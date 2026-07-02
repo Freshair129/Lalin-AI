@@ -27,7 +27,12 @@ if ($Unload) {
         $name = $m.name
         Write-Host "[prewarm] unloading $name ..."
         $body = @{ model = $name; prompt = ""; keep_alive = 0 } | ConvertTo-Json
-        Invoke-RestMethod -Uri "$base/api/generate" -Method Post -Body $body -ContentType "application/json" | Out-Null
+        # embedding model (เช่น bge-m3 ตระกูล bert) ไม่รับ /api/generate — ต้องใช้ /api/embeddings
+        if ($m.details.family -match "bert") {
+            Invoke-RestMethod -Uri "$base/api/embeddings" -Method Post -Body $body -ContentType "application/json" | Out-Null
+        } else {
+            Invoke-RestMethod -Uri "$base/api/generate" -Method Post -Body $body -ContentType "application/json" | Out-Null
+        }
     }
     Write-Host "[prewarm] done - VRAM freed"
     exit 0
