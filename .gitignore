@@ -30,3 +30,7 @@ frontend/src-tauri/target/
 Thumbs.db
 .idea/
 .vscode/
+
+# backend runtime logs (transient)
+backend/backend.log
+backend/backend.err
