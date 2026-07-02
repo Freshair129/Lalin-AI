@@ -10,8 +10,13 @@ import { MarketplacePanel } from "./components/MarketplacePanel";
 import { FileManager } from "./components/FileManager";
 import { UpdateChecker } from "./components/UpdateChecker";
 import { Icon } from "./components/icons";
+import { EngineProvider } from "./store/engineContext";
+import { StudioDock } from "./components/StudioDock";
 
 type Tab = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "files" | "market" | "brain";
+
+// แท็บที่แสดง timeline dock ล่าง (พื้น DAW) — เครื่องมือที่ผลิตเสียงลง timeline
+const STUDIO_TABS = new Set<Tab>(["remix", "tts", "dubbing", "mastering"]);
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "voices", icon: "voices", label: "คลังเสียง" },
@@ -47,6 +52,7 @@ export default function App() {
   const current = NAV.find((n) => n.id === tab);
 
   return (
+    <EngineProvider>
     <div className="daw">
       {/* ── Top bar (เต็มกว้าง แบบ DAW) ── */}
       <header className="topbar">
@@ -96,6 +102,9 @@ export default function App() {
         </main>
       </div>
 
+      {/* ── Timeline dock (พื้น DAW ถาวร) — เห็นบนแท็บ studio ── */}
+      {STUDIO_TABS.has(tab) && <StudioDock />}
+
       {/* ── Status bar (ล่าง, monospace) ── */}
       <footer className="statusbar mono">
         <span className="status-item">
@@ -110,5 +119,6 @@ export default function App() {
         <span className="status-item dim">v0.1.0</span>
       </footer>
     </div>
+    </EngineProvider>
   );
 }

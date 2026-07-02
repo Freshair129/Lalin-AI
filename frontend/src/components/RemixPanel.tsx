@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRemixStore } from "../store/useRemixStore";
 import {
   ReactFlow,
@@ -21,11 +21,9 @@ import { Waveform } from "./Waveform";
 import { Knob } from "./Knob";
 import { Meter } from "./Meter";
 import type { TrackView } from "./Timeline";
-import { ClipTimeline, type ClipCtx } from "./ClipTimeline";
-import { useClipEngine } from "../timeline/useClipEngine";
+import { useEngine } from "../store/engineContext";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { LibraryPanel } from "./LibraryPanel";
-import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { FxRack } from "./FxRack";
 import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
@@ -105,10 +103,9 @@ export function RemixPanel() {
 
   const leftW = useRemixStore((s) => s.leftW);
   const setLeftW = useRemixStore((s) => s.setLeftW);
+  // tlH/rackH คงไว้ใน snapshot (ขนาด dock) — dock timeline ย้ายไป StudioDock แล้ว
   const tlH = useRemixStore((s) => s.tlH);
-  const setTlH = useRemixStore((s) => s.setTlH);
   const rackH = useRemixStore((s) => s.rackH);
-  const setRackH = useRemixStore((s) => s.setRackH);
 
   const layout = useRemixStore((s) => s.layout);
   const setLayout = useRemixStore((s) => s.setLayout);
@@ -120,9 +117,8 @@ export function RemixPanel() {
 
   const { job, busy, start } = useJob();
 
-  // ── clip engine (timeline: drag/slice/clone/delete/undo) — ไม่ย้าย ──
-  const engine = useClipEngine();
-  const [ctxMenu, setCtxMenu] = useState<ClipCtx | null>(null);
+  // ── clip engine (shared ทั้ง workspace ผ่าน EngineProvider) ──
+  const engine = useEngine();
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
   const customSeq = useRef(0);
   const loadingRef = useRef(false);
@@ -371,17 +367,6 @@ export function RemixPanel() {
     ? { id: selTrackObj.id, label: selTrackObj.label, color: selTrackObj.color, muted: selTrackObj.muted, solo: selTrackObj.solo, locked: selTrackObj.locked }
     : null;
 
-  // context menu (คลิกขวาที่ clip)
-  const ctxItems = (c: ClipCtx): MenuItem[] => [
-    { label: "Mute clip", icon: "🔇", shortcut: "Ctrl+M", onClick: () => engine.muteClip(c.trackId, c.clipId) },
-    { label: "Clip settings…", icon: "⚙", onClick: () => engine.select(c.trackId, c.clipId) },
-    { type: "sep" },
-    { label: "Clone clip", icon: "❏", shortcut: "Ctrl+D", onClick: () => engine.clone(c.trackId, c.clipId) },
-    { label: "Slice clip here", icon: "▥", shortcut: "Shift", onClick: () => engine.slice(c.trackId, c.clipId, c.atSec) },
-    { type: "sep" },
-    { label: "Delete clip", icon: "🗑", danger: true, onClick: () => engine.remove(c.trackId, c.clipId) },
-  ];
-
   // ── export (bake master FX → ดาวน์โหลด) ───────────────────
   const { job: exJob, busy: exBusy, start: exStart } = useJob();
   useEffect(() => {
@@ -486,63 +471,40 @@ export function RemixPanel() {
 
         <div className="remix-main">
           {layout === "node" ? (
-            <>
-              <div className="remix-canvas" style={{ flex: 1 }}>
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  nodeTypes={nodeTypes}
-                  fitView
-                  nodesConnectable={false}
-                  proOptions={{ hideAttribution: true }}
-                >
-                  <Background gap={22} color="#1c1f26" />
-                  <Controls showInteractive={false} />
-                </ReactFlow>
-              </div>
-              <Splitter axis="y" onDelta={(d) => setTlH((h) => clamp(h - d, 130, 540))} onReset={() => setTlH(230)} />
-              <div className="remix-pane" style={{ height: tlH }}>
-                <ClipTimeline
-                  engine={engine} onContext={setCtxMenu}
-                  reverb={mReverb} echo={mEcho} comp={mComp}
-                  onReverb={setMReverb} onEcho={setMEcho} onComp={setMComp}
-                />
-              </div>
-            </>
+            <div className="remix-canvas" style={{ flex: 1 }}>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                fitView
+                nodesConnectable={false}
+                proOptions={{ hideAttribution: true }}
+              >
+                <Background gap={22} color="#1c1f26" />
+                <Controls showInteractive={false} />
+              </ReactFlow>
+            </div>
           ) : (
-            <>
-              <div className="remix-pane" style={{ flex: 1 }}>
-                <ClipTimeline
-                  engine={engine} onContext={setCtxMenu}
-                  reverb={mReverb} echo={mEcho} comp={mComp}
-                  onReverb={setMReverb} onEcho={setMEcho} onComp={setMComp}
-                />
-              </div>
-              <Splitter axis="y" onDelta={(d) => setRackH((h) => clamp(h - d, 110, 420))} onReset={() => setRackH(190)} />
-              <div className="remix-rack" style={{ height: rackH }}>
-                <FxRack
-                  reverb={reverb} setReverb={setReverb}
-                  delay={delay} setDelay={setDelay}
-                  autotune={autotune} setAutotune={setAutotune}
-                  fx={fx} setFx={setFx}
-                  lufs={lufs} setLufs={setLufs}
-                  offsetAuto={offsetAuto} setOffsetAuto={setOffsetAuto}
-                  offsetMs={offsetMs} setOffsetMs={setOffsetMs}
-                  mReverb={mReverb} setMReverb={setMReverb}
-                  mEcho={mEcho} setMEcho={setMEcho}
-                  mComp={mComp} setMComp={setMComp}
-                />
-              </div>
-            </>
+            <div className="remix-rack" style={{ flex: 1, overflow: "auto" }}>
+              <FxRack
+                reverb={reverb} setReverb={setReverb}
+                delay={delay} setDelay={setDelay}
+                autotune={autotune} setAutotune={setAutotune}
+                fx={fx} setFx={setFx}
+                lufs={lufs} setLufs={setLufs}
+                offsetAuto={offsetAuto} setOffsetAuto={setOffsetAuto}
+                offsetMs={offsetMs} setOffsetMs={setOffsetMs}
+                mReverb={mReverb} setMReverb={setMReverb}
+                mEcho={mEcho} setMEcho={setMEcho}
+                mComp={mComp} setMComp={setMComp}
+              />
+            </div>
           )}
         </div>
       </div>
 
-      {ctxMenu && (
-        <ContextMenu x={ctxMenu.x} y={ctxMenu.y} items={ctxItems(ctxMenu)} onClose={() => setCtxMenu(null)} />
-      )}
       {showDesigner && (
         <NodeDesigner onCreate={addCustomNode} onClose={() => setShowDesigner(false)} />
       )}
