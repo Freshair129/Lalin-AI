@@ -27,6 +27,12 @@ MODEL_OPTIONS = {
         "temperature": 0.6, "top_p": 0.95, "top_k": 20, "repeat_penalty": 1.05,
         "num_ctx": 8192, "num_predict": 6000,
     },
+    # Mellum2 MoE (A2.5B active) — card: temp 0.6/top_p 0.95/top_k 20 (JetBrains official),
+    # thinking model → num_predict เผื่อ <think>
+    "hf.co/yuxinlu1/Mellum2-12B-A2.5B-Claude-4.6-4.8-Opus-Thinking-GGUF:Q4_K_M": {
+        "temperature": 0.6, "top_p": 0.95, "top_k": 20,
+        "num_ctx": 8192, "num_predict": 6000,
+    },
 }
 
 

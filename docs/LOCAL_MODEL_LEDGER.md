@@ -10,7 +10,8 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 |---|---|---|---|---|---|
 | 1 | `qwen3:latest` (14.8B) | **7/7 = 100%** | **5.1s** | 10.05GB | **default** — VRAM ว่างเท่านั้น (เหลือ ~1.1GB ไม่พอ ML) |
 | 2 | `sushirl:latest` (9B) | **7/7 = 100%** (ต้องใช้ extractor v2 — 0/7 ถ้า extract แบบ fence-แรก) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
-| 3 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรอง/escalation ใน T1 |
+| 3 | `hf.co/yuxinlu1/Mellum2-12B-A2.5B…:Q4_K_M` (MoE, active 2.5B) | 6/7 = 86% (fail เดียว = logic slip; temp 0.6 ตาม card) | **4.9s** (gen 127 tok/s — เร็วสุด) | 8.25GB | สำรองอันดับ 1 / งาน latency-sensitive |
+| 4 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรองอันดับ 2 |
 
 ### candidate (ยังไม่เข้า pool)
 | model | เหตุผล |

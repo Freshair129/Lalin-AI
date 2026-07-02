@@ -1,0 +1,18 @@
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let sum = 0;
+  for (const clip of clips) {
+    const { start, end } = clip;
+    if (
+      typeof start === 'number' &&
+      typeof end === 'number' &&
+      Number.isFinite(start) &&
+      Number.isFinite(end) &&
+      end > start
+    ) {
+      sum += end - start;
+    }
+  }
+  return Math.round(sum * 1000) / 1000;
+}
+```

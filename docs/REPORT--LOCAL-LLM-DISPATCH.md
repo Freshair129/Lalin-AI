@@ -196,6 +196,7 @@ probe 4 ทาง ([orchestration/probe_gemma.py](../orchestration/probe_gemma.p
 |---|---|---|---|---|
 | qwen3:latest 14.8B (**10.05GB**) | v-plain 7/7 | 7/7 (ไม่เปลี่ยน — fail ของมันเป็น logic จริง 0/6 rescued) | **5.1s** | **default (คุณภาพ+เร็วสุด)** |
 | sushirl 9B (**5.57GB**) | **0/7** — fence แรกจับ prompt-restatement | **7/7 (rescue offline ยืนยันด้วย live re-run 7/7)** | 11.6s | **promote: ตัว co-resident** |
+| Mellum2-12B-A2.5B MoE (8.25GB) | — (เทสเพิ่มรอบ 3 ตาม config card: temp 0.6) | **6/7** — fail เดียวคือ logic slip ตัวอักษรเดียว (regex `:` แทน `\.`) · **gen 127.5 tok/s = 4x qwen3** · cold load 26.8s (เร็วสุดในกลุ่มใหญ่) · ไม่มี special-token leak (ยืนยัน GGUF เสียเป็นราย build ไม่ใช่ราย uploader yuxinlu1) | 4.9s | สำรองอันดับ 1 ใน pool (แซง Qwythos) |
 | gemma-4-12b-it 11.9B (8.36GB) | v-plain 6/7 · v-bracket 3/7 | 14/14 (offline re-verify) แต่ `<|channel>thought` รั่วเป็น text ทุก run (0/14 single-fence) | 54.9s (**ช้า 10x**) | candidate (ช้าเกิน) |
 | Qwythos-9B (6.09GB) | 1/7 ที่ temp 0.1 | **5/7 ที่ temp 0.6** (ตาม model card: "avoid T≤0.3 → repetition loop") + extractor v2 | 19.6s | candidate (ยังแพ้ sushirl) |
 | gemma-4-12B-coder (7.4GB) | `<unused30>` eval=4 | probe 4 ทางยืนยัน **เสียถาวร** (V2.1) | — | **blacklist ถาวร** |
@@ -255,7 +256,8 @@ Output ONLY the ```ts block.
 |---|---|---|---|
 | **default** (คุณภาพ+เร็ว, VRAM ว่าง) | `qwen3:latest` | `temp 0.1, num_ctx 8192, num_predict 2500, keep_alive 30m` | 7/7 @ 5.1s |
 | **co-resident กับงาน ML** | `sushirl:latest` + extractor v2 | เหมือน default | 7/7 @ 11.6s, VRAM 5.57GB |
-| สำรอง (escalation ใน T1) | `Qwythos-9B` | **`temp 0.6, top_p 0.95, top_k 20, repeat_penalty 1.05, num_predict 6000`** (per model card — temp 0.1 ทำ repetition: 1/7) | 5/7 @ 19.6s |
+| สำรองอันดับ 1 (escalation ใน T1) | `Mellum2-12B-A2.5B` (MoE) | `temp 0.6, top_p 0.95, top_k 20, num_predict 6000` (JetBrains official per card) | 6/7 @ 4.9s, 127 tok/s, VRAM 8.25GB |
+| สำรองอันดับ 2 | `Qwythos-9B` | **`temp 0.6, top_p 0.95, top_k 20, repeat_penalty 1.05, num_predict 6000`** (per model card — temp 0.1 ทำ repetition: 1/7) | 5/7 @ 19.6s |
 | blacklist | `gemma-4-12B-coder…GGUF` (ถาวร, V2.1) · `llama3.2:1b` (เล็กเกิน) | — | |
 | pre-warm | `scripts\prewarm_ollama.ps1` ก่อนทุก batch — **num_ctx ต้องตรงกับ dispatch** | `-Unload` ก่อน Demucs/whisper ถ้าใช้ qwen3 | cold 56–115s → warm ~5–12s |
 | per-model options | เก็บใน `dispatch.py:MODEL_OPTIONS` — ห้ามใช้ config เดียวทุกโมเดล | บทเรียน Qwythos | |
