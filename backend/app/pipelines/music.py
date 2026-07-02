@@ -52,10 +52,22 @@ def _to_wav(src: str, dst: str) -> str:
 
 
 # ════════════════════════════════════════════════════════════
-#  1) แยก stem (Demucs) — คืน path ของ vocals.wav + no_vocals.wav
+#  1) แยก stem (Demucs) — คืน path ของ vocals/drums/bass/other (+ instrumental รวม)
 # ════════════════════════════════════════════════════════════
-def separate_stems(audio: str, out_dir: str, *, device: str | None = None) -> dict:
-    """แยกเสียงร้อง/ดนตรีด้วย Demucs (htdemucs, two-stems=vocals)."""
+
+# ชื่อ stem ทั้ง 4 ที่ htdemucs แยกให้ (ลำดับ default ของ demucs)
+STEM_NAMES = ("vocals", "drums", "bass", "other")
+
+
+def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
+                    full: bool = False) -> dict:
+    """แยกเสียงด้วย Demucs (htdemucs).
+
+    full=False (ดีฟอลต์, ใช้ใน run_remix): แยกแบบ two-stems=vocals
+        → คืน {"vocals", "instrumental"} เท่านั้น (เร็วกว่า ใช้พอสำหรับ remix vocal↔beat)
+    full=True: แยกเต็ม 4 stem (vocals/drums/bass/other) สำหรับ per-stem mixer
+        → คืน {"vocals","drums","bass","other","instrumental"} (instrumental = drums+bass+other รวมกัน)
+    """
     try:
         import torch  # noqa: F401
     except ImportError as e:  # noqa: BLE001
@@ -65,6 +77,22 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None) -> di
     dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
     sep_root = Path(out_dir) / "_sep"
     name = Path(audio).stem
+
+    if full:
+        subprocess.run(
+            [sys.executable, "-m", "demucs", "-d", dev,
+             "-o", str(sep_root), audio],
+            check=True,
+        )
+        torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
+        base = sep_root / "htdemucs" / name
+        result = {stem: str(base / f"{stem}.wav") for stem in STEM_NAMES}
+        result["instrumental"] = _sum_stems(
+            [result["drums"], result["bass"], result["other"]],
+            str(base / "no_vocals.wav"),
+        )
+        return result
+
     subprocess.run(
         [sys.executable, "-m", "demucs", "--two-stems=vocals", "-d", dev,
          "-o", str(sep_root), audio],
@@ -76,6 +104,59 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None) -> di
         "vocals": str(base / "vocals.wav"),
         "instrumental": str(base / "no_vocals.wav"),
     }
+
+
+def _sum_stems(paths: list[str], out_path: str) -> str:
+    """รวมไฟล์ wav หลายไฟล์เข้าด้วยกัน (สำหรับสร้าง instrumental รวมจาก drums+bass+other)."""
+    import soundfile as sf
+
+    mix = None
+    sr = SR
+    for p in paths:
+        data, sr = sf.read(p)
+        if data.ndim == 1:
+            data = np.stack([data, data], axis=1)
+        mix = data if mix is None else mix[:min(len(mix), len(data))] + data[:min(len(mix), len(data))]
+    if mix is None:
+        raise ValueError("ไม่มีไฟล์ stem ให้รวม")
+    sf.write(out_path, mix, sr)
+    return out_path
+
+
+def apply_stem_gains(stems: dict[str, str], gains: dict[str, float], out_dir: str) -> dict[str, str]:
+    """โหลดแต่ละ stem, คูณด้วย gain (0..1.5 ต่อ stem), เขียนกลับเป็นไฟล์ใหม่.
+
+    gains: dict ของ {"vocals":1.0, "drums":1.0, "bass":1.0, "other":1.0} — ค่าไหนไม่ระบุ = 1.0 (ไม่เปลี่ยน)
+    คืน dict path ของ stem ที่ปรับ gain แล้ว (คีย์เดิมของ STEM_NAMES) — ไม่แก้ "instrumental" ตรงๆ
+    (instrumental รวมใหม่จะถูกคำนวณใหม่จาก drums/bass/other ที่ปรับ gain แล้วถ้ามีครบ)
+    """
+    import soundfile as sf
+
+    out_paths: dict[str, str] = {}
+    for stem in STEM_NAMES:
+        path = stems.get(stem)
+        if not path or not Path(path).exists():
+            continue
+        gain = float(gains.get(stem, 1.0))
+        data, sr = sf.read(path)
+        if abs(gain - 1.0) > 1e-6:
+            data = data * gain
+            gained_path = str(Path(out_dir) / f"_gain_{stem}.wav")
+            sf.write(gained_path, data, sr)
+            out_paths[stem] = gained_path
+        else:
+            out_paths[stem] = path
+
+    # ถ้ามี drums/bass/other ครบ (มาจาก full=True) → รวมเป็น instrumental ใหม่หลังปรับ gain
+    if all(s in out_paths for s in ("drums", "bass", "other")):
+        out_paths["instrumental"] = _sum_stems(
+            [out_paths["drums"], out_paths["bass"], out_paths["other"]],
+            str(Path(out_dir) / "_gain_instrumental.wav"),
+        )
+    elif "instrumental" in stems:
+        out_paths.setdefault("instrumental", stems["instrumental"])
+
+    return out_paths
 
 
 # ════════════════════════════════════════════════════════════
@@ -304,12 +385,16 @@ def run_remix(
     vocal_gain: float = 0.95,
     reverb: float = 0.16,
     delay: float = 0.12,
+    stem_gains: dict[str, float] | None = None,   # {"vocals","drums","bass","other"} 0..1.5 ต่อ stem, ดีฟอลต์ 1.0
     progress=None,   # callable(frac: float, msg: str) — รายงานความคืบหน้า (optional)
 ) -> dict:
     """แยกเสียงร้องจาก source → autotune/FX → วางบน beat → มาสเตอร์.
 
     offset_ms: เลื่อนเสียงร้อง (มิลลิวินาที). None = หา phase อัตโนมัติ.
                ค่าบวก = เลื่อนช้าลง (ขวา). ใช้ปรับ manual ให้เนียนสุด.
+    stem_gains: ถ้าระบุ (dict ใดๆ ที่ไม่ว่าง) → แยก stem เต็ม 4 ทาง (vocals/drums/bass/other)
+                แล้วคูณ gain แต่ละ stem ก่อนรวมเป็น instrumental/vocal สำหรับมิกซ์ต่อ.
+                ถ้าไม่ระบุ (None หรือ {}) → ใช้ two-stems=vocals แบบเดิม (เร็วกว่า, ไม่มี per-stem control)
     """
     import librosa
     import pyloudnorm as pyln
@@ -328,9 +413,15 @@ def run_remix(
     src_wav = _to_wav(source_audio, str(work / "_src.wav"))
     beat_wav = _to_wav(beat_audio, str(work / "_beat.wav"))
 
-    # 1) แยก stem
-    _p(0.15, "กำลังแยกเสียงร้อง (Demucs)…")
-    stems = separate_stems(src_wav, str(work), device=settings.tts_device)
+    # 1) แยก stem — ถ้ามี stem_gains ระบุมา ให้แยกเต็ม 4 ทาง (vocals/drums/bass/other)
+    #    เพื่อคูณ gain แยกแต่ละ stem ได้ (per-stem mixer, WP 3.4) ไม่งั้นใช้ two-stems แบบเดิม (เร็วกว่า)
+    want_full = bool(stem_gains)
+    _p(0.15, "กำลังแยกเสียงร้อง (Demucs)…" if not want_full else "กำลังแยก stem (Demucs, เต็ม 4 ทาง)…")
+    stems = separate_stems(src_wav, str(work), device=settings.tts_device, full=want_full)
+
+    if want_full:
+        stems = apply_stem_gains(stems, stem_gains or {}, str(work))
+
     voc_path = stems["vocals"]
 
     # 2) วิเคราะห์ BPM/Key
@@ -401,6 +492,7 @@ def run_remix(
         "lufs": round(final_lufs, 1),
         "autotune": do_autotune,
         "fx": do_fx,
+        "stem_gains": stem_gains or None,
     }
 
 

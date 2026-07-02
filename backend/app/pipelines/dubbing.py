@@ -17,6 +17,7 @@ import subprocess
 from pathlib import Path
 
 from ..brain import get_brain
+from ..brain.base import Message
 from ..config import get_settings
 from ..utils.audio import fit_duration, overlay_on_timeline
 from ..utils.ffmpeg import configure as configure_ffmpeg
@@ -24,6 +25,56 @@ from ..utils.ids import short_id
 from . import asr, tts
 
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
+
+# อัตราคำพูดไทยโดยประมาณ (ตัวอักษร/วินาที) ไว้ประเมินว่าประโยคยาวเกินช่องเวลาไหม
+_THAI_CHARS_PER_SEC = 12.0
+
+
+async def refine_line_for_duration(
+    text: str,
+    *,
+    target_sec: float,
+    tone: str = "formal",
+    brain=None,
+) -> str:
+    """ให้ "สมอง" เกลาบทพากย์ให้ความยาวคำพูดพอดีกับช่องเวลา (target_sec วินาที)
+
+    ใช้ตอนแปล/เขียนบทแล้วยาวเกินช่วงเวลาเดิม ทำให้ fit_duration ต้องยืด/บีบเสียงมากไป
+    คงความหมายเดิมไว้ ตัดให้กระชับขึ้นถ้ายาวเกิน — ถ้าสมองตอบผิดพลาด คืนข้อความเดิม (ไม่ throw)
+
+    tone: "formal" (ทางการ) | "casual" (กันเอง)
+    """
+    text = (text or "").strip()
+    if not text:
+        return text
+
+    brain = brain or get_brain()
+    tone_desc = "เป็นกันเอง พูดคุยธรรมชาติ" if tone == "casual" else "ทางการ สุภาพ เหมาะกับงานพากย์"
+    est_chars = max(1, round(target_sec * _THAI_CHARS_PER_SEC))
+
+    system = (
+        "คุณคือนักเขียนบทพากย์เสียงมืออาชีพ หน้าที่คือเกลาประโยคให้ความยาวเวลาพูด "
+        "พอดีกับช่องเวลาที่กำหนด โดยคงความหมายเดิมไว้ให้มากที่สุด "
+        "ถ้าประโยคยาวเกินช่องเวลา ให้ตัดคำฟุ่มเฟือย/กระชับประโยคลง "
+        "ถ้าสั้นกว่าช่องเวลามากให้ปล่อยตามเดิมได้ (ไม่ต้องเติมคำให้ยาวขึ้นโดยไม่จำเป็น) "
+        "ห้ามใส่คำอธิบาย หมายเหตุ หรือเครื่องหมายคำพูดครอบ — ตอบกลับเฉพาะประโยคที่เกลาแล้วบรรทัดเดียวเท่านั้น"
+    )
+    user = (
+        f"ช่องเวลาที่มีให้พูด: ประมาณ {target_sec:.1f} วินาที "
+        f"(กะคร่าวๆ ว่าพูดได้ราว {est_chars} ตัวอักษรภาษาไทย)\n"
+        f"โทนเสียง: {tone_desc}\n\n"
+        f"ประโยคเดิม:\n{text}\n\n"
+        "เกลาประโยคนี้ให้พอดีเวลาข้างต้น ตอบกลับเฉพาะประโยคที่เกลาแล้วเท่านั้น:"
+    )
+    try:
+        res = await brain.chat(
+            [Message("system", system), Message("user", user)],
+            temperature=0.3,
+        )
+        refined = (res.text or "").strip().strip('"').strip("“”").strip()
+        return refined or text
+    except Exception:  # noqa: BLE001 — สมองพังไม่ควรทำให้ผู้ใช้เสียบทเดิม
+        return text
 
 
 async def run_dubbing(
@@ -35,6 +86,7 @@ async def run_dubbing(
     translate: bool = True,
     source_lang: str | None = None,
     tts_language: str = "th",
+    refine_fit: bool = False,
     report=None,
 ) -> dict:
     """รันไปป์ไลน์พากย์เสียงทั้งหมด คืน dict ผลลัพธ์ (path ไฟล์ออก)
@@ -74,6 +126,14 @@ async def run_dubbing(
             text = await brain.translate(
                 text, target_lang=target_lang, source_lang=source_lang
             )
+
+        if refine_fit:
+            seg_dur = seg.end - seg.start
+            if seg_dur > 0:
+                await say(base + 0.01, f"เกลาบท {i+1}/{n}…")
+                text = await refine_line_for_duration(
+                    text, target_sec=seg_dur, brain=brain
+                )
 
         sub_segments.append({
             "start": seg.start,
@@ -129,6 +189,7 @@ async def run_dubbing(
         "target_lang": target_lang,
         "subtitle_srt": srt_name,
         "subtitle_vtt": vtt_name,
+        "refine_fit": refine_fit,
     }
 
     # 6) ถ้าต้นฉบับเป็นวิดีโอ → mux เสียงพากย์ใหม่กลับเข้าไฟล์วิดีโอ ─

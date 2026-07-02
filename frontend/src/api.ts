@@ -52,6 +52,24 @@ export const voices = {
     req<{ deleted: string }>(`/voices/${id}`, { method: "DELETE" }),
 };
 
+// ── Agent (mix copilot — LLM เสนอ mutations ให้ apply เอง) ──
+export interface AgentMutation {
+  op: string;
+  args: Record<string, unknown>;
+}
+export interface AgentActResult {
+  reply: string;
+  mutations: AgentMutation[];
+}
+export const agent = {
+  act: (message: string, project: Record<string, unknown>) =>
+    req<AgentActResult>("/agent/act", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, project }),
+    }),
+};
+
 // ── Files ─────────────────────────────────────────────────
 export const files = {
   upload: (file: File) => {
@@ -90,6 +108,13 @@ export const tts = {
 export const dubbing = {
   run: (body: Record<string, unknown>) =>
     req<{ job_id: string }>("/dubbing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  // เกลาบทพากย์ให้ความยาวคำพูดพอดีกับช่องเวลา (ตัวช่วยแยก ไม่ผูกกับ job หลัก)
+  refine: (body: { text: string; target_sec: number; tone?: "formal" | "casual" }) =>
+    req<{ refined: string }>("/dubbing/refine", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

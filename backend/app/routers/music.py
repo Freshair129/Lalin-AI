@@ -41,6 +41,7 @@ async def remix(req: RemixRequest):
                 offset_ms=req.offset_ms,
                 reverb=req.reverb,
                 delay=req.delay,
+                stem_gains=req.stem_gains,
                 progress=on_progress,
             ),
         )

@@ -2,14 +2,27 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from pydantic import BaseModel, Field
 
 from ..jobs import jobs
-from ..pipelines.dubbing import run_dubbing
+from ..pipelines.dubbing import refine_line_for_duration, run_dubbing
 from ..schemas import DubbingRequest
 from ..services import voices
 from .files import resolve_upload
 
 router = APIRouter(prefix="/dubbing", tags=["dubbing"])
+
+
+class RefineLineRequest(BaseModel):
+    """คำขอ "เกลาบทให้พอดีเวลา" — ให้สมองเขียนประโยคใหม่ให้ยาวพูดพอดีช่องเวลา"""
+
+    text: str
+    target_sec: float = Field(gt=0, description="ความยาวช่องเวลาที่มีให้พูด (วินาที)")
+    tone: str = Field(default="formal", pattern="^(formal|casual)$")
+
+
+class RefineLineResponse(BaseModel):
+    refined: str
 
 
 @router.post("")
@@ -32,3 +45,16 @@ async def dub(req: DubbingRequest):
 
     job = jobs.spawn("dubbing", task)
     return {"job_id": job.id}
+
+
+@router.post("/refine", response_model=RefineLineResponse)
+async def refine(req: RefineLineRequest):
+    """เกลาบทพากย์บรรทัดเดียวให้ความยาวคำพูดพอดีกับช่องเวลา (ช่วยแก้ปัญหาแปลแล้วยาวเกิน)
+
+    เรียกสมอง (cloud/ollama ตามที่ตั้งค่าไว้) — ถ้าสมองพัง/error จะคืนข้อความเดิมกลับไป
+    (ไม่ throw ให้ endpoint นี้ล้มเหลว เพราะเป็นแค่ตัวช่วยเสริม)
+    """
+    refined = await refine_line_for_duration(
+        req.text, target_sec=req.target_sec, tone=req.tone
+    )
+    return {"refined": refined}

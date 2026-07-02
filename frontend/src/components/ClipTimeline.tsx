@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ClipEngine } from "../timeline/useClipEngine";
 import { uid, makeClip, type Clip } from "../timeline/clipModel";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
+import { metronomeTicks } from "../timeline/grid";
 import { StereoMeter } from "./StereoMeter";
 import { ChannelMeterBalance } from "./ChannelMeterBalance";
 
@@ -214,6 +215,20 @@ export function ClipTimeline({
   // WP3.3: ลาก playhead (grab handle ด้านบน)
   const playheadDrag = useRef<boolean>(false);
 
+  // WP3.2: loop region [loopStart, loopEnd] (sec) — ลากบน ruler เพื่อกำหนด
+  const [loopRegion, setLoopRegion] = useState<{ start: number; end: number } | null>(null);
+  const [loopOn, setLoopOn] = useState(false);
+  const loopRegionRef = useRef<{ start: number; end: number } | null>(null);
+  loopRegionRef.current = loopRegion;
+  const loopOnRef = useRef(false);
+  loopOnRef.current = loopOn;
+  const loopDrag = useRef<{ x0: number; anchorSec: number } | null>(null);
+  const [loopDragPreview, setLoopDragPreview] = useState<{ start: number; end: number } | null>(null);
+
+  // WP3.2: metronome click-track
+  const [metroOn, setMetroOn] = useState(false);
+  const clickNodesRef = useRef<{ osc: OscillatorNode; gain: GainNode }[]>([]);
+
   const duration = Math.max(project.duration, 20);
   const contentW = duration * pps;
 
@@ -231,11 +246,41 @@ export function ClipTimeline({
   };
 
   const stopNodes = () => { nodesRef.current.forEach((n) => { try { n.stop(); } catch { /* */ } }); nodesRef.current = []; };
+  const stopClicks = () => {
+    clickNodesRef.current.forEach(({ osc }) => { try { osc.stop(); } catch { /* */ } });
+    clickNodesRef.current = [];
+  };
 
   const pause = () => {
     cancelAnimationFrame(rafRef.current);
     stopNodes();
+    stopClicks();
     setPlaying(false);
+  };
+
+  // WP3.2: ตารางเสียงคลิก metronome ตั้งแต่ seek ถึง end (loopEnd หรือ duration) บน shared ctx
+  const scheduleClicks = (ctx: AudioContext, seek: number, endSec: number, ctxStart: number) => {
+    if (!metroOn) return;
+    const span = endSec - seek;
+    if (span <= 0) return;
+    const ticks = metronomeTicks(bpm, sig, endSec).filter((tk) => tk.t >= seek);
+    for (const tk of ticks) {
+      const when = ctxStart + (tk.t - seek);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = tk.accent ? 1000 : 800;
+      const peak = tk.accent ? 0.5 : 0.32;
+      gain.gain.setValueAtTime(0, when);
+      gain.gain.linearRampToValueAtTime(peak, when + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
+      osc.connect(gain).connect(ctx.destination);
+      try {
+        osc.start(when);
+        osc.stop(when + 0.06);
+      } catch { /* */ }
+      clickNodesRef.current.push({ osc, gain });
+    }
   };
 
   const play = async () => {
@@ -243,6 +288,8 @@ export function ClipTimeline({
     await ctx.resume();
     let seek = posRef.current;
     if (seek >= project.duration) seek = 0;
+    const lr = loopOnRef.current ? loopRegionRef.current : null;
+    if (lr && (seek < lr.start || seek >= lr.end)) seek = lr.start;
     seekRef.current = seek;
     const anySolo = project.tracks.some((t) => t.solo);
 
@@ -278,6 +325,9 @@ export function ClipTimeline({
     const decs = new Map<string, Decoded>();
     await Promise.all(srcs.map((s) => getDecoded(s).then((d) => decs.set(s, d)).catch(() => {})));
 
+    // loop region (ถ้าเปิด loopOn) — จำกัด playback ให้ไม่เกิน loopEnd, wrap กลับ loopStart ใน tick()
+    const loopEndSec = lr ? Math.min(lr.end, duration) : duration;
+
     const meters: Record<string, { l: AnalyserNode; r: AnalyserNode }> = {};
     for (const t of project.tracks) {
       if (t.muted || (anySolo && !t.solo)) continue;
@@ -297,9 +347,13 @@ export function ClipTimeline({
         if (!d) continue;
         const cdur = c.duration || d.duration;
         if (c.start + cdur <= seek) continue;
+        if (c.start >= loopEndSec) continue;
         const whenOffset = Math.max(0, c.start - seek);
         const into = c.offset + Math.max(0, seek - c.start);
-        const playDur = cdur - Math.max(0, seek - c.start);
+        let playDur = cdur - Math.max(0, seek - c.start);
+        // ตัด playback ที่ loopEnd ไม่ให้เล่นเลยขอบเขตของ loop
+        const capByLoop = loopEndSec - Math.max(seek, c.start);
+        playDur = Math.min(playDur, capByLoop);
         if (playDur <= 0) continue;
         const node = ctx.createBufferSource();
         node.buffer = d.buffer;
@@ -333,6 +387,7 @@ export function ClipTimeline({
     }
     setTrackMeters(meters);
     ctxStartRef.current = ctx.currentTime;
+    scheduleClicks(ctx, seek, loopEndSec, ctx.currentTime);
     setPlaying(true);
 
     const tick = () => {
@@ -340,6 +395,17 @@ export function ClipTimeline({
       posRef.current = cur;
       if (headRef.current) headRef.current.style.left = `${headWRef.current + cur * pps}px`;
       setPosSec(cur);
+      // loop wrap: ถึง loopEnd แล้ว → re-schedule audio node ใหม่จาก loopStart แบบไร้รอยต่อ
+      const activeLoop = loopOnRef.current ? loopRegionRef.current : null;
+      if (activeLoop && cur >= activeLoop.end) {
+        stopNodes();
+        stopClicks();
+        cancelAnimationFrame(rafRef.current);
+        posRef.current = activeLoop.start;
+        setPosSec(activeLoop.start);
+        play();
+        return;
+      }
       if (cur >= duration) { pause(); posRef.current = 0; setPosSec(0); if (headRef.current) headRef.current.style.left = `${headWRef.current}px`; return; }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -352,7 +418,7 @@ export function ClipTimeline({
 
   const stop = () => { pause(); posRef.current = 0; setPosSec(0); if (headRef.current) headRef.current.style.left = `${headWRef.current}px`; };
 
-  useEffect(() => () => { cancelAnimationFrame(rafRef.current); stopNodes(); }, []);
+  useEffect(() => () => { cancelAnimationFrame(rafRef.current); stopNodes(); stopClicks(); }, []);
 
   // ── helpers สำหรับ keyboard shortcuts ─────────────────────
   // หา clip ที่เลือกอยู่ (+ track ของมัน)
@@ -495,6 +561,16 @@ export function ClipTimeline({
             <input type="range" min={0} max={1} step={0.01} value={echo} onChange={(e) => onEcho(Number(e.target.value))} /></span>
           <button className={`tl-btn ${comp ? "play" : ""}`} onClick={() => onComp(!comp)} title="Compressor">CMP</button>
           <button className={`tl-btn ${snapOn ? "play" : ""}`} onClick={() => setSnapOn((s) => !s)} title="Snap to grid">⊞</button>
+          <button
+            className={`tl-btn ${loopOn ? "play" : ""}`}
+            onClick={() => setLoopOn((v) => !v)}
+            title={loopRegion ? "เปิด/ปิดวนซ้ำช่วงที่เลือก (ลากบนไม้บรรทัดเพื่อกำหนดช่วง)" : "ลากบนไม้บรรทัดเพื่อกำหนดช่วงวนซ้ำก่อน"}
+          >🔁</button>
+          <button
+            className={`tl-btn ${metroOn ? "play" : ""}`}
+            onClick={() => setMetroOn((v) => !v)}
+            title="Metronome click-track"
+          >🎵</button>
         </span>
         <StereoMeter analyserL={analysers?.l} analyserR={analysers?.r} active={playing} height={26} />
         <span className="cliptl-gap" />
@@ -527,6 +603,8 @@ export function ClipTimeline({
                 ["M", "ปิดเสียง clip ที่เลือก"],
                 ["S", "สลับ Snap"],
                 ["+ / −  ·  \\", "ซูม เข้า/ออก · พอดีจอ"],
+                ["ลากบนไม้บรรทัด", "กำหนดช่วงวนซ้ำ (loop region)"],
+                ["ดับเบิลคลิก / ✕ บนแถบ loop", "ล้างช่วงวนซ้ำ"],
               ].map(([k, d]) => (
                 <div className="kb-row" key={k}><kbd>{k}</kbd><span>{d}</span></div>
               ))}
@@ -538,20 +616,91 @@ export function ClipTimeline({
 
       <div className="cliptl-scroll" ref={scrollRef} onScroll={(e) => setCollapsed(e.currentTarget.scrollLeft > 40)}>
         <div className="cliptl-inner" style={{ width: headW + contentW }}>
-          {/* ruler — คลิกเพื่อ seek playhead ไปยังตำแหน่งเวลานั้น */}
+          {/* ruler — คลิกเพื่อ seek, ลากเพื่อกำหนดช่วงวนซ้ำ (loop region) */}
           <div
             className="cliptl-ruler"
-            style={{ paddingLeft: headW, cursor: "pointer" }}
-            onClick={(e) => {
+            style={{ paddingLeft: headW, cursor: "pointer", position: "relative" }}
+            onPointerDown={(e) => {
+              if ((e.target as HTMLElement).closest(".cliptl-loop-clear")) return;
               const rect = e.currentTarget.getBoundingClientRect();
               const x = e.clientX - rect.left - headW;
               if (x < 0) return;
-              seekTo(x / pps);
+              (e.target as HTMLElement).setPointerCapture(e.pointerId);
+              const anchorSec = Math.max(0, x / pps);
+              loopDrag.current = { x0: e.clientX, anchorSec };
+              setLoopDragPreview({ start: anchorSec, end: anchorSec });
+            }}
+            onPointerMove={(e) => {
+              if (!loopDrag.current) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left - headW;
+              const cur = Math.max(0, x / pps);
+              const a = loopDrag.current.anchorSec;
+              setLoopDragPreview({ start: Math.min(a, cur), end: Math.max(a, cur) });
+            }}
+            onPointerUp={(e) => {
+              if (!loopDrag.current) return;
+              (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+              const moved = Math.abs(e.clientX - loopDrag.current.x0) > 3;
+              loopDrag.current = null;
+              if (moved && loopDragPreview && loopDragPreview.end - loopDragPreview.start > 0.05) {
+                setLoopRegion({ start: loopDragPreview.start, end: loopDragPreview.end });
+                setLoopOn(true);
+              } else {
+                // คลิกธรรมดา (ไม่ลาก) → seek
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left - headW;
+                if (x >= 0) seekTo(x / pps);
+              }
+              setLoopDragPreview(null);
             }}
           >
             {Array.from({ length: Math.ceil(duration) + 1 }, (_, i) => (
               <span key={i} className="cliptl-rtick mono" style={{ left: headW + i * pps }}>{i % 2 === 0 ? fmt(i) : ""}</span>
             ))}
+            {/* แถบ preview ระหว่างลาก */}
+            {loopDragPreview && (
+              <div
+                className="cliptl-loop-band preview"
+                style={{
+                  position: "absolute", top: 0, bottom: 0,
+                  left: headW + loopDragPreview.start * pps,
+                  width: Math.max(1, (loopDragPreview.end - loopDragPreview.start) * pps),
+                  background: "color-mix(in srgb, var(--accent, #c7f046) 28%, transparent)",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+            {/* แถบ loop region ที่ตั้งไว้แล้ว */}
+            {loopRegion && !loopDragPreview && (
+              <div
+                className={`cliptl-loop-band ${loopOn ? "on" : "off"}`}
+                title="ดับเบิลคลิกเพื่อล้างช่วงวนซ้ำ"
+                style={{
+                  position: "absolute", top: 0, bottom: 0,
+                  left: headW + loopRegion.start * pps,
+                  width: Math.max(1, (loopRegion.end - loopRegion.start) * pps),
+                  background: loopOn
+                    ? "color-mix(in srgb, var(--accent, #c7f046) 32%, transparent)"
+                    : "color-mix(in srgb, #888 22%, transparent)",
+                  borderLeft: "1px solid var(--accent, #c7f046)",
+                  borderRight: "1px solid var(--accent, #c7f046)",
+                  cursor: "pointer",
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onDoubleClick={(e) => { e.stopPropagation(); setLoopRegion(null); setLoopOn(false); }}
+              >
+                <span
+                  className="cliptl-loop-clear"
+                  title="ล้างช่วงวนซ้ำ"
+                  style={{
+                    position: "absolute", top: 1, right: 1, fontSize: 10, lineHeight: 1,
+                    padding: "1px 3px", borderRadius: 3, background: "rgba(0,0,0,.45)", color: "#fff", cursor: "pointer",
+                  }}
+                  onClick={(e) => { e.stopPropagation(); setLoopRegion(null); setLoopOn(false); }}
+                >✕</span>
+              </div>
+            )}
           </div>
 
           {/* dynamic grid (ตาม BPM + time signature) */}
@@ -570,6 +719,25 @@ export function ClipTimeline({
               />
             );
           })()}
+
+          {/* loop region band — ทาบผ่านทุกเลนตามช่วง [loopStart, loopEnd] */}
+          {loopRegion && (
+            <div
+              className={`cliptl-loop-band-lanes ${loopOn ? "on" : "off"}`}
+              style={{
+                position: "absolute", top: 20, bottom: 0,
+                left: headW + loopRegion.start * pps,
+                width: Math.max(1, (loopRegion.end - loopRegion.start) * pps),
+                background: loopOn
+                  ? "color-mix(in srgb, var(--accent, #c7f046) 8%, transparent)"
+                  : "color-mix(in srgb, #888 6%, transparent)",
+                borderLeft: "1px dashed var(--accent, #c7f046)",
+                borderRight: "1px dashed var(--accent, #c7f046)",
+                zIndex: 1,
+                pointerEvents: "none",
+              }}
+            />
+          )}
 
           {/* playhead + grab handle ด้านบน (ลากเพื่อ scrub) */}
           <div className="cliptl-playhead" ref={headRef} style={{ left: headW }}>

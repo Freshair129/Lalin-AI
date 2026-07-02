@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRemixStore } from "../store/useRemixStore";
 import {
   ReactFlow,
@@ -27,6 +27,7 @@ import { LibraryPanel } from "./LibraryPanel";
 import { FxRack } from "./FxRack";
 import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
+import { StemMixer, DEFAULT_STEM_GAINS, type StemGains } from "./StemMixer";
 
 // สี lane (DAW) — ส่งเป็น hex เพราะ SVG attribute ไม่ resolve var()
 const C = { vocal: "#9b6cf0", beat: "#3d9be0", master: "#c7f046" };
@@ -115,6 +116,15 @@ export function RemixPanel() {
   const setShowDesigner = useRemixStore((s) => s.setShowDesigner);
   const loadRecipe = useRemixStore((s) => s.loadRecipe);
 
+  // stem_gains (WP 3.4 per-stem faders) — เก็บ local state ไม่เข้า store กลาง
+  // (store ยังไม่มี field นี้ + ไม่ต้อง persist ข้าม snapshot ตอนนี้)
+  const [stemGains, setStemGains] = useState<StemGains>({ ...DEFAULT_STEM_GAINS });
+  // stem mixer มีผลจริงเมื่อค่าต่างจาก default อย่างน้อยหนึ่ง stem — ไม่งั้นส่ง undefined
+  // ให้ backend ใช้เส้นทาง two-stems=vocals แบบเดิม (เร็วกว่า ไม่ต้องแยก stem เต็ม 4 ทาง)
+  const stemGainsActive = (Object.keys(stemGains) as (keyof StemGains)[]).some(
+    (k) => Math.abs(stemGains[k] - 1) > 1e-6
+  );
+
   const { job, busy, start } = useJob();
 
   // ── clip engine (shared ทั้ง workspace ผ่าน EngineProvider) ──
@@ -180,6 +190,8 @@ export function RemixPanel() {
         reverb,
         delay,
         target_lufs: lufs,
+        // ส่งเฉพาะตอนมีการปรับ fader จริง — ไม่งั้น backend ใช้เส้นทาง two-stems เดิม (เร็วกว่า)
+        stem_gains: stemGainsActive ? stemGains : undefined,
       })
     );
 
@@ -500,6 +512,25 @@ export function RemixPanel() {
                 mEcho={mEcho} setMEcho={setMEcho}
                 mComp={mComp} setMComp={setMComp}
               />
+              <div className="bento-tile glass wide" style={{ marginTop: 12 }}>
+                <div className="bento-head">
+                  <span className="bento-dot" style={{ background: "#e0863d" }} />
+                  <b>Stem Mixer</b>
+                  <span className="bento-sub">VOCALS · DRUMS · BASS · OTHER</span>
+                </div>
+                <div style={{ padding: "10px 6px" }}>
+                  <StemMixer gains={stemGains} onChange={setStemGains} />
+                  <div className="hint" style={{ marginTop: 8, fontSize: 10, color: "var(--amber)" }}>
+                    * ใน remix แบบวางเสียงร้องบน beat ใหม่ ตอนนี้ตัวปรับ “ร้อง” มีผลกับผลลัพธ์จริง —
+                    drums/bass/other จะมีผลเมื่อผสม instrumental จากเพลงต้นฉบับ (โหมดถัดไป)
+                  </div>
+                  {!stemGainsActive && (
+                    <div className="hint mono" style={{ marginTop: 4, fontSize: 10 }}>
+                      ยังไม่ปรับ — ใช้แยก stem แบบเร็ว (vocal/instrumental)
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

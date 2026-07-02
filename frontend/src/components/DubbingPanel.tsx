@@ -17,6 +17,15 @@ export function DubbingPanel() {
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
 
+  // ── เกลาบทให้พอดีเวลา (copilot แยก ไม่ผูกกับ job พากย์หลัก) ──
+  const [refineText, setRefineText] = useState("");
+  const [refineSec, setRefineSec] = useState(3);
+  const [refineTone, setRefineTone] = useState<"formal" | "casual">("formal");
+  const [refineResult, setRefineResult] = useState<string | null>(null);
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     voicesApi.list().then((r) => {
       setVoices(r.voices);
@@ -45,6 +54,36 @@ export function DubbingPanel() {
         translate,
       })
     );
+  };
+
+  // เรียกสมองให้เกลาบทให้ความยาวคำพูดพอดีกับช่องเวลา
+  const runRefine = async () => {
+    if (!refineText.trim()) return;
+    setRefining(true);
+    setRefineError(null);
+    setCopied(false);
+    try {
+      const r = await dubbing.refine({
+        text: refineText,
+        target_sec: refineSec,
+        tone: refineTone,
+      });
+      setRefineResult(r.refined);
+    } catch (e) {
+      setRefineError("เกลาบทไม่สำเร็จ — ลองใหม่อีกครั้ง");
+    } finally {
+      setRefining(false);
+    }
+  };
+
+  const copyRefined = async () => {
+    if (!refineResult) return;
+    try {
+      await navigator.clipboard.writeText(refineResult);
+      setCopied(true);
+    } catch {
+      /* clipboard ไม่พร้อมใช้งาน — เงียบไว้ */
+    }
   };
 
   // ส่งเสียงพากย์ที่ได้ลง timeline กลาง (แทร็ก vocal)
@@ -133,6 +172,66 @@ export function DubbingPanel() {
           )}
         </div>
       )}
+
+      {/* ── เกลาบทให้พอดีเวลา: ตัวช่วยแยก ใช้ตอนคำแปลยาวเกินช่องเวลาเดิม ── */}
+      <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border, #333)" }}>
+        <h3 style={{ margin: "0 0 0.25rem" }}>✂ เกลาบทให้พอดีเวลา</h3>
+        <p className="hint">
+          วางประโยคที่แปลแล้วยาวเกินช่องเวลา ให้สมองช่วยตัด/กระชับ โดยคงความหมายเดิม —
+          ใช้แก้ปัญหาเสียงพากย์ถูกยืด/บีบมากเกินไปตอน fit ความยาว
+        </p>
+
+        <label className="field">
+          <span>ประโยค (คำแปล)</span>
+          <textarea
+            rows={3}
+            value={refineText}
+            onChange={(e) => setRefineText(e.target.value)}
+            placeholder="วางบทพากย์ที่ยาวเกินช่องเวลาตรงนี้…"
+          />
+        </label>
+
+        <div className="row">
+          <label className="field">
+            <span>ช่องเวลา (วินาที)</span>
+            <input
+              type="number"
+              min={0.5}
+              step={0.5}
+              value={refineSec}
+              onChange={(e) => setRefineSec(Math.max(0.5, Number(e.target.value) || 0.5))}
+            />
+          </label>
+          <label className="field">
+            <span>โทนเสียง</span>
+            <select value={refineTone} onChange={(e) => setRefineTone(e.target.value as "formal" | "casual")}>
+              <option value="formal">ทางการ</option>
+              <option value="casual">กันเอง</option>
+            </select>
+          </label>
+        </div>
+
+        <button className="primary" onClick={runRefine} disabled={refining || !refineText.trim()}>
+          {refining ? "กำลังเกลาบท…" : "✂ เกลาบทให้พอดีเวลา"}
+        </button>
+
+        {refineError && <p className="hint">⚠ {refineError}</p>}
+
+        {refineResult && (
+          <div className="row" style={{ flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem", alignItems: "flex-start" }}>
+            <p style={{ flex: 1, minWidth: "200px", background: "rgba(255,255,255,0.04)", padding: "0.5rem", borderRadius: "6px" }}>
+              {refineResult}
+            </p>
+            <button
+              className="primary"
+              style={{ background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)" }}
+              onClick={copyRefined}
+            >
+              {copied ? "✓ คัดลอกแล้ว" : "⧉ คัดลอก"}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

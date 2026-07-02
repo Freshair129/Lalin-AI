@@ -72,6 +72,9 @@ class RemixRequest(BaseModel):
     )
     reverb: float = 0.16
     delay: float = 0.12
+    stem_gains: dict[str, float] | None = Field(
+        default=None, description="gain ต่อ stem (vocals/drums/bass/other); None = ข้าม 4-stem"
+    )
 
 
 # ── Jobs ────────────────────────────────────────────────────
