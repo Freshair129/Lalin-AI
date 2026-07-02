@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { tts, voices as voicesApi, type Voice } from "../api";
+import { files, tts, voices as voicesApi, type Voice } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
+import { useEngine } from "../store/engineContext";
+import { makeClip } from "../timeline/clipModel";
 
 // Voice Cloning: พิมพ์ข้อความ → อ่านออกเสียงด้วยเสียงที่โคลน
 export function TTSPanel() {
@@ -11,6 +13,8 @@ export function TTSPanel() {
   const [language, setLanguage] = useState("th");
   const [speed, setSpeed] = useState(1.0);
   const { job, busy, start } = useJob();
+  const engine = useEngine();
+  const [addedMsg, setAddedMsg] = useState(false);
 
   useEffect(() => {
     voicesApi.list().then((r) => {
@@ -19,8 +23,23 @@ export function TTSPanel() {
     }).catch(() => {});
   }, []);
 
-  const run = () =>
+  const run = () => {
+    setAddedMsg(false);
     start(() => tts.synth({ text, voice_id: voiceId, language, speed }));
+  };
+
+  // ส่งเสียงที่สังเคราะห์แล้วลง timeline กลาง (แทร็ก vocal)
+  const addToTimeline = () => {
+    const output = job?.result?.output;
+    if (!output) return;
+    const track = engine.project.tracks.find((t) => t.id === "vocal") ?? engine.project.tracks[0];
+    if (!track) return;
+    const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    const clip = makeClip(files.downloadUrl(output), "#9b6cf0");
+    clip.start = start;
+    engine.addClip(track.id, clip);
+    setAddedMsg(true);
+  };
 
   return (
     <div className="panel">
@@ -56,6 +75,19 @@ export function TTSPanel() {
       </button>
 
       <JobProgress job={job} />
+
+      {job?.status === "done" && job.result?.output && (
+        <div className="row" style={{ gap: "0.5rem", marginTop: "0.5rem", alignItems: "center" }}>
+          <button
+            className="primary"
+            style={{ background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)" }}
+            onClick={addToTimeline}
+          >
+            ＋ ลง Timeline
+          </button>
+          {addedMsg && <span className="hint">✓ เพิ่มลง Timeline แล้ว</span>}
+        </div>
+      )}
     </div>
   );
 }

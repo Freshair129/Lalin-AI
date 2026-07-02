@@ -75,6 +75,7 @@ export function useClipEngine() {
   const muteClip = useCallback((tid: string, cid: string) => commit(ops.toggleClipMute(project, tid, cid)), [commit, project]);
   const addClip = useCallback((tid: string, clip: Clip) => commit(ops.addClip(project, tid, clip)), [commit, project]);
   const setGain = useCallback((tid: string, cid: string, g: number) => commit(ops.setClipGain(project, tid, cid, g)), [commit, project]);
+  const setFade = useCallback((tid: string, cid: string, fadeIn: number, fadeOut: number) => commit(ops.setClipFade(project, tid, cid, fadeIn, fadeOut)), [commit, project]);
   const toggleTrack = useCallback((tid: string, what: "muted" | "solo" | "locked") => commit(ops.toggleTrack(project, tid, what)), [commit, project]);
 
   // ── undo/redo ─────────────────────────────────────────────
@@ -129,7 +130,7 @@ export function useClipEngine() {
     project, selTrack, selClip,
     canUndo: past.current.length > 0, canRedo: future.current.length > 0, histTick,
     setTrackSource, hydrateDuration,
-    move, slice, clone, remove, muteClip, addClip, setGain, toggleTrack, renameTrack, setTrackColor, reorderTrack,
+    move, slice, clone, remove, muteClip, addClip, setGain, setFade, toggleTrack, renameTrack, setTrackColor, reorderTrack,
     undo, redo, select, loadProject,
   };
 }

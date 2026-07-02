@@ -24,6 +24,8 @@ export interface Clip {
   gain: number;        // 0..1
   muted: boolean;
   color: string;
+  fadeIn?: number;     // วินาที fade-in จากจุดเริ่ม clip (default 0/undefined)
+  fadeOut?: number;    // วินาที fade-out ก่อนจุดจบ clip (default 0/undefined)
 }
 
 // ── Envelope: เส้น automation (gain/pitch/pan ตามเวลา) ───────

@@ -160,6 +160,21 @@ export function toggleClipMute(
   );
 }
 
+// ── setClipFade: set fadeIn/fadeOut (seconds, clamped >= 0) ─────────────────
+export function setClipFade(
+  p: Project,
+  trackId: string,
+  clipId: string,
+  fadeIn: number,
+  fadeOut: number,
+): Project {
+  const fi = Math.max(0, fadeIn);
+  const fo = Math.max(0, fadeOut);
+  return mapTrackClips(p, trackId, clips =>
+    clips.map(c => (c.id === clipId ? { ...c, fadeIn: fi, fadeOut: fo } : c)),
+  );
+}
+
 // ── toggleTrack: toggle a track-level boolean flag ───────────────────────────
 export function toggleTrack(
   p: Project,

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { dubbing, files, voices as voicesApi, type Voice } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
+import { useEngine } from "../store/engineContext";
+import { makeClip } from "../timeline/clipModel";
 
 // พากย์เสียง: อัปโหลดไฟล์ต้นฉบับ → เลือกเสียง+ภาษา → ถอด/แปล/พากย์
 export function DubbingPanel() {
@@ -12,6 +14,8 @@ export function DubbingPanel() {
   const [source, setSource] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const { job, busy, start } = useJob();
+  const engine = useEngine();
+  const [addedMsg, setAddedMsg] = useState(false);
 
   useEffect(() => {
     voicesApi.list().then((r) => {
@@ -31,7 +35,8 @@ export function DubbingPanel() {
     }
   };
 
-  const run = () =>
+  const run = () => {
+    setAddedMsg(false);
     start(() =>
       dubbing.run({
         source_audio: source,
@@ -40,6 +45,20 @@ export function DubbingPanel() {
         translate,
       })
     );
+  };
+
+  // ส่งเสียงพากย์ที่ได้ลง timeline กลาง (แทร็ก vocal)
+  const addToTimeline = () => {
+    const output = job?.result?.output;
+    if (!output) return;
+    const track = engine.project.tracks.find((t) => t.id === "vocal") ?? engine.project.tracks[0];
+    if (!track) return;
+    const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    const clip = makeClip(files.downloadUrl(basename(output)), "#9b6cf0");
+    clip.start = start;
+    engine.addClip(track.id, clip);
+    setAddedMsg(true);
+  };
 
   return (
     <div className="panel">
@@ -79,7 +98,17 @@ export function DubbingPanel() {
       <JobProgress job={job} />
 
       {job?.status === "done" && job.result && (
-        <div className="row" style={{ flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
+        <div className="row" style={{ flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem", alignItems: "center" }}>
+          {job.result.output && (
+            <button
+              className="primary"
+              style={{ background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)" }}
+              onClick={addToTimeline}
+            >
+              ＋ ลง Timeline
+            </button>
+          )}
+          {addedMsg && <span className="hint">✓ เพิ่มลง Timeline แล้ว</span>}
           {job.result.video_output && (
             <a
               className="dl"

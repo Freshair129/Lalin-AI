@@ -2,6 +2,8 @@ import { useState } from "react";
 import { files, mastering } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
+import { useEngine } from "../store/engineContext";
+import { makeClip } from "../timeline/clipModel";
 
 // Mastering: อัปโหลดเพลง → (ทางเลือก) เพลงอ้างอิง → มาสเตอร์
 export function MasteringPanel() {
@@ -10,6 +12,8 @@ export function MasteringPanel() {
   const [targetLufs, setTargetLufs] = useState(-14);
   const [format, setFormat] = useState("wav");
   const { job, busy, start } = useJob();
+  const engine = useEngine();
+  const [addedMsg, setAddedMsg] = useState(false);
 
   const upload = async (f: File | null, set: (s: string) => void) => {
     if (!f) return;
@@ -17,7 +21,8 @@ export function MasteringPanel() {
     set(r.filename);
   };
 
-  const run = () =>
+  const run = () => {
+    setAddedMsg(false);
     start(() =>
       mastering.run({
         source_audio: source,
@@ -26,6 +31,20 @@ export function MasteringPanel() {
         target_format: format,
       })
     );
+  };
+
+  // ส่งเพลงที่มาสเตอร์แล้วลง timeline กลาง (แทร็ก master)
+  const addToTimeline = () => {
+    const output = job?.result?.output;
+    if (!output) return;
+    const track = engine.project.tracks.find((t) => t.id === "master") ?? engine.project.tracks[0];
+    if (!track) return;
+    const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    const clip = makeClip(files.downloadUrl(output), "#c7f046");
+    clip.start = start;
+    engine.addClip(track.id, clip);
+    setAddedMsg(true);
+  };
 
   return (
     <div className="panel">
@@ -66,6 +85,19 @@ export function MasteringPanel() {
       </button>
 
       <JobProgress job={job} />
+
+      {job?.status === "done" && job.result?.output && (
+        <div className="row" style={{ gap: "0.5rem", marginTop: "0.5rem", alignItems: "center" }}>
+          <button
+            className="primary"
+            style={{ background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)" }}
+            onClick={addToTimeline}
+          >
+            ＋ ลง Timeline
+          </button>
+          {addedMsg && <span className="hint">✓ เพิ่มลง Timeline แล้ว</span>}
+        </div>
+      )}
     </div>
   );
 }

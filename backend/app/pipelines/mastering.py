@@ -17,11 +17,21 @@ from ..utils.ids import short_id
 
 
 def master_with_reference(target: str, reference: str, out_path: str) -> str:
-    """Matchering: ทำให้ target ฟังดูเหมือน reference."""
+    """Matchering: ทำให้ target ฟังดูเหมือน reference.
+
+    matchering เป็น optional/GPL dep (BYOM) — ถ้ายังไม่ได้ติดตั้ง จะแจ้ง error
+    ภาษาไทยบอกวิธีติดตั้ง แทนที่จะ crash แบบไม่มีคำอธิบาย. ใช้โหมด auto
+    (`master_auto`, pyloudnorm) แทนได้ถ้าไม่ต้องการติดตั้งปลั๊กอินนี้.
+    """
     try:
         import matchering as mg
     except ImportError as e:  # noqa: BLE001
-        raise RuntimeError("ยังไม่ได้ติดตั้ง matchering — ดู setup script") from e
+        raise RuntimeError(
+            "โหมด reference mastering ต้องใช้ปลั๊กอิน matchering ซึ่งยังไม่ได้ติดตั้ง "
+            "(เป็น optional component — license GPLv3) "
+            "ติดตั้งด้วยคำสั่ง `uv pip install matchering` แล้วลองใหม่อีกครั้ง "
+            "หรือใช้โหมด auto (ปรับความดังอัตโนมัติ ไม่ต้องมีเพลงอ้างอิง) แทนได้"
+        ) from e
 
     mg.process(
         target=target,

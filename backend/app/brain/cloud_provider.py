@@ -8,6 +8,7 @@ import SDK แบบ lazy เพื่อให้เซิร์ฟเวอร
 """
 from __future__ import annotations
 
+import json
 from typing import AsyncIterator
 
 from .base import ChatResult, LLMProvider, Message
@@ -126,6 +127,89 @@ class CloudProvider(LLMProvider):
             delta = chunk.choices[0].delta.content
             if delta:
                 yield delta
+
+    # ── chat_with_tools ─────────────────────────────────────
+    @staticmethod
+    def _to_anthropic_tools(tools: list[dict]) -> list[dict]:
+        """แปลง tool schema กลาง -> รูปแบบ Anthropic tools API."""
+        out = []
+        for t in tools:
+            out.append(
+                {
+                    "name": t["name"],
+                    "description": t.get("description", ""),
+                    "input_schema": t.get("input_schema") or t.get("parameters") or {
+                        "type": "object",
+                        "properties": {},
+                    },
+                }
+            )
+        return out
+
+    @staticmethod
+    def _to_openai_tools(tools: list[dict]) -> list[dict]:
+        """แปลง tool schema กลาง -> รูปแบบ OpenAI function-calling."""
+        out = []
+        for t in tools:
+            out.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": t["name"],
+                        "description": t.get("description", ""),
+                        "parameters": t.get("input_schema") or t.get("parameters") or {
+                            "type": "object",
+                            "properties": {},
+                        },
+                    },
+                }
+            )
+        return out
+
+    async def chat_with_tools(
+        self,
+        messages: list[Message],
+        tools: list[dict],
+        *,
+        temperature: float = 0.2,
+    ) -> dict:
+        if self.provider == "anthropic":
+            system, convo = self._split_system(messages)
+            client = self._anthropic_client()
+            resp = await client.messages.create(
+                model=self.model,
+                system=system or None,
+                messages=convo,
+                tools=self._to_anthropic_tools(tools),
+                temperature=temperature,
+                max_tokens=2048,
+            )
+            text_parts: list[str] = []
+            tool_calls: list[dict] = []
+            for block in resp.content:
+                if block.type == "text":
+                    text_parts.append(block.text)
+                elif block.type == "tool_use":
+                    tool_calls.append({"name": block.name, "arguments": block.input or {}})
+            return {"text": "".join(text_parts), "tool_calls": tool_calls}
+
+        # openai / openrouter (OpenAI-compatible function-calling)
+        client = self._openai_client()
+        resp = await client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+            tools=self._to_openai_tools(tools),
+            temperature=temperature,
+        )
+        choice = resp.choices[0].message
+        tool_calls: list[dict] = []
+        for tc in choice.tool_calls or []:
+            try:
+                args = json.loads(tc.function.arguments or "{}")
+            except (ValueError, TypeError):
+                args = {}
+            tool_calls.append({"name": tc.function.name, "arguments": args})
+        return {"text": choice.content or "", "tool_calls": tool_calls}
 
     async def health(self) -> dict:
         if not self.api_key:

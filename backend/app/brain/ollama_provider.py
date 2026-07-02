@@ -73,6 +73,95 @@ class OllamaProvider(LLMProvider):
                     if chunk.get("done"):
                         break
 
+    # ── chat_with_tools ─────────────────────────────────────
+    @staticmethod
+    def _to_ollama_tools(tools: list[dict]) -> list[dict]:
+        """แปลง tool schema กลาง -> รูปแบบ Ollama (เหมือน OpenAI function-calling)."""
+        out = []
+        for t in tools:
+            out.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": t["name"],
+                        "description": t.get("description", ""),
+                        "parameters": t.get("input_schema") or t.get("parameters") or {
+                            "type": "object",
+                            "properties": {},
+                        },
+                    },
+                }
+            )
+        return out
+
+    async def chat_with_tools(
+        self,
+        messages: list[Message],
+        tools: list[dict],
+        *,
+        temperature: float = 0.2,
+    ) -> dict:
+        """ลองใช้ tool-calling ของ Ollama ก่อน (โมเดลที่รองรับ เช่น qwen2.5/llama3.1)
+        ถ้าไม่รองรับ (ไม่มี field tool_calls กลับมา) → fallback เป็นสั่งให้ตอบ JSON
+        แล้ว parse เอง — ถ้า parse ไม่ได้ ก็คืนข้อความล้วนแบบไม่พัง
+        """
+        payload = self._payload(messages, temperature, max_tokens=2048, stream=False)
+        payload["tools"] = self._to_ollama_tools(tools)
+        try:
+            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+                r = await client.post(f"{self.base_url}/api/chat", json=payload)
+                r.raise_for_status()
+                data = r.json()
+            msg = data.get("message", {})
+            raw_calls = msg.get("tool_calls") or []
+            if raw_calls:
+                tool_calls = []
+                for c in raw_calls:
+                    fn = c.get("function", {})
+                    args = fn.get("arguments")
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except (ValueError, TypeError):
+                            args = {}
+                    tool_calls.append({"name": fn.get("name", ""), "arguments": args or {}})
+                return {"text": _strip_think(msg.get("content", "")), "tool_calls": tool_calls}
+        except (httpx.HTTPError, KeyError, ValueError):
+            pass  # โมเดล/เวอร์ชันนี้อาจไม่รองรับ tools → ไปทาง fallback
+
+        # ── fallback: ขอให้ตอบเป็น JSON object แล้ว parse เอง ──
+        tool_desc = "\n".join(
+            f"- {t['name']}: {t.get('description', '')} "
+            f"(arguments schema: {json.dumps(t.get('input_schema') or t.get('parameters') or {}, ensure_ascii=False)})"
+            for t in tools
+        )
+        instruction = Message(
+            "system",
+            "คุณสามารถเรียกใช้เครื่องมือ (tools) ต่อไปนี้ได้ ถ้าจำเป็น:\n"
+            f"{tool_desc}\n\n"
+            "ถ้าต้องการเรียกเครื่องมือ ให้ตอบเป็น JSON object รูปแบบนี้เท่านั้น "
+            '(ไม่ต้องมีข้อความอื่นปน): '
+            '{"tool_calls": [{"name": "...", "arguments": {...}}], "text": "..."}\n'
+            "ถ้าไม่ต้องเรียกเครื่องมือ ให้ตอบข้อความปกติได้เลย",
+        )
+        fallback_messages = [instruction, *messages]
+        res = await self.chat(fallback_messages, temperature=temperature, max_tokens=2048)
+        text = res.text.strip()
+        try:
+            start = text.index("{")
+            end = text.rindex("}") + 1
+            parsed = json.loads(text[start:end])
+            calls = parsed.get("tool_calls") or []
+            norm = [
+                {"name": c.get("name", ""), "arguments": c.get("arguments") or {}}
+                for c in calls
+                if isinstance(c, dict)
+            ]
+            return {"text": parsed.get("text", "") or "", "tool_calls": norm}
+        except (ValueError, KeyError):
+            # parse ไม่ได้ → เสื่อมสภาพอย่างนุ่มนวล คืนข้อความล้วน ไม่มี tool_calls
+            return {"text": text, "tool_calls": []}
+
     async def health(self) -> dict:
         try:
             async with httpx.AsyncClient(timeout=5) as client:

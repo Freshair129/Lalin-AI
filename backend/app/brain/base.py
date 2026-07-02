@@ -54,6 +54,25 @@ class LLMProvider(abc.ABC):
     async def health(self) -> dict:
         """ตรวจว่าสมองพร้อมใช้ไหม (เช่น Ollama รันอยู่/มี API key)."""
 
+    # ── tool-use (agent) ────────────────────────────────────
+    async def chat_with_tools(
+        self,
+        messages: list[Message],
+        tools: list[dict],
+        *,
+        temperature: float = 0.2,
+    ) -> dict:
+        """เรียกสมองแบบ "ใช้เครื่องมือได้" (function/tool calling)
+
+        คืนรูปแบบมาตรฐานเดียวกันทุก provider:
+            { "text": str, "tool_calls": [ {"name": str, "arguments": dict}, ... ] }
+
+        provider ที่ไม่รองรับ tool-calling จะได้ default นี้ (ตอบข้อความล้วน
+        ไม่มี tool_calls) — provider ที่รองรับให้ override เมธอดนี้
+        """
+        res = await self.chat(messages, temperature=temperature)
+        return {"text": res.text, "tool_calls": []}
+
     # ── helper ที่ใช้ร่วมกันได้ ─────────────────────────────
     async def translate(
         self, text: str, *, target_lang: str, source_lang: str | None = None

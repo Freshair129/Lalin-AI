@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ClipEngine } from "../timeline/useClipEngine";
-import { uid, type Clip } from "../timeline/clipModel";
+import { uid, makeClip, type Clip } from "../timeline/clipModel";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 import { StereoMeter } from "./StereoMeter";
 import { ChannelMeterBalance } from "./ChannelMeterBalance";
@@ -11,17 +11,20 @@ export type ClipCtx = { trackId: string; clipId: string; atSec: number; x: numbe
 
 // ── clip block (SVG waveform จาก peaks, ลากได้) ───────────────
 function ClipBlock({
-  clip, trackId, pps, selected, snap, onSelect, onContext, onMove, onHydrate,
+  clip, trackId, pps, selected, snap, onSelect, onContext, onMove, onHydrate, onFade,
 }: {
   clip: Clip; trackId: string; pps: number; selected: boolean; snap: number;
   onSelect: (tid: string, cid: string) => void;
   onContext: (c: ClipCtx) => void;
   onMove: (tid: string, cid: string, start: number) => void;
   onHydrate: (tid: string, cid: string, dur: number) => void;
+  onFade: (tid: string, cid: string, fadeIn: number, fadeOut: number) => void;
 }) {
   const [dec, setDec] = useState<Decoded | null>(null);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const drag = useRef<{ x0: number; s0: number; moved: boolean } | null>(null);
+  const [fadeDrag, setFadeDrag] = useState<{ side: "in" | "out"; val: number } | null>(null);
+  const fadeDragRef = useRef<{ side: "in" | "out"; x0: number; v0: number } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -65,6 +68,40 @@ function ClipBlock({
     else onSelect(trackId, clip.id);
   };
 
+  // ── fade handles (มุมบนซ้าย/ขวาของ clip) ─────────────────────
+  const fadeIn = fadeDrag?.side === "in" ? fadeDrag.val : (clip.fadeIn ?? 0);
+  const fadeOut = fadeDrag?.side === "out" ? fadeDrag.val : (clip.fadeOut ?? 0);
+
+  const onFadeHandleDown = (side: "in" | "out") => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const v0 = side === "in" ? fadeIn : fadeOut;
+    fadeDragRef.current = { side, x0: e.clientX, v0 };
+    setFadeDrag({ side, val: v0 });
+  };
+  const onFadeHandleMove = (e: React.PointerEvent) => {
+    const fd = fadeDragRef.current;
+    if (!fd) return;
+    const dx = e.clientX - fd.x0;
+    const raw = fd.side === "in" ? fd.v0 + dx / pps : fd.v0 - dx / pps;
+    const maxFade = Math.max(0, dur);
+    const val = Math.max(0, Math.min(maxFade, raw));
+    setFadeDrag({ side: fd.side, val });
+  };
+  const onFadeHandleUp = (e: React.PointerEvent) => {
+    const fd = fadeDragRef.current;
+    if (!fd) return;
+    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+    const finalIn = fd.side === "in" ? (fadeDrag?.val ?? fd.v0) : fadeIn;
+    const finalOut = fd.side === "out" ? (fadeDrag?.val ?? fd.v0) : fadeOut;
+    fadeDragRef.current = null;
+    setFadeDrag(null);
+    onFade(trackId, clip.id, finalIn, finalOut);
+  };
+
+  const fadeInPx = Math.min(width, fadeIn * pps);
+  const fadeOutPx = Math.min(width, fadeOut * pps);
+
   return (
     <div
       className={`clip ${selected ? "sel" : ""} ${clip.muted ? "muted" : ""}`}
@@ -85,6 +122,42 @@ function ClipBlock({
           return <rect key={i} x={i} y={(H - h) / 2} width={0.9} height={h} fill="rgba(0,0,0,0.42)" />;
         })}
       </svg>
+      {/* fade overlay (triangle, SVG viewBox 0 0 100 100 preserveAspectRatio="none" เพื่อยืดเต็มความสูง) — fade-in ซ้าย, fade-out ขวา */}
+      {fadeInPx > 0 && (
+        <svg
+          className="clip-fade-svg in"
+          viewBox="0 0 100 100" preserveAspectRatio="none"
+          style={{ position: "absolute", top: 0, left: 0, width: fadeInPx, height: "100%", pointerEvents: "none" }}
+        >
+          <polygon points="0,0 100,0 0,100" fill="rgba(0,0,0,0.5)" />
+        </svg>
+      )}
+      {fadeOutPx > 0 && (
+        <svg
+          className="clip-fade-svg out"
+          viewBox="0 0 100 100" preserveAspectRatio="none"
+          style={{ position: "absolute", top: 0, right: 0, width: fadeOutPx, height: "100%", pointerEvents: "none" }}
+        >
+          <polygon points="100,0 0,0 100,100" fill="rgba(0,0,0,0.5)" />
+        </svg>
+      )}
+      {/* fade handles — มุมบนซ้าย/ขวา */}
+      <div
+        className="clip-fade-handle in"
+        title="ลากเพื่อตั้งค่า fade-in"
+        style={{ position: "absolute", top: 0, left: fadeInPx, width: 10, height: 10, marginLeft: -5, borderRadius: "50%", background: "#fff", border: "1px solid rgba(0,0,0,.4)", cursor: "ew-resize", zIndex: 3 }}
+        onPointerDown={onFadeHandleDown("in")}
+        onPointerMove={onFadeHandleMove}
+        onPointerUp={onFadeHandleUp}
+      />
+      <div
+        className="clip-fade-handle out"
+        title="ลากเพื่อตั้งค่า fade-out"
+        style={{ position: "absolute", top: 0, right: fadeOutPx, width: 10, height: 10, marginRight: -5, borderRadius: "50%", background: "#fff", border: "1px solid rgba(0,0,0,.4)", cursor: "ew-resize", zIndex: 3 }}
+        onPointerDown={onFadeHandleDown("out")}
+        onPointerMove={onFadeHandleMove}
+        onPointerUp={onFadeHandleUp}
+      />
     </div>
   );
 }
@@ -136,6 +209,10 @@ export function ClipTimeline({
   const [showKeys, setShowKeys] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const clipboardRef = useRef<Clip | null>(null);
+  // WP2.2: drop target ของ lane (highlight ตอนลากไฟล์จาก Library มาวาง)
+  const [dropOverTrack, setDropOverTrack] = useState<string | null>(null);
+  // WP3.3: ลาก playhead (grab handle ด้านบน)
+  const playheadDrag = useRef<boolean>(false);
 
   const duration = Math.max(project.duration, 20);
   const contentW = duration * pps;
@@ -227,8 +304,29 @@ export function ClipTimeline({
         const node = ctx.createBufferSource();
         node.buffer = d.buffer;
         const g = ctx.createGain();
-        g.gain.value = c.gain;
         node.connect(g).connect(panner);
+        // fade in/out (linear ramp) — คำนวณเทียบกับเวลาจริงของ AudioContext
+        const fadeIn = Math.max(0, c.fadeIn ?? 0);
+        const fadeOut = Math.max(0, c.fadeOut ?? 0);
+        const t0 = ctx.currentTime + whenOffset; // เวลาที่ clip เริ่มเล่นจริง (อาจถูก seek ตัดหน้าไปแล้ว)
+        const clipStartCtxTime = ctx.currentTime + whenOffset - Math.max(0, seek - c.start); // เวลา ctx ที่ตรงกับ c.start จริง
+        const fadeInEndCtxTime = clipStartCtxTime + fadeIn;
+        const clipEndCtxTime = clipStartCtxTime + cdur;
+        const fadeOutStartCtxTime = clipEndCtxTime - fadeOut;
+        if (fadeIn > 0 && fadeInEndCtxTime > t0) {
+          const gAtStart = fadeIn > 0 ? Math.max(0, Math.min(1, (t0 - clipStartCtxTime) / fadeIn)) * c.gain : c.gain;
+          g.gain.setValueAtTime(gAtStart, t0);
+          g.gain.linearRampToValueAtTime(c.gain, fadeInEndCtxTime);
+        } else {
+          g.gain.setValueAtTime(c.gain, t0);
+        }
+        if (fadeOut > 0 && fadeOutStartCtxTime < clipEndCtxTime) {
+          const rampStart = Math.max(t0, fadeOutStartCtxTime);
+          // ถ้า seek เข้ามากลาง fade-out ต้องเริ่มที่ระดับ gain ที่ลดลงแล้ว ไม่ใช่ค่าเต็ม
+          const gAtRampStart = Math.max(0, Math.min(1, (clipEndCtxTime - rampStart) / fadeOut)) * c.gain;
+          g.gain.setValueAtTime(gAtRampStart, rampStart);
+          g.gain.linearRampToValueAtTime(0, clipEndCtxTime);
+        }
         try { node.start(ctx.currentTime + whenOffset, into, playDur); } catch { /* */ }
         nodesRef.current.push(node);
       }
@@ -440,8 +538,17 @@ export function ClipTimeline({
 
       <div className="cliptl-scroll" ref={scrollRef} onScroll={(e) => setCollapsed(e.currentTarget.scrollLeft > 40)}>
         <div className="cliptl-inner" style={{ width: headW + contentW }}>
-          {/* ruler */}
-          <div className="cliptl-ruler" style={{ paddingLeft: headW }}>
+          {/* ruler — คลิกเพื่อ seek playhead ไปยังตำแหน่งเวลานั้น */}
+          <div
+            className="cliptl-ruler"
+            style={{ paddingLeft: headW, cursor: "pointer" }}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left - headW;
+              if (x < 0) return;
+              seekTo(x / pps);
+            }}
+          >
             {Array.from({ length: Math.ceil(duration) + 1 }, (_, i) => (
               <span key={i} className="cliptl-rtick mono" style={{ left: headW + i * pps }}>{i % 2 === 0 ? fmt(i) : ""}</span>
             ))}
@@ -464,8 +571,33 @@ export function ClipTimeline({
             );
           })()}
 
-          {/* playhead */}
-          <div className="cliptl-playhead" ref={headRef} style={{ left: headW }} />
+          {/* playhead + grab handle ด้านบน (ลากเพื่อ scrub) */}
+          <div className="cliptl-playhead" ref={headRef} style={{ left: headW }}>
+            <div
+              className="cliptl-playhead-grip"
+              title="ลากเพื่อเลื่อน playhead"
+              style={{
+                position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+                width: 12, height: 12, borderRadius: "50%", background: "var(--accent, #c7f046)",
+                cursor: "ew-resize", pointerEvents: "auto", boxShadow: "0 0 6px rgba(0,0,0,.5)",
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                (e.target as HTMLElement).setPointerCapture(e.pointerId);
+                playheadDrag.current = true;
+              }}
+              onPointerMove={(e) => {
+                if (!playheadDrag.current || !scrollRef.current) return;
+                const rect = scrollRef.current.getBoundingClientRect();
+                const x = e.clientX - rect.left + scrollRef.current.scrollLeft - headW;
+                seekTo(Math.max(0, x / pps));
+              }}
+              onPointerUp={(e) => {
+                playheadDrag.current = false;
+                (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+              }}
+            />
+          </div>
 
           {/* tracks */}
           {project.tracks.map((t) => {
@@ -529,7 +661,34 @@ export function ClipTimeline({
                     />
                   </div>
                 </div>
-                <div className="cliptl-lane">
+                <div
+                  className="cliptl-lane"
+                  style={dropOverTrack === t.id ? { background: "color-mix(in srgb, var(--accent, #c7f046) 14%, transparent)", boxShadow: "inset 0 0 0 1px var(--accent, #c7f046)" } : undefined}
+                  onDragOver={(e) => {
+                    // WP2.2: รับ drop จาก Library เท่านั้น (MIME text/gmusic-clip) — ไม่แย่ง drag-reorder แทร็ก
+                    if (dragId) return;
+                    if (e.dataTransfer.types.includes("text/gmusic-clip")) {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "copy";
+                      if (dropOverTrack !== t.id) setDropOverTrack(t.id);
+                    }
+                  }}
+                  onDragLeave={() => { if (dropOverTrack === t.id) setDropOverTrack(null); }}
+                  onDrop={(e) => {
+                    const raw = e.dataTransfer.getData("text/gmusic-clip");
+                    setDropOverTrack(null);
+                    if (!raw) return;
+                    e.preventDefault();
+                    let payload: { src: string; label?: string; color?: string } | null = null;
+                    try { payload = JSON.parse(raw); } catch { payload = null; }
+                    if (!payload?.src) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    let startSec = Math.max(0, (e.clientX - rect.left) / pps);
+                    if (snapOn) { const snap = 60 / bpm; startSec = Math.round(startSec / snap) * snap; }
+                    const clip = { ...makeClip(payload.src, payload.color ?? t.color), start: startSec };
+                    engine.addClip(t.id, clip);
+                  }}
+                >
                   {t.clips.map((c) => (
                     <ClipBlock
                       key={c.id} clip={c} trackId={t.id} pps={pps}
@@ -539,9 +698,10 @@ export function ClipTimeline({
                       onContext={onContext}
                       onMove={engine.move}
                       onHydrate={engine.hydrateDuration}
+                      onFade={engine.setFade}
                     />
                   ))}
-                  {!t.clips.length && <span className="cliptl-empty">— โหลดไฟล์เสียงจากปุ่ม 🎤 Source / 🥁 Beat ด้านบน —</span>}
+                  {!t.clips.length && <span className="cliptl-empty">— โหลดไฟล์เสียงจากปุ่ม 🎤 Source / 🥁 Beat ด้านบน — หรือลากไฟล์จาก Library มาวาง —</span>}
                 </div>
               </div>
             );

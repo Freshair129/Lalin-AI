@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { packs, type Pack } from "../api";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { files, packs, type Pack } from "../api";
+
+// payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
+// (drop handler อยู่ในเลนของ StudioDock/ClipTimeline — worker อื่นรับผิดชอบ)
+export const CLIP_DRAG_MIME = "text/gmusic-clip";
+export interface LibraryDragPayload { src: string; label: string; color: string; }
 
 // Library (left sector) — เลือก sound/pack แบบ GarageBand
 export function LibraryPanel() {
@@ -39,6 +44,10 @@ export function LibraryPanel() {
             key={p.id}
             className={`lib-item ${sel?.id === p.id ? "on" : ""}`}
             onClick={() => setSel(p)}
+            draggable
+            title="ลากลง timeline ได้"
+            style={{ cursor: "grab" }}
+            onDragStart={(e) => onDragStart(e, p)}
           >
             <span className="lib-dot" style={{ background: p.color }} />
             <span className="lib-name">{p.name}</span>
@@ -49,4 +58,16 @@ export function LibraryPanel() {
       </div>
     </aside>
   );
+}
+
+// ตั้งค่า dataTransfer ตอนเริ่มลาก sound/pack จาก Library
+// src: URL ไฟล์เสียงของ pack (สมมติชื่อไฟล์ = pack id ที่ดาวน์โหลด/ติดตั้งแล้วในโฟลเดอร์ input)
+function onDragStart(e: DragEvent<HTMLButtonElement>, p: Pack) {
+  const payload: LibraryDragPayload = {
+    src: files.inputUrl(p.id),
+    label: p.name,
+    color: p.color || "#9b6cf0",
+  };
+  e.dataTransfer.effectAllowed = "copy";
+  e.dataTransfer.setData(CLIP_DRAG_MIME, JSON.stringify(payload));
 }

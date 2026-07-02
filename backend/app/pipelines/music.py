@@ -106,8 +106,16 @@ def detect_key(path: str) -> tuple[str, str, int]:
 #  3) Auto-tune (psola) — snap เข้าสเกลของ target key
 # ════════════════════════════════════════════════════════════
 def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str) -> np.ndarray:
+    """Snap เสียงร้องเข้าคีย์ด้วย psola. ถ้าไม่มี psola (optional/GPL dep) →
+    คืนเสียงต้นฉบับโดยไม่แก้พิตช์ (ข้ามขั้น auto-tune) พร้อม log แจ้งเตือน."""
     import librosa
-    import psola
+
+    try:
+        import psola
+    except ImportError:
+        print("⚠️ ไม่พบ psola — ข้ามขั้น auto-tune "
+              "(ติดตั้ง `uv pip install psola` เพื่อเปิดใช้ auto-tune)")
+        return vocal_stereo
 
     allowed = np.array(sorted({(key_idx + s) % 12 for s in _SCALE[mode]}))
     fmin, fmax = librosa.note_to_hz("C2"), librosa.note_to_hz("C6")
@@ -140,10 +148,20 @@ def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str) -> np.ndarray:
 def vocal_fx(vocal_stereo: np.ndarray, *, reverb: float = 0.16,
              delay: float = 0.12, comp_ratio: float = 3.5,
              air_db: float = 3.0) -> np.ndarray:
-    """EQ → gate → compress → ความใส → delay → reverb (ปรับความแรงได้)."""
-    from pedalboard import (Compressor, Delay, Gain, HighpassFilter,
-                            HighShelfFilter, LowShelfFilter, NoiseGate,
-                            Pedalboard, Reverb)
+    """EQ → gate → compress → ความใส → delay → reverb (ปรับความแรงได้).
+
+    ถ้าไม่มี pedalboard (optional/GPL dep) → คืนเสียงต้นฉบับโดยไม่ใส่ FX
+    (ข้ามขั้นนี้) พร้อม log แจ้งเตือนภาษาไทย.
+    """
+    try:
+        from pedalboard import (Compressor, Delay, Gain, HighpassFilter,
+                                HighShelfFilter, LowShelfFilter, NoiseGate,
+                                Pedalboard, Reverb)
+    except ImportError:
+        print("⚠️ ไม่พบ pedalboard — ข้ามขั้นใส่เอฟเฟกต์เสียงร้อง (vocal FX) "
+              "(ติดตั้ง `uv pip install pedalboard` เพื่อเปิดใช้)")
+        return vocal_stereo
+
     board = Pedalboard([
         NoiseGate(threshold_db=-45, ratio=2.0, release_ms=150),
         HighpassFilter(cutoff_frequency_hz=90),
@@ -334,12 +352,12 @@ def run_remix(
     if abs(ratio - 1.0) > 0.01:
         v = np.stack([librosa.effects.time_stretch(v[c], rate=ratio) for c in range(2)])
 
-    # 4) auto-tune เข้าคีย์ beat
+    # 4) auto-tune เข้าคีย์ beat (ถ้าไม่มี psola จะข้ามขั้นนี้ให้อัตโนมัติ — ดู autotune())
     if do_autotune:
         _p(0.65, "ปรับเสียงเข้าคีย์ (auto-tune)…")
         v = autotune(v, key_b[2], key_b[1])
 
-    # 5) vocal FX
+    # 5) vocal FX (ถ้าไม่มี pedalboard จะข้ามขั้นนี้ให้อัตโนมัติ — ดู vocal_fx())
     if do_fx:
         _p(0.8, "ใส่เอฟเฟกต์เสียงร้อง…")
         v = vocal_fx(v, reverb=reverb, delay=delay)
@@ -397,14 +415,31 @@ def apply_master_fx(
     echo: float = 0.0,     # 0..1 delay mix
     comp: bool = False,
 ) -> str:
-    """เบค master FX (reverb/echo/compressor) ลงไฟล์ → out_path."""
+    """เบค master FX (reverb/echo/compressor) ลงไฟล์ → out_path.
+
+    ถ้าไม่มี pedalboard (optional/GPL dep) → ข้ามการใส่ FX ทั้งหมด แล้วคัดลอก
+    ไฟล์ต้นฉบับไปยัง out_path ตรงๆ พร้อม log แจ้งเตือนภาษาไทย.
+    """
     import numpy as np
     import soundfile as sf
-    from pedalboard import Pedalboard, Reverb, Delay, Compressor
 
     data, sr = sf.read(input_path)
     if data.ndim == 1:
         data = np.stack([data, data], axis=1)
+
+    want_fx = comp or echo > 0 or reverb > 0
+    if not want_fx:
+        sf.write(out_path, data, sr)
+        return out_path
+
+    try:
+        from pedalboard import Pedalboard, Reverb, Delay, Compressor
+    except ImportError:
+        print("⚠️ ไม่พบ pedalboard — ข้ามการใส่ master FX (reverb/echo/compressor) "
+              "(ติดตั้ง `uv pip install pedalboard` เพื่อเปิดใช้) — คัดลอกไฟล์ต้นฉบับแทน")
+        sf.write(out_path, data, sr)
+        return out_path
+
     audio = data.T.astype("float32")  # pedalboard wants shape (channels, samples)
 
     chain = []
@@ -414,10 +449,6 @@ def apply_master_fx(
         chain.append(Delay(delay_seconds=0.3, feedback=0.32, mix=float(echo) * 0.6))
     if reverb > 0:
         chain.append(Reverb(room_size=0.5, wet_level=float(reverb) * 0.6, dry_level=1.0))
-    if not chain:
-        # ไม่มี fx → คัดลอกตรงๆ
-        sf.write(out_path, data, sr)
-        return out_path
 
     board = Pedalboard(chain)
     out = board(audio, sr)
