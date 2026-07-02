@@ -160,7 +160,14 @@ export interface Job {
   status: "queued" | "running" | "done" | "error";
   progress: number;
   message: string;
-  result?: { output?: string } & Record<string, unknown>;
+  result?: {
+    output?: string;
+    // dubbing: ไฟล์ซับไตเติล + วิดีโอที่รวมเสียงพากย์กลับเข้าไปแล้ว (ถ้าต้นฉบับเป็นวิดีโอ)
+    subtitle_srt?: string | null;
+    subtitle_vtt?: string | null;
+    video_output?: string;
+    video_mux_error?: string;
+  } & Record<string, unknown>;
   error?: string;
 }
 

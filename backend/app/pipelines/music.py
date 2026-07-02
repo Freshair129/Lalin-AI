@@ -216,25 +216,56 @@ def _master_to_target(
     target_lufs: float,
     ceiling_db: float = -1.0,
 ) -> tuple[np.ndarray, float]:
-    """Normalize toward target LUFS while respecting available headroom."""
+    """Normalize ไปยัง target LUFS แล้วกันพีคด้วย brickwall limiter (pedalboard.Limiter).
+
+    ลำดับ: วัด LUFS ต้นทาง → ใส่ gain ให้เข้าใกล้ target LUFS (ไม่ scale ตามพีคแบบเดิม
+    ที่บีบ dynamics) → ผ่าน limiter เพื่อกันพีคเกิน ceiling_db (true-peak) →
+    วัด LUFS ผลลัพธ์อีกครั้งเพื่อรายงาน/log.
+
+    ถ้าไม่มี pedalboard (optional/GPL dep) → fallback เป็น peak-scaling แบบเดิม
+    (ปลอดภัยแต่ dynamics ถูกบีบกว่า) พร้อม log แจ้งเตือนภาษาไทย.
+    """
     import pyloudnorm as pyln
 
     meter = pyln.Meter(sample_rate)
     ceiling = 10 ** (ceiling_db / 20)
     mastered = stereo_mix.astype(np.float32, copy=True)
 
-    peak = float(np.max(np.abs(mastered)))
-    if peak > ceiling:
-        mastered *= ceiling / peak
-
+    # 1) วัด LUFS ต้นทาง แล้วใส่ gain มุ่งสู่ target (ไม่ยุ่งกับพีคตรงนี้ —
+    #    ปล่อยให้ limiter จัดการพีคทีหลัง เพื่อไม่บีบ dynamics ก่อนเวลา)
     loudness_in = float(meter.integrated_loudness(mastered))
-    target_gain_db = target_lufs - loudness_in
+    # กันกรณี input เงียบ/เบากว่า gating threshold → pyloudnorm คืน -inf (หรือ nan)
+    # ถ้าไม่กัน target_gain_db จะเป็น +inf → mastered *= inf กลายเป็น nan ทั้งไฟล์
+    # (np.clip ไม่ล้าง nan) ทำให้ sf.write ได้ไฟล์เสีย — ข้าม gain แล้วปล่อยเงียบต่อ
+    if np.isfinite(loudness_in):
+        target_gain_db = target_lufs - loudness_in
+        mastered *= 10 ** (target_gain_db / 20)
 
-    peak = float(np.max(np.abs(mastered)))
-    if peak > 0:
-        max_gain_db = 20 * np.log10(ceiling / peak)
-        applied_gain_db = min(target_gain_db, max_gain_db)
-        mastered *= 10 ** (applied_gain_db / 20)
+    # 2) กันพีคด้วย brickwall limiter (pedalboard) — เก็บ dynamics ไว้ได้ดีกว่า
+    #    peak-scaling หยาบๆ ที่ลดทั้งเพลงตามจุดพีคจุดเดียว
+    try:
+        from pedalboard import Limiter, Pedalboard
+
+        board = Pedalboard([
+            Limiter(threshold_db=ceiling_db, release_ms=100),
+        ])
+        # pedalboard ต้องการ shape (channels, samples) — stereo_mix ที่รับเข้ามาเป็น
+        # (samples, channels) (เช่นจาก mix.T ใน run_remix ที่จะ sf.write ตรงๆ)
+        # จึง transpose เข้า/ออกรอบเรียก board() เพื่อความชัดเจนไม่เดา shape
+        is_samples_first = mastered.ndim == 2 and mastered.shape[1] in (1, 2) and mastered.shape[0] != mastered.shape[1]
+        board_input = np.ascontiguousarray(mastered.T if is_samples_first else mastered)
+        board_output = board(board_input, sample_rate)
+        mastered = np.ascontiguousarray(board_output.T if is_samples_first else board_output)
+    except ImportError:
+        # pedalboard ไม่มี (optional/GPL dep) → fallback peak-scale แบบเดิมกันพังตรงนี้
+        print("⚠️ ไม่พบ pedalboard — ใช้ peak-scaling สำรองแทน brickwall limiter "
+              "(ติดตั้ง `uv pip install pedalboard` เพื่อคุณภาพมาสเตอร์ที่ดีกว่า)")
+        peak = float(np.max(np.abs(mastered)))
+        if peak > ceiling:
+            mastered *= ceiling / peak
+
+    # กันพีคหลุดเพดานแบบ hard-clip เผื่อกรณี extreme (safety net)
+    np.clip(mastered, -1.0, 1.0, out=mastered)
 
     loudness_out = float(meter.integrated_loudness(mastered))
     return mastered, loudness_out

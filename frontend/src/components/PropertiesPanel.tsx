@@ -1,8 +1,6 @@
-import { useState } from "react";
 import type { TrackView } from "./Timeline";
 
 // Properties dock — แก้พารามิเตอร์ของ track ที่เลือก (แนว AudioNodes)
-// หมายเหตุ: speed/pitch/fade/reverse เป็น scaffold (backend one-shot ยังไม่ apply)
 export function PropertiesPanel({
   track, outputName, onToggle, onExport, exporting,
 }: {
@@ -31,9 +29,6 @@ function PropsBody({
   onExport: (fmt: "wav" | "mp3") => void;
   exporting: boolean;
 }) {
-  const [fade, setFade] = useState("none");
-  const [speed, setSpeed] = useState(100);
-  const [pitch, setPitch] = useState(0);
   const isMaster = track.id === "master";
 
   return (
@@ -49,30 +44,6 @@ function PropsBody({
         <button className={`props-tg ${track.locked ? "on" : ""}`} onClick={() => onToggle(track.id, "lock")}>Lock</button>
       </div>
 
-      <div className="props-sec">
-        <div className="props-label">Fade</div>
-        <select value={fade} onChange={(e) => setFade(e.target.value)}>
-          <option value="none">None</option>
-          <option value="linear">Linear</option>
-          <option value="bezier">Bezier</option>
-        </select>
-      </div>
-
-      <div className="props-sec">
-        <div className="props-label">Playback speed <span className="mono props-val">{speed}%</span></div>
-        <input type="range" min={50} max={150} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} />
-      </div>
-
-      <div className="props-sec">
-        <div className="props-label">Pitch <span className="mono props-val">{pitch > 0 ? "+" : ""}{pitch} st</span></div>
-        <input type="range" min={-12} max={12} value={pitch} onChange={(e) => setPitch(Number(e.target.value))} />
-      </div>
-
-      <div className="props-sec">
-        <div className="props-label">Effects</div>
-        <button className="props-apply">↺ Reverse audio</button>
-      </div>
-
       {isMaster && outputName && (
         <div className="props-sec props-export">
           <div className="props-label">Export {exporting && "· กำลังเบค…"}</div>
@@ -84,7 +55,7 @@ function PropsBody({
         </div>
       )}
 
-      <div className="props-note">* speed / pitch / fade เป็น scaffold — ยังไม่ส่งผลกับ backend</div>
+      <div className="props-note">การปรับ speed / pitch / fade แบบต่อ clip จะมาในเวอร์ชันถัดไป (ต้องใช้ DSP ต่อ clip)</div>
     </aside>
   );
 }

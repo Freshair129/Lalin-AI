@@ -77,6 +77,38 @@ export function DubbingPanel() {
       </button>
 
       <JobProgress job={job} />
+
+      {job?.status === "done" && job.result && (
+        <div className="row" style={{ flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
+          {job.result.video_output && (
+            <a
+              className="dl"
+              href={files.downloadUrl(basename(job.result.video_output))}
+              download
+            >
+              ⬇ วิดีโอพากย์เสียง (.mp4)
+            </a>
+          )}
+          {job.result.subtitle_srt && (
+            <a className="dl" href={files.downloadUrl(job.result.subtitle_srt)} download>
+              ⬇ SRT
+            </a>
+          )}
+          {job.result.subtitle_vtt && (
+            <a className="dl" href={files.downloadUrl(job.result.subtitle_vtt)} download>
+              ⬇ VTT
+            </a>
+          )}
+          {job.result.video_mux_error && (
+            <p className="hint">⚠ {job.result.video_mux_error}</p>
+          )}
+        </div>
+      )}
     </div>
   );
+}
+
+// path เต็ม (จาก backend) → เอาแค่ชื่อไฟล์ ไว้ใช้กับ files.downloadUrl
+function basename(p: string) {
+  return p.split(/[\\/]/).pop() ?? p;
 }

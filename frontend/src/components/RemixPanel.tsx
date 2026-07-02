@@ -14,6 +14,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { API_BASE, files, music } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
+import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
 import { Waveform } from "./Waveform";
 import { Knob } from "./Knob";
@@ -138,7 +139,8 @@ export function RemixPanel() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const file = useProjectFile({ buildSnapshot, applySnapshot });
+  const dialog = useDialogHost();
+  const file = useProjectFile({ buildSnapshot, applySnapshot, ui: { prompt: dialog.prompt, confirm: dialog.confirm } });
 
   const upload = async (f: File | null, set: (s: string) => void) => {
     if (!f) return;
@@ -427,6 +429,16 @@ export function RemixPanel() {
         </div>
       </div>
 
+      {file.recoverable && (
+        <div className="recover-banner">
+          <span>พบงานที่ยังไม่ได้บันทึกจาก {new Date(file.recoverable.savedAt).toLocaleTimeString("th-TH")} — กู้คืน / ทิ้ง</span>
+          <div className="recover-actions">
+            <button className="seg-add" onClick={file.recoverDraft}>♻ กู้คืน</button>
+            <button className="seg-add" onClick={file.discardDraft}>🗑 ทิ้ง</button>
+          </div>
+        </div>
+      )}
+
       <div className="remix-body">
         <div className="remix-left" style={{ width: leftW }}>
           <div className="remix-lefttabs">
@@ -527,6 +539,7 @@ export function RemixPanel() {
           </div>
         </div>
       )}
+      {dialog.node}
     </div>
   );
 }

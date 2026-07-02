@@ -606,6 +606,28 @@ label.seg-add { display: inline-flex; align-items: center; gap: 4px; }
 .mkt-prog-fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); transition: width .12s; }
 .mkt-prog span { position: relative; font-size: 11px; color: var(--text); }
 
+/* ── Recovery banner (autosave draft กู้คืน) ── */
+.recover-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 0 14px 10px; padding: 9px 16px;
+  background: rgba(255,179,64,.08); border: 1px solid var(--amber); border-radius: 12px;
+  font-size: 12.5px; color: var(--text);
+}
+.recover-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── Dialog (แทนที่ window.prompt / window.confirm) ── */
+.dialog-card { border-radius: 16px; padding: 22px; width: 340px; }
+.dialog-msg { margin: 0 0 14px; font-size: 13.5px; color: var(--text); line-height: 1.55; }
+.dialog-input { width: 100%; margin-bottom: 4px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.dialog-btn {
+  padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: var(--panel2); color: var(--muted);
+}
+.dialog-btn.cancel:hover { color: var(--red); border-color: var(--red); }
+.dialog-btn.ok { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.dialog-btn.ok:hover { background: var(--accent-bright); }
+
 /* react-flow theme override */
 .remix-canvas .react-flow__attribution { display: none; }
 .remix-canvas .react-flow__edge-path { stroke: var(--border); stroke-width: 1.5; }
