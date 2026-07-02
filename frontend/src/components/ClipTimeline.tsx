@@ -5,6 +5,7 @@ import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../ti
 import { metronomeTicks } from "../timeline/grid";
 import { StereoMeter } from "./StereoMeter";
 import { ChannelMeterBalance } from "./ChannelMeterBalance";
+import { useMicRecorder, MicRecordIndicator } from "./MicRecorder";
 
 const HEAD_W = 210;
 
@@ -228,6 +229,28 @@ export function ClipTimeline({
   // WP3.2: metronome click-track
   const [metroOn, setMetroOn] = useState(false);
   const clickNodesRef = useRef<{ osc: OscillatorNode; gain: GainNode }[]>([]);
+
+  // WP3.1: บันทึกเสียงจากไมค์ → เพิ่มเป็น clip ในแทร็กที่ "armed" ที่ตำแหน่ง playhead
+  const mic = useMicRecorder();
+  const [asRefVoice, setAsRefVoice] = useState(false);
+  const armedTrackId = engine.selTrack ?? project.tracks[0]?.id ?? null;
+
+  const onRecordClick = async () => {
+    if (mic.recording) {
+      const result = await mic.stop();
+      if (result && armedTrackId) {
+        const track = project.tracks.find((t) => t.id === armedTrackId);
+        const clip = { ...makeClip(result.url, track?.color ?? "#c7f046"), start: posRef.current };
+        engine.addClip(armedTrackId, clip);
+        if (asRefVoice) {
+          // TODO: เพิ่มเข้าคลังเสียง (voices API ต้องการ name/ref_text) —
+          // ยังไม่มี UI สำหรับกรอกชื่อ/บทพูดอ้างอิงตรงนี้ จึงพักไว้ก่อนเพื่อไม่ให้ block WP3.1
+        }
+      }
+    } else {
+      mic.start();
+    }
+  };
 
   const duration = Math.max(project.duration, 20);
   const contentW = duration * pps;
@@ -542,6 +565,19 @@ export function ClipTimeline({
       <div className="cliptl-bar">
         <button className="tl-btn play" onClick={() => (playing ? pause() : play())}>{playing ? "⏸" : "▶"}</button>
         <button className="tl-btn" onClick={stop}>⏹</button>
+        <button
+          className="tl-btn"
+          onClick={onRecordClick}
+          disabled={mic.busy || !armedTrackId}
+          title={armedTrackId ? "บันทึกเสียงจากไมค์เข้าแทร็กที่เลือก (ที่ตำแหน่ง playhead)" : "ยังไม่มีแทร็กให้บันทึก"}
+          style={{ color: mic.recording ? "#ff5050" : undefined }}
+        >{mic.busy ? "…" : "●"}</button>
+        {mic.recording && <MicRecordIndicator recording={mic.recording} elapsed={mic.elapsed} />}
+        {mic.error && <span className="cliptl-unit" style={{ color: "#ff5050" }} title={mic.error}>⚠ {mic.error}</span>}
+        <label className="cliptl-unit" style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }} title="เมื่อบันทึกเสร็จ จะเพิ่มเสียงนี้เข้าคลังเสียงเป็นเสียงอ้างอิงสำหรับโคลนด้วย">
+          <input type="checkbox" checked={asRefVoice} onChange={(e) => setAsRefVoice(e.target.checked)} />
+          ตั้งเป็น reference voice
+        </label>
         <span className="cliptl-time mono">{fmt(posSec)} / {fmt(duration)}</span>
         <span className="cliptl-grid-ctl">
           <input className="mono" type="number" min={40} max={240} value={bpm}

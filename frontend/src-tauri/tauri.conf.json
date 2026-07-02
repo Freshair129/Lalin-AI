@@ -34,6 +34,12 @@
       "icons/icon.ico"
     ],
     "createUpdaterArtifacts": true,
+    "externalBin": [
+      "binaries/g-music-backend"
+    ],
+    "resources": [
+      "binaries/_internal/**/*"
+    ],
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",

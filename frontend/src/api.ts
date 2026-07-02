@@ -157,6 +157,24 @@ export const packs = {
     req<{ installed: boolean; id: string }>(`/packs/${id}/download`, { method: "POST" }),
 };
 
+// ── Plugins (BYOM: dep เสริม/GPL — pedalboard/psola/matchering) ──
+export interface PluginInfo {
+  available: boolean;
+  label: string;
+  unlocks: string;
+  license: string;
+}
+export interface PluginInstallInfo {
+  name: string;
+  command: string;
+  note: string;
+}
+export const plugins = {
+  list: () => req<Record<string, PluginInfo>>("/plugins"),
+  installCommand: (name: string) =>
+    req<PluginInstallInfo>(`/plugins/${name}/install`, { method: "POST" }),
+};
+
 // ── Projects (workspace save/load) ────────────────────────
 export interface ProjectMeta { id: string; name: string; }
 export const projects = {

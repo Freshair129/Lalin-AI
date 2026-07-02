@@ -12,8 +12,10 @@ import { UpdateChecker } from "./components/UpdateChecker";
 import { Icon } from "./components/icons";
 import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
+import { BatchQueue } from "./components/BatchQueue";
+import { PluginsPanel } from "./components/PluginsPanel";
 
-type Tab = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "files" | "market" | "brain";
+type Tab = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "files" | "market" | "brain" | "queue" | "plugins";
 
 // แท็บที่แสดง timeline dock ล่าง (พื้น DAW) — เครื่องมือที่ผลิตเสียงลง timeline
 const STUDIO_TABS = new Set<Tab>(["remix", "tts", "dubbing", "mastering"]);
@@ -26,6 +28,8 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "remix", icon: "remix", label: "Remix" },
   { id: "files", icon: "files", label: "Files" },
   { id: "market", icon: "market", label: "Marketplace" },
+  { id: "queue", icon: "doc", label: "คิวงาน" },
+  { id: "plugins", icon: "audio", label: "ปลั๊กอิน" },
   { id: "brain", icon: "brain", label: "สมอง" },
 ];
 
@@ -96,6 +100,8 @@ export default function App() {
               {tab === "dubbing" && <DubbingPanel />}
               {tab === "mastering" && <MasteringPanel />}
               {tab === "market" && <MarketplacePanel />}
+              {tab === "queue" && <BatchQueue />}
+              {tab === "plugins" && <PluginsPanel />}
               {tab === "brain" && <BrainPanel onChange={() => ping()} />}
             </div>
           )}
