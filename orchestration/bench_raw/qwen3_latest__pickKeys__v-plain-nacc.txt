@@ -1,0 +1,14 @@
+<think>
+</think>
+
+```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result: Partial<Pick<T, K>> = {};
+  for (const key of keys) {
+    if (obj.hasOwnProperty(key)) {
+      result[key] = obj[key];
+    }
+  }
+  return result as Pick<T, K>;
+}
+```

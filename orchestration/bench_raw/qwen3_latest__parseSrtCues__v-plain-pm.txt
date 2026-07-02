@@ -1,0 +1,48 @@
+<think>
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  const blocks = srt.split(/\r?\n\r?\n+/);
+  const result: { start: number; end: number; text: string }[] = [];
+  
+  for (const block of blocks) {
+    if (!block.trim()) continue;
+    
+    const lines = block.trim().split(/\r?\n/);
+    let timeLineIndex = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (/^\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+$/.test(lines[i])) {
+        timeLineIndex = i;
+        break;
+      }
+    }
+    
+    if (timeLineIndex === -1) continue;
+    
+    const timeLine = lines[timeLineIndex];
+    const [startTimeStr, endTimeStr] = timeLine.split(" --> ");
+    
+    let start = 0;
+    let end = 0;
+    
+    try {
+      const [h1, m1, s1, ms1] = startTimeStr.split(":").map(Number);
+      start = h1 * 3600 + m1 * 60 + s1 + ms1 / 1000;
+      
+      const [h2, m2, s2, ms2] = endTimeStr.split(":").map(Number);
+      end = h2 * 3600 + m2 * 60 + s2 + ms2 / 1000;
+    } catch {
+      continue;
+    }
+    
+    const textLines = lines.slice(timeLineIndex + 1);
+    const text = textLines.join("\n");
+    
+    result.push({ start, end, text });
+  }
+  
+  return result;
+}
+```

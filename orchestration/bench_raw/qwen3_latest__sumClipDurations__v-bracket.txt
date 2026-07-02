@@ -1,0 +1,127 @@
+<think>
+Okay, I need to write a TypeScript function called sumClipDurations that takes an array of clips and returns the sum of their durations. Let me think about the requirements.
+
+First, the function should sum (end - start) for each clip, but only if end is greater than start. Also, I need to ignore any invalid clips where end is less than or equal to start, or if either start or end isn't finite. Oh right, and the final sum needs to be rounded to three decimal places. If the array is empty, return 0.
+
+So, let's break it down. For each clip in the clips array, I need to check if both start and end are finite numbers. Then check if end > start. If those conditions are met, add (end - start) to the total sum. Otherwise, skip that clip.
+
+How do I check if a number is finite? In JavaScript, there's Number.isFinite(), but I need to make sure that both start and end are finite. So for each clip, I'll check Number.isFinite(clip.start) && Number.isFinite(clip.end). If that's true, then proceed.
+
+Once I have the valid clips, calculate end - start and accumulate the sum. Then round the total sum to three decimals. Wait, how to round? Using Math.round(total * 1000) / 1000? Or maybe using toFixed(3), but that returns a string. Since the function should return a number, better to use Math.round.
+
+Wait, rounding can be tricky. For example, if the sum is 1.5005, rounding to three decimals would be 1.501. So multiplying by 1000, rounding to nearest integer, then divide by 1000.
+
+So the steps are:
+
+Initialize totalSum to 0.
+
+Loop through each clip in clips:
+
+- Check if start and end are finite numbers.
+- Check if end > start.
+- If both conditions are true, add (end - start) to totalSum.
+
+After processing all clips, round totalSum to three decimal places.
+
+Edge cases: empty array returns 0. Clips with invalid values are skipped.
+
+Let me test some examples:
+
+First example: sumClipDurations([{start:0,end:1.5},{start:2,end:2}]) -> 1.5. The second clip has end equal to start, so it's invalid. So only the first clip contributes 1.5 - 0 = 1.5. Sum is 1.5, rounded to three decimals is 1.5.
+
+Second example: sumClipDurations([]) returns 0.
+
+Third example: sumClipDurations([{start:1,end:0.5},{start:0,end:0.25}]) -> 0.25. The first clip has end < start, so invalid. Second clip is valid: 0.25 - 0 = 0.25. Sum is 0.25, which rounds to 0.25.
+
+So the code should handle these cases.
+
+Now, implementing this in TypeScript.
+
+The function signature is export function sumClipDurations(clips: { start: number; end: number }[]): number.
+
+Inside the function:
+
+Initialize totalSum as 0.
+
+Loop through each clip in clips:
+
+for (const clip of clips) {
+
+Check if Number.isFinite(clip.start) && Number.isFinite(clip.end). If not, skip.
+
+Then check if clip.end > clip.start. If yes, add (clip.end - clip.start) to totalSum.
+
+Once all clips are processed, round the totalSum to three decimals.
+
+But how to handle rounding? Let's do:
+
+return Math.round(totalSum * 1000) / 1000;
+
+Wait, but what if totalSum is something like 0.25, which is exactly 0.250 when multiplied by 1000 gives 250, so Math.round(250)/1000 = 0.25.
+
+Yes. So that should work.
+
+Putting it all together:
+
+function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let totalSum = 0;
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end)) {
+      if (clip.end > clip.start) {
+        totalSum += clip.end - clip.start;
+      }
+    }
+  }
+  return Math.round(totalSum * 1000) / 1000;
+}
+
+Wait, but what about cases where the sum is something like 0.2505? Rounding to three decimals would be 0.251. But the problem says to round the final sum to three decimals. So this approach should work.
+
+Testing the third example: sum is 0.25, which becomes 0.25 after rounding. Correct.
+
+Another test case: if a clip has start=1, end=3, then contributes 2. Another clip with start=4, end=5, contributes 1. Total sum is 3. Rounded to three decimals is 3.0.
+
+But the function returns number, so 3.0 would be represented as 3, but in TypeScript, numbers can have decimal points. So Math.round(3 * 1000) / 1000 is 3.0, which is correct.
+
+Now, what about if a clip has start or end as NaN? Number.isFinite will return false for NaN, so those clips are skipped.
+
+So this should handle all the cases.
+
+Now, write the code inside the file frontend/src/timeline/sumClipDurations.ts.
+
+The function is exported, so the code should be:
+
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let totalSum = 0;
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end)) {
+      if (clip.end > clip.start) {
+        totalSum += clip.end - clip.start;
+      }
+    }
+  }
+  return Math.round(totalSum * 1000) / 1000;
+}
+
+Wait, but what about when the sum is zero? For example, empty array returns 0. Which is handled correctly.
+
+Another edge case: a clip with start and end as finite numbers but end <= start. Those are skipped.
+
+Yes.
+
+So this should meet all the requirements.
+</think>
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let totalSum = 0;
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end)) {
+      if (clip.end > clip.start) {
+        totalSum += clip.end - clip.start;
+      }
+    }
+  }
+  return Math.round(totalSum * 1000) / 1000;
+}
+```

@@ -1,0 +1,42 @@
+Let me think about how to approach this coding problem.
+
+Problem: You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/utils/formatTimecode.ts:
+export function formatTimecode(sec: number): string
+
+Rules:
+- output format "MM:SS.mmm" zero-padded (minutes at least 2 digits).
+- round to the nearest millisecond FIRST (total milliseconds), then split into minutes/seconds/ms so rounding can carry over (e.g. 59.9996 -> "01:00.000").
+- negative or non-finite input -> "00:00.000".
+
+Acceptance: formatTimecode(62.5) -> "01:02.500". formatTimecode(0) -> "00:00.000". formatTimecode(-3) -> "00:00.000". formatTimecode(659.999) -> "10:59.999".
+Output ONLY the ```ts block.
+
+Approach: 1. Round to nearest millisecond first (with proper carry-over).
+2. Extract minutes, seconds, and milliseconds from the rounded value.
+3. Format each component with zero-padding.
+
+Let me implement this solution.
+</think>
+
+```typescript
+export function formatTimecode(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) {
+    return "00:00.000";
+  }
+
+  // Round to nearest millisecond (carry over allowed, e.g., 59.9996 -> 1000 ms)
+  const roundedMs = Math.round(sec * 1000);
+
+  // Extract components
+  const totalMinutes = Math.floor(roundedMs / 60000);
+  const remainingMsAfterMinutes = roundedMs % 60000;
+  const seconds = Math.floor(remainingMsAfterMinutes / 1000);
+  const milliseconds = remainingMsAfterMinutes % 1000;
+
+  // Zero-pad each component
+  return `${String(totalMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(milliseconds).padStart(3, "0")}`;
+}
+```

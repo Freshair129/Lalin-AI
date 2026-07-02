@@ -1,0 +1,321 @@
+Alright, I need to create a function that parses SRT subtitle strings into an array of objects with start time, end time, and text content. The input is a string formatted according to the SRT specification. Let's break down what the function needs to handle.
+
+First, the SRT format consists of multiple blocks separated by one or more blank lines. Each block has:
+- An index line (which we can ignore for the output)
+- A timing line in the format "HH:MM:SS,mmm --> HH:MM:SS,mmm"
+- One or more text lines that should be joined with "\n"
+
+The function should return an array of objects, each with `start`, `end`, and `text`. The start and end times need to be converted from the string format (like "00:00:01,000") into seconds as numbers. For example, "00:00:01,000" should become 1 second.
+
+I also need to handle different line endings. The input might have "\n" or "\r\n", so I should normalize the string by replacing all line breaks with a single newline for consistent processing. Then split the string into blocks based on one or more blank lines. That means splitting by two or more consecutive newlines, but since the index line is always present, maybe splitting by a single blank line (which would be two newlines) should work. However, I need to be careful because if there are multiple blank lines between blocks, the split should still separate them correctly.
+
+Wait, the SRT format specifies that blocks are separated by one or more blank lines. So if I split the string by a regex that matches two or more newlines, that should give me the blocks. But I also need to handle the case where the input might have trailing newlines, which could result in an empty block at the end. So after splitting, I should filter out any blocks that are empty or contain only whitespace.
+
+For each block, I need to parse the timing line. The timing line is the second line of the block (after the index). I need to extract the start and end times from that line. The format is "HH:MM:SS,mmm --> HH:MM:SS,mmm". So I can split the line by " --> " to get the start and end parts. Then parse each part into hours, minutes, seconds, and milliseconds. Convert that to total seconds. For example, "00:00:01,000" would be 1 second. The conversion formula is: (hours * 3600) + (minutes * 60) + (seconds) + (milliseconds / 1000). But since milliseconds are given as a three-digit number, dividing by 1000 gives the decimal part. So for "00:00:01,000", hours=0, minutes=0, seconds=1, milliseconds=0 -> total seconds = 1. For "00:00:02,500", it's 2.5 seconds.
+
+Then, the text lines are the remaining lines in the block after the timing line. I need to join them with "\n". Also, each line should be trimmed of leading and trailing whitespace. So for each block, split by newline, filter out empty lines (or lines that are only whitespace), trim each line, then join them with "\n".
+
+Additionally, if the input is empty or contains only whitespace, the function should return an empty array. So after splitting into blocks, if there are no valid blocks, return [].
+
+What about malformed blocks? For example, a block without a valid timing line. The timing line must be present and correctly formatted. If a block doesn't have a timing line (maybe missing " --> "), or if the timing parts can't be parsed into numbers, I should skip that block. So when parsing each block, if the timing line is missing or invalid, I should not include it in the output.
+
+Let me think about the steps:
+1. Normalize line endings: replace all \r\n and \n with just \n.
+2. Split into blocks by two or more newlines (i.e., blank lines). Use a regex like /\n\s*\n+/g to match one or more blank lines. But since we want to split by one or more blank lines, maybe split by /\n\s*\n+/g. However, this might be tricky because the index line is always present, so splitting by two newlines should separate blocks correctly.
+3. For each block:
+   a. Split into lines.
+   b. Check if there are at least two lines (index and timing). If not, skip.
+   c. The second line is the timing line. Check if it contains " --> ". If not, skip.
+   d. Split the timing line by " --> " to get start and end parts.
+   e. Parse each part into hours, minutes, seconds, milliseconds. Convert to total seconds.
+   f. The remaining lines (after the timing line) are the text lines. Split them, filter out empty or whitespace-only lines, trim each, then join with "\n".
+4. If the input is empty or results in no valid blocks, return [].
+
+Edge cases: 
+- Input is empty string -> return [].
+- Input has only whitespace -> after splitting into blocks, all blocks will be empty or whitespace, so return [].
+- A block without a timing line -> skip.
+- A timing line with invalid format (e.g., missing " --> ") -> skip.
+- Text lines that are empty or just spaces -> filter them out.
+
+Let me try to implement this step by step.
+
+First, normalize the line endings:
+```ts
+const normalized = srt.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+```
+
+Then split into blocks by two or more newlines:
+```ts
+const blocks = normalized.split(/\n\s*\n+/);
+```
+
+Now, process each block. For each block:
+- Trim leading/trailing whitespace from the block itself (in case there are extra spaces).
+- Split into lines using `block.split('\n')`.
+- Check if there are at least two lines. If not, skip.
+- The second line is the timing line. Ensure it contains " --> ". If not, skip.
+- Split the timing line by " --> " to get start and end parts.
+- Parse each part into hours, minutes, seconds, milliseconds. Convert to total seconds.
+- Then, take the remaining lines (after the timing line) as text lines. Filter out empty or whitespace-only lines, trim each, then join with "\n".
+
+Wait, but what if there are only two lines (index and timing)? Then the text lines would be empty. But according to the SRT format, there should be at least one text line after the timing line. However, the problem statement says "text lines (join multiple text lines with "\n")". It doesn't say that there must be at least one text line. So maybe it's allowed to have zero text lines? But the example given has text lines. Let me check the problem statement again:
+
+"blocks separated by one or more blank lines; each block = index line, then time line "HH:MM:SS,mmm --> HH:MM:SS,mmm", then 1+ text lines (join multiple text lines with "\n")."
+
+It says "1+ text lines", so there must be at least one text line. Therefore, if a block has only the index and timing lines without any text lines, it should be skipped. So when splitting into lines, after the timing line, there should be at least one line. If not, skip.
+
+Thus, for each block:
+- Split into lines.
+- Check that there are at least three lines (index, timing, and at least one text). If not, skip.
+- The second line is the timing line. Ensure it contains " --> ". If not, skip.
+- Then parse the timing line.
+- Take the remaining lines (from index+2 onwards) as text lines.
+
+Wait, but what if there are extra blank lines within a block? For example, after the timing line, there might be blank lines before the text lines. But according to SRT format, the text lines should immediately follow the timing line, with no blank lines in between. However, the problem statement says "blocks separated by one or more blank lines", so blank lines only separate blocks, not within a block. Therefore, within a block, after the timing line, there should be text lines directly, possibly with multiple lines, but no blank lines. So when splitting into lines, if there are blank lines within a block, they would be part of the same block, which might cause issues. But since the blocks are separated by one or more blank lines, any blank lines within a block are not separators. Therefore, after the timing line, we can consider all subsequent lines as text lines, even if some are empty. However, the problem says "1+ text lines", so there must be at least one non-empty line. Therefore, after extracting the timing line, we should take all subsequent lines, filter out empty or whitespace-only lines, and then join them with "\n". If after filtering, there are no lines left, then skip the block.
+
+So the steps for each block:
+- Split into lines.
+- Check that there are at least three lines (index, timing, and at least one text). If not, skip.
+- The second line is the timing line. Ensure it contains " --> ". If not, skip.
+- Parse the timing line to get start and end times.
+- Take all lines after the timing line (from index+2 onwards). Split them into an array, filter out empty or whitespace-only lines, trim each, then join with "\n".
+- If the resulting text is empty, skip the block.
+
+Now, let's implement this in TypeScript.
+
+First, define a function `parseSrtCues` that takes a string `srt`.
+
+Inside the function:
+- Normalize line endings.
+- Split into blocks by two or more newlines.
+- For each block:
+   - Split into lines.
+   - Check if there are at least three lines. If not, skip.
+   - The second line is the timing line. Ensure it contains " --> ". If not, skip.
+   - Parse the timing line to get start and end times.
+   - Take all lines after the timing line, filter out empty or whitespace-only, trim each, join with "\n".
+   - If text is empty, skip.
+- Return the array of parsed cues.
+
+Now, let's write the code.
+
+First, normalize:
+```ts
+const normalized = srt.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+```
+
+Then split into blocks:
+```ts
+const blocks = normalized.split(/\n\s*\n+/);
+```
+
+Now, process each block:
+```ts
+const cues: { start: number; end: number; text: string }[] = [];
+for (const block of blocks) {
+   const lines = block.split('\n');
+   if (lines.length < 3) continue;
+   const timingLine = lines[1];
+   if (!timingLine.includes(' --> ')) continue;
+   const parts = timingLine.split(' --> ');
+   if (parts.length !== 2) continue;
+   const startParts = parseTime(parts[0].trim());
+   if (!startParts) continue;
+   const endParts = parseTime(parts[1].trim());
+   if (!endParts) continue;
+   const textLines = lines.slice(2).map(l => l.trim()).filter(l => l !== '');
+   cues.push({ start: startParts, end: endParts, text: textLines.join('\n') });
+}
+return cues;
+```
+
+But I need to define the `parseTime` function. Since the problem says "pure function, no imports", I should include all necessary logic within the file. So I can define a helper function inside the same file, but since the output must be a single ```ts block with only the export function, maybe I can include the helper as an inner function or use arrow functions.
+
+Alternatively, I can parse the time inline without a separate function. Let's think about how to parse a time string like "HH:MM:SS,mmm".
+
+Split by ":" and ",". For example, "00:00:01,000" -> hours=0, minutes=0, seconds=1, milliseconds=0. Convert to total seconds: (hours * 3600) + (minutes * 60) + seconds + (milliseconds / 1000). Since milliseconds are given as a three-digit number, dividing by 1000 gives the decimal part.
+
+But what if the time string is malformed? For example, not enough parts. So we need to check that it has at least four parts when split by ":" and ",". Wait, splitting by ":" would give hours, minutes, seconds, milliseconds. But the milliseconds part includes the comma. So maybe split by ":" first, then take the last part and split by ",".
+
+Alternatively, use a regex to match the pattern. But since we need to handle malformed blocks, if the time line doesn't match the expected format, skip it.
+
+Let me write a function `parseTime` that takes a string like "HH:MM:SS,mmm" and returns the total seconds as a number, or null if invalid.
+
+```ts
+function parseTime(timeStr: string): number | null {
+   const parts = timeStr.split(':');
+   if (parts.length !== 3) return null;
+   const [hh, mm, ssMs] = parts;
+   if (!/^(\d{2}):(\d{2}):(\d{2},\d{3})$/.test(timeStr)) return null;
+   const h = parseInt(hh, 10);
+   const m = parseInt(mm, 10);
+   const s = parseInt(ssMs.substring(0, 2), 10);
+   const ms = parseInt(ssMs.substring(3), 10); // substring from index 3 (after the comma)
+   return h * 3600 + m * 60 + s + ms / 1000;
+}
+```
+
+Wait, but the regex check might be redundant if we split by ":" and then parse. However, to handle malformed inputs, we should ensure that the time string matches the expected format. So maybe use a regex to validate the time line before parsing.
+
+Alternatively, since the problem says "skip malformed blocks (no valid time line)", we can skip any block where the timing line doesn't contain " --> " or where the time parts don't parse correctly.
+
+But let's think: if the time line is "00:00:01,000", splitting by ":" gives ["00","00","01,000"]. Then we can parse hours, minutes, seconds, and milliseconds from that. The seconds part includes the comma, so we need to split that part into seconds and milliseconds. For example, "01,000" -> seconds=1, milliseconds=0.
+
+But what if there are extra digits? The problem says to handle both \n and \r\n line endings; trim each line. So maybe the time string could have extra spaces, but we should trim each line before processing. Wait, the problem says "trim each line". So when splitting the block into lines, each line should be trimmed. Therefore, when processing the timing line, we should first trim it.
+
+So in the loop over blocks, after splitting into lines, we can map each line to `line.trim()`. Then check if there are at least three lines (index, timing, and text). The second line is the timing line. Ensure that it contains " --> ". Then split by " --> " to get start and end parts. Then parse each part.
+
+Now, when parsing a time string like "00:00:01,000", we can split by ":" and then take the last part, which includes the comma. Then split that last part by "," to get seconds and milliseconds. So:
+
+```ts
+const [h, m, sMs] = parts;
+const [s, ms] = sMs.split(',').map(Number);
+```
+
+But we need to ensure that `sMs` is exactly three digits after the comma. However, since we're trimming each line, and the input is supposed to be valid SRT, maybe it's okay to assume that the time string is correctly formatted. But the problem says "skip malformed blocks (no valid time line)", so if the time line doesn't have the correct format, we should skip it.
+
+Therefore, after splitting by " --> ", we need to validate each part. For example, check that each part matches the regex `/^\d{2}:\d{2}:\d{2},\d{3}$/`. If not, skip.
+
+So:
+
+```ts
+const startStr = parts[0].trim();
+const endStr = parts[1].trim();
+if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(startStr)) continue;
+if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(endStr)) continue;
+```
+
+Then parse the times.
+
+Now, let's put it all together.
+
+But I need to make sure that the function returns an array of objects with `start`, `end`, and `text`. The text should be joined with "\n". Also, if there are multiple text lines, they should be joined with "\n". So after filtering out empty or whitespace-only lines, we join them with "\n".
+
+Now, let's write the code.
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+   const normalized = srt.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+   if (!normalized.trim()) return [];
+   const blocks = normalized.split(/\n\s*\n+/);
+   const cues: { start: number; end: number; text: string }[] = [];
+   for (const block of blocks) {
+      const lines = block.split('\n').map(l => l.trim());
+      if (lines.length < 3) continue;
+      const timingLine = lines[1];
+      if (!timingLine.includes(' --> ')) continue;
+      const parts = timingLine.split(' --> ');
+      if (parts.length !== 2) continue;
+      const startStr = parts[0].trim();
+      const endStr = parts[1].trim();
+      if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(startStr)) continue;
+      if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(endStr)) continue;
+      const [h, m, s, ms] = startStr.split(':').map(Number);
+      const start = h * 3600 + m * 60 + s + ms / 1000;
+      const [eh, em, es, ems] = endStr.split(':').map(Number);
+      const end = eh * 3600 + em * 60 + es + ems / 1000;
+      const textLines = lines.slice(2).filter(l => l !== '');
+      cues.push({ start, end, text: textLines.join('\n') });
+   }
+   return cues;
+}
+```
+
+Wait, but in the regex test, I'm using `split(':')` which would give three parts: hours, minutes, seconds with milliseconds. But I need to parse the seconds and milliseconds separately. So when splitting by ":", the third part is "SS,mmm". Then splitting that by "," gives SS and mmm. So:
+
+```ts
+const [hStr, mStr, sMs] = startStr.split(':');
+const h = parseInt(hStr, 10);
+const m = parseInt(mStr, 10);
+const [s, ms] = sMs.split(',').map(Number);
+```
+
+But I need to ensure that `sMs` is exactly "SS,mmm", but since the regex already validated the format, it should be fine. However, in the code above, I'm using `split(':')` which would give an array of three strings. Then I map them to numbers. But for the third element, splitting by "," and mapping to Number would give the seconds and milliseconds as numbers.
+
+But wait, in the regex test, I'm checking that the string matches `^(\d{2}):(\d{2}):(\d{2}),(\d{3})$`. So when split by ":", the third part would be "SS,mmm", which when split by "," gives SS and mmm. Then mapping to Number would give SS and mmm as numbers.
+
+But in the code above, I'm doing:
+
+```ts
+const [h, m, s, ms] = startStr.split(':').map(Number);
+```
+
+This would incorrectly map the last part (which includes the comma) to a number, which would be invalid. So that's a mistake.
+
+Therefore, I need to split by ":" first, then take the third element and split by "," to get seconds and milliseconds.
+
+So:
+
+```ts
+const [hStr, mStr, sMs] = startStr.split(':');
+const h = parseInt(hStr, 10);
+const m = parseInt(mStr, 10);
+const [s, ms] = sMs.split(',').map(Number);
+```
+
+Similarly for the end time.
+
+Therefore, the code should be:
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+   const normalized = srt.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+   if (!normalized.trim()) return [];
+   const blocks = normalized.split(/\n\s*\n+/);
+   const cues: { start: number; end: number; text: string }[] = [];
+   for (const block of blocks) {
+      const lines = block.split('\n').map(l => l.trim());
+      if (lines.length < 3) continue;
+      const timingLine = lines[1];
+      if (!timingLine.includes(' --> ')) continue;
+      const parts = timingLine.split(' --> ');
+      if (parts.length !== 2) continue;
+      const startStr = parts[0].trim();
+      const endStr = parts[1].trim();
+      if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(startStr)) continue;
+      if (!/^(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(endStr)) continue;
+      const [hStr, mStr, sMs] = startStr.split(':');
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      const [s, ms] = sMs.split(',').map(Number);
+      const start = h * 3600 + m * 60 + s + ms / 1000;
+      const [ehStr, emStr, esMs] = endStr.split(':');
+      const eh = parseInt(ehStr, 10);
+      const em = parseInt(emStr, 10);
+      const [es, ems] = esMs.split(',').map(Number);
+      const end = eh * 3600 + em * 60 + es + ems / 1000;
+      const textLines = lines.slice(2).filter(l => l !== '');
+      cues.push({ start, end, text: textLines.join('\n') });
+   }
+   return cues;
+}
+```
+
+Now, test with the given examples.
+
+Example 1: parseSrtCues("1\n00:00:01,000 --> 00:00:02,500\nhello\n\n2\n00:00:03,000 --> 00:00:04,000\nworld a\nworld b")
+
+Normalized: replace \r\n with \n. Then split into blocks by two or more newlines. The input has "1\n00:00:01,000 --> 00:00:02,500\nhello\n\n2\n00:00:03,000 --> 00:00:04,000\nworld a\nworld b". After normalization, splitting by /\n\s*\n+/g gives two blocks: first block is "1\n00:00:01,000 --> 00:00:02,500\nhello", second block is "2\n00:00:03,000 --> 00:00:04,000\nworld a\nworld b".
+
+For first block:
+- lines = ["1", "00:00:01,000 --> 00:00:02,500", "hello"]
+- timingLine = "00:00:01,000 --> 00:00:02,500"
+- parts = ["00:00:01,000", "00:00:02,500"]
+- startStr = "00:00:01,000" -> h=0, m=0, s=1, ms=0 -> start=1
+- endStr = "00:00:02,500" -> h=0, m=0, s=2, ms=500 -> end=2.5
+- textLines = ["hello"] -> text="hello"
+
+Second block:
+- lines = ["2", "00:00:03,000 --> 00:00:04,000", "world a", "world b"]
+- timingLine = "00:00:03,000 --> 00:00:04,000"
+- parts = ["00:00:03,000", "00:00:04,000"]
+- startStr = "00:00:03,000" -> start=3
+- endStr = "00:00:04,000" -> end=4
+- textLines = ["world a", "world b"] -> text="world a\nworld b"
+
+Thus, the output should be [{start:1,end:2.5,text:"hello"},{start:3,end:4,text:"world a\nworld b"}], which matches the expected result.
+
+Example 2: parseSrtCues("") -> normalized is empty, so return [].
+
+Another test case: if there's a block with only two lines (index and timing), then

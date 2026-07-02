@@ -1,0 +1,61 @@
+<think>
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  const blocks = srt.split(/\r?\n\r?\n+/);
+  const result: { start: number; end: number; text: string }[] = [];
+
+  for (const block of blocks) {
+    if (!block.trim()) continue;
+
+    const lines = block.trim().split(/\r?\n/);
+    let timeLineIndex = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (/^\d+$/.test(lines[i])) {
+        timeLineIndex = i + 1;
+        break;
+      }
+    }
+
+    if (timeLineIndex === -1 || timeLineIndex >= lines.length) continue;
+
+    const timeLine = lines[timeLineIndex];
+    const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
+
+    if (!timeMatch) continue;
+
+    const [startStr, endStr] = timeMatch.slice(1);
+    const start = parseTime(startStr);
+    const end = parseTime(endStr);
+
+    if (isNaN(start) || isNaN(end)) continue;
+
+    let text = '';
+    for (let i = timeLineIndex + 1; i < lines.length; i++) {
+      text += lines[i];
+      if (i < lines.length - 1) text += '\n';
+    }
+
+    result.push({ start, end, text });
+  }
+
+  return result;
+}
+
+function parseTime(time: string): number {
+  const [hh, mm, ssMs] = time.split(':');
+  const [ss, ms] = ssMs.split(',');
+  if (!hh || !mm || !ss || !ms) return NaN;
+
+  const hours = parseInt(hh, 10);
+  const minutes = parseInt(mm, 10);
+  const seconds = parseInt(ss, 10);
+  const milliseconds = parseInt(ms, 10);
+
+  if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(milliseconds)) return NaN;
+
+  return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+}
+```

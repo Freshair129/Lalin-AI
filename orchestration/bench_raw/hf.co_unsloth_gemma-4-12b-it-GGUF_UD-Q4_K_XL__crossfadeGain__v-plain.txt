@@ -1,0 +1,99 @@
+<|channel>thought
+*   Task: Implement `crossfadeGain` in TypeScript.
+    *   Signature: `export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number }`.
+    *   Logic:
+        *   Equal-power crossfade: $p = \text{clamp}(t / \text{durationSec}, 0, 1)$.
+        *   $\text{gainIn} = \sin(p \cdot \pi / 2)$.
+        *   $\text{gainOut} = \cos(p \cdot \pi / 2)$.
+        *   Edge cases:
+            *   `durationSec <= 0` or not finite $\rightarrow \{ \text{gainIn}: 1, \text{gainOut}: 0 \}$. (Wait, usually crossfade starts at gainIn=1, gainOut=0 and ends at gainIn=0, gainOut=1? Let's check the prompt's specific logic).
+            *   Prompt says: `crossfadeGain(0,2) -> {gainIn:0,gainOut:1}`. This means $t=0$ is the *start* of the fade-in for "In" and fade-out for "Out"? No, let's look at the math provided.
+            *   Prompt logic: `p = t/durationSec`.
+            *   `gainIn = sin(p*PI/2)`, `gainOut = cos(p*PI/2)`.
+            *   At $t=0$, $p=0$: $\sin(0)=0, \cos(0)=1$. So `gainIn: 0`, `gainOut: 1`.
+            *   At $t=\text{durationSec}$, $p=1$: $\sin(\pi/2)=1, \cos(\pi/2)=0$. So `gainIn: 1`, `gainOut: 0`.
+            *   This matches the prompt's acceptance test: `crossfadeGain(0,2) -> {gainIn:0,gainOut:1}`.
+        *   `t` is NaN $\rightarrow$ treat as $t=0$.
+        *   Tolerance: $1e-6$.
+
+    *   Input: `t`, `durationSec`.
+    *   Check if `durationSec <= 0` or `!Number.isFinite(durationSec)`. If so, return `{ gainIn: 1, gainOut: 0 }`. (Wait, the prompt says "if durationSec <= 0 ... -> { gainIn: 1, gainOut: 0 }". Let's re-read).
+    *   Actually, if $t=0$ gives `gainIn: 0`, and the fallback for invalid duration is `{ gainIn: 1, gainOut: 0 }`, that's a bit inconsistent but I must follow the prompt exactly.
+    *   Check if `isNaN(t)`. If so, set `t = 0`.
+    *   Calculate $p = t / \text{durationSec}$.
+    *   Clamp $p$ to $[0, 1]$.
+    *   $\pi = \text{Math.PI}$.
+    *   `gainIn = Math.sin(p * Math.PI / 2)`.
+    *   `gainOut = Math.cos(p * Math.PI / 2)`.
+
+    *   Prompt: `if durationSec <= 0 or not finite -> { gainIn: 1, gainOut: 0 }`.
+    *   Wait, if $t=0$ results in `{gainIn: 0, gainOut: 1}`, why does a bad duration result in `{gainIn: 1, gainOut: 0}`? It doesn't matter, I must follow the instruction.
+
+    ```typescript
+    export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+      if (durationSec <= 0 || !Number.isFinite(durationSec)) {
+        return { gainIn: 1, gainOut: 0 };
+      }
+
+      let time = isNaN(t) ? 0 : t;
+      const p = Math.max(0, Math.min(1, time / durationSec));
+
+      const gainIn = Math.sin((p * Math.PI) / 2);
+      const gainOut = Math.cos((p * Math.PI) / 2);
+
+      return { gainIn, gainOut };
+    }
+    ```
+
+    *   `crossfadeGain(0, 2)`: $p=0$. $\sin(0)=0$, $\cos(0)=1$. Result `{gainIn: 0, gainOut: 1}`. Correct.
+    *   `crossfadeGain(1, 2)`: $p=0.5$. $\sin(\pi/4) \approx 0.7071068$, $\cos(\pi/4) \approx 0.7071068$. Correct.
+    *   `crossfadeGain(2, 2)`: $p=1$. $\sin(\pi/2)=1$, $\cos(\pi/2)=0$. Result `{gainIn: 1, gainOut: 0}`. Correct.
+    *   `crossfadeGain(5, 2)`: $p=2.5 \rightarrow$ clamp to 1. Result `{gainIn: 1, gainOut: 0}`. Correct.
+
+    Wait, the prompt says "if durationSec <= 0 or not finite -> { gainIn: 1, gainOut: 0 }".
+    Let's double check `Number.isFinite`. If it's `Infinity`, it returns false. If it's `NaN`, it returns false.
+
+    One detail: "if t is NaN -> treat as t = 0".
+    `isNaN(t)` handles this.
+
+    Final code structure:
+    ```ts
+    export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+      if (durationSec <= 0 || !Number.isFinite(durationSec)) {
+        return { gainIn: 1, gainOut: 0 };
+      }
+
+      const time = isNaN(t) ? 0 : t;
+      const p = Math.max(0, Math.min(1, time / durationSec));
+
+      return {
+        gainIn: Math.sin((p * Math.PI) / 2),
+        gainOut: Math.cos((p * Math.PI) / 2),
+      };
+    }
+    ```
+
+    Wait, the prompt says "No prose. Pure function, no imports." and "Output ONLY the ```ts code block".
+
+    One more check on `durationSec <= 0`. If it's exactly 0, it returns `{ gainIn: 1, gainOut: 0 }`.
+    If $t=0$ and duration is valid (e.g., 2), it returns `{ gainIn: 0, gainOut: 1 }`.
+
+    Wait, let me re-read the prompt's logic for `gainIn` and `gainOut` one more time.
+    "p = t/durationSec clamped to [0,1]; gainIn = sin(p*PI/2), gainOut = cos(p*PI/2)".
+    At $t=0$, $p=0$. $\sin(0)=0$, $\cos(0)=1$. Correct.
+
+    Wait, I should ensure `Math.PI` is used correctly. Yes.<channel|>```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (durationSec <= 0 || !Number.isFinite(durationSec)) {
+    return { gainIn: 1, gainOut: 0 };
+  }
+
+  const time = isNaN(t) ? 0 : t;
+  const p = Math.max(0, Math.min(1, time / durationSec));
+
+  const gainIn = Math.sin((p * Math.PI) / 2);
+  const gainOut = Math.cos((p * Math.PI) / 2);
+
+  return { gainIn, gainOut };
+}
+```

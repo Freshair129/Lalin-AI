@@ -1,22 +1,34 @@
 # LOCAL_MODEL_LEDGER.md — anti-error-loop (file-based degrade path)
 
-ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-MODEL-ANTI-ERROR-LOOP §6/§L0.
-ก่อน dispatch งานคล้ายกันครั้งถัดไป → อ่าน "❌ PAST MISTAKES" ที่เกี่ยวข้องแล้วฉีดเข้า prompt.
+ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-LLM-DISPATCH-V2 §6/§10.
+machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jsonl) — ไฟล์นี้เป็น human-readable view.
+ก่อน dispatch → `python orchestration/recall_mistakes.py --task "<คำอธิบาย task>"` แล้วฉีดผลเข้า prompt.
+**อัปเดต 2026-07-03:** จาก benchmark v2 (74 dispatch จริง, 7 micro-task × 4 prompt-variant × 6 โมเดล) — ดู [REPORT V2](REPORT--LOCAL-LLM-DISPATCH.md)
 
-## ✅ PASSED
-| task | model | latency | note |
+## ✅ POOL (ผ่านการวัดจริง)
+| ลำดับ | model | pass-rate (v-plain, gate tsc+visible+holdout) | median warm | VRAM | บทบาท |
+|---|---|---|---|---|---|
+| 1 | `qwen3:latest` (14.8B) | **7/7 = 100%** | **5.1s** | 10.05GB | **default** — VRAM ว่างเท่านั้น (เหลือ ~1.1GB ไม่พอ ML) |
+| 2 | `sushirl:latest` (9B) | **7/7 = 100%** (ต้องใช้ extractor v2 — 0/7 ถ้า extract แบบ fence-แรก) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
+| 3 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรอง/escalation ใน T1 |
+
+### candidate (ยังไม่เข้า pool)
+| model | เหตุผล |
+|---|---|
+| `hf.co/unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL` | ความสามารถผ่าน (14/14 ด้วย extractor v2) แต่ **ช้า 10x** (median 54.9s — `<|channel>thought` รั่วเป็น text ทุก run, Ollama ไม่แยก channel ของ arch gemma4) — ใช้ได้เมื่อไม่มีทางเลือก |
+
+## ❌ FAILED / BLACKLIST (ห้ามใช้ซ้ำ)
+| model | issue | severity | หลักฐาน/fix |
 |---|---|---|---|
-| `metronomeTicks` (grid.ts, pure beat-grid) | `qwen3:latest` (14.8B) | 186s (cold) | ผ่าน Verify Gate ครบ (times/accents/guards); Opus hardened float-drift |
-| `estimateSpeechDurationSec` (dubbing/estimateSpeech.ts) | `qwen3:latest` (14.8B) | **5.6s (warm)** | ผ่าน Verify Gate ครบ; **warm = เร็ว 30x กว่า cold** |
+| `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` | คืน `<unusedNN>` ล้วนทุกช่องทาง — **probe 4 ทาง (generate/chat/raw×2 template) ยืนยันเสียระดับ GGUF weights/vocab ไม่ใช่ template** | critical | **blacklist ถาวร — แก้ด้วย Modelfile ไม่ได้** (`orchestration/probe_gemma.py`) |
+| `llama3.2:1b` | ตัด `export` ทิ้งจาก signature (compile ผ่านแต่ไม่ export) | major | เล็กเกินสำหรับ contract-following — ไม่เข้า pool |
 
-## ❌ FAILED (ห้ามใช้ซ้ำ / ต้องเลี่ยง)
-| model | issue | severity | fix/escalation |
-|---|---|---|---|
-| `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` | คืน special token รั่ว `<unused30><unused14>` (eval_count=4) — GGUF/chat-template เสีย | critical | **อย่า dispatch โมเดลนี้** → escalate ไป `qwen3:latest` (ผ่าน) |
-
-## กติกา dispatch (สรุปจากสเปก)
-- prompt: ROLE/small-rules → SCAFFOLD (signature เป๊ะ) → GROUNDED CONTEXT (สั้น) → PAST MISTAKES → TASK+ACCEPTANCE; output = code block เดียว
-- เฉพาะ **pure/self-contained micro-task** ที่ acceptance ตรวจได้อัตโนมัติ
-- `maxReworkRounds: 1` → fail แล้ว escalate (โมเดลอื่น / Sonnet / Opus)
-- Verify Gate: tsc + unit assertion บน acceptance — empty/garbage = fail เสมอ
-- default local worker: **`qwen3:latest`** (9B+ known-good) · embedding (ถ้าใช้ retrieval): `bge-m3`
+## กติกา dispatch (อัปเดตตามผลวัด v2)
+- **prompt = v-plain เท่านั้น** (template ตาม REPORT V2.7): signature เป๊ะ + rules bullet + acceptance เลขคำนวณได้ — **ห้าม bracket-header** (`[ROLE]…` ทำ pass 100%→71% + ช้า 10x จาก think-overflow)
+- **PAST MISTAKES inject เฉพาะจาก `recall_mistakes.py`** (blacklist เสมอ + sim ≥ 0.5) — แทรกบรรทัดไม่ตรง task ทำ pass ร่วงเหลือ 57% (วัดจริง)
+- **extractor v2 บังคับ** (อยู่ใน `dispatch.py`): strip think/orphan-`</think>` → fence สุดท้ายที่มี `export function` — ห้ามใช้ fence แรก
+- **options ต่อโมเดล** จาก `dispatch.py:MODEL_OPTIONS` (default: temp 0.1/ctx 8192/predict 2500 · Qwythos: temp 0.6 ตาม card) — ห้าม config เดียวทุกโมเดล
+- **pre-warm ก่อนทุก batch** ด้วย `scripts\prewarm_ollama.ps1` (num_ctx ต้องตรงกับ dispatch ไม่งั้น reload ทิ้งการอุ่น) · cold 56–115s → warm 5–12s · `-Unload` ก่อนงาน ML หนักถ้าใช้ qwen3
+- เฉพาะ **pure/self-contained micro-task** ที่ acceptance ตรวจอัตโนมัติได้ · `maxReworkRounds: 1` → escalate (pool ถัดไป → T2 Sonnet → T3 Opus)
+- Verify Gate: `tsc --strict` + assertion บน visible + holdout (`orchestration/verify_gate.mjs`) — empty/garbage/special-token = fail เสมอ
+- embedding สำหรับ retrieval: `bge-m3` (1.2GB co-resident กับโมเดล 9B ได้)

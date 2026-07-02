@@ -1,0 +1,43 @@
+Let me think about how to approach this coding problem.
+
+Problem: You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/timeline/sumClipDurations.ts:
+export function sumClipDurations(clips: { start: number; end: number }[]): number
+
+Rules:
+- sum (end - start) over clips where end > start.
+- ignore invalid clips: end <= start, or start/end not finite numbers.
+- round the final sum to 3 decimals.
+- empty array -> 0.
+
+Acceptance: sumClipDurations([{start:0,end:1.5},{start:2,end:2}]) -> 1.5. sumClipDurations([]) -> 0. sumClipDurations([{start:1,end:0.5},{start:0,end:0.25}]) -> 0.25.
+Output ONLY the ```ts block.
+
+Approach: TypeScript Function for Summing Clip Durations
+
+Let me implement this solution.
+</think>
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+    let total = 0;
+
+    for (const clip of clips) {
+        const { start, end } = clip;
+
+        // Skip if either value is not a finite number
+        if (!Number.isFinite(start) || !Number.isFinite(end)) {
+            continue;
+        }
+
+        // Only add duration when end > start
+        if (end > start) {
+            total += end - start;
+        }
+    }
+
+    return Number(total.toFixed(3));
+}
+```

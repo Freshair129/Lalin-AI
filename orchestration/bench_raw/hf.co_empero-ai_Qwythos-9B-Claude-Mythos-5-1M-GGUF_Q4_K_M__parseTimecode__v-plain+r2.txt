@@ -1,0 +1,32 @@
+The user wants me to write a TypeScript function that parses a time code string in the format "MM:SS.mmm". They've specified exact input rules and acceptance criteria. I need to output only the function signature and implementation in a single ```ts code block, with no prose or imports.
+
+First, I'll parse the input string by splitting on both ":" and "." delimiters to get the minutes, seconds, and milliseconds parts. Then I'll validate that each part matches the expected digit counts: minutes must be exactly 2 digits (00-99), seconds exactly 2 digits (00-59), and milliseconds exactly 3 digits (000-999). I'll use a regex to enforce these constraints. After validation, I'll convert each part to an integer and calculate the total seconds as minutes * 60 + seconds + milliseconds / 1000. Finally, I'll return -1 if any validation fails.
+
+I'll write the function with a clear signature: export function parseTimecode(s: string): number. Inside, I'll handle edge cases like null or undefined input by returning -1 immediately. Then I'll split the string and map each segment to an integer, using a regex to ensure correct formatting. I'll check that the minutes part is exactly 2 digits (00-99), seconds exactly 2 digits (00-59), and milliseconds exactly 3 digits (000-999). If any of these checks fail, I'll return -1. Otherwise, I'll compute the total seconds and return it.
+
+Now I'll implement this step by step in TypeScript.
+
+```ts
+export function parseTimecode(s: string): number {
+    if (!s) return -1;
+    const [min, sec, ms] = s.split(/[:.]/).map(Number);
+    if (sec > 59 || !/^\d{2}$/.test(min) || !/^\d{2}$/.test(sec) || !/^\d{3}$/.test(ms)) return -1;
+    return min * 60 + sec + ms / 1000;
+}
+```
+
+Wait, I need to be careful with the regex. The minutes part must be exactly 2 digits, and seconds must be exactly 2 digits as well, but the regex `^\d{2}$` only checks length, not range. Since seconds are already validated by `sec > 59`, that's sufficient. Also, milliseconds must be exactly 3 digits, which is enforced by the regex. I'll keep the code concise and return -1 if any validation fails.
+
+I think this implementation meets all the requirements: it handles invalid input (null/undefined) by returning -1, validates the format and ranges, and computes the total seconds correctly. The function signature matches exactly what was requested.
+
+Now I'll output only the ```ts block with the function definition, as instructed.
+</think>
+
+```ts
+export function parseTimecode(s: string): number {
+    if (!s) return -1;
+    const [min, sec, ms] = s.split(/[:.]/).map(Number);
+    if (sec > 59 || !/^\d{2}$/.test(min) || !/^\d{2}$/.test(sec) || !/^\d{3}$/.test(ms)) return -1;
+    return min * 60 + sec + ms / 1000;
+}
+```

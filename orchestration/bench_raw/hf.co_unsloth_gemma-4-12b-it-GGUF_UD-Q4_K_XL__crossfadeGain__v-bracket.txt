@@ -1,0 +1,62 @@
+<|channel>thought
+*   Role: Focused code generator.
+    *   Task: Implement `crossfadeGain` function in TypeScript.
+    *   Output format: Only a single `.ts` file content inside a ```ts block. No prose, no imports, no external deps.
+    *   Signature: `export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number }`.
+
+    *   Equal-power crossfade formula:
+        *   $p = \text{clamp}(t / \text{durationSec}, 0, 1)$
+        *   $\text{gainIn} = \sin(p \cdot \pi / 2)$
+        *   $\text{gainOut} = \cos(p \cdot \pi / 2)$
+    *   Edge cases:
+        *   `durationSec <= 0` or not finite $\rightarrow$ `{ gainIn: 1, gainOut: 0 }`.
+        *   `t` is `NaN` $\rightarrow$ treat as $t = 0$.
+    *   Tolerance: $1e-6$.
+
+    *   Input: `t`, `durationSec`.
+    *   Handle `t === NaN`: `if (isNaN(t)) t = 0;`
+    *   Handle `durationSec <= 0` or not finite: `if (durationSec <= 0 || !Number.isFinite(durationSec)) return { gainIn: 1, gainOut: 0 };`
+    *   Calculate $p$: `const p = Math.max(0, Math.min(1, t / durationSec));`
+    *   Calculate gains:
+        *   $\text{gainIn} = \sin(p \cdot \frac{\pi}{2})$
+        *   $\text{gainOut} = \cos(p \cdot \frac{\pi}{2})$
+    *   Return object.
+
+    ```typescript
+    export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+      if (isNaN(t)) t = 0;
+      if (durationSec <= 0 || !Number.isFinite(durationSec)) {
+        return { gainIn: 1, gainOut: 0 };
+      }
+
+      const p = Math.max(0, Math.min(1, t / durationSec));
+      const gainIn = Math.sin((p * Math.PI) / 2);
+      const gainOut = Math.cos((p * Math.PI) / 2);
+
+      return { gainIn, gainOut };
+    }
+    ```
+
+    *   `crossfadeGain(0, 2)`: $p=0$, $\sin(0)=0$, $\cos(0)=1$. Correct.
+    *   `crossfadeGain(1, 2)`: $p=0.5$, $\sin(\pi/4) \approx 0.7071068$, $\cos(\pi/4) \approx 0.7071068$. Correct.
+    *   `crossfadeGain(2, 2)`: $p=1$, $\sin(\pi/2)=1$, $\cos(\pi/2)=0$. Correct.
+    *   `crossfadeGain(5, 2)`: $p=1$ (clamped), $\sin(\pi/2)=1$, $\cos(\pi/2)=0$. Correct.
+
+    *   Single file? Yes.
+    *   No prose? Yes.
+    *   One code block? Yes.
+    *   Signature exact? Yes.<channel|>```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (isNaN(t)) t = 0;
+
+  if (durationSec <= 0 || !Number.isFinite(durationSec)) {
+    return { gainIn: 1, gainOut: 0 };
+  }
+
+  const p = Math.max(0, Math.min(1, t / durationSec));
+  const gainIn = Math.sin((p * Math.PI) / 2);
+  const gainOut = Math.cos((p * Math.PI) / 2);
+
+  return { gainIn, gainOut };
+}
+```

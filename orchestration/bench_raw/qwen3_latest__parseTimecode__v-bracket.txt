@@ -1,0 +1,176 @@
+<think>
+Okay, I need to write a TypeScript function called parseTimecode that takes a string and returns a number. The requirements are pretty specific. Let me think through this step by step.
+
+First, the input format must be exactly "MM:SS.mmm". So, two digits for minutes, colon, two digits for seconds, dot, three digits for milliseconds. Any deviation from this format should return -1.
+
+So, the function needs to validate the string against this pattern. How can I do that? Maybe using a regular expression. Let's see. The regex should match exactly two digits for minutes, then a colon, then two digits for seconds, a dot, and three digits for milliseconds. And the entire string must conform to this structure.
+
+The regex pattern would be something like ^\d{2}:\d{2}\.\d{3}$$. Let me check: ^ ensures start of string, \d{2} for two digits, colon, another two digits, dot, three digits, then $ at the end. Yes, that should work.
+
+So, first step: check if the input string matches this regex. If not, return -1.
+
+Once the format is validated, I need to parse the components. Split the string into minutes, seconds, and milliseconds. Let's see. Splitting on colon and dot. For example, "01:02.500" would split into ["01", "02.500"], then split again on the dot to get ["02", "500"].
+
+Wait, maybe splitting on the colon first. So, split into two parts: minutes part and the rest. Then split the rest into seconds and milliseconds.
+
+So, let's split the string into parts. Let's take s.split(':'), which would give an array with two elements: minutes part and the seconds/millis part. Then, split the second element on '.' to get seconds and millis.
+
+Once I have those parts, convert them to numbers. Then calculate total seconds as minutes * 60 + seconds + milliseconds / 1000.
+
+But need to handle leading zeros? Well, since they're parsed as numbers, leading zeros won't matter. For example, "01" becomes 1, which is correct.
+
+So, code steps:
+
+Check if the string matches the regex. If not, return -1.
+
+Else, split into minutes, seconds, millis.
+
+Convert each part to numbers.
+
+Calculate total seconds: minutes * 60 + seconds + millis / 1000.
+
+Return that as a number.
+
+Now, edge cases: "00:00.000" should return 0. "01:02.500" is 1*60 + 2 + 0.5 = 62.5. Correct.
+
+What about invalid values? For example, minutes being '99' is allowed since the problem says minutes can be 00-99. So no need to check that, as per the context. The regex ensures two digits, and the problem states that seconds must be 00-59, but the function doesn't have to validate that because the input is supposed to be correct. Wait, no: the grounded context says that seconds part must be 00-59 and minutes 00-99. But according to the task, any string not matching format returns -1. So does the function need to check if the numeric values are within range?
+
+Wait, looking back at GROUNDED CONTEXT: "seconds part must be 00-59; minutes 00-99. return total seconds as a number. any string not matching format exactly -> return -1."
+
+So, the format is checked first. But if the string matches format but has invalid values (like minutes '99' is allowed since minutes can be up to 99). Wait, no: the problem says minutes can be 00-99. So '99' is valid. The seconds part must be 00-59. But if the input string is "99:60.000", then the format is correct (two digits for minutes, two for seconds, three millis), but seconds are 60 which is invalid. However, according to GROUNDED CONTEXT, the function should return total seconds as a number. But the problem says that any string not matching format exactly returns -1. So does this mean that even if the format is correct but the values are out of range (like seconds being 60), it's considered valid? Or is that considered invalid?
+
+Wait, the GROUNDED CONTEXT says: "input format is exactly 'MM:SS.mmm' (2-digit minutes, 2-digit seconds, 3-digit milliseconds). seconds part must be 00-59; minutes 00-99. any string not matching format exactly -> return -1."
+
+So the format is checked first. So if the format matches (like "99:60.000"), then it's considered valid format, but the seconds part is invalid. However, according to the problem statement, the function should return total seconds as a number. But does that mean that even if the values are out of range, the function returns the number? Or is that considered format not matching?
+
+Wait, no. The format is checked for structure (MM:SS.mmm), but the actual values (like SS being 60) are not part of the format check. So the function should parse it as long as the format matches, even if the values are out of range. Because the format is correct.
+
+So in that case, "99:60.000" would be considered valid format, and the function returns 99*60 + 60 + 0 = 6000 seconds. But according to the problem statement, the function should return total seconds as a number regardless of whether the values are within range. So the function doesn't need to check if minutes or seconds are in their respective ranges. Only the format is checked.
+
+So the regex ensures that the string is in MM:SS.mmm format. Then, the code proceeds to parse it into numbers and compute total seconds.
+
+Therefore, the function's steps are:
+
+1. Check if s matches the regex ^\d{2}:\d{2}\.\d{3}$$. If not, return -1.
+
+2. Split the string into parts.
+
+3. Parse each part as numbers.
+
+4. Compute total seconds.
+
+So, code-wise:
+
+Implementing the regex check first.
+
+In TypeScript, using a regular expression test.
+
+Then splitting the string.
+
+Let me write this step by step.
+
+Function parseTimecode(s: string): number {
+
+   if (!/^\d{2}:\d{2}\.\d{3}$/.test(s)) {
+      return -1;
+   }
+
+   const parts = s.split(':');
+   const minutesPart = parts[0];
+   const secondsMillisPart = parts[1];
+
+   const [secondsPart, millisPart] = secondsMillisPart.split('.');
+
+   const minutes = parseInt(minutesPart, 10);
+   const seconds = parseInt(secondsPart, 10);
+   const millis = parseInt(millisPart, 10);
+
+   return minutes * 60 + seconds + millis / 1000;
+}
+
+Wait, but what if splitting parts[1] into seconds and millis? For example, if the input is "01:02.500", then parts[1] is "02.500". Splitting on '.' gives ["02", "500"], which is correct.
+
+Yes.
+
+But what about leading zeros? Well, parseInt handles that correctly.
+
+Testing some cases:
+
+parseTimecode("01:02.500") -> 1*60 + 2 + 500/1000 = 62.5 → correct.
+
+parseTimecode("00:00.000") → 0 → correct.
+
+parseTimecode("abc") → regex fails, returns -1.
+
+parseTimecode("1:02.500") → format is "1:02.500" which doesn't match the regex (minutes part must be two digits). So returns -1 → correct.
+
+Another test case: "99:59.999" → 99*60 +59 + 0.999 = 5999.999 → correct.
+
+What about "00:60.000"? The format is correct (two digits for minutes, two for seconds, three millis). So returns 0*60 +60 +0 = 60 → which is valid according to the function's specs.
+
+So that's handled correctly.
+
+Now, edge cases:
+
+What if the string is "00:00.00" → length of millis part is 2 → regex requires three digits. So returns -1.
+
+Another case: "00:00.000a" → regex fails.
+
+So the code seems to handle all cases.
+
+Now, implement this in TypeScript.
+
+But need to make sure that split works correctly. For example, if parts[1] is split into two parts. What if there's no '.'? Well, the regex ensures that the format is correct, so the split will always have exactly one '.'.
+
+So code should be safe.
+
+Now, write the function as per the requirements.
+
+The function must be exported as parseTimecode, and return a number.
+
+So the code would be:
+
+export function parseTimecode(s: string): number {
+  if (!/^\d{2}:\d{2}\.\d{3}$/.test(s)) {
+    return -1;
+  }
+  const [minutesStr, secondsMillis] = s.split(':');
+  const [secondsStr, millisStr] = secondsMillis.split('.');
+  const minutes = parseInt(minutesStr, 10);
+  const seconds = parseInt(secondsStr, 10);
+  const millis = parseInt(millisStr, 10);
+  return minutes * 60 + seconds + millis / 1000;
+}
+
+Wait, but in the code above, after splitting s into parts with split(':'), we have two parts. Then split the second part on '.'.
+
+Yes.
+
+Testing this code:
+
+For "01:02.500", minutesStr is '01', secondsMillis is '02.500'. Splitting that gives ['02', '500'] → correct.
+
+Yes.
+
+So this should work.
+
+Now, check for possible errors. What if the split returns more than two parts? Well, the regex ensures that the format is correct, so splitting on ':' will give exactly two parts. Similarly, splitting secondsMillis on '.' gives exactly two parts.
+
+Thus, code should be safe.
+
+So this should handle all cases.
+</think>
+
+```ts
+export function parseTimecode(s: string): number {
+  if (!/^\d{2}:\d{2}\.\d{3}$/.test(s)) {
+    return -1;
+  }
+  const [minutesStr, secondsMillis] = s.split(':');
+  const [secondsStr, millisStr] = secondsMillis.split('.');
+  const minutes = parseInt(minutesStr, 10);
+  const seconds = parseInt(secondsStr, 10);
+  const millis = parseInt(millisStr, 10);
+  return minutes * 60 + seconds + millis / 1000;
+}
+```

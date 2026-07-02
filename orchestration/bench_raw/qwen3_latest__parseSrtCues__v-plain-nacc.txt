@@ -1,0 +1,50 @@
+<think>
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  const blocks = srt.split(/\r?\n\r?\n+/);
+  const result: { start: number; end: number; text: string }[] = [];
+  
+  for (const block of blocks) {
+    const lines = block.trim().split(/\r?\n/);
+    if (lines.length < 2) continue;
+    
+    let timeLineFound = false;
+    let startTime = 0;
+    let endTime = 0;
+    let text = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      if (/^\d+$/.test(line)) continue;
+      
+      if (/.* --> .*/.test(line)) {
+        timeLineFound = true;
+        const [startStr, endStr] = line.split(' --> ');
+        startTime = parseTime(startStr);
+        endTime = parseTime(endStr);
+      } else if (timeLineFound) {
+        text += line.trim() + '\n';
+      }
+    }
+    
+    if (timeLineFound && text !== '') {
+      result.push({ start: startTime, end: endTime, text: text.trimEnd() });
+    }
+  }
+  
+  return result;
+}
+
+function parseTime(timeStr: string): number {
+  const [hhmmss, mmm] = timeStr.split(',');
+  if (!hhmmss || !mmm) return 0;
+  
+  const [h, m, s] = hhmmss.split(':').map(Number);
+  const ms = Number(mmm);
+  
+  return h * 3600 + m * 60 + s + ms / 1000;
+}
+```

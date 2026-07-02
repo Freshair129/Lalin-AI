@@ -1,0 +1,70 @@
+<think>
+
+Okay, I need to implement the pickKeys function in TypeScript. Let's see. The function takes an object and an array of keys, and returns a new object with only those keys. The signature is export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>. 
+
+First, I should make sure that the function doesn't mutate the input object. So, I need to create a new object. The way to do this is by using an object literal or Object.assign. But since we need to pick specific keys, maybe using a loop over the keys array would be better.
+
+Wait, but in TypeScript, if the keys are provided as an array, how do I ensure that each key is present in the object? Well, the generic K extends keyof T ensures that the keys are valid keys of T. So, the function can safely access those properties.
+
+So, the steps are: iterate over each key in the keys array, check if it's present in the obj (though since K is a subset of T's keys, they should all be there), and then add them to a new object.
+
+Wait, but what if the same key is listed multiple times in the keys array? The problem statement says that duplicate keys must not duplicate work or throw. So, even if the keys array has duplicates, the function should just include each key once. So, maybe we need to deduplicate the keys first?
+
+But the function's parameters are K[], which is a list of keys. However, in TypeScript, if the same key is present multiple times, it's still considered part of the array. But when creating the new object, duplicate keys would result in the last one being kept. However, since Pick<T, K> would have each key once, even if K has duplicates, but K is a list of keys. Wait, no. The K is a list of keys, but in TypeScript, K is a union type. For example, if K is ["a", "a"], then K would be "a" as a single key. But the function's parameters are K[], which could have duplicates. However, Pick<T, K> would pick all the keys in K, even if they're duplicated. Wait no, Pick<T, K> picks the keys present in K, but K is a list of keys. Wait, no. The Pick utility type takes a union of keys. So if K is an array with duplicate keys, like ["a", "a"], then K would be considered as "a" | "a", which is just "a". So the Pick<T, K> would pick all properties of T that are in K, but since K is a list of keys, even if duplicated, the Pick type would still have each key once. 
+
+But the function's implementation needs to create an object with only those keys. So if the keys array has duplicates, the resulting object should have each key once. So, in the implementation, when building the new object, we need to ensure that duplicate keys in the array don't result in multiple entries. But since Object.assign or a loop would overwrite existing properties, but in reality, the same key can't be present twice in the object. So, even if the keys array has duplicates, the resulting object will have each key once.
+
+So, perhaps we can just loop through the keys array and add each key to the new object. Even if there are duplicates, the last occurrence would overwrite previous ones, but since the keys are all valid, it's safe. However, in reality, the Pick type would include each key once, so the function should return an object with each key present once, regardless of duplicates in the array.
+
+But how to handle that? Well, maybe we can deduplicate the keys array first. But how? Since the function is supposed to work for any K[], perhaps the best approach is to loop through the keys and add them to a new object. Even if there are duplicate keys in the array, the resulting object will have each key once, which aligns with Pick<T, K>.
+
+So, the implementation would be something like:
+
+function pickKeys(obj, keys) {
+  const result = {};
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+But in TypeScript, we need to make sure that the function is generic and returns Pick<T, K>. Also, the function should not mutate the input object. The above code creates a new object, so that's okay.
+
+Wait, but what if the keys array contains a key that isn't present in obj? Well, since K extends keyof T, the keys are guaranteed to be present. So the code can safely access obj[key].
+
+So putting it all together with TypeScript generics:
+
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+Wait, but what if the keys array is empty? Then the function returns an empty object. Which aligns with the test case pickKeys({a:1}, []) -> {}.
+
+But in TypeScript strict mode, when K is an empty array, Pick<T, K> would be an empty object. So the code should work.
+
+Another thing to consider: the result is typed as Pick<T, K>, but when we create the object literal, TypeScript might not infer it correctly. So using a type assertion like {} as Pick<T, K> could help. However, in some cases, this may not be necessary if the loop correctly assigns the properties.
+
+Alternatively, we can use Object.fromEntries or other methods. But for simplicity and compatibility with older environments, a loop is better.
+
+Testing the sample case pickKeys({a:1,b:2,c:3}, ["a","c"]) should return {a:1,c:3} which the code would do.
+
+Another edge case: when keys are empty. The code returns an empty object.
+
+What about duplicate keys in the array? For example, pickKeys({a:1}, ["a", "a"]). The code will assign obj["a"] twice, but the result object will have {a:1} which is correct.
+
+So this implementation should meet all the requirements. Now, write it in TypeScript with the exact signature.
+</think>
+
+```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+```

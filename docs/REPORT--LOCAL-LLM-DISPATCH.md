@@ -3,6 +3,7 @@
 > เก็บจากการรัน swarm G-Music (Wave 0–5, 24 WP) — 2026-07-02/03
 > โฟกัส: **การ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-MODEL-ANTI-ERROR-LOOP**
 > ใช้คู่กับ [LOCAL_MODEL_LEDGER.md](LOCAL_MODEL_LEDGER.md) (failure/pass ledger)
+> **อัปเดต v2 (2026-07-03):** benchmark เชิงประจักษ์ 74 dispatch จริง → ดู [หัวข้อ V2](#v2--ผลการทดลองรอบ-2-2026-07-03-benchmark-74-dispatch) — **แทนที่ §4 (prompt) และ §5 (config) ของรายงานเดิม**
 
 ---
 
@@ -74,7 +75,7 @@ Local LLM เข้ามาช่วง batch หลัง (ตามคำส�
 
 ---
 
-## 4. คำแนะนำปรับ PROMPT (concrete)
+## 4. คำแนะนำปรับ PROMPT (concrete) — ⚠️ superseded โดย [V2.7](#v27-prompt-template-v2-แทน-4--ผู้ชนะคือ-v-plain-เดิม--กติกาที่พิสูจน์เพิ่ม)
 
 สิ่งที่ **ทำให้ qwen3 สำเร็จ** (ทำต่อ):
 1. **Signature เป๊ะบรรทัดเดียว** — "Implement EXACTLY: export function X(...): T" → โมเดลไม่เดา API
@@ -102,7 +103,7 @@ Output ONLY the ```ts block.
 
 ---
 
-## 5. คำแนะนำปรับ CONFIG (Ollama)
+## 5. คำแนะนำปรับ CONFIG (Ollama) — ⚠️ superseded โดย [V2.8](#v28-config-v2-แทน-5--ค่าที่วัดแล้วทั้งหมด)
 
 | พารามิเตอร์ | ค่าที่ใช้ได้จริง | เหตุผล |
 |---|---|---|
@@ -137,6 +138,129 @@ Output ONLY the ```ts block.
 3. **L1 retrieval จริง** (SPEC §8): ใช้ `bge-m3` embed failure/pass nodes → inject "past mistakes" ที่ semantic ตรง task (ตอนนี้ยังเป็น file-ledger manual)
 4. **ขยายชนิด micro-task ที่ให้ local**: pure parser (SRT/VTT cues), pure DSP helper, format util — ทุกตัวต้อง acceptance ตรวจได้
 5. **วัด eval_count/latency ต่อโมเดล** เก็บสถิติเลือก model อัตโนมัติ (เร็ว+ผ่าน gate บ่อย = โปรโมท)
+
+---
+
+## V2 — ผลการทดลองรอบ 2 (2026-07-03, benchmark 74 dispatch)
+
+> **วิธีวัด:** benchmark suite 7 micro-task ([orchestration/bench_tasks.json](../orchestration/bench_tasks.json)) ครอบคลุม pure-math / parser ×2 (รวม SRT→cues) / array-reduce / format-util / dsp-helper / TS-generics · ทุก task มี **visible acceptance** (อยู่ใน prompt) + **holdout checks** (ไม่อยู่ใน prompt) · Verify Gate = `tsc --noEmit --strict` + assertion ทั้งสองชุด (eps 1e-6) — deterministic ล้วน ([orchestration/verify_gate.mjs](../orchestration/verify_gate.mjs)) · pre-warm ก่อนทุก batch แล้ววัดเฉพาะ warm · harness: [orchestration/bench.py](../orchestration/bench.py) + [orchestration/dispatch.py](../orchestration/dispatch.py) · ผลดิบ: `orchestration/bench_results.jsonl` + `orchestration/bench_raw/*.txt`
+
+### V2.1 Root cause A — gemma-4-12B-coder: **เสียถาวรระดับ weights ไม่ใช่ template**
+
+probe 4 ทาง ([orchestration/probe_gemma.py](../orchestration/probe_gemma.py)) บนโมเดล warm:
+
+| probe | ผล |
+|---|---|
+| P1 `/api/generate` (template ของโมเดล) | eval=1, output ว่าง |
+| P2 `/api/chat` + system role + messages array | eval=67, `<unused33><unused27>…[multimodal]…` ล้วน |
+| P3 `raw:true` + ประกอบ template gemma4 (`<|turn>`) เอง | eval=33, `<unusedNN>` ล้วน |
+| P4 `raw:true` + template gemma ดั้งเดิม (`<start_of_turn>`) | eval=83, `<unusedNN>` ล้วน |
+
+- **แม้ raw mode ที่ข้าม template ทุกชั้นก็ยังพ่น unused-token** → ปัญหาอยู่ที่ GGUF export (weights/vocab mapping) ไม่ใช่ chat template → **แก้ด้วย Modelfile/template ไม่ได้ — blacklist ถาวร**
+- หลักฐานเทียบ: `gemma-4-12b-it` (unsloth) ใช้ arch `gemma4` + Jinja template **เดียวกันเป๊ะ** (ตรวจด้วย `ollama show --template`) แต่ generate ข้อความจริงได้ → template ไม่ใช่ตัวการ
+- ข้อสรุป v1 ("GGUF/chat-template เสีย") แม่นครึ่งเดียว — ที่ถูกคือ **GGUF เสีย, template ไม่เกี่ยว**
+
+### V2.2 Root cause B — กายวิภาค cold-load (ตัวเลข 160–186s เดิม reproduce ไม่ได้)
+
+| เงื่อนไข | load_duration วัดจริง |
+|---|---|
+| qwen3 14.8B (9GB) จาก **VRAM ว่าง** | **62.7s** |
+| qwen3 reload โดยต้อง **evict** sushirl (5.6GB) | **88.1s** |
+| Qwythos 9B evict gemma-it (8.4GB) / evict gemma-coder (7.4GB) | 80.1s / **115.3s** |
+| sushirl 9B (โหลด 2 ครั้ง) | 55.6s / 63.5s |
+| llama3.2:1b (1.3GB) | 20.4s |
+
+- เวลา cold ≈ `load_duration` ล้วน (wall − load < 1s) = อ่าน blob จาก **SATA SSD** (C: = WDC WDS250G2B0A, ~500MB/s; 9GB ≈ 19s ขั้นต่ำ) + dequant/PCIe upload + alloc KV cache · **eviction เพิ่ม 25–40%** · disk เหลือ 17GB (เกือบเต็ม — เสี่ยงช้าลงอีก)
+- ตัวเลข 160–186s ของ v1 **ไม่เกิดซ้ำในเครื่องว่าง** — คำอธิบายที่สอดคล้อง: ตอน swarm มี Sonnet workers หลายตัวอัด disk/CPU พร้อมกัน + eviction ทับซ้อน → cold แบนด์จริงวันนี้ = **56–115s**, warm = 1.8–6.1s (qwen3) → **speedup 10–35x ยืนยัน**
+- **กับดักที่วัดพบใหม่: pre-warm ต้องใช้ `num_ctx` เดียวกับ dispatch จริง** — llama1b prewarm (ctx default) 20.4s แล้ว call ถัดไป (ctx 8192) โดน **reload อีก 3.7s** เพราะ Ollama re-allocate เมื่อ num_ctx เปลี่ยน → [scripts/prewarm_ollama.ps1](../scripts/prewarm_ollama.ps1) fix แล้ว (ctx 8192 + `-Unload` สำหรับก่อนงาน ML)
+
+### V2.3 Root cause C — prompt A/B บน qwen3 (7 task × 4 variant, warm ทั้งหมด)
+
+| variant | gate pass | median latency | median eval_count |
+|---|---|---|---|
+| **v-plain** (template §4 เดิม) | **7/7 = 100%** | **5.1s** | 142 |
+| v-plain-nacc (ตัด acceptance) | 6/7 = 86% | 6.1s | 175 |
+| v-bracket (section header `[ROLE]…` ตามสเปกเก่า) | 5/7 = 71% | 49.0s (**~10x ช้ากว่า**) | 1492 |
+| v-plain-pm (แทรก past-mistakes **ไม่ตรง task**) | 4/7 = 57% | 5.6s | 160 |
+| v-plain-pm+**recall** (แทรกจาก bge-m3 recall, 3 task ที่ pm-static เคยตก) | **3/3 = 100%** | 6.6s | 184 |
+
+กลไกที่เห็นจาก raw output:
+- **v-plain ทำให้ qwen3 ปล่อย `<think>` ว่าง** แล้วเขียนโค้ดทันที (eval 45–175) · v-bracket/v-nacc จุด CoT ยาว 675–2500 token → ช้า 10 เท่า และ 2 เคส **think จนชน num_predict 2500 → โค้ดโดนตัด → fail** (`parseTimecode`, `parseSrtCues` v-bracket)
+- v-bracket ยังพลาด rule บน holdout (ลืม validate SS≤59) — คิดเยอะ ≠ แม่นขึ้น
+- ไม่มี acceptance → **syntax hallucination**: `String.padStart(n,2,"0")` (static method ที่ไม่มีจริง) — tsc ใน gate จับได้ 2 เคส
+- **past-mistakes ที่ไม่ตรง task เป็นพิษ** (57%): ทำ logic เพี้ยน (`parseSrtCues` คืน start/end = null) และจุด think-overflow (`pickKeys` eval=2500) — ขณะที่บรรทัดจาก semantic recall (FR-4) ผ่านครบ → **inject เฉพาะที่ recall ตรง มิฉะนั้นไม่ใส่เลย**
+
+### V2.4 Model benchmark — before/after (harness v1 → v2)
+
+| model (VRAM จริง) | ก่อน (extractor v1 + config เดียวทุกโมเดล) | หลัง (extractor v2 ± per-model config) | median warm | สถานะ |
+|---|---|---|---|---|
+| qwen3:latest 14.8B (**10.05GB**) | v-plain 7/7 | 7/7 (ไม่เปลี่ยน — fail ของมันเป็น logic จริง 0/6 rescued) | **5.1s** | **default (คุณภาพ+เร็วสุด)** |
+| sushirl 9B (**5.57GB**) | **0/7** — fence แรกจับ prompt-restatement | **7/7 (rescue offline ยืนยันด้วย live re-run 7/7)** | 11.6s | **promote: ตัว co-resident** |
+| gemma-4-12b-it 11.9B (8.36GB) | v-plain 6/7 · v-bracket 3/7 | 14/14 (offline re-verify) แต่ `<|channel>thought` รั่วเป็น text ทุก run (0/14 single-fence) | 54.9s (**ช้า 10x**) | candidate (ช้าเกิน) |
+| Qwythos-9B (6.09GB) | 1/7 ที่ temp 0.1 | **5/7 ที่ temp 0.6** (ตาม model card: "avoid T≤0.3 → repetition loop") + extractor v2 | 19.6s | candidate (ยังแพ้ sushirl) |
+| gemma-4-12B-coder (7.4GB) | `<unused30>` eval=4 | probe 4 ทางยืนยัน **เสียถาวร** (V2.1) | — | **blacklist ถาวร** |
+| llama3.2:1b (2.58GB) | 0/1 — ตัด `export` ทิ้ง | — | 4.1s | เล็กเกิน ไม่เข้า pool |
+
+**Extractor v2** (แก้ใน `dispatch.py:analyze_output`, พิสูจน์ด้วย [orchestration/reextract.py](../orchestration/reextract.py) จาก raw เดิม — ไม่รันโมเดลซ้ำ):
+1. strip `<think>…</think>` → 2. strip **orphan `</think>`** (template qwen3.5-family auto-open `<think>` ตอน generation → CoT ต้น response ไม่มี tag เปิด) → 3. จับ fence ทุก language tag → 4. เลือก **fence ตัวสุดท้ายที่มี `export function`** (ห้ามใช้ fence แรก — โมเดล CoT ชอบ restate โจทย์ที่มี ``` ในเนื้อความ) → 5. fallback: fence สุดท้าย → substring ตั้งแต่ `export function`
+- ผล rescue: sushirl 0/7→7/7 · gemma-it 9/14→14/14 · Qwythos 1/7→4/7 (ที่เหลือเป็น logic จริง) · qwen3 0/6 rescued (fail ของ thinking-model เก่งเป็นของจริง ไม่ใช่ format)
+
+### V2.5 L1 retrieval (FR-4) — วัดจริงด้วย bge-m3
+
+- [orchestration/recall_mistakes.py](../orchestration/recall_mistakes.py): embed `lesson` ใน [orchestration/ledger.jsonl](../orchestration/ledger.jsonl) (8 entries) ผ่าน `/api/embeddings` + cache (`ledger_vec.json`, re-query 0.19s) · blacklist inject เสมอ
+- ranking ถูกโดเมนทุก query ที่ทดสอบ: "parse subtitle timecode…" → parser lesson **0.587** (อันดับ 1) · "format milliseconds MM:SS.mmm" → **0.709** · "crossfade DSP" → สูงสุด 0.448 (ไม่ผ่าน threshold → ไม่ inject อะไร = ปลอดภัย)
+- calibration: ช่วง sim ของ lesson ที่เกี่ยวจริง 0.41–0.71 vs ไม่เกี่ยว 0.32–0.42 (คาบเกี่ยว) — **คง threshold 0.5** เพราะ false-positive แพง (V2.3 พิสูจน์ว่า inject ผิด = pass-rate ร่วง) ยอมพลาด lesson ชายขอบ (เช่น padStart 0.406)
+- ผลเชิงพฤติกรรม: PM จาก recall = 3/3 pass บน task ที่ PM-static-irrelevant ตก 0/3 (ตาราง V2.3)
+
+### V2.6 VRAM / co-residency (RTX 3060 12GB, desktop กิน ~0.9GB)
+
+| โมเดล | size_vram (`/api/ps`, ctx 8192) | เหลือให้ ML | co-resident Demucs/whisper? |
+|---|---|---|---|
+| qwen3 14.8B | 10.05GB | ~1.1GB | ❌ ต้อง `-Unload` ก่อน (mutex FR-5) |
+| gemma-4-12b-it | 8.36GB | ~2.7GB | ❌/เสี่ยง |
+| Qwythos-9B | 6.09GB | ~5.0GB | ✅ น่าจะพอ |
+| **sushirl 9B** | **5.57GB** | **~5.5GB** | ✅ (Demucs htdemucs แบบ staged ใน `music.py` + whisper large-v3 ~3GB) |
+| bge-m3 (embeddings) | 1.2GB | — | co-resident กับ 9B ได้ (วัดแล้วตอนรัน recall คู่ Qwythos) |
+
+> ยังไม่ได้รัน Demucs พร้อม sushirl จริง — ตัวเลขฝั่ง ML เป็น estimate จากสเปก pipeline; ก่อนใช้จริงให้ทดสอบ 1 รอบ
+
+### V2.7 Prompt template v2 (**แทน §4**) — ผู้ชนะคือ v-plain เดิม + กติกาที่พิสูจน์เพิ่ม
+
+```
+You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in <path>:
+export function <signature 1 บรรทัดเป๊ะ>
+
+Rules:
+- <bullet สั้น ≤ 6 ข้อ รวม guard invalid input>
+
+Acceptance: <call> -> <expected ที่คำนวณได้>. <อย่างน้อย 2 case รวม edge>.
+{PAST MISTAKES (from ledger, avoid these): <เฉพาะจาก recall_mistakes.py — blacklist + sim ≥ 0.5 เท่านั้น>}
+Output ONLY the ```ts block.
+```
+
+| กติกา | หลักฐาน |
+|---|---|
+| **ห้าม** section-header วงเล็บ `[ROLE]…[SCAFFOLD]` | 100%→71%, 5.1s→49s, จุด CoT 10x + think-overflow (V2.3) — v1 บอก "ไม่ช่วย" แต่จริงคือ **ทำร้าย** |
+| acceptance เลขคำนวณได้ = บังคับ | ตัดแล้วเหลือ 86% + syntax hallucination (padStart) |
+| PAST MISTAKES เฉพาะจาก recall | static-irrelevant = 57% · recall = 100% (n=3) · ไม่มีอะไร inject = ปลอดภัยกว่า inject มั่ว |
+| `num_predict ≥ 2500` (qwen3) | think-overflow คือ failure mode อันดับ 1 ของ prompt ที่จุด CoT |
+| ฝั่ง harness ต้องมี extractor v2 เสมอ | prompt สั่ง "ONLY one block" แล้วโมเดล CoT-นอก-tag ก็ยังไม่ทำตาม (gemma-it 0/14, sushirl 1/7 single-fence) |
+
+### V2.8 Config v2 (**แทน §5**) — ค่าที่วัดแล้วทั้งหมด
+
+| สถานการณ์ | โมเดล | options | หมายเหตุ |
+|---|---|---|---|
+| **default** (คุณภาพ+เร็ว, VRAM ว่าง) | `qwen3:latest` | `temp 0.1, num_ctx 8192, num_predict 2500, keep_alive 30m` | 7/7 @ 5.1s |
+| **co-resident กับงาน ML** | `sushirl:latest` + extractor v2 | เหมือน default | 7/7 @ 11.6s, VRAM 5.57GB |
+| สำรอง (escalation ใน T1) | `Qwythos-9B` | **`temp 0.6, top_p 0.95, top_k 20, repeat_penalty 1.05, num_predict 6000`** (per model card — temp 0.1 ทำ repetition: 1/7) | 5/7 @ 19.6s |
+| blacklist | `gemma-4-12B-coder…GGUF` (ถาวร, V2.1) · `llama3.2:1b` (เล็กเกิน) | — | |
+| pre-warm | `scripts\prewarm_ollama.ps1` ก่อนทุก batch — **num_ctx ต้องตรงกับ dispatch** | `-Unload` ก่อน Demucs/whisper ถ้าใช้ qwen3 | cold 56–115s → warm ~5–12s |
+| per-model options | เก็บใน `dispatch.py:MODEL_OPTIONS` — ห้ามใช้ config เดียวทุกโมเดล | บทเรียน Qwythos | |
+
+**Harness ครบ loop (ใช้ซ้ำได้):** `python orchestration/dispatch.py --task <id> --model qwen3:latest --pool sushirl:latest` = buildPrompt → dispatch → Verify Gate (tsc+visible+holdout) → escalate ใน pool (maxRework=1) → append `model_stats.jsonl` — exit 2 = ส่งขึ้น T2
 
 ---
 

@@ -1,0 +1,20 @@
+<think>
+</think>
+
+```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (!isFinite(durationSec) || durationSec <= 0) {
+    return { gainIn: 1, gainOut: 0 };
+  }
+
+  if (isNaN(t)) {
+    t = 0;
+  }
+
+  const p = Math.max(0, Math.min(t / durationSec, 1));
+  const gainIn = Math.sin(p * Math.PI / 2);
+  const gainOut = Math.cos(p * Math.PI / 2);
+
+  return { gainIn, gainOut };
+}
+```

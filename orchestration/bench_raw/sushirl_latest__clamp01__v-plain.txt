@@ -1,0 +1,32 @@
+Let me think about how to approach this coding problem.
+
+Problem: You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/audio/clamp01.ts:
+export function clamp01(x: number): number
+
+Rules:
+- return x clamped to the range [0, 1].
+- if x is NaN return 0.
+
+Acceptance: clamp01(-1) -> 0. clamp01(0.5) -> 0.5. clamp01(2) -> 1. clamp01(NaN) -> 0.
+Output ONLY the ```ts block.
+
+Approach: TypeScript function to clamp a number between 0 and 1, returning 0 for NaN inputs.
+
+Key considerations:
+- Math.max(x, 0) ensures values below 0 become 0
+- Math.min(result, 1) ensures values above 1 become 1
+- isNaN() check handles the NaN case as specified
+
+Let me implement this solution.
+</think>
+
+```ts
+export function clamp01(x: number): number {
+    if (isNaN(x)) return 0;
+    const clamped = Math.max(0, Math.min(x, 1));
+    return clamped;
+}
+```
