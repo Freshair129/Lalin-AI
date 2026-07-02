@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import WaveSurfer from "wavesurfer.js";
+import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 
 export type TrackView = {
   id: string;
@@ -20,52 +20,68 @@ type LaneProps = {
   onSelect: (id: string) => void;
   onToggle: (id: string, what: "mute" | "solo" | "lock") => void;
   onContext: (id: string, x: number, y: number) => void;
-  register: (id: string, ws: WaveSurfer | null) => void;
+  register: (id: string, audio: HTMLAudioElement | null) => void;
 };
 
 function Lane({ track, effMuted, selected, playing, stopSignal, onSelect, onToggle, onContext, register }: LaneProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const wsRef = useRef<WaveSurfer | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [dec, setDec] = useState<Decoded | null>(null);
+  const [width, setWidth] = useState(0);
 
+  // decode peaks
   useEffect(() => {
-    if (!ref.current || !track.src) return;
-    const ws = WaveSurfer.create({
-      container: ref.current,
-      url: track.src,
-      height: 48,
-      waveColor: track.color,
-      progressColor: track.color,
-      cursorColor: "#c7f046",
-      cursorWidth: 1,
-      barWidth: 1,
-      barGap: 0,
-      normalize: true,
-    });
-    wsRef.current = ws;
-    register(track.id, ws);
+    let alive = true;
+    setDec(null);
+    if (!track.src) return;
+    getDecoded(track.src).then((d) => { if (alive) setDec(d); }).catch(() => {});
+    return () => { alive = false; };
+  }, [track.src]);
+
+  // audio element lifecycle
+  useEffect(() => {
+    if (!track.src) return;
+    sharedAudioContext();
+    const audio = new Audio(track.src);
+    audio.muted = effMuted;
+    audioRef.current = audio;
+    register(track.id, audio);
     return () => {
       register(track.id, null);
-      ws.destroy();
-      wsRef.current = null;
+      audio.pause();
+      audioRef.current = null;
     };
-  }, [track.src, track.color, track.id, register]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track.src, track.id, register]);
+
+  // track container width for resampling bars
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setWidth(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
-    const ws = wsRef.current;
-    if (!ws) return;
-    if (playing) ws.play().catch(() => {});
-    else ws.pause();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) audio.play().catch(() => {});
+    else audio.pause();
   }, [playing]);
 
   useEffect(() => {
-    const ws = wsRef.current;
-    if (!ws || stopSignal === 0) return;
-    ws.pause();
-    try { ws.seekTo(0); } catch { /* not ready */ }
+    const audio = audioRef.current;
+    if (!audio || stopSignal === 0) return;
+    audio.pause();
+    audio.currentTime = 0;
   }, [stopSignal]);
 
   useEffect(() => {
-    wsRef.current?.setMuted(effMuted);
+    if (audioRef.current) audioRef.current.muted = effMuted;
   }, [effMuted, playing]);
 
   const tbtn = (what: "mute" | "solo" | "lock", on: boolean, label: string) => (
@@ -75,6 +91,11 @@ function Lane({ track, effMuted, selected, playing, stopSignal, onSelect, onTogg
       title={what}
     >{label}</button>
   );
+
+  const dur = dec?.duration || 0;
+  const samples = Math.max(2, Math.floor((width || 200) / 1));
+  const bars = dec && dur > 0 ? regionPeaks(dec, 0, dur, samples) : [];
+  const H = 48;
 
   return (
     <div
@@ -92,6 +113,14 @@ function Lane({ track, effMuted, selected, playing, stopSignal, onSelect, onTogg
       </div>
       <div className="tl-wave" ref={ref}>
         {!track.src && <span className="tl-empty">— ยังไม่มีไฟล์ —</span>}
+        {track.src && (
+          <svg className="tl-wave-svg" viewBox={`0 0 ${Math.max(2, bars.length)} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
+            {bars.map((v, i) => {
+              const h = Math.max(1, v * H);
+              return <rect key={i} x={i} y={(H - h) / 2} width={0.9} height={h} fill={track.color} />;
+            })}
+          </svg>
+        )}
       </div>
     </div>
   );
@@ -108,7 +137,7 @@ export function Timeline({
 }) {
   const [playing, setPlaying] = useState(false);
   const [stopSignal, setStopSignal] = useState(0);
-  const wsMap = useRef<Map<string, WaveSurfer>>(new Map());
+  const audioMap = useRef<Map<string, HTMLAudioElement>>(new Map());
   const lanesRef = useRef<HTMLDivElement | null>(null);
   const headRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number>(0);
@@ -116,12 +145,12 @@ export function Timeline({
   const hasAudio = tracks.some((t) => t.src);
   const anySolo = tracks.some((t) => t.solo);
 
-  const register = useRef((id: string, ws: WaveSurfer | null) => {
-    if (ws) wsMap.current.set(id, ws);
-    else wsMap.current.delete(id);
+  const register = useRef((id: string, audio: HTMLAudioElement | null) => {
+    if (audio) audioMap.current.set(id, audio);
+    else audioMap.current.delete(id);
   }).current;
 
-  // playhead — ลากเส้นเดียวผ่านทุก lane (sync จาก ws อ้างอิงตัวแรก)
+  // playhead — ลากเส้นเดียวผ่านทุก lane (sync จาก audio อ้างอิงตัวแรก)
   useEffect(() => {
     if (!playing) {
       cancelAnimationFrame(rafRef.current);
@@ -129,11 +158,11 @@ export function Timeline({
       return;
     }
     const tick = () => {
-      const ref = [...wsMap.current.values()].find((w) => w.getDuration() > 0);
+      const ref = [...audioMap.current.values()].find((a) => a.duration > 0);
       const lanes = lanesRef.current;
       const head = headRef.current;
       if (ref && lanes && head) {
-        const p = ref.getCurrentTime() / ref.getDuration();
+        const p = ref.currentTime / ref.duration;
         const waveW = lanes.clientWidth - 132; // 132 = ความกว้าง track header
         head.style.left = `${132 + p * waveW}px`;
         head.style.opacity = "1";

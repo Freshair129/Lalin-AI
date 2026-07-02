@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRemixStore } from "../store/useRemixStore";
 import {
   ReactFlow,
   Background,
@@ -75,33 +76,55 @@ const INIT_EDGES: Edge[] = [
 ];
 
 export function RemixPanel() {
-  const [source, setSource] = useState<string | null>(null);
-  const [beat, setBeat] = useState<string | null>(null);
-  const [autotune, setAutotune] = useState(true);
-  const [fx, setFx] = useState(true);
-  const [reverb, setReverb] = useState(0.16);
-  const [delay, setDelay] = useState(0.12);
-  const [offsetAuto, setOffsetAuto] = useState(true);
-  const [offsetMs, setOffsetMs] = useState(0);
-  const [lufs, setLufs] = useState(-14);
+  // ── recipe/master-fx/panel-size/UI-layout state (ย้ายไป Zustand store แล้ว) ──
+  const source = useRemixStore((s) => s.source);
+  const setSource = useRemixStore((s) => s.setSource);
+  const beat = useRemixStore((s) => s.beat);
+  const setBeat = useRemixStore((s) => s.setBeat);
+  const autotune = useRemixStore((s) => s.autotune);
+  const setAutotune = useRemixStore((s) => s.setAutotune);
+  const fx = useRemixStore((s) => s.fx);
+  const setFx = useRemixStore((s) => s.setFx);
+  const reverb = useRemixStore((s) => s.reverb);
+  const setReverb = useRemixStore((s) => s.setReverb);
+  const delay = useRemixStore((s) => s.delay);
+  const setDelay = useRemixStore((s) => s.setDelay);
+  const offsetAuto = useRemixStore((s) => s.offsetAuto);
+  const setOffsetAuto = useRemixStore((s) => s.setOffsetAuto);
+  const offsetMs = useRemixStore((s) => s.offsetMs);
+  const setOffsetMs = useRemixStore((s) => s.setOffsetMs);
+  const lufs = useRemixStore((s) => s.lufs);
+  const setLufs = useRemixStore((s) => s.setLufs);
+
+  const mReverb = useRemixStore((s) => s.mReverb);
+  const setMReverb = useRemixStore((s) => s.setMReverb);
+  const mEcho = useRemixStore((s) => s.mEcho);
+  const setMEcho = useRemixStore((s) => s.setMEcho);
+  const mComp = useRemixStore((s) => s.mComp);
+  const setMComp = useRemixStore((s) => s.setMComp);
+
+  const leftW = useRemixStore((s) => s.leftW);
+  const setLeftW = useRemixStore((s) => s.setLeftW);
+  const tlH = useRemixStore((s) => s.tlH);
+  const setTlH = useRemixStore((s) => s.setTlH);
+  const rackH = useRemixStore((s) => s.rackH);
+  const setRackH = useRemixStore((s) => s.setRackH);
+
+  const layout = useRemixStore((s) => s.layout);
+  const setLayout = useRemixStore((s) => s.setLayout);
+  const leftTab = useRemixStore((s) => s.leftTab);
+  const setLeftTab = useRemixStore((s) => s.setLeftTab);
+  const showDesigner = useRemixStore((s) => s.showDesigner);
+  const setShowDesigner = useRemixStore((s) => s.setShowDesigner);
+  const loadRecipe = useRemixStore((s) => s.loadRecipe);
+
   const { job, busy, start } = useJob();
 
-  // ── clip engine (timeline: drag/slice/clone/delete/undo) ──
+  // ── clip engine (timeline: drag/slice/clone/delete/undo) — ไม่ย้าย ──
   const engine = useClipEngine();
   const [ctxMenu, setCtxMenu] = useState<ClipCtx | null>(null);
-  const [layout, setLayout] = useState<"standard" | "node">("standard");
-  const [showDesigner, setShowDesigner] = useState(false);
-  const [leftTab, setLeftTab] = useState<"library" | "track">("library");
-  // ขนาด panel ที่ลากปรับได้ (Adobe-style)
-  const [leftW, setLeftW] = useState(230);
-  const [tlH, setTlH] = useState(230);     // ความสูง timeline (node layout)
-  const [rackH, setRackH] = useState(190); // ความสูง FX rack (standard layout)
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
   const customSeq = useRef(0);
-  // master FX (preview chain + bake on export)
-  const [mReverb, setMReverb] = useState(0);
-  const [mEcho, setMEcho] = useState(0);
-  const [mComp, setMComp] = useState(false);
   const loadingRef = useRef(false);
 
   // ── Adobe-style project file (New/Open/Save/Save As + dirty) ──
@@ -120,21 +143,23 @@ export function RemixPanel() {
       { id: "beat", label: "audio-02", color: "#3d9be0", clips: [], envelopes: [], muted: false, solo: false, locked: false },
       { id: "master", label: "audio-03", color: "#c7f046", clips: [], envelopes: [], muted: false, solo: false, locked: false },
     ] });
-    setSource((d.source as string | null) ?? null);
-    setBeat((d.beat as string | null) ?? null);
-    setAutotune(d.autotune == null ? true : Boolean(d.autotune));
-    setFx(d.fx == null ? true : Boolean(d.fx));
-    setReverb(Number(d.reverb ?? 0.16));
-    setDelay(Number(d.delay ?? 0.12));
-    setOffsetAuto(d.offsetAuto == null ? true : Boolean(d.offsetAuto));
-    setOffsetMs(Number(d.offsetMs ?? 0));
-    setLufs(Number(d.lufs ?? -14));
-    setMReverb(Number(d.mReverb ?? 0));
-    setMEcho(Number(d.mEcho ?? 0));
-    setMComp(Boolean(d.mComp));
-    setLeftW(Number(d.leftW ?? 230));
-    setTlH(Number(d.tlH ?? 230));
-    setRackH(Number(d.rackH ?? 190));
+    loadRecipe({
+      source: (d.source as string | null) ?? null,
+      beat: (d.beat as string | null) ?? null,
+      autotune: d.autotune == null ? true : Boolean(d.autotune),
+      fx: d.fx == null ? true : Boolean(d.fx),
+      reverb: Number(d.reverb ?? 0.16),
+      delay: Number(d.delay ?? 0.12),
+      offsetAuto: d.offsetAuto == null ? true : Boolean(d.offsetAuto),
+      offsetMs: Number(d.offsetMs ?? 0),
+      lufs: Number(d.lufs ?? -14),
+      mReverb: Number(d.mReverb ?? 0),
+      mEcho: Number(d.mEcho ?? 0),
+      mComp: Boolean(d.mComp),
+      leftW: Number(d.leftW ?? 230),
+      tlH: Number(d.tlH ?? 230),
+      rackH: Number(d.rackH ?? 190),
+    });
     setTimeout(() => { loadingRef.current = false; }, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

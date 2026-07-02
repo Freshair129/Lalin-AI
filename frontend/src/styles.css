@@ -38,6 +38,15 @@
   --radius-sm: 8px;
   --mono: "SF Mono", "JetBrains Mono", "Consolas", ui-monospace, monospace;
 
+  /* responsive / touch tokens */
+  --tap-min: 44px;
+  --gap-xs: 4px;
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --gap-lg: 16px;
+  --rail-size: 52px;      /* ความกว้าง rail แนวตั้ง (desktop) / ความสูง rail แนวนอน (mobile) */
+  --rail-size-mobile: 60px;
+
   /* glassmorphism (blur 24px) */
   --glass-bg: rgba(26, 29, 38, 0.55);
   --glass-bg-strong: rgba(22, 24, 32, 0.72);
@@ -668,3 +677,98 @@ label.seg-add { display: inline-flex; align-items: center; gap: 4px; }
 .remix-check input { width: auto; accent-color: var(--accent); }
 /* mini waveform ในโหนด source/beat/output */
 .remix-mini-wave { width: 100%; }
+
+/* ════════════════════════════════════════════════════════════
+   ── Responsive ── (CSS-only, ไม่มี markup เปลี่ยน)
+   desktop: ≥1100px (ค่าเริ่มต้นด้านบน, ไม่แตะ)
+   compact: 700px–1100px
+   mobile:  <700px
+   ════════════════════════════════════════════════════════════ */
+
+/* ป้องกัน overflow แนวนอนทุกความกว้าง (ปลอดภัยไว้ก่อนแม้ desktop) */
+html, body, #root { max-width: 100%; overflow-x: hidden; }
+
+/* ───────────────────────────────────────────────────────────
+   Compact: 700px – 1100px
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .daw-body { padding: 10px; gap: 10px; }
+  .topbar { padding: 0 8px 0 12px; gap: 10px; margin: 10px 10px 0; flex-wrap: wrap; height: auto; min-height: 50px; }
+  .topbar-ctx { padding-left: 10px; }
+  .remix-toolbar { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
+  .remix-toolbar-right { gap: 8px; flex-wrap: wrap; }
+  .statusbar { margin: 0 10px 10px; padding: 0 10px; gap: 6px; flex-wrap: wrap; height: auto; min-height: 26px; }
+  .props { width: 180px; }
+  .bento { grid-template-columns: 1fr 1fr; }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Mobile: < 700px
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  * { max-width: 100%; }
+
+  .daw-body { flex-direction: column; padding: 8px; gap: 8px; padding-bottom: calc(var(--rail-size-mobile) + 14px); }
+
+  /* rail: ย้ายไปเป็นแถบล่างแนวนอน แทน rail แนวตั้งซ้าย */
+  .rail {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 40;
+    width: auto; height: var(--rail-size-mobile);
+    flex-direction: row; justify-content: space-around; align-items: center;
+    border-radius: 0; margin: 0; padding: 6px 8px; gap: 0;
+    border: 1px solid var(--glass-border); border-bottom: none;
+  }
+  .rail-btn.active::before {
+    left: 50%; top: -6px; bottom: auto; right: auto;
+    width: 18px; height: 3px; transform: translateX(-50%);
+  }
+
+  .stage { border-radius: 16px; }
+  .stage-pad { padding: 16px; }
+
+  /* topbar / toolbar: wrap + shrink */
+  .topbar { border-radius: 16px; padding: 8px 10px; gap: 8px; margin: 8px 8px 0; }
+  .brand-name { font-size: 11px; letter-spacing: 0.1em; }
+  .topbar-ctx { padding-left: 8px; gap: 6px; }
+  .topbar-right { gap: 6px; }
+  .remix-toolbar { padding: 10px; gap: 8px; }
+  .remix-toolbar-right { gap: 6px; }
+  .remix-tb-sep { display: none; }
+
+  .statusbar { border-radius: 10px; margin: 0 8px 8px; padding: 6px 10px; flex-wrap: wrap; height: auto; }
+
+  /* remix body / bento: stack แนวตั้ง */
+  .remix-body { flex-direction: column; }
+  .remix-left { width: 100% !important; border-right: none; border-bottom: 1px solid var(--border); max-height: 260px; }
+  .props { width: 100%; }
+  .bento { grid-template-columns: 1fr; padding: 8px; gap: 8px; }
+
+  .panel { max-width: 100%; padding: 18px; }
+  .mkt-detail, .ws-load, .dialog-card { width: min(340px, 88vw); }
+
+  .kb-grid { grid-template-columns: 1fr; }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Touch targets ≥44px (compact + mobile เท่านั้น — ไม่กระทบ desktop)
+   ใช้ ::after เป็น hit-area ล่องหนสำหรับปุ่มเล็ก + min-height/min-width
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .rail-btn { width: var(--tap-min); height: var(--tap-min); flex-shrink: 0; }
+
+  .tl-tbtn, .th-grip, .tl-btn, .seg-add {
+    position: relative;
+  }
+  .tl-tbtn::after, .th-grip::after, .tl-btn::after, .seg-add::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
+    transform: translate(-50%, -50%);
+  }
+
+  .tl-btn { min-width: var(--tap-min); min-height: var(--tap-min); }
+  .seg-add { min-height: var(--tap-min); display: inline-flex; align-items: center; }
+  .fm-btn, .fm-crumb, .props-tg, .props-apply, .toggle button, .dialog-btn, .update-btn {
+    min-height: var(--tap-min);
+  }
+}
+
