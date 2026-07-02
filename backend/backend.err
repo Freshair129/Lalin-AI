@@ -1,0 +1,8 @@
+INFO:     Will watch for changes in these directories: ['D:\\G-Music\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8756 (Press CTRL+C to quit)
+INFO:     Started reloader process [19612] using WatchFiles
+D:\G-Music\backend\.venv\Lib\site-packages\pydub\utils.py:170: RuntimeWarning: Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work
+  warn("Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work", RuntimeWarning)
+INFO:     Started server process [29268]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
