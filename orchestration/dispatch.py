@@ -19,9 +19,26 @@ TZ = timezone(timedelta(hours=7))
 
 DEFAULT_OPTIONS = {"temperature": 0.1, "num_ctx": 8192, "num_predict": 2500}
 DEFAULT_KEEP_ALIVE = "30m"
+
+# override ต่อโมเดลจาก model card / smoke result (SPEC §9.2)
+# Qwythos card: "Avoid greedy decoding and very-low-temperature sampling (T <= 0.3)" -> repetition loop
+MODEL_OPTIONS = {
+    "hf.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF:Q4_K_M": {
+        "temperature": 0.6, "top_p": 0.95, "top_k": 20, "repeat_penalty": 1.05,
+        "num_ctx": 8192, "num_predict": 6000,
+    },
+}
+
+
+def options_for(model, options=None):
+    return options or MODEL_OPTIONS.get(model) or DEFAULT_OPTIONS
 SPECIAL_LEAK_RE = re.compile(r"<unused\d+>|<pad>|<\|[^|>]{0,40}\|>")
 THINK_RE = re.compile(r"<think>.*?</think>", re.S)
 FENCE_RE = re.compile(r"```(?:ts|typescript)?\s*\n?(.*?)```", re.S)
+# extractor v2: fence ทุก language tag — บางโมเดล (sushirl, Qwythos) พ่น CoT เปล่า ๆ
+# ที่ restate โจทย์ (มี ``` ในเนื้อความ) → ห้ามใช้ fence แรก ให้ใช้ fence ที่มี export function ตัวสุดท้าย
+# ผลวัดจริง (reextract.py จาก bench 2026-07-03): sushirl 0/7 → 7/7, gemma-it 9/14 → 14/14
+FENCE_ANY_RE = re.compile(r"```[a-zA-Z]*\s*\n(.*?)```", re.S)
 
 
 def load_tasks():
@@ -93,9 +110,23 @@ def ollama_ps():
 def analyze_output(text):
     had_think = bool(THINK_RE.search(text))
     stripped = THINK_RE.sub("", text)
-    fences = FENCE_RE.findall(stripped)
-    outside = FENCE_RE.sub("", stripped).strip()
-    code = fences[0].strip() if fences else None
+    # orphan </think>: template ของ qwen3.5-family (Qwythos/sushirl) auto-open <think>
+    # ตอน generation → CoT ต้นๆ response ไม่มี tag เปิด — ตัดทุกอย่างก่อน </think> ตัวสุดท้าย
+    if "</think>" in stripped:
+        had_think = True
+        stripped = stripped.rsplit("</think>", 1)[1]
+    fences = FENCE_ANY_RE.findall(stripped)
+    outside = FENCE_ANY_RE.sub("", stripped).strip()
+    # v2: เลือก fence ที่มี export function (ตัวสุดท้าย = คำตอบสุดท้าย); fallback ตามลำดับ
+    with_export = [f for f in fences if "export function" in f]
+    if with_export:
+        code = with_export[-1].strip()
+    elif fences:
+        code = fences[-1].strip()
+    elif "export function" in stripped:  # ไม่มี fence เลย — ตัด prose นำหน้าออก
+        code = stripped[stripped.index("export function"):].strip()
+    else:
+        code = None
     return {
         "had_think": had_think,
         "n_fences": len(fences),
@@ -127,7 +158,7 @@ def verify(code, task_id, workdir=None, skip_tsc=False):
 def dispatch_once(model, task, variant="v-plain", past_mistakes=None, options=None,
                   keep_alive=DEFAULT_KEEP_ALIVE, skip_tsc=False, raw_dir=None):
     prompt = build_prompt(task, variant, past_mistakes)
-    resp = ollama_generate(model, prompt, options=options, keep_alive=keep_alive)
+    resp = ollama_generate(model, prompt, options=options_for(model, options), keep_alive=keep_alive)
     text = resp.get("response", "")
     ana = analyze_output(text)
     if ana["code"]:

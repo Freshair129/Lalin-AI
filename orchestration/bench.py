@@ -8,8 +8,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from dispatch import (HERE, DEFAULT_OPTIONS, load_tasks, build_prompt, ollama_generate,
-                      ollama_ps, dispatch_once, append_jsonl)
+from dispatch import (HERE, DEFAULT_OPTIONS, options_for, load_tasks, build_prompt,
+                      ollama_generate, ollama_ps, dispatch_once, append_jsonl)
 
 RESULTS = HERE / "bench_results.jsonl"
 RAW_DIR = HERE / "bench_raw"
@@ -26,7 +26,7 @@ def prewarm(model):
     สำคัญ: ต้องใช้ options ชุดเดียวกับ dispatch จริง (โดยเฉพาะ num_ctx) —
     ถ้า num_ctx ต่างกัน Ollama จะ reload โมเดล ทำให้ pre-warm เสียเปล่า (วัดพบจริง)"""
     resp = ollama_generate(model, "Reply with exactly: ok",
-                           options={**DEFAULT_OPTIONS, "num_predict": 8, "temperature": 0}, timeout=1200)
+                           options={**options_for(model), "num_predict": 8}, timeout=1200)
     load_s = round(resp.get("load_duration", 0) / 1e9, 1)
     vram = 0
     for m in ollama_ps().get("models", []):
@@ -57,6 +57,7 @@ def main():
     ap.add_argument("--tasks", default="all", help="all | ไม่รวม smoke | comma list ของ id")
     ap.add_argument("--include-smoke", action="store_true")
     ap.add_argument("--skip-tsc", action="store_true")
+    ap.add_argument("--tag", default="", help="ต่อท้ายชื่อ variant ในผลลัพธ์ (สำหรับ re-run เงื่อนไขใหม่)")
     args = ap.parse_args()
 
     tasks = load_tasks()
@@ -75,8 +76,9 @@ def main():
         print(f"[bench] prewarm load={pw['load_s']}s wall={pw['wall_s']}s vram={pw['size_vram_gb']}GB", flush=True)
         for task_id in ids:
             for variant in variants:
-                if (model, task_id, variant) in done:
-                    print(f"[bench] skip (done): {task_id} {variant}", flush=True)
+                label = f"{variant}+{args.tag}" if args.tag else variant
+                if (model, task_id, label) in done:
+                    print(f"[bench] skip (done): {task_id} {label}", flush=True)
                     continue
                 t0 = time.perf_counter()
                 try:
@@ -90,11 +92,12 @@ def main():
                            "latency_s": round(time.perf_counter() - t0, 1),
                            "ts": datetime.now().isoformat(timespec="seconds")}
                     text = ""
+                rec["variant"] = label
                 append_jsonl(RESULTS, rec)
                 if text:
                     safe = model.replace("/", "_").replace(":", "_")
-                    (RAW_DIR / f"{safe}__{task_id}__{variant}.txt").write_text(text, encoding="utf-8")
-                print(f"[bench] {task_id:18s} {variant:14s} gate={rec['gate']:4s} "
+                    (RAW_DIR / f"{safe}__{task_id}__{label}.txt").write_text(text, encoding="utf-8")
+                print(f"[bench] {task_id:18s} {label:14s} gate={rec['gate']:4s} "
                       f"lat={rec.get('latency_s', '?')}s eval={rec.get('eval_count', '?')}", flush=True)
     print("[bench] done", flush=True)
 
