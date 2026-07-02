@@ -150,3 +150,136 @@ Output ONLY the ```ts block.
 | โมเดลที่ใช้ได้ | `qwen3:latest` (14.8B) |
 | โมเดล blacklist | `gemma-4-12B-coder…GGUF` |
 | bug เงียบที่ gate ชั้นบนจับ (ทั้ง swarm) | 4 (autosave dep, LUFS NaN, fade-out pop, mic leak) — ไม่ใช่ของ local |
+
+---
+
+## ภาคผนวก B — ตัวอย่าง task จริง (prompt → output แบบ verbatim)
+
+> คู่ prompt-ที่ส่งจริง ↔ output-ที่โมเดลคืนจริง — ใช้เทียบ before/after ตอนจูน
+
+### ตัวอย่าง 1 — `metronomeTicks` · gemma-4-12B-coder → ❌ FAIL
+
+**PROMPT ที่ส่ง** (มี section-header วงเล็บ, options: `temp 0.1, num_ctx 4096, num_predict 700`):
+```
+[ROLE / SMALL_MODEL_RULES]
+You are a focused code generator. ONE task only. Output ONLY a single TypeScript file's
+contents inside one ```ts code block. No prose, no explanation. Pure function, no imports,
+no external deps. Surgical and minimal.
+
+[SCAFFOLD]
+File: frontend/src/timeline/grid.ts
+Signature to implement EXACTLY:
+export function metronomeTicks(bpm: number, beatsPerBar: number, durationSec: number): { t: number; accent: boolean }[]
+
+[GROUNDED CONTEXT]
+- t is a time in seconds from 0.
+- one beat lasts 60/bpm seconds.
+- emit one tick per beat starting at t=0 up to and including any tick < durationSec.
+- accent=true on the downbeat of each bar (every `beatsPerBar` beats: 0, beatsPerBar, 2*beatsPerBar, ...), else false.
+- guard: if bpm<=0 or beatsPerBar<=0 or durationSec<=0 return [].
+
+[TASK + ACCEPTANCE]
+metronomeTicks(120, 4, 2) -> beat = 0.5s -> ticks at 0,0.5,1.0,1.5 (4 ticks; 2.0 excluded). accents: [true,false,false,false].
+Return ONLY the file contents in one ```ts block.
+```
+
+**OUTPUT ที่คืนจริง** (eval_count=4):
+```
+<unused30><unused14>
+```
+→ **Verify Gate ❌** (special token รั่ว = GGUF/template เสีย) → escalate ไป qwen3
+
+---
+
+### ตัวอย่าง 2 — `metronomeTicks` · qwen3:14.8B → ✅ PASS (cold 186s)
+
+**PROMPT ที่ส่ง** (ตัด section-header ออก → plain, options: `temp 0.1, num_ctx 8192, num_predict 2500`):
+```
+You are a focused code generator. ONE task only. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/timeline/grid.ts:
+export function metronomeTicks(bpm: number, beatsPerBar: number, durationSec: number): { t: number; accent: boolean }[]
+
+Rules:
+- one beat = 60/bpm seconds; emit one tick per beat from t=0 while t < durationSec.
+- accent=true on downbeats (beat index 0, beatsPerBar, 2*beatsPerBar, ...), else false.
+- if bpm<=0 or beatsPerBar<=0 or durationSec<=0 return [].
+
+Acceptance: metronomeTicks(120,4,2) -> ticks at 0,0.5,1.0,1.5 (4 ticks, 2.0 excluded), accents [true,false,false,false].
+Output ONLY the ```ts block.
+```
+
+**OUTPUT ที่คืนจริง** (verbatim, หลัง strip `<think>`):
+```ts
+export function metronomeTicks(bpm: number, beatsPerBar: number, durationSec: number): { t: number; accent: boolean }[] {
+  if (bpm <= 0 || beatsPerBar <= 0 || durationSec <= 0) return [];
+  const ticks: { t: number; accent: boolean }[] = [];
+  const beatDuration = 60 / bpm;
+  let beatIndex = 0;
+  let time = 0;
+
+  while (time < durationSec) {
+    const isDownbeat = beatIndex % beatsPerBar === 0;
+    ticks.push({ t: time, accent: isDownbeat });
+    beatIndex++;
+    time += beatDuration;   // ← Opus hardening: เปลี่ยนเป็น beatIndex*beatDuration กัน float drift
+  }
+
+  return ticks;
+}
+```
+→ **Verify Gate ✅** `metronomeTicks(120,4,2)` = times `[0,0.5,1,1.5]`, accents `[T,F,F,F]`, guards ผ่าน
+→ merge เป็น [grid.ts](../frontend/src/timeline/grid.ts) (หลัง Opus hardening drift)
+
+---
+
+### ตัวอย่าง 3 — `estimateSpeechDurationSec` · qwen3:14.8B → ✅ PASS (warm 5.6s)
+
+**PROMPT ที่ส่ง** (plain + acceptance หลาย lang, options: `temp 0.1, num_ctx 8192, num_predict 2000`):
+```
+You are a focused code generator. ONE task. Output ONLY the TypeScript file contents in a
+single ```ts block. No prose. Pure function, no imports.
+
+Implement EXACTLY in frontend/src/dubbing/estimateSpeech.ts:
+export function estimateSpeechDurationSec(text: string, lang: "th" | "en"): number
+
+Rules (heuristic for fitting dubbed text to a time slot):
+- th: ~5.0 chars/sec (count non-space characters). en: ~14 chars/sec (count non-space characters).
+- trim text; if empty return 0.
+- add 0.30s trailing pause. round to 3 decimals.
+
+Acceptance: estimateSpeechDurationSec("hello world", "en") -> 10 non-space chars /14 = 0.714 + 0.30 = 1.014.
+estimateSpeechDurationSec("", "en") -> 0. estimateSpeechDurationSec("สวัสดีครับ","th") -> 10 chars/5 =2.0 +0.30 =2.3.
+Output ONLY the ```ts block.
+```
+
+**OUTPUT ที่คืนจริง** (verbatim):
+```ts
+export function estimateSpeechDurationSec(text: string, lang: "th" | "en"): number {
+    const trimmedText = text.trim();
+    if (trimmedText === "") return 0;
+
+    const nonSpaceChars = trimmedText.replace(/\s/g, "").length;
+    let charPerSec: number;
+
+    if (lang === "th") {
+        charPerSec = 5.0;
+    } else {
+        charPerSec = 14.0;
+    }
+
+    const duration = nonSpaceChars / charPerSec + 0.30;
+    return Math.round(duration * 1000) / 1000;
+}
+```
+→ **Verify Gate ✅** `("hello world","en")=1.014`, `("","en")=0`, `("สวัสดีครับ","th")=2.3`
+→ merge เป็น [estimateSpeech.ts](../frontend/src/dubbing/estimateSpeech.ts) (verbatim, ไม่ต้อง harden)
+
+---
+
+### ข้อสังเกตจาก 3 ตัวอย่าง (สำหรับจูน)
+- **ตัวอย่าง 2 vs 1**: prompt qwen3 (plain) กับ gemma (bracket) ต่างกันเล็กน้อย แต่ผลลัพธ์ต่างสุดขั้ว → **root cause = โมเดล ไม่ใช่ prompt**
+- **ตัวอย่าง 2**: local เขียนถูกเชิง logic แต่ใช้ accumulation (drift ได้) → **Verify Gate ผ่าน acceptance แต่ Opus review ยัง harden** = local pass ≠ production-ready
+- **ตัวอย่าง 3**: acceptance ที่ให้เลขคำนวณ (10/14=0.714+0.30) ทำให้โมเดล "เห็นสูตร" → output ตรงเป๊ะ; **ยิ่ง acceptance เป็นเลขที่ตรวจได้ ยิ่งแม่น**
+- ทั้ง 2 ตัวที่ผ่าน: **ไม่มี import, function เดียว, signature ตรง** — ยืนยันขอบเขต "pure micro-task เท่านั้น"
