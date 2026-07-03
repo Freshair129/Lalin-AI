@@ -1,5 +1,5 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-07-03T11:28:12+07:00"
 status: "active"
 attributes:
@@ -43,7 +43,26 @@ Sprint 0 is complete only when all gates below are true:
 | G0.3 Secrets safety | `.gitignore` excludes `keys/`, `.env`, `backend/.env`, generated media, venvs, node modules, and Tauri target | Done |
 | G0.4 Path conflicts recorded | RWANG and BikeOps path conflicts are listed as blockers outside this lane | Done |
 | G0.5 WIP limits recorded | Product MVP work is capped at one main lane | Done |
-| G0.6 Sprint 1 ready | Feature backlog is reduced to the minimum work needed for G-Music RC | Pending |
+| G0.6 Sprint 1 ready | Feature backlog is reduced to the minimum work needed for G-Music RC | Done |
+
+## Sprint 0 Findings
+
+Code truth checked on 2026-07-03:
+
+- `backend/app/routers/music.py` already exposes `POST /music/remix`.
+- `backend/app/routers/music.py` already exposes `POST /music/export`.
+- `backend/app/routers/mastering.py` exposes `POST /mastering`.
+- `frontend/src/api.ts` calls `/music/remix`, `/music/export`, and `/mastering`.
+- `frontend/src/components/RemixPanel.tsx` sends `offset_ms`, `reverb`,
+  `delay`, `target_lufs`, and optional `stem_gains`.
+- `backend/app/pipelines/music.py` already has `_master_to_target()` with a
+  `pedalboard.Limiter` path plus fallback peak-scaling when `pedalboard` is not
+  installed.
+- `backend/smoke_remix.py` exists and is the smallest current smoke entrypoint
+  for measuring Remix output metadata.
+
+Sprint 1 should therefore validate and measure the existing implementation
+before adding new DAW features.
 
 ## Sprint 1 Candidate Work
 
@@ -52,11 +71,11 @@ refactors until the RC path is proven.
 
 | Priority | Work | Acceptance Criteria |
 | --- | --- | --- |
-| P0 | Verify current Remix route and UI truth | `POST /music/remix` and current UI flow match docs or docs are corrected |
-| P0 | Fix LUFS drop after FX chain | Remix output is within target LUFS tolerance and does not clip |
 | P0 | Re-run end-to-end Remix smoke | Source + beat input produces a downloadable output without code edits during the run |
-| P1 | Mastering endpoint truth-sync | Docs refer to the actual implemented route set, not stale `/music/master` wording |
+| P0 | Measure LUFS and peak after Remix | Output reports target LUFS tolerance and no clipping; failures become the first code fix |
+| P0 | Docs truth-sync for Remix/Mastering | Docs stop referring to stale `/music/master` work and describe the actual `/mastering`, `/music/remix`, and `/music/export` route set |
 | P1 | RC validation checklist | Commands for backend, frontend, and smoke verification are recorded with pass/fail results |
+| P1 | Packaging readiness check | Existing sidecar/installer docs are reviewed for what is validated vs scaffolding only |
 
 ## Frozen During G-Music RC
 
@@ -95,4 +114,5 @@ start feature work in them until G-Music reaches `v1.0-rc1`.
 
 | Version | Date | Status | Summary |
 | --- | --- | --- | --- |
+| 0.1.1b | 2026-07-03 | active | Marked Sprint 1 readiness complete after route/UI truth check and reduced Sprint 1 to smoke, LUFS/peak measurement, docs truth-sync, RC validation, and packaging readiness. |
 | 0.1.0b | 2026-07-03 | active | Created Sprint 0 control plan, exit gates, WIP limits, frozen project list, and agent allocation for the G-Music MVP/RC lane. |
