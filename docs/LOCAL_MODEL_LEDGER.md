@@ -9,8 +9,8 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 ## ✅ POOL (ผ่านการวัดจริง)
 | ลำดับ | model | pass-rate (v-plain, gate tsc+visible+holdout) | median warm | VRAM | บทบาท |
 |---|---|---|---|---|---|
-| 1 | `qwen3:latest` (14.8B) | **7/7 = 100%** | **5.1s** | 10.05GB | **default** — VRAM ว่างเท่านั้น (เหลือ ~1.1GB ไม่พอ ML) |
-| 2 | `sushirl:latest` (9B) = [bigatuna/Qwen3.5-9b-Sushi-Coder-RL](https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF) | **7/7 = 100%** (ต้องใช้ extractor v2) + tools 3/3 · card อนุญาต deterministic (ทน temp ต่ำได้ต่างจาก qwen3) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
+| 1 | `sushirl:latest` (9B) = [bigatuna/Qwen3.5-9b-Sushi-Coder-RL](https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF) | **7/7 = 100%** (ต้องใช้ extractor v2) + **tools 3/3** · card อนุญาต deterministic | 11.6s | **5.57GB** | **default ใหม่** (code+tools+co-resident ครบในตัวเดียว) |
+| — | ~~`qwen3:latest`~~ (แจ้งลบ — ดูตาราง tool-calling) | 7/7 @ 5.1s (เร็วสุดใน code แต่ tools runaway จาก Ollama bug) | 5.1s | 10.05GB | ออกจาก pool — แทนด้วย unsloth build ได้ภายหลังถ้าจำเป็น |
 | 3 | `hf.co/yuxinlu1/Mellum2-12B-A2.5B…:Q4_K_M` (MoE, active 2.5B) | 6/7 = 86% (fail เดียว = logic slip; temp 0.6 ตาม card) | **4.9s** (gen 127 tok/s — เร็วสุด) | 8.25GB | สำรองอันดับ 1 / งาน latency-sensitive |
 | 4 | `hf.co/deepreinforce-ai/Ornith-1.0-9B…:Q4_K_M` (qwen3.5-base) | 6/7 = 86% (temp 0.6 ตาม card) + **tool-use 3/3 เร็วสุด 1.9–2.7s** | ~25s (think เยอะ) | **5.57GB** | **งาน agentic/tool-calling + co-resident** |
 | 5 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรองท้ายแถว |
@@ -20,7 +20,7 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 |---|---|---|---|
 | `Ornith-1.0-9B` | ✅ 3/3 (1.9–2.7s) | 6/7 | ตัวหลักงาน agentic |
 | `hf.co/yuxinlu1/gemma-4-12B-agentic…v2-3.5x-tau2` | ✅ 3/3 (2.3–4.1s) | **3/7 — ห้ามให้เขียนโค้ด** | tool-calling เท่านั้น · v2 GGUF แก้ special-token leak ของ coder v1 แล้ว |
-| `qwen3:latest` | ❌ **think-loop timeout >900s เมื่อเจอ tools** | 7/7 | **ห้ามใช้กับ tool-calling เด็ดขาด** |
+| `qwen3:latest` (`670a5c200264` — **แจ้งลบแล้ว**) | ❌ runaway ระดับ server: generate เกิน num_predict+num_ctx, `ollama stop` ไม่หยุด ต้อง kill process — root cause = **Ollama bug** ([ollama#14493](https://github.com/ollama/ollama/issues/14493): renderer/parser tool ตระกูล Qwen ผิด format) ไม่ใช่ weights/sampling (ทดสอบ temp 0.1 และ 0.6 official แล้ว) | 7/7 | ลบ tag · ถ้าต้องการ qwen3 ภายหลัง: [unsloth/Qwen3-14B-GGUF](https://huggingface.co/unsloth/Qwen3-14B-GGUF) + presence_penalty 1.0–1.5 + smoke tools ก่อน |
 
 ### candidate (ยังไม่เข้า pool)
 | model | เหตุผล |
