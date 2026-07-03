@@ -24,6 +24,12 @@ models/
 frontend/node_modules/
 frontend/dist/
 frontend/src-tauri/target/
+frontend/src-tauri/binaries/
+
+# Packaging build artifacts
+backend/build/
+backend/dist/
+backend/*.spec
 
 # OS / IDE
 .DS_Store
@@ -34,3 +40,5 @@ Thumbs.db
 # backend runtime logs (transient)
 backend/backend.log
 backend/backend.err
+backend/sidecar-smoke.log
+backend/sidecar-smoke.err
