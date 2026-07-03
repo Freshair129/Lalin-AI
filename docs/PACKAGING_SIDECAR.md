@@ -2,7 +2,7 @@
 
 ## Status
 
-Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/mastering/remix feature smoke are validated on this Windows workspace.
+Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/dubbing/mastering/remix feature smoke are validated on this Windows workspace.
 
 Validated:
 - `powershell -ExecutionPolicy Bypass -File scripts\build_sidecar.ps1`
@@ -15,11 +15,10 @@ Validated:
 - `powershell -ExecutionPolicy Bypass -File scripts\smoke_full_profile_readiness.ps1`
 - Full-profile readiness: ML workstation modules are installed and TTS/dubbing/mastering/remix routes mount under `create_app("full")`
 - `powershell -ExecutionPolicy Bypass -File scripts\smoke_workstation_features.ps1`
-- Workstation feature smoke: F5 Thai TTS, auto mastering, and remix write real outputs and pass loudness/peak gates where applicable
+- Workstation feature smoke: F5 Thai TTS, dubbing, auto mastering, and remix write real outputs and pass subtitles/loudness/peak gates where applicable
 
 Still not fully production-complete:
 - Full ML workstation distribution artifact. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
-- Dubbing end-to-end workstation feature smoke.
 - First-run model download UX/progress.
 - CPU/GPU distribution strategy for end-user machines.
 
@@ -150,7 +149,7 @@ G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-
 
 - Full-backend PyInstaller builds are slow and too large because static import of the full app pulls in ML-heavy dependencies such as torch, transformers, librosa, scipy, and related native libraries.
 - The previous full-backend sidecar payload was approximately 4.77 GB in this workspace, which exceeded the practical NSIS bundling path. The local installer gate now uses the lite sidecar profile instead.
-- Feature-level smoke for dubbing and packaged full ML distribution smoke are still required; the lite installer intentionally excludes ML-heavy routers.
+- Packaged full ML distribution smoke is still required; the lite installer intentionally excludes ML-heavy routers.
 - Installed-app smoke, not `cargo check`, is the packaging gate that proves NSIS places `_internal` beside the sidecar executable correctly.
 - The installer signing key under `keys/` is intentionally gitignored and must be provisioned outside source control before release builds.
 - Default `scripts\build_installer.ps1` local validation mode confirms the setup executable. Use `-WithUpdaterArtifacts` for a stricter release gate that requires a fresh setup executable and updater signature.

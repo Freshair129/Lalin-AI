@@ -33,6 +33,7 @@ This validates the current workstation surface:
 
 - Full profile boots and mounts ML feature routes.
 - TTS voice cloning writes a real Thai audio output with F5-TTS-THAI.
+- Dubbing writes an audio output plus SRT/VTT subtitles from a short Thai source clip.
 - Auto mastering writes a WAV output and meets LUFS/peak gates.
 - Remix writes a WAV output and meets LUFS/peak gates.
 

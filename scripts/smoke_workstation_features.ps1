@@ -65,7 +65,7 @@ Write-Host " G-Music - workstation feature smoke" -ForegroundColor Cyan
 Write-Host "=====================================================" -ForegroundColor Cyan
 
 Invoke-PowerShellStep -Name "Full profile readiness" -ScriptPath (Join-Path $root "scripts\smoke_full_profile_readiness.ps1")
-Invoke-SmokeStep -Name "TTS voice clone smoke" -Arguments @("smoke_tts.py")
+Invoke-SmokeStep -Name "Dubbing smoke" -Arguments @("smoke_dubbing.py")
 Invoke-SmokeStep -Name "Auto mastering smoke" -Arguments @("smoke_mastering.py")
 Invoke-SmokeStep -Name "Remix smoke" -Arguments @("smoke_remix.py")
 

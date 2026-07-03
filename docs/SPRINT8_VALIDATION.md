@@ -50,7 +50,7 @@ Observed non-blocking runtime warnings:
 
 ## Remaining Production Gates
 
-- Run dubbing end-to-end feature smoke from the workstation surface.
+- Run dubbing end-to-end feature smoke from the workstation surface. Follow-up: Sprint 9 closes this gate with `backend\smoke_dubbing.py`.
 - Build or define the next installable/launchable workstation artifact outside ad hoc developer commands.
 - Run packaged/full-workstation feature smoke from that artifact.
 - Finalize first-run model download UX/progress.
