@@ -12,9 +12,11 @@ Validated:
 - Local NSIS artifact: `frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe`
 - `powershell -ExecutionPolicy Bypass -File scripts\smoke_installed_app.ps1`
 - Installed-app layout: `G-Music.exe`, `g-music-backend.exe`, and adjacent `_internal` under `frontend\src-tauri\target\installed-smoke`
+- `powershell -ExecutionPolicy Bypass -File scripts\smoke_full_profile_readiness.ps1`
+- Full-profile readiness: ML workstation modules are installed and TTS/dubbing/mastering/remix routes mount under `create_app("full")`
 
 Still not fully production-complete:
-- Full ML workstation sidecar/installer profile. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
+- Full ML workstation distribution artifact. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
 - First-run model download UX/progress.
 - CPU/GPU distribution strategy for end-user machines.
 
@@ -146,6 +148,6 @@ G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-
 - Full-backend PyInstaller builds are slow and too large because static import of the full app pulls in ML-heavy dependencies such as torch, transformers, librosa, scipy, and related native libraries.
 - The previous full-backend sidecar payload was approximately 4.77 GB in this workspace, which exceeded the practical NSIS bundling path. The local installer gate now uses the lite sidecar profile instead.
 - Feature-level smoke for TTS/remix/dubbing from a packaged full ML distribution is still required; the lite installer intentionally excludes those routers.
-- Tauri `cargo check` validates local sidecar resolution, but it does not prove an installed NSIS app places `_internal` beside the sidecar executable correctly.
+- Installed-app smoke, not `cargo check`, is the packaging gate that proves NSIS places `_internal` beside the sidecar executable correctly.
 - The installer signing key under `keys/` is intentionally gitignored and must be provisioned outside source control before release builds.
 - Default `scripts\build_installer.ps1` local validation mode confirms the setup executable. Use `-WithUpdaterArtifacts` for a stricter release gate that requires a fresh setup executable and updater signature.
