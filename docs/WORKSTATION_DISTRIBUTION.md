@@ -20,6 +20,7 @@ The full ML workstation distribution is the production feature track for TTS, du
 - Requires workstation ML modules such as `torch`, `torchaudio`, `faster_whisper`, `f5_tts`, `matchering`, `pyloudnorm`, `librosa`, `demucs`, `psola`, `pedalboard`, `soundfile`, and `imageio_ffmpeg`.
 - Uses model caches outside source control, primarily Hugging Face cache and tool-specific caches.
 - Treats GPL-sensitive components as BYOM/optional components instead of bundling them into the lite installer.
+- Exposes a runtime device choice: prefer CUDA when compatible, but fall back to CPU/int8 for ASR and CPU for TTS when speech CUDA libraries are unstable.
 
 ## Current Validated Surface
 

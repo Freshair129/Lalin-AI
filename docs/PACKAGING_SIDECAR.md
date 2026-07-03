@@ -16,11 +16,12 @@ Validated:
 - Full-profile readiness: ML workstation modules are installed and TTS/dubbing/mastering/remix routes mount under `create_app("full")`
 - `powershell -ExecutionPolicy Bypass -File scripts\smoke_workstation_features.ps1`
 - Workstation feature smoke: F5 Thai TTS, dubbing, auto mastering, and remix write real outputs and pass subtitles/loudness/peak gates where applicable
+- `cd backend; .\.venv\Scripts\python.exe runtime_device_report.py`
+- CPU/GPU strategy: this workstation has CUDA-capable Torch/CTranslate2 on RTX 3060, while ASR/TTS speech smokes use CPU fallback when CUDA speech libraries are unstable
 
 Still not fully production-complete:
 - Full ML workstation distribution artifact. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
 - First-run model download UX/progress.
-- CPU/GPU distribution strategy for end-user machines.
 
 ## Goal
 
