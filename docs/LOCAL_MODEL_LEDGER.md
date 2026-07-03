@@ -10,7 +10,7 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 | ลำดับ | model | pass-rate (v-plain, gate tsc+visible+holdout) | median warm | VRAM | บทบาท |
 |---|---|---|---|---|---|
 | 1 | `qwen3:latest` (14.8B) | **7/7 = 100%** | **5.1s** | 10.05GB | **default** — VRAM ว่างเท่านั้น (เหลือ ~1.1GB ไม่พอ ML) |
-| 2 | `sushirl:latest` (9B) | **7/7 = 100%** (ต้องใช้ extractor v2 — 0/7 ถ้า extract แบบ fence-แรก) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
+| 2 | `sushirl:latest` (9B) = [bigatuna/Qwen3.5-9b-Sushi-Coder-RL](https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF) | **7/7 = 100%** (ต้องใช้ extractor v2) + tools 3/3 · card อนุญาต deterministic (ทน temp ต่ำได้ต่างจาก qwen3) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
 | 3 | `hf.co/yuxinlu1/Mellum2-12B-A2.5B…:Q4_K_M` (MoE, active 2.5B) | 6/7 = 86% (fail เดียว = logic slip; temp 0.6 ตาม card) | **4.9s** (gen 127 tok/s — เร็วสุด) | 8.25GB | สำรองอันดับ 1 / งาน latency-sensitive |
 | 4 | `hf.co/deepreinforce-ai/Ornith-1.0-9B…:Q4_K_M` (qwen3.5-base) | 6/7 = 86% (temp 0.6 ตาม card) + **tool-use 3/3 เร็วสุด 1.9–2.7s** | ~25s (think เยอะ) | **5.57GB** | **งาน agentic/tool-calling + co-resident** |
 | 5 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรองท้ายแถว |
@@ -30,7 +30,7 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 ## ❌ FAILED / BLACKLIST (ห้ามใช้ซ้ำ)
 | model | issue | severity | หลักฐาน/fix |
 |---|---|---|---|
-| `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` | คืน `<unusedNN>` ล้วนทุกช่องทาง — **probe 4 ทาง (generate/chat/raw×2 template) ยืนยันเสียระดับ GGUF weights/vocab ไม่ใช่ template** | critical | **blacklist ถาวร — แก้ด้วย Modelfile ไม่ได้** (`orchestration/probe_gemma.py`) |
+| `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` (build `5434f64afb3f`) | คืน `<unusedNN>` ล้วนทุกช่องทาง — probe 4 ทางยืนยันเสียระดับ GGUF weights/vocab ไม่ใช่ template | critical | **blacklist เฉพาะ build ที่ pull มา (2026-06-25)** — card errata ระบุ export รุ่นแรกเสีย ให้ re-download quant ใหม่ได้ · หรือใช้ v2 (agentic) ที่เทสผ่านแล้วแทน |
 | `llama3.2:1b` | ตัด `export` ทิ้งจาก signature (compile ผ่านแต่ไม่ export) | major | เล็กเกินสำหรับ contract-following — ไม่เข้า pool |
 
 ## กติกา dispatch (อัปเดตตามผลวัด v2)
