@@ -2,15 +2,19 @@
 
 ## Status
 
-Status as of 2026-07-03: sidecar build and runtime smoke are validated on this Windows workspace.
+Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, and local NSIS installer artifact generation are validated on this Windows workspace.
 
 Validated:
 - `powershell -ExecutionPolicy Bypass -File scripts\build_sidecar.ps1`
 - `cargo check --manifest-path frontend\src-tauri\Cargo.toml`
 - Direct sidecar runtime smoke: launch `frontend\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe`, then `GET http://127.0.0.1:8756/health`
+- `powershell -ExecutionPolicy Bypass -File scripts\build_installer.ps1`
+- Local NSIS artifact: `frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe`
 
 Still not fully production-complete:
-- NSIS installer build and install-from-artifact smoke. Current evidence: `makensis` fails with `Internal compiler error #12345: error mmapping file ... is out of range` when bundling the generated sidecar payload.
+- Install-from-artifact smoke on a clean user path.
+- Full ML workstation sidecar/installer profile. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
+- Updater artifact/signature validation. Local validation mode proves the setup executable, not fresh updater `.sig` or `.nsis.zip` artifacts.
 - Installed-app resource path validation for PyInstaller `_internal`.
 - First-run model download UX/progress.
 - CPU/GPU distribution strategy for end-user machines.
@@ -28,12 +32,15 @@ G-Music.exe (Tauri/WebView2)
   -> FastAPI app on 127.0.0.1:8756
 ```
 
-The backend loads ML model weights lazily through the existing cache/download paths. Model weights are not embedded in the sidecar executable.
+The default packaged sidecar uses the lite backend profile. It serves shell/MVP endpoints without importing ML-heavy routers, so model weights and large ML runtime dependencies are not embedded in the local installer artifact. A future full ML workstation profile must be validated separately.
 
 ## Source Files
 
-- `backend/sidecar_entry.py`: versioned PyInstaller entrypoint. It imports `app.main.app` statically so PyInstaller can discover the backend package.
-- `scripts/build_sidecar.ps1`: builds the backend sidecar with PyInstaller and copies the onedir output into `frontend/src-tauri/binaries/`.
+- `backend/sidecar_entry.py`: versioned PyInstaller entrypoint. It imports `app.sidecar_lite.app` so local packaging does not collect ML-heavy router dependencies.
+- `backend/app/sidecar_lite.py`: lite FastAPI app for packaged MVP shell endpoints.
+- `backend/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
+- `scripts/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `frontend/src-tauri/binaries/`.
+- `scripts/build_installer.ps1`: builds the Tauri NSIS installer from the generated sidecar. Default local validation mode gates on a stable setup executable because this Windows Tauri wrapper may not reliably exit after artifact generation.
 - `frontend/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and resources as `binaries/_internal/**/*`.
 - `frontend/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup and stores the child process in Tauri state.
 
@@ -55,6 +62,12 @@ The script:
 - Runs PyInstaller in `--onedir --console` mode.
 - Copies the onedir output into `frontend\src-tauri\binaries\`.
 - Renames the executable to `g-music-backend-<target-triple>.exe`, which Tauri expects for `externalBin`.
+
+Current lite-profile payload evidence:
+
+```text
+frontend\src-tauri\binaries total: 167,857,355 bytes (160.08 MB)
+```
 
 Expected local build output:
 
@@ -97,11 +110,44 @@ Expected response includes:
 }
 ```
 
+Profile smoke:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8756/"
+```
+
+Expected response includes:
+
+```json
+{
+  "profile": "lite"
+}
+```
+
+Installer validation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_installer.ps1
+```
+
+Expected local artifact:
+
+```text
+frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe
+```
+
+Current artifact evidence:
+
+```text
+G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-03 15:56:24
+```
+
 ## Known Limits
 
-- PyInstaller build is slow because static import of the backend pulls in ML-heavy dependencies such as torch, transformers, librosa, scipy, and related native libraries.
-- The generated sidecar payload is approximately 4.77 GB in this workspace, which currently exceeds the practical NSIS bundling path.
-- PyInstaller currently emits warnings about optional/missing native libraries such as some bitsandbytes CUDA/XPU DLLs and `tbb12.dll`. The `/health` smoke passes, but feature-level smoke for TTS/remix/dubbing from the packaged sidecar is still required.
+- Full-backend PyInstaller builds are slow and too large because static import of the full app pulls in ML-heavy dependencies such as torch, transformers, librosa, scipy, and related native libraries.
+- The previous full-backend sidecar payload was approximately 4.77 GB in this workspace, which exceeded the practical NSIS bundling path. The local installer gate now uses the lite sidecar profile instead.
+- Feature-level smoke for TTS/remix/dubbing from a packaged full ML distribution is still required; the lite installer intentionally excludes those routers.
 - Tauri `cargo check` validates local sidecar resolution, but it does not prove an installed NSIS app places `_internal` beside the sidecar executable correctly.
 - The frontend can still issue API requests before the sidecar is healthy. A later gate should add app-level readiness handling or health polling.
 - The installer signing key under `keys/` is intentionally gitignored and must be provisioned outside source control before release builds.
+- Default `scripts\build_installer.ps1` local validation mode confirms the setup executable. Use `-WithUpdaterArtifacts` for a stricter release gate that waits for the Tauri process to exit and requires non-empty setup, signature, and updater zip artifacts.

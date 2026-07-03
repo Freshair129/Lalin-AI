@@ -6,10 +6,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import import_module
 
 from ..config import Settings, get_settings
 from .base import LLMProvider
-from .cloud_provider import CloudProvider
 from .ollama_provider import OllamaProvider
 
 
@@ -35,6 +35,7 @@ def _build(settings: Settings) -> LLMProvider:
             base_url=settings.ollama_base_url,
             model=_override.ollama_model or settings.ollama_model,
         )
+    CloudProvider = import_module(".cloud_provider", __package__).CloudProvider
     return CloudProvider(
         provider=_override.cloud_provider or settings.cloud_provider,
         api_key=_override.cloud_api_key or settings.cloud_api_key,

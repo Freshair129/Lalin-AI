@@ -24,13 +24,13 @@ Sprint 2 moves packaging from scaffolding toward a validated local sidecar path:
 ## Fixes Made
 
 - `frontend/src-tauri/src/lib.rs` now spawns `g-music-backend` during Tauri setup and stores the child process in app state.
-- `backend/sidecar_entry.py` is versioned and statically imports `app.main.app` so PyInstaller discovers the backend package.
+- Historical Sprint 2 implementation: `backend/sidecar_entry.py` statically imported `app.main.app` so PyInstaller could discover the backend package. Sprint 3 replaces this with the lite sidecar entrypoint.
 - `scripts/build_sidecar.ps1` is parser-safe, bootstraps `pip` when needed, installs PyInstaller when missing, and generates the target-triple sidecar binary.
 - `.gitignore` excludes generated sidecar/package artifacts.
 
 ## Remaining Gates
 
-- Build the NSIS installer successfully. Current blocker: `makensis` fails with `Internal compiler error #12345: error mmapping file ... is out of range` after the generated sidecar folder reaches about 4.77 GB.
+- Build the NSIS installer successfully for the chosen MVP packaging profile. Follow-up: Sprint 3 resolves this by switching local packaging to the lite sidecar profile; full ML workstation packaging remains a separate distribution gate.
 - Install the generated installer and verify the installed app can spawn the sidecar with `_internal` resources in the expected relative location.
 - Add frontend readiness UX so API calls wait for backend health.
 - Run packaged-sidecar feature smoke for remix/TTS/dubbing, not only `/health`.
@@ -45,3 +45,7 @@ failed to bundle project: `Failed to bundle app with makensis`
 ```
 
 The generated `frontend\src-tauri\binaries` payload is approximately 4.77 GB because PyInstaller collects ML-heavy native dependencies into `_internal`.
+
+## Follow-up
+
+Sprint 3 supersedes the local NSIS blocker for MVP packaging by using a lite sidecar profile. This Sprint 2 record remains as evidence for why the full-backend packaging path is not production-ready.

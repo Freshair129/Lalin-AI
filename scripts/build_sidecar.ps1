@@ -10,6 +10,10 @@ $specName = "g-music-backend"
 $specFile = Join-Path $backendDir "$specName.spec"
 $sidecarDir = Join-Path $root "frontend\src-tauri\binaries"
 $entryScript = Join-Path $backendDir "sidecar_entry.py"
+$profile = $env:GMUSIC_BACKEND_PROFILE
+if ([string]::IsNullOrWhiteSpace($profile)) {
+    $profile = "lite"
+}
 
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host " G-Music - build backend sidecar" -ForegroundColor Cyan
@@ -27,6 +31,7 @@ if (-not (Test-Path $entryScript)) {
     exit 1
 }
 Write-Host "[*] Found entrypoint: $entryScript" -ForegroundColor Green
+Write-Host "[*] Backend profile: $profile" -ForegroundColor Green
 
 if (-not (Test-Path $venvPyInstaller)) {
     Write-Host "[!] PyInstaller is not installed in backend venv; installing it now." -ForegroundColor Yellow
@@ -69,6 +74,7 @@ if (Test-Path $specFile) { Remove-Item -Force $specFile }
 Push-Location $backendDir
 try {
     Write-Host "[*] Running PyInstaller (--onedir). This may take several minutes with ML dependencies." -ForegroundColor Cyan
+    $env:GMUSIC_BACKEND_PROFILE = $profile
     & $venvPyInstaller `
         --name $specName `
         --onedir `

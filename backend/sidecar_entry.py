@@ -2,7 +2,7 @@
 
 import uvicorn
 
-from app.main import app
+from app.sidecar_lite import app
 
 
 if __name__ == "__main__":
