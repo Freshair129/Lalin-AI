@@ -318,7 +318,7 @@ def _master_to_target(
     """Normalize ไปยัง target LUFS แล้วกันพีคด้วย brickwall limiter (pedalboard.Limiter).
 
     ลำดับ: วัด LUFS ต้นทาง → ใส่ gain ให้เข้าใกล้ target LUFS (ไม่ scale ตามพีคแบบเดิม
-    ที่บีบ dynamics) → ผ่าน limiter เพื่อกันพีคเกิน ceiling_db (true-peak) →
+    ที่บีบ dynamics) → ผ่าน limiter เพื่อกัน sample peak เกิน ceiling_db →
     วัด LUFS ผลลัพธ์อีกครั้งเพื่อรายงาน/log.
 
     ถ้าไม่มี pedalboard (optional/GPL dep) → fallback เป็น peak-scaling แบบเดิม
@@ -364,7 +364,19 @@ def _master_to_target(
             mastered *= ceiling / peak
 
     # กันพีคหลุดเพดานแบบ hard-clip เผื่อกรณี extreme (safety net)
-    np.clip(mastered, -1.0, 1.0, out=mastered)
+    # Limiting can move integrated loudness away from the target, so correct
+    # once after limiting and then enforce the configured peak ceiling.
+    loudness_after_limit = float(meter.integrated_loudness(mastered))
+    if np.isfinite(loudness_after_limit):
+        correction_db = target_lufs - loudness_after_limit
+        mastered *= 10 ** (correction_db / 20)
+
+    peak = float(np.max(np.abs(mastered)))
+    if peak > ceiling:
+        mastered *= ceiling / peak
+
+    # Final safety clip at the requested ceiling, not full scale.
+    np.clip(mastered, -ceiling, ceiling, out=mastered)
 
     loudness_out = float(meter.integrated_loudness(mastered))
     return mastered, loudness_out

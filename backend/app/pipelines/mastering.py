@@ -52,7 +52,7 @@ def master_auto(target: str, out_path: str, target_lufs: float = -14.0) -> str:
     loudness = meter.integrated_loudness(data)
     normalized = pyln.normalize.loudness(data, loudness, target_lufs)
 
-    # peak limiting กันคลิป (true-peak แบบง่าย: scale ลงถ้าเกิน -1 dBFS)
+    # sample peak limiting กันคลิป (scale ลงถ้าเกิน -1 dBFS)
     peak = np.max(np.abs(normalized))
     ceiling = 10 ** (-1.0 / 20)  # -1 dBFS
     if peak > ceiling:

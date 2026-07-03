@@ -45,7 +45,7 @@ Suno เจนเพลง / เดโม่ตัวเอง  →  [G-Music]  
 | **Beat-sync ระดับโปร** | ⚠️ global phase ได้ แต่ drift/phrase ยังไม่จัด | **Manual nudge UI** (ให้คนเลื่อน ms + เลือกห้องเริ่ม) — DAW จริงก็ให้คนคุม |
 | Piecewise warp | ❌ artifact + พึ่ง beat detection ที่ไม่เสถียร | ยังไม่คุ้ม — ใช้ manual แทน |
 | Key match minor↔major | ⚠️ detect ถูก แต่ force mode อาจเพี้ยน melody | ให้ผู้ใช้ override คีย์ได้ |
-| LUFS หลัง FX ตก (-17 แทน -14) | ⚠️ peak scaling หยาบ | ใช้ `pedalboard.Limiter` จริงแทน peak-scale |
+| LUFS หลัง FX ตก (-17 แทน -14) | ✅ แก้แล้ว / smoke-gated | `backend/smoke_remix.py` วัดไฟล์ output จริง: target -14 LUFS, tolerance ±0.5, sample peak ceiling -1 dBFS |
 | Formant ตอน pitch-shift มาก | ⚠️ เพี้ยน timbre เมื่อ shift > 4 semitone | pyworld (formant-preserving) ถ้าต้องการ |
 | ค่า FX ตอนนี้ fix | — | UI ให้ปรับ reverb/delay/autotune strength (param มีใน `vocal_fx`/`run_remix` แล้ว) |
 
@@ -108,8 +108,8 @@ uv pip install demucs psola pedalboard
 
 ### 🟢 เฟส A — เอาของที่พิสูจน์แล้วขึ้นแอป
 - [ ] เพิ่ม deps เป็น optional install ใน setup script (+ ตรวจตอน runtime)
-- [ ] สร้าง router `POST /music/remix` + `POST /music/master` → `jobs.spawn()`
-- [ ] แก้ LUFS ตก → ใช้ `pedalboard.Limiter`
+- [x] Router truth-sync: `POST /music/remix`, `POST /music/export`, and `POST /mastering` are implemented through `jobs.spawn()`.
+- [x] Remix LUFS/peak gate: `backend/smoke_remix.py` now verifies output LUFS and peak ceiling after writing the file.
 - [ ] UI: หน้า "Remix" — อัป source + beat, toggle autotune/FX, ปุ่มสร้าง + progress
 
 ### 🟡 เฟส B — Manual mixer (แก้จุดที่ยังไม่เนียน)

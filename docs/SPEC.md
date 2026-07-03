@@ -378,7 +378,7 @@ meter = pyln.Meter(rate)
 current_lufs = meter.integrated_loudness(data)
 normalized = pyln.normalize.loudness(data, current_lufs, target_lufs)
 
-# Peak limiting: scale down if true peak > -1 dBFS
+# Peak limiting: scale down if sample peak > -1 dBFS
 peak = np.max(np.abs(normalized))
 ceiling = 10 ** (-1.0 / 20)  # -1 dBFS
 if peak > ceiling:

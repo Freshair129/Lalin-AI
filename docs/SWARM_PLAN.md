@@ -75,7 +75,7 @@ Wave 0 ──► Wave 1 ──► Wave 2 ──► Wave 3 (DAW feats)
 | **0.4** | Export SRT/VTT จาก dubbing | `backend/app/routers/dubbing.py` (endpoint ใหม่), `DubbingPanel.tsx` (ปุ่มดาวน์โหลด) | dub 1 ไฟล์ → ได้ .srt timestamps ตรง segment, .vtt เปิดใน player ได้ |
 | **0.5** | Dubbing คืนวิดีโอเต็มไฟล์ (re-mux เสียงพากย์กลับเข้า container ด้วย ffmpeg ที่ bundle) | `backend/app/pipelines/dubbing.py`, `utils/ffmpeg.py` | input .mp4 → output .mp4 ภาพเดิม+เสียงใหม่, sync ตรง, ไฟล์เสียงเดี่ยวยังได้เหมือนเดิม |
 | **0.6** | Autosave: interval 60s เมื่อ dirty → เก็บ draft (`/projects` id พิเศษหรือ localStorage) + recovery banner ตอนเปิดแอปถ้ามี draft ใหม่กว่า save ล่าสุด | `hooks/useProjectFile.ts`, `RemixPanel.tsx` | ฆ่าแอปกลางคัน → เปิดใหม่เจอ banner กู้คืน → กู้แล้ว state ตรง |
-| **0.7** | แก้ LUFS drop หลัง FX chain: ใช้ `pedalboard.Limiter` แทน peak-scaling (known issue ใน ROADMAP_MUSIC §known-issues) | `backend/app/pipelines/music.py` | remix ออกมา LUFS ±0.5 จาก target, ไม่ clip (true peak ≤ -1 dBTP) |
+| **0.7** | แก้ LUFS drop หลัง FX chain: ใช้ `pedalboard.Limiter` แทน peak-scaling (known issue ใน ROADMAP_MUSIC §known-issues) | `backend/app/pipelines/music.py`, `backend/smoke_remix.py` | remix ออกมา LUFS ±0.5 จาก target, sample peak ≤ -1 dBFS ตาม smoke gate |
 
 **Final Gate Wave 0:** flow เดิมทั้ง 5 แท็บใช้งานได้เหมือนก่อน + ทุก criteria ข้างบน
 
