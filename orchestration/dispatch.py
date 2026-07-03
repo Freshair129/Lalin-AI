@@ -23,6 +23,12 @@ DEFAULT_KEEP_ALIVE = "30m"
 # override ต่อโมเดลจาก model card / smoke result (SPEC §9.2)
 # Qwythos card: "Avoid greedy decoding and very-low-temperature sampling (T <= 0.3)" -> repetition loop
 MODEL_OPTIONS = {
+    # Qwen official (Qwen3-14B card): thinking mode temp 0.6/top_p 0.95/top_k 20/min_p 0
+    # + "DO NOT use greedy decoding ... endless repetitions" — tag บนเครื่องถูก bake temp 0.1 ไว้ ต้อง override
+    "qwen3:latest": {
+        "temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0,
+        "num_ctx": 8192, "num_predict": 2500,
+    },
     "hf.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF:Q4_K_M": {
         "temperature": 0.6, "top_p": 0.95, "top_k": 20, "repeat_penalty": 1.05,
         "num_ctx": 8192, "num_predict": 6000,
@@ -36,6 +42,11 @@ MODEL_OPTIONS = {
     # Ornith 9B (qwen3.5-base, thinking) — card: temp 0.6/top_p 0.95/top_k 20
     "hf.co/deepreinforce-ai/Ornith-1.0-9B-GGUF:Q4_K_M": {
         "temperature": 0.6, "top_p": 0.95, "top_k": 20,
+        "num_ctx": 8192, "num_predict": 6000,
+    },
+    # gemma-4-12b-it — unsloth card: temp 1.0/top_p 0.95/top_k 64 (เดิมเรารันที่ 0.1 = ผิด card)
+    "hf.co/unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL": {
+        "temperature": 1.0, "top_p": 0.95, "top_k": 64,
         "num_ctx": 8192, "num_predict": 6000,
     },
     # gemma-agentic-v2 — card: "for coding you can also go greedy (temp 0)" + known issue

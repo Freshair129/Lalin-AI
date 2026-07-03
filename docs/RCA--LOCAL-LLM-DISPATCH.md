@@ -58,11 +58,13 @@
 | Qwythos evict gemma-it / evict gemma-coder | 80.1s / **115.3s** |
 | sushirl (5.6GB) ×2 ครั้ง | 55.6s / 63.5s |
 
-ข้อเท็จจริงระบบ: blob อยู่บน **C: = SATA SSD** (WDC WDS250G2B0A, ~500MB/s → 9GB ≈ 19s ขั้นต่ำแค่อ่าน disk) + เหลือที่ **17GB** (เกือบเต็ม) · เวลา cold ≈ load_duration ล้วน (wall − load < 1s)
+ข้อเท็จจริงระบบ (แก้ไขหลังตรวจ deep — 2026-07-03 บ่าย): เดิมวิเคราะห์ว่า blob อยู่บน C: SSD แต่ตรวจจริงพบ **blob ทั้ง 106 ก้อนบน C: เป็น symlink pointer (0KB) ชี้ไป `G:\.ollama_blobs_root`** (ระบบ GHT offload ที่สร้างไว้ มิ.ย. 2026) และ **G: = WD10EZEX HDD 1TB (~100–150MB/s)** — ไม่มี blob จริงบน SSD เลยแม้แต่ไฟล์เดียว
 
-### Root cause
+### Root cause (ฉบับแก้ไข — supersede ย่อหน้าเดิมที่โทษ SSD)
 
-cold-load = **อ่าน blob จาก SATA SSD + dequant/PCIe upload + alloc KV cache** โดยมี **eviction เป็นตัวแปรเพิ่ม 25–40%** — ตัวเลข 160–186s ของ v1 **reproduce ไม่ได้บนเครื่องว่าง** (แบนด์จริง 56–115s); ส่วนต่างที่เหลืออธิบายได้จาก disk/CPU contention ช่วง swarm รันหลาย worker พร้อมกัน (ไม่สามารถ reproduce สภาพนั้นได้แล้ว — บันทึกเป็นข้อจำกัดการวิเคราะห์)
+cold-load = **อ่าน blob จาก HDD ผ่าน symlink offload** + dequant/PCIe + KV alloc โดยมี eviction/page-cache เป็นตัวแปรรอง — ตัวเลขทุกจุดลงล็อกกับความเร็ว HDD: qwen3 9GB/62.7s≈143MB/s · sushirl 5.6GB/55.6s≈100MB/s · gemma-it 7.5GB/75.4s≈99MB/s · ความแปรปรวนสุดขั้ว (Mellum2 26.8s = page cache หลัง pull · gemma-agentic-v2 404s = pull ใหม่+contention) เป็นพฤติกรรม HDD ตามตำรา · ตัวเลข 160–186s ของ v1 = HDD + I/O contention ช่วง swarm หลาย worker
+
+**Optimization ที่เปิดขึ้น (ยังไม่ได้ทำ):** hot-tier บน C: SSD — ย้ายเฉพาะโมเดลร้อน (sushirl 5.6GB + Ornith 5.6GB + bge-m3 1.2GB ≈ 12.4GB, C: เหลือ 17GB) กลับเป็นไฟล์จริง → คาด cold ลดจาก ~56s เหลือ **~11–15s (500MB/s)**; ที่เหลือคงอยู่ G: ผ่าน GHT ตามเดิม — จัดการผ่าน `ops\symlink-registry.yaml` ของ GHT
 
 ### Root cause ย่อยที่เจอใหม่ (สำคัญกว่าตัวเลข 180s)
 
