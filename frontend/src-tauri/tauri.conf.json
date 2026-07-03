@@ -53,9 +53,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgzQjhGQTI0MzlFM0UyNEYKUldSUDR1TTVKUHE0ZzE0NEZ3cTZVWjVuS2lGeUo1Q016cE1jTnhNclphTkpJVVZId1hLanZNOU4K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNUNFOEZFRUI5RkUwQ0EKUldUSzRKL3IvdWhjK3VFM1pWbDZYeVlIYllDMDlCd0ROeEpYcjNjZ1g5WjhYdDJwbzlSOGh5dVoK",
       "endpoints": [
-        "https://github.com/piyawatproject/G-Music/releases/latest/download/latest.json"
+        "https://github.com/Freshair129/G-Music/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
