@@ -2,7 +2,7 @@
 
 ## Status
 
-Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, and local NSIS installer artifact generation are validated on this Windows workspace.
+Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, and installed PyInstaller resource layout are validated on this Windows workspace.
 
 Validated:
 - `powershell -ExecutionPolicy Bypass -File scripts\build_sidecar.ps1`
@@ -10,12 +10,11 @@ Validated:
 - Direct sidecar runtime smoke: launch `frontend\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe`, then `GET http://127.0.0.1:8756/health`
 - `powershell -ExecutionPolicy Bypass -File scripts\build_installer.ps1`
 - Local NSIS artifact: `frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe`
+- `powershell -ExecutionPolicy Bypass -File scripts\smoke_installed_app.ps1`
+- Installed-app layout: `G-Music.exe`, `g-music-backend.exe`, and adjacent `_internal` under `frontend\src-tauri\target\installed-smoke`
 
 Still not fully production-complete:
-- Install-from-artifact smoke on a clean user path.
 - Full ML workstation sidecar/installer profile. The validated installer uses the lite backend profile and does not bundle ML-heavy routers.
-- Updater artifact/signature validation. Local validation mode proves the setup executable, not fresh updater `.sig` or `.nsis.zip` artifacts.
-- Installed-app resource path validation for PyInstaller `_internal`.
 - First-run model download UX/progress.
 - CPU/GPU distribution strategy for end-user machines.
 
@@ -41,7 +40,7 @@ The default packaged sidecar uses the lite backend profile. It serves shell/MVP 
 - `backend/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
 - `scripts/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `frontend/src-tauri/binaries/`.
 - `scripts/build_installer.ps1`: builds the Tauri NSIS installer from the generated sidecar. Default local validation mode gates on a stable setup executable because this Windows Tauri wrapper may not reliably exit after artifact generation.
-- `frontend/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and resources as `binaries/_internal/**/*`.
+- `frontend/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and maps `binaries/_internal/` to installed `_internal/` so PyInstaller resources sit beside the installed sidecar executable.
 - `frontend/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup and stores the child process in Tauri state.
 
 ## Build Flow
@@ -148,6 +147,5 @@ G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-
 - The previous full-backend sidecar payload was approximately 4.77 GB in this workspace, which exceeded the practical NSIS bundling path. The local installer gate now uses the lite sidecar profile instead.
 - Feature-level smoke for TTS/remix/dubbing from a packaged full ML distribution is still required; the lite installer intentionally excludes those routers.
 - Tauri `cargo check` validates local sidecar resolution, but it does not prove an installed NSIS app places `_internal` beside the sidecar executable correctly.
-- The frontend can still issue API requests before the sidecar is healthy. A later gate should add app-level readiness handling or health polling.
 - The installer signing key under `keys/` is intentionally gitignored and must be provisioned outside source control before release builds.
-- Default `scripts\build_installer.ps1` local validation mode confirms the setup executable. Use `-WithUpdaterArtifacts` for a stricter release gate that waits for the Tauri process to exit and requires non-empty setup, signature, and updater zip artifacts.
+- Default `scripts\build_installer.ps1` local validation mode confirms the setup executable. Use `-WithUpdaterArtifacts` for a stricter release gate that requires a fresh setup executable and updater signature.

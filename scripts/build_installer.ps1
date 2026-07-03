@@ -208,11 +208,22 @@ if ($WithUpdaterArtifacts) {
     $artifactStable = $false
     $deadline = (Get-Date).AddMinutes(12)
     while ((Get-Date) -lt $deadline) {
-        if ($process.HasExited -and $process.ExitCode -ne 0) {
+        $process.Refresh()
+        if ($process.HasExited -and -not $artifactStable) {
+            $process.WaitForExit()
+            $setupIsFresh = Test-ArtifactFresh -Paths @($setupPath) -NotBefore $buildStartedAt
+            $bundleFinished = Test-BuildLogHasSuccessfulBundle -Path $buildErr
+            $logHasError = Test-BuildLogHasError -Paths @($buildLog, $buildErr)
+            if ($setupIsFresh -and $bundleFinished -and -not $logHasError) {
+                $artifactStable = $true
+                break
+            }
+
+            $exitCode = if ($null -eq $process.ExitCode -or $process.ExitCode -eq 0) { 1 } else { $process.ExitCode }
             Write-Host "[!] Tauri build exited before installer artifact was ready." -ForegroundColor Red
             if (Test-Path $buildLog) { Get-Content $buildLog -Tail 80 }
             if (Test-Path $buildErr) { Get-Content $buildErr -Tail 120 }
-            exit $process.ExitCode
+            exit $exitCode
         }
 
         if (Test-Path $setupPath) {

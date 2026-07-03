@@ -37,9 +37,9 @@
     "externalBin": [
       "binaries/g-music-backend"
     ],
-    "resources": [
-      "binaries/_internal/**/*"
-    ],
+    "resources": {
+      "binaries/_internal/": "_internal/"
+    },
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
