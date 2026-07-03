@@ -1,0 +1,20 @@
+<|channel>thought
+Goal: implement `sumClipDurations(clips)` returning total valid duration rounded to 3 decimal places.
+
+Edge cases from examples:
+- end <= start → skip (e.g., {start:2,end:2} contributes nothing).
+- non-finite start/end → skip.
+- empty array → 0.
+- multiple valid clips sum normally; round final total to 3 decimals via Number.toFixed(3) cast back to number.
+
+Approach: reduce with a filter for validity (isFinite, end > start), then `Number((sum).toFixed(3))`. O(n) time, O(1) extra space.
+<channel|>```ts
+export function sumClipDurations(clips): number {
+  const total = clips.reduce((acc, clip) => {
+    if (typeof clip !== 'object' || clip === null) return acc;
+    const { start, end } = clip;
+    return Number.isFinite(start) && Number.isFinite(end) && end > start ? acc + end - start : acc;
+  }, 0);
+  return Number(total.toFixed(3));
+}
+```

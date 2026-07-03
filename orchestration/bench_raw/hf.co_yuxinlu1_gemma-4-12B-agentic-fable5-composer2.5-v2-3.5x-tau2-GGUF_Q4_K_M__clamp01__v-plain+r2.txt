@@ -1,0 +1,14 @@
+<|channel>thought
+Goal: implement `clamp01(x)` in TypeScript with no imports, returning x clamped to [0, 1], and NaN → 0.
+
+Edge cases: negative → 0; >1 → 1; exactly 0/1 unchanged; NaN must be handled explicitly (Math.min/max would return NaN).
+
+Approach: check `isNaN(x)` first, then clamp with Math.min(1, Math.max(0, x)).
+
+Complexity: O(1) time and space.
+<channel|>```ts
+export function clamp01(x: number): number {
+  if (Number.isNaN(x)) return 0;
+  return Math.min(1, Math.max(0, x));
+}
+```

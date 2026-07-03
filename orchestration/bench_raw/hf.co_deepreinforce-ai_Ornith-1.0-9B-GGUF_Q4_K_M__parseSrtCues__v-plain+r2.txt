@@ -1,0 +1,260 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Task: Generate a single TypeScript file content (`frontend/src/dubbing/parseSrtCues.ts`).
+    *   Function Signature: `export function parseSrtCues(srt: string): { start: number; end: number; text: string }[]`
+    *   Rules:
+        *   SRT format parsing (index, time line "HH:MM:SS,mmm --> HH:MM:SS,mmm", text lines).
+        *   Multi-line texts joined by `\n`.
+        *   Seconds as numbers.
+        *   Handle `\n` and `\r\n`.
+        *   Trim each line.
+        *   Skip malformed blocks (no valid time line), do not throw.
+        *   Empty/whitespace input returns `[]`.
+    *   Constraints: Output ONLY the ````ts code block. No prose. Pure function, no imports.
+
+2.  **Drafting the Code:**
+    *   Need to split the input into blocks based on blank lines (one or more).
+    *   For each block:
+        *   Split by newline.
+        *   Filter/trim lines.
+        *   The first line is the index (can be anything, usually ignored but must exist for structure? Actually, SRT format requires an index line, but the prompt says "skip malformed blocks (no valid time line)". So if there's no time line, skip).
+        *   The second line must match the time pattern: `HH:MM:SS,mmm --> HH:MM:SS,mmm`.
+        *   Parse start and end times.
+        *   Remaining lines are text.
+    *   Time parsing logic:
+        *   Split by " --> ".
+        *   Split each part by ",".
+        *   First 3 parts are H:M:S. Third is milliseconds (integer).
+        *   Convert to seconds: `H * 3600 + M * 60 + S + ms / 1000`.
+
+3.  **Refining the Logic:**
+    *   Split input by `\r\n` first, then normalize to `\n`, or use regex `/[\r\n]+/`. Let's split by lines using `split(/\r?\n/g)`.
+    *   Actually, SRT blocks are separated by blank lines. So I should group consecutive non-empty lines into blocks.
+    *   Algorithm:
+        1. Split input string by `\r\n` or `\n`.
+        2. Filter out empty strings/whitespace-only strings to find block boundaries? No, better to accumulate lines between blank lines.
+        3. Let's iterate through lines. If current line is empty (after trim), finalize the current block if it exists. Otherwise add to current block.
+    *   Wait, standard approach:
+        *   Split by `\r\n`. Normalize to `\n` for processing? Or just split by `[\r\n]+`.
+        *   Let's use `split(/\r?\n/g)`.
+        *   Group lines into blocks separated by empty lines.
+    *   Inside a block:
+        *   Lines array (trimmed).
+        *   If length < 2, skip? Or check specifically for time line.
+        *   Time line regex: `^(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})$`.
+        *   Find index of the line matching this regex. If not found, skip block.
+        *   Actually, strictly following SRT: Line 0 is index, Line 1 is time. But prompt says "skip malformed blocks (no valid time line)". So I look for the time line specifically.
+        *   Text lines are everything after the time line.
+
+4.  **Implementation Details:**
+    *   Regex for time: `/^(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})$/`
+    *   Helper to parse "HH:MM:SS,mmm" to seconds.
+
+5.  **Edge Cases:**
+    *   Input `""` -> split gives `[""]`. Trim is empty. Loop yields no blocks. Returns `[]`.
+    *   Whitespace only -> same.
+    *   Malformed block (missing time line) -> skip.
+    *   Multiple text lines -> join with `\n`.
+
+6.  **Writing the Code:**
+    ```typescript
+    export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+      if (!srt || srt.trim() === "") return [];
+
+      const lines = srt.split(/\r?\n/).map(l => l.trim());
+      const result: { start: number; end: number; text: string }[] = [];
+
+      let blockLines: string[] = [];
+
+      for (const line of lines) {
+        if (!line) {
+          if (blockLines.length > 0) {
+            processBlock(blockLines, result);
+            blockLines = [];
+          }
+        } else {
+          blockLines.push(line);
+        }
+      }
+
+      // Handle trailing block without final newline? SRT usually ends with newline. But just in case.
+      if (blockLines.length > 0) {
+        processBlock(blockLines, result);
+      }
+
+      return result;
+    }
+
+    function processBlock(lines: string[], result: { start: number; end: number; text: string }[]) {
+      // Find the time line. In standard SRT it's index \n time \n text...
+      // But we just need to find the valid time line within the block.
+      const timeLineIndex = lines.findIndex(l => /^(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(l));
+
+      if (timeLineIndex === -1) return; // Malformed
+
+      const [startStr, endStr] = lines[timeLineIndex].split("-->");
+      const startSec = parseTime(startStr.trim());
+      const endSec = parseTime(endStr.trim());
+
+      const textLines = lines.slice(timeLineIndex + 1);
+      result.push({
+        start: startSec,
+        end: endSec,
+        text: textLines.join("\n")
+      });
+    }
+
+    function parseTime(t: string): number {
+      // HH:MM:SS,mmm
+      const parts = t.split(",").map(Number);
+      if (parts.length !== 2) return 0;
+      const [hms, ms] = parts;
+      const [h, m, s] = hms.split(":").map(Number);
+      return h * 3600 + m * 60 + s + ms / 1000;
+    }
+    ```
+
+7.  **Review against Constraints:**
+    *   `parseSrtCues("")` -> returns `[]`. Correct.
+    *   Test case: `"1\n00:00:01,000 --> 00:00:02,500\nhello\n\n2\n00:00:03,000 --> 00:00:04,000\nworld a\nworld b"`
+        *   Lines: `["1", "00:00:01,000 --> 00:00:02,500", "hello", "", "2", ...]`
+        *   Block 1: `["1", "time...", "hello"]`. Time line found at index 1. Start=1, End=2.5. Text="hello".
+        *   Block 2: `["2", "time...", "world a", "world b"]`. Time line at index 1. Start=3, End=4. Text="world a\nworld b".
+    *   Output format: ````ts block ONLY. No prose.
+
+8.  **Final Polish:** Combine helper functions into the main file scope or keep them private. Since it's one file and export is required for `parseSrtCues`, helpers can be non-exported functions in the same module. The prompt says "Pure function, no imports". This means no `import` statements. Helpers are fine within the file.
+
+    Wait, "Output ONLY the ```ts block". I need to make sure there is absolutely nothing outside the code block.
+
+    Let's double check the regex for time line. `\s*-->\s*`. The prompt says `"HH:MM:SS,mmm --> HH:MM:SS,mmm"`. Standard SRT allows whitespace around `-->`. I will allow optional whitespace to be robust, or stick strictly? Usually trimming lines handles surrounding spaces. The separator is usually just `-->`. Let's use `\s*-->\s*` for safety as it doesn't hurt valid inputs and helps with potential formatting variations, but strict adherence suggests exactly ` --> `. However, standard SRT parsers tolerate whitespace. I'll stick to a reasonable regex that matches the spec.
+
+    One specific constraint: "trim each line". Done via `.map(l => l.trim())`.
+    Constraint: "handle both \n and \r\n line endings". Done via `split(/\r?\n/)`.
+    Constraint: "skip malformed blocks (no valid time line) instead of throwing". Done.
+
+    Ready to generate output.
+
+    Wait, one detail: "Output ONLY the TypeScript file contents in a single ```ts code block."
+    Does it mean I should include the path comment? No, just the code block content.
+
+    Let's refine the `parseTime` function. If input is empty or invalid, return 0 to avoid NaN spread.
+
+    Final check on signature: `export function parseSrtCues(srt: string): { start: number; end: number; text: string }[]`. Matches.
+
+    One minor thing: The prompt says "Pure function". This usually implies no side effects, but it also often means "no imports/state". It matches the constraint "no imports". I will treat helpers as private functions within the file.
+
+    Wait, looking closely at the provided test case string: `"1\n00:00:01,000 --> 00:00:02,500\nhello\n\n2..."`.
+    Split by `\r?\n`: `["1", "00:00:01,000 --> 00:00:02,500", "hello", "", "2", ...]`
+    Block accumulation logic handles the empty string line correctly (triggers processBlock).
+
+    Code looks solid.
+
+```typescript
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  if (!srt || srt.trim() === "") return [];
+
+  const lines = srt.split(/\r?\n/).map(l => l.trim());
+  const result: { start: number; end: number; text: string }[] = [];
+  let blockLines: string[] = [];
+
+  for (const line of lines) {
+    if (!line) {
+      if (blockLines.length > 0) processBlock(blockLines, result);
+      blockLines = [];
+    } else {
+      blockLines.push(line);
+    }
+  }
+
+  if (blockLines.length > 0) processBlock(blockLines, result);
+
+  return result;
+}
+
+function processBlock(lines: string[], result: { start: number; end: number; text: string }[]) {
+  const timeLineIdx = lines.findIndex(l => /^(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(l));
+
+  if (timeLineIdx === -1) return;
+
+  const parts = lines[timeLineIdx].split(/\s*-->\s*/);
+  const startSec = parseTime(parts[0]);
+  const endSec = parseTime(parts[1]);
+
+  result.push({
+    start: startSec,
+    end: endSec,
+    text: lines.slice(timeLineIdx + 1).join("\n")
+  });
+}
+
+function parseTime(t: string): number {
+  if (!t) return 0;
+  const [hms, ms] = t.split(",");
+  if (ms == null) return 0;
+  const [h, m, s] = hms.split(":").map(Number);
+  return h * 3600 + m * 60 + s + Number(ms) / 1000;
+}
+```
+
+    Wait, I need to ensure no prose outside the block. Just the block.
+    The prompt says "Output ONLY the ```ts code block."
+    So I will output exactly that.
+
+    One check: `split(/\s*-->\s*/)` vs `split("-->")`. If line is trimmed, usually there are no extra spaces. But `\s*` is safer for robust parsing. The regex in findIndex uses `\s*-->\s*`, so the split should match the same delimiter to be consistent. I used `\s*-->\s*` in the split too. Good.
+
+    Wait, `Number(ms)` vs `parseInt`. `Number` works fine here.
+    Also `hms.split(":")` might fail if format is wrong (e.g., "12:34"). Then `.map(Number)` returns `[NaN, 34]`, resulting in `NaN * 3600 + ... = NaN`. I should probably guard against this or just let it be since the regex ensures validity. The regex `(\d{2}):(\d{2}):(\d{2}),(\d{3})` guarantees 3 colon-separated parts and comma separated ms. So `parseTime` input is guaranteed format by the findIndex check.
+
+    Final output generation.
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  if (!srt || srt.trim() === "") return [];
+
+  const lines = srt.split(/\r?\n/).map(l => l.trim());
+  const result: { start: number; end: number; text: string }[] = [];
+  let blockLines: string[] = [];
+
+  for (const line of lines) {
+    if (!line) {
+      if (blockLines.length > 0) processBlock(blockLines, result);
+      blockLines = [];
+    } else {
+      blockLines.push(line);
+    }
+  }
+
+  if (blockLines.length > 0) processBlock(blockLines, result);
+
+  return result;
+}
+
+function processBlock(lines: string[], result: { start: number; end: number; text: string }[]) {
+  const timeLineIdx = lines.findIndex(
+    l => /^(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})$/.test(l)
+  );
+
+  if (timeLineIdx === -1) return;
+
+  const separator = /\s*-->\s*/;
+  const parts = lines[timeLineIdx].split(separator);
+  const startSec = parseTime(parts[0]);
+  const endSec = parseTime(parts[1]);
+
+  result.push({
+    start: startSec,
+    end: endSec,
+    text: lines.slice(timeLineIdx + 1).join("\n")
+  });
+}
+
+function parseTime(t: string): number {
+  if (!t) return 0;
+  const [hms, ms] = t.split(",");
+  if (ms == null) return 0;
+  const [h, m, s] = hms.split(":").map(Number);
+  return h * 3600 + m * 60 + s + Number(ms) / 1000;
+}
+```

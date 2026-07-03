@@ -33,6 +33,17 @@ MODEL_OPTIONS = {
         "temperature": 0.6, "top_p": 0.95, "top_k": 20,
         "num_ctx": 8192, "num_predict": 6000,
     },
+    # Ornith 9B (qwen3.5-base, thinking) — card: temp 0.6/top_p 0.95/top_k 20
+    "hf.co/deepreinforce-ai/Ornith-1.0-9B-GGUF:Q4_K_M": {
+        "temperature": 0.6, "top_p": 0.95, "top_k": 20,
+        "num_ctx": 8192, "num_predict": 6000,
+    },
+    # gemma-agentic-v2 — card: "for coding you can also go greedy (temp 0)" + known issue
+    # repetition ถ้าไม่ตั้ง rep_pen 1.1
+    "hf.co/yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF:Q4_K_M": {
+        "temperature": 0, "repeat_penalty": 1.1, "top_p": 0.95, "top_k": 64,
+        "num_ctx": 8192, "num_predict": 6000,
+    },
 }
 
 

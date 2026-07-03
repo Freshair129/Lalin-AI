@@ -1,6 +1,7 @@
 # LOCAL_MODEL_LEDGER.md — anti-error-loop (file-based degrade path)
 
-ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-LLM-DISPATCH-V2 §6/§10.
+ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-LLM-DISPATCH-V2 §6/§10
+(**สเปกย้ายไปอยู่ `G:/Rwang/docs/` แล้ว 2026-07-03** — เป็นเอกสารชั้น orchestrator ไม่ใช่ของ target repo).
 machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jsonl) — ไฟล์นี้เป็น human-readable view.
 ก่อน dispatch → `python orchestration/recall_mistakes.py --task "<คำอธิบาย task>"` แล้วฉีดผลเข้า prompt.
 **อัปเดต 2026-07-03:** จาก benchmark v2 (74 dispatch จริง, 7 micro-task × 4 prompt-variant × 6 โมเดล) — ดู [REPORT V2](REPORT--LOCAL-LLM-DISPATCH.md)
@@ -11,7 +12,15 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 | 1 | `qwen3:latest` (14.8B) | **7/7 = 100%** | **5.1s** | 10.05GB | **default** — VRAM ว่างเท่านั้น (เหลือ ~1.1GB ไม่พอ ML) |
 | 2 | `sushirl:latest` (9B) | **7/7 = 100%** (ต้องใช้ extractor v2 — 0/7 ถ้า extract แบบ fence-แรก) | 11.6s | **5.57GB** | **co-resident กับ Demucs/whisper** (เหลือ ~5.5GB) |
 | 3 | `hf.co/yuxinlu1/Mellum2-12B-A2.5B…:Q4_K_M` (MoE, active 2.5B) | 6/7 = 86% (fail เดียว = logic slip; temp 0.6 ตาม card) | **4.9s** (gen 127 tok/s — เร็วสุด) | 8.25GB | สำรองอันดับ 1 / งาน latency-sensitive |
-| 4 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรองอันดับ 2 |
+| 4 | `hf.co/deepreinforce-ai/Ornith-1.0-9B…:Q4_K_M` (qwen3.5-base) | 6/7 = 86% (temp 0.6 ตาม card) + **tool-use 3/3 เร็วสุด 1.9–2.7s** | ~25s (think เยอะ) | **5.57GB** | **งาน agentic/tool-calling + co-resident** |
+| 5 | `hf.co/empero-ai/Qwythos-9B…:Q4_K_M` | 5/7 = 71% **เฉพาะ temp 0.6** (temp 0.1 → repetition loop, 1/7) | 19.6s | 6.09GB | สำรองท้ายแถว |
+
+### เฉพาะทาง tool-calling
+| model | tool-use (S1-en / S2-th / S3-no-call) | code | บทบาท |
+|---|---|---|---|
+| `Ornith-1.0-9B` | ✅ 3/3 (1.9–2.7s) | 6/7 | ตัวหลักงาน agentic |
+| `hf.co/yuxinlu1/gemma-4-12B-agentic…v2-3.5x-tau2` | ✅ 3/3 (2.3–4.1s) | **3/7 — ห้ามให้เขียนโค้ด** | tool-calling เท่านั้น · v2 GGUF แก้ special-token leak ของ coder v1 แล้ว |
+| `qwen3:latest` | ❌ **think-loop timeout >900s เมื่อเจอ tools** | 7/7 | **ห้ามใช้กับ tool-calling เด็ดขาด** |
 
 ### candidate (ยังไม่เข้า pool)
 | model | เหตุผล |
