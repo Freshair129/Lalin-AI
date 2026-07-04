@@ -19,6 +19,7 @@ class ChatRequest(BaseModel):
 
 class BrainConfigRequest(BaseModel):
     provider: str | None = Field(default=None, description="ollama | cloud")
+    ollama_base_url: str | None = None
     ollama_model: str | None = None
     cloud_provider: str | None = Field(default=None, description="anthropic | openai | openrouter")
     cloud_model: str | None = None

@@ -15,6 +15,7 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
 export interface BrainConfig {
   provider: string;
   model?: string;
+  ollama_base_url?: string;
   cloud_provider?: string;
   base_url?: string;
   has_api_key?: boolean;

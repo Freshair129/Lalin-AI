@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { files, packs, type Pack } from "../api";
+import { Icon } from "./icons";
 
 // payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
 // (drop handler อยู่ในเลนของ StudioDock/ClipTimeline — worker อื่นรับผิดชอบ)
@@ -24,6 +25,9 @@ export function LibraryPanel() {
   return (
     <aside className="lib">
       <div className="lib-title">Library</div>
+      <div className="lib-subtitle">
+        <Icon name="search" size={12} /> Packs · loops · reference audio
+      </div>
 
       {/* preview */}
       <div className="lib-preview">
@@ -33,7 +37,7 @@ export function LibraryPanel() {
 
       {/* search */}
       <div className="lib-search">
-        <span className="lib-search-ic">🔍</span>
+        <span className="lib-search-ic"><Icon name="search" size={13} /></span>
         <input placeholder="Search Library" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
@@ -51,7 +55,7 @@ export function LibraryPanel() {
           >
             <span className="lib-dot" style={{ background: p.color }} />
             <span className="lib-name">{p.name}</span>
-            {p.installed && <span className="lib-tag">✓</span>}
+            {p.installed && <span className="lib-tag">Ready</span>}
           </button>
         ))}
         {filtered.length === 0 && <div className="lib-empty">ไม่พบ</div>}

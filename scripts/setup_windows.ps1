@@ -3,6 +3,10 @@
 #  ต้องมี Python 3.11 (ML stack ยังไม่รองรับ 3.12/3.13)
 #  รัน:  cd D:\G-Music\backend ; ..\scripts\setup_windows.ps1
 # ═══════════════════════════════════════════════════════════════════
+param(
+  [switch]$InstallOptionalRemixDeps
+)
+
 $ErrorActionPreference = "Stop"
 
 # ── หา Python 3.11 ──────────────────────────────────────────────────
@@ -44,6 +48,16 @@ Write-Host "==> ติดตั้งโมเดลเสียง" -Foreground
 & $pipInstall @("matchering", "pyloudnorm") # mastering
 & $pipInstall @("librosa")                  # time-stretch สำหรับ dubbing
 # XTTS (ทางเลือก) — ติดตั้งเมื่อต้องการ:  & $pipInstall @("coqui-tts")
+
+if ($InstallOptionalRemixDeps) {
+  Write-Host "==> ติดตั้ง optional Remix deps (Demucs / PSOLA / pedalboard)" -ForegroundColor Cyan
+  & $pipInstall @("demucs", "psola", "pedalboard")
+} else {
+  Write-Host "==> ข้าม optional Remix deps" -ForegroundColor Yellow
+  Write-Host "   ถ้าต้องการเปิดใช้ stem split / auto-tune / vocal FX แบบเต็ม:" -ForegroundColor DarkYellow
+  Write-Host "   ..\\scripts\\setup_windows.ps1 -InstallOptionalRemixDeps" -ForegroundColor DarkYellow
+  Write-Host "   หมายเหตุ: psola/pedalboard มีผลด้าน license ตาม docs/ROADMAP_MUSIC.md" -ForegroundColor DarkYellow
+}
 
 Write-Host "==> เตรียมไฟล์ config" -ForegroundColor Cyan
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }

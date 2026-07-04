@@ -1,6 +1,7 @@
 // ชุด line icon โมเดิร์น (stroke=currentColor) สำหรับ rail/nav
 type IconName = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "market" | "brain"
-  | "files" | "folder" | "audio" | "doc";
+  | "files" | "folder" | "audio" | "doc" | "save" | "saveAs" | "play" | "stop"
+  | "record" | "search" | "undo" | "redo" | "loop" | "metro" | "grid" | "spark";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // microphone
@@ -54,6 +55,54 @@ const PATHS: Record<IconName, React.ReactNode> = {
   doc: (<>
     <path d="M6 3h8l4 4v14a0 0 0 0 1 0 0H6a0 0 0 0 1 0 0z" />
     <path d="M14 3v4h4M9 13h6M9 17h6" />
+  </>),
+  save: (<>
+    <path d="M5 4h11l3 3v13H5z" />
+    <path d="M8 4v6h8V4M9 18h6" />
+  </>),
+  saveAs: (<>
+    <path d="M5 4h11l3 3v13H5z" />
+    <path d="M8 4v6h8V4M9 18h6" />
+    <path d="M15 13l4 4M19 13v4h-4" />
+  </>),
+  play: (<>
+    <path d="M8 6l10 6-10 6z" />
+  </>),
+  stop: (<>
+    <rect x="7" y="7" width="10" height="10" rx="1.5" />
+  </>),
+  record: (<>
+    <circle cx="12" cy="12" r="5" />
+  </>),
+  search: (<>
+    <circle cx="11" cy="11" r="6" />
+    <path d="M20 20l-4.2-4.2" />
+  </>),
+  undo: (<>
+    <path d="M9 7L5 11l4 4" />
+    <path d="M6 11h7a5 5 0 1 1 0 10h-1" />
+  </>),
+  redo: (<>
+    <path d="M15 7l4 4-4 4" />
+    <path d="M18 11h-7a5 5 0 1 0 0 10h1" />
+  </>),
+  loop: (<>
+    <path d="M7 7h10v4" />
+    <path d="M17 17H7v-4" />
+    <path d="M17 7l2 2-2 2" />
+    <path d="M7 17l-2-2 2-2" />
+  </>),
+  metro: (<>
+    <path d="M10 4h4l3 15H7z" />
+    <path d="M12 8v4" />
+    <path d="M9 20h6" />
+  </>),
+  grid: (<>
+    <rect x="5" y="5" width="14" height="14" rx="2" />
+    <path d="M10 5v14M14 5v14M5 10h14M5 14h14" />
+  </>),
+  spark: (<>
+    <path d="M4 15c2.2 0 2.8-6 5-6s2.8 10 5 10 2.8-12 6-12" />
   </>),
 };
 

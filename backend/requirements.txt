@@ -25,4 +25,5 @@ pydub==0.25.1
 #   TTS                  (Coqui XTTS v2 fallback)
 #   matchering           (mastering)
 #   pyloudnorm           (loudness)
+#   demucs / psola / pedalboard (Remix optional path; ติดตั้งผ่าน scripts/setup_windows.ps1 -InstallOptionalRemixDeps)
 # ──────────────────────────────────────────────────────────────────────

@@ -110,7 +110,17 @@ body {
 }
 .ctx-icon { font-size: 14px; }
 .ctx-name { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text); }
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.topbar-meta { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.topbar-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--glass-border);
+  color: var(--muted2); font-size: 10px; letter-spacing: .12em;
+}
+.topbar-pill.live { color: var(--text); border-color: color-mix(in srgb, var(--accent) 36%, var(--glass-border)); }
+.topbar-pill.down { color: #ffc2c8; border-color: rgba(255,81,99,.32); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
 
 /* ── Icon rail (ลอยเป็นบ็อบกลม) ── */
 .daw-body { flex: 1; display: flex; min-height: 0; padding: 12px 14px; gap: 12px; }
@@ -147,6 +157,7 @@ body {
   border: 1px solid var(--glass-border); border-radius: 22px;
   box-shadow: var(--glass-shadow), var(--glass-hi);
 }
+.stage.stage-studio { overflow: hidden; display: flex; flex-direction: column; }
 .stage-pad { padding: 30px 34px; }
 
 /* ── Status bar (ลอยเป็นบ็อบกลม) ── */
@@ -379,16 +390,46 @@ button.danger:hover { background: var(--red); color: #fff; }
 /* ════════════════════════════════════════════════════════════
    Remix — node workflow (react-flow)
    ════════════════════════════════════════════════════════════ */
-.remix-wrap { display: flex; flex-direction: column; height: 100%; }
+.remix-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
 .remix-toolbar {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 24px; border-bottom: 1px solid var(--border-soft);
-  background: var(--panel); gap: 16px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 18px 22px 16px; border-bottom: 1px solid var(--border-soft);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 70%),
+    linear-gradient(180deg, rgba(0,0,0,.12), transparent 42%),
+    var(--panel);
+  gap: 18px;
 }
-.remix-toolbar-right { display: flex; align-items: center; gap: 14px; }
-.remix-body { flex: 1; display: flex; min-height: 0; }
-.remix-main { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.remix-toolbar-head { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
+.remix-kicker { font-size: 10px; letter-spacing: .18em; color: var(--muted2); }
+.remix-toolbar-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex: 1; flex-wrap: wrap; }
+.remix-body { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+.remix-main { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
 .remix-canvas { flex: 3; min-height: 0; background: var(--bg); }
+.remix-standard {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  overflow: hidden;
+}
+.remix-timeline-shell {
+  flex: 1.35;
+  min-height: 300px;
+  overflow: hidden;
+}
+.remix-bottom-dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+  max-height: 42%;
+  overflow: auto;
+}
 
 /* ── File Manager (Adobe-style) ── */
 .fm { height: 100%; display: flex; flex-direction: column; min-height: 0; }
@@ -433,7 +474,7 @@ button.danger:hover { background: var(--red); color: #fff; }
 
 /* sized panes */
 .remix-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; flex-shrink: 0; }
-.remix-rack { overflow: auto; flex-shrink: 0; min-width: 0; }
+.remix-rack { overflow: hidden; flex-shrink: 0; min-width: 0; min-height: 0; }
 
 /* ── Left dock (Library | Track) ── */
 .remix-left { flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
@@ -445,20 +486,35 @@ button.danger:hover { background: var(--red); color: #fff; }
 /* ── Library (GarageBand-style) ── */
 .lib { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .lib-title { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 12px 14px 8px; }
+.lib-subtitle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 14px 10px;
+  color: var(--muted2); font-size: 11px;
+}
 .lib-preview { padding: 0 14px 12px; }
 .lib-cover { aspect-ratio: 16/10; border-radius: 10px; box-shadow: inset 0 0 28px rgba(0,0,0,.45); border: 1px solid var(--glass-border); }
 .lib-cover-name { text-align: center; font-size: 13px; font-weight: 600; margin-top: 8px; }
-.lib-search { display: flex; align-items: center; gap: 7px; margin: 0 12px 8px; padding: 7px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; }
-.lib-search-ic { font-size: 11px; opacity: .6; }
+.lib-search { display: flex; align-items: center; gap: 7px; margin: 0 12px 10px; padding: 8px 10px; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; }
+.lib-search-ic { display: inline-flex; align-items: center; justify-content: center; color: var(--muted2); }
 .lib-search input { flex: 1; background: transparent; border: none; padding: 0; color: var(--text); font-size: 13px; }
 .lib-search input:focus { outline: none; box-shadow: none; }
 .lib-list { flex: 1; overflow-y: auto; padding: 0 6px 10px; }
-.lib-item { display: flex; align-items: center; gap: 9px; width: 100%; background: transparent; border: none; color: var(--text); padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; text-align: left; }
-.lib-item:hover { background: var(--panel2); }
-.lib-item.on { background: var(--accent2, #2a6cf0); background: linear-gradient(90deg, color-mix(in srgb, var(--beat) 30%, transparent), transparent); color: #fff; }
+.lib-item { display: flex; align-items: center; gap: 9px; width: 100%; background: transparent; border: 1px solid transparent; color: var(--text); padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 13px; text-align: left; transition: background .14s ease, border-color .14s ease; }
+.lib-item:hover { background: rgba(255,255,255,.03); border-color: var(--border-soft); }
+.lib-item.on {
+  background: linear-gradient(90deg, rgba(61, 155, 224, 0.18), rgba(61, 155, 224, 0.02));
+  border-color: rgba(61, 155, 224, 0.28);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
 .lib-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .lib-name { flex: 1; }
-.lib-tag { font-size: 10px; color: var(--accent); }
+.lib-tag {
+  font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); padding: 3px 6px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  background: rgba(199,240,70,.06);
+}
 .lib-empty { color: var(--muted2); font-size: 12px; padding: 12px; text-align: center; }
 
 /* ── Properties dock (ซ้าย แบบ AudioNodes) ── */
@@ -539,12 +595,23 @@ button.danger:hover { background: var(--red); color: #fff; }
 }
 .studio-dock .cliptl { flex: 1; min-height: 0; border-top: none; border-radius: 0; }
 .cliptl { flex: 2; min-height: 170px; display: flex; flex-direction: column; background: var(--bg2); border-top: 1px solid var(--border); }
-.cliptl-bar { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.cliptl-bar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 80%),
+    var(--panel);
+}
 .cliptl-time { font-size: 11px; color: var(--muted); margin-left: 6px; }
 .cliptl-grid-ctl { display: flex; align-items: center; gap: 5px; margin-left: 10px; }
 .cliptl-grid-ctl input { width: 52px; padding: 4px 6px; font-size: 11px; text-align: right; }
 .cliptl-grid-ctl select { padding: 4px 6px; font-size: 11px; }
 .cliptl-unit { font-size: 9px; color: var(--muted2); letter-spacing: .1em; margin-right: 4px; }
+.cliptl-warning {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: #ffb8c1; font-size: 10px;
+  padding: 0 8px;
+}
 .cliptl-gap { flex: 1; }
 .cliptl-grid { position: absolute; top: 20px; bottom: 0; right: 0; z-index: 0; pointer-events: none; }
 .cliptl-zoom { display: flex; gap: 3px; margin-left: 6px; }
@@ -558,7 +625,7 @@ button.danger:hover { background: var(--red); color: #fff; }
 .kb-row kbd { flex-shrink: 0; min-width: 92px; text-align: center; font-family: monospace; font-size: 10px; padding: 3px 6px; border-radius: 5px; background: var(--panel2); border: 1px solid var(--border); box-shadow: 0 1px 0 var(--border); }
 .kb-note { margin-top: 12px; font-size: 10px; color: var(--muted2); }
 @media (max-width: 560px) { .kb-grid { grid-template-columns: 1fr; } }
-.cliptl-scroll { flex: 1; overflow: auto; position: relative; }
+.cliptl-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
 .cliptl-inner { position: relative; min-height: 100%; }
 .cliptl-ruler { position: sticky; top: 0; height: 20px; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 6; }
 .cliptl-rtick { position: absolute; top: 4px; font-size: 9px; color: var(--muted2); border-left: 1px solid var(--border-soft); padding-left: 3px; height: 16px; }
@@ -623,6 +690,14 @@ button.danger:hover { background: var(--red); color: #fff; }
 .clip.muted { opacity: 0.4; }
 .clip-bg { position: absolute; inset: 0; opacity: 0.92; }
 .clip-wave { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.85; }
+.studio-dock.embedded {
+  height: 100%;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)), var(--bg2);
+}
+.remix-stem-dock { margin-top: 0 !important; }
 
 /* ── Layout switcher (Standard / +Node) ── */
 .seg-toggle { display: flex; background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); border-radius: 999px; padding: 3px; }
@@ -631,7 +706,23 @@ button.danger:hover { background: var(--red); color: #fff; }
 .seg-add { background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); color: var(--text); font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
 .seg-add:hover { border-color: var(--accent); }
 label.seg-add { display: inline-flex; align-items: center; gap: 4px; }
+.tool-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; }
+.tool-chip.ready { border-color: color-mix(in srgb, var(--accent) 38%, var(--glass-border)); color: var(--text); }
+.tool-chip svg { flex-shrink: 0; }
 .remix-tb-sep { width: 1px; align-self: stretch; background: var(--glass-border); margin: 2px 2px; }
+.remix-toolbar-progress { margin-left: 2px; }
+.tool-metric {
+  display: inline-flex; align-items: center;
+  min-height: 34px; padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.05);
+}
+.tool-run {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding-inline: 18px;
+  box-shadow: 0 10px 24px -18px var(--accent-glow);
+}
 /* Adobe-style project title chip */
 .proj-title { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); border-radius: 999px; }
 .proj-name { background: transparent; border: 0; color: var(--text); font-size: 12px; font-weight: 600; padding: 0; min-width: 70px; }
@@ -646,11 +737,12 @@ label.seg-add { display: inline-flex; align-items: center; gap: 4px; }
 .ws-del:hover { color: #ff5163; border-color: #ff5163; }
 .ws-chip { font-size: 11px; color: var(--accent); background: rgba(199,240,70,.08); border: 1px solid var(--accent-dim); padding: 5px 10px; border-radius: 999px; }
 .ws-load { border-radius: 16px; padding: 22px; width: 360px; }
-.ws-load h3 { margin: 0 0 14px; font-size: 16px; }
+.ws-load h3 { margin: 0 0 14px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
 .ws-item { display: flex; justify-content: space-between; align-items: center; width: 100%; background: var(--panel2); border: 1px solid var(--border); color: var(--text); padding: 11px 14px; border-radius: 9px; margin-bottom: 7px; cursor: pointer; font-size: 13px; }
 .ws-item:hover { border-color: var(--accent); }
 .ws-id { color: var(--muted2); font-size: 10px; }
 .ws-close { width: 100%; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); padding: 9px; border-radius: 9px; cursor: pointer; margin-top: 6px; }
+.ws-close:hover { border-color: var(--accent); color: var(--text); }
 
 /* ── Bento FX rack ── */
 .bento { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr 1.6fr 1fr; gap: 10px; padding: 12px; border-top: 1px solid var(--border); }
@@ -814,6 +906,8 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   /* remix body / bento: stack แนวตั้ง */
   .remix-body { flex-direction: column; }
   .remix-left { width: 100% !important; border-right: none; border-bottom: 1px solid var(--border); max-height: 260px; }
+  .remix-standard { padding: 8px; gap: 8px; }
+  .remix-timeline-shell { min-height: 220px; }
   .props { width: 100%; }
   .bento { grid-template-columns: 1fr; padding: 8px; gap: 8px; }
 

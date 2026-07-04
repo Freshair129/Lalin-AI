@@ -18,6 +18,7 @@ class BrainConfig:
     """ค่าที่ override ได้สดตอนรัน (ทับค่าจาก .env)."""
 
     provider: str | None = None  # "ollama" | "cloud"
+    ollama_base_url: str | None = None
     ollama_model: str | None = None
     cloud_provider: str | None = None
     cloud_model: str | None = None
@@ -32,7 +33,7 @@ def _build(settings: Settings) -> LLMProvider:
     provider = _override.provider or settings.brain_provider
     if provider == "ollama":
         return OllamaProvider(
-            base_url=settings.ollama_base_url,
+            base_url=_override.ollama_base_url or settings.ollama_base_url,
             model=_override.ollama_model or settings.ollama_model,
         )
     CloudProvider = import_module(".cloud_provider", __package__).CloudProvider
@@ -56,7 +57,7 @@ def reconfigure(cfg: BrainConfig) -> LLMProvider:
     """อัปเดต override แล้วสร้างสมองใหม่ — ใช้โดย POST /brain/config."""
     global _override, _current
     # อัปเดตเฉพาะฟิลด์ที่ส่งมา (ไม่ใช่ None)
-    for f in ("provider", "ollama_model", "cloud_provider", "cloud_model", "cloud_api_key"):
+    for f in ("provider", "ollama_base_url", "ollama_model", "cloud_provider", "cloud_model", "cloud_api_key"):
         v = getattr(cfg, f)
         if v is not None:
             setattr(_override, f, v)
@@ -71,7 +72,7 @@ def current_summary() -> dict:
         return {
             "provider": "ollama",
             "model": _override.ollama_model or settings.ollama_model,
-            "base_url": settings.ollama_base_url,
+            "base_url": _override.ollama_base_url or settings.ollama_base_url,
         }
     return {
         "provider": "cloud",

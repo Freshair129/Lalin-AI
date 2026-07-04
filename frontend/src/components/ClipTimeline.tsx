@@ -6,6 +6,7 @@ import { metronomeTicks } from "../timeline/grid";
 import { StereoMeter } from "./StereoMeter";
 import { ChannelMeterBalance } from "./ChannelMeterBalance";
 import { useMicRecorder, MicRecordIndicator } from "./MicRecorder";
+import { Icon } from "./icons";
 
 const HEAD_W = 210;
 
@@ -254,6 +255,22 @@ export function ClipTimeline({
 
   const duration = Math.max(project.duration, 20);
   const contentW = duration * pps;
+  const MIN_PPS = 24;
+  const MAX_PPS = 72;
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || duration <= 0) return;
+    const fit = () => {
+      const avail = Math.max(120, el.clientWidth - headWRef.current - 12);
+      const next = Math.max(MIN_PPS, Math.min(MAX_PPS, avail / duration));
+      setPps(next);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [duration]);
 
   // สร้าง impulse response สำหรับ reverb (cache)
   const makeImpulse = (ctx: AudioContext) => {
@@ -484,8 +501,8 @@ export function ClipTimeline({
   const zoomFit = () => {
     const el = scrollRef.current;
     if (!el || duration <= 0) return;
-    const avail = el.clientWidth - headW - 24;
-    if (avail > 0) setPps(Math.max(15, Math.min(200, avail / duration)));
+    const avail = el.clientWidth - headW - 12;
+    if (avail > 0) setPps(Math.max(MIN_PPS, Math.min(MAX_PPS, avail / duration)));
   };
   const copySel = () => { const s = findSel(); if (s) clipboardRef.current = structuredClone(s.clip); };
   const pasteClip = () => {
@@ -548,8 +565,8 @@ export function ClipTimeline({
         case "c": case "C": e.preventDefault(); k.razor(); break;
         case "s": case "S": e.preventDefault(); k.setSnapOn((v) => !v); break;
         case "m": case "M": e.preventDefault(); k.muteSel(); break;
-        case "=": case "+": e.preventDefault(); k.setPps((p) => Math.min(200, p + 15)); break;
-        case "-": case "_": e.preventDefault(); k.setPps((p) => Math.max(15, p - 15)); break;
+        case "=": case "+": e.preventDefault(); k.setPps((p) => Math.min(MAX_PPS, p + 6)); break;
+        case "-": case "_": e.preventDefault(); k.setPps((p) => Math.max(MIN_PPS, p - 6)); break;
         case "\\": e.preventDefault(); k.zoomFit(); break;
         default: break;
       }
@@ -563,17 +580,19 @@ export function ClipTimeline({
   return (
     <div className="cliptl">
       <div className="cliptl-bar">
-        <button className="tl-btn play" onClick={() => (playing ? pause() : play())}>{playing ? "⏸" : "▶"}</button>
-        <button className="tl-btn" onClick={stop}>⏹</button>
+        <button className="tl-btn play" onClick={() => (playing ? pause() : play())} title={playing ? "Pause" : "Play"}>
+          {playing ? <Icon name="stop" size={12} /> : <Icon name="play" size={12} />}
+        </button>
+        <button className="tl-btn" onClick={stop} title="Stop"><Icon name="stop" size={12} /></button>
         <button
           className="tl-btn"
           onClick={onRecordClick}
           disabled={mic.busy || !armedTrackId}
           title={armedTrackId ? "บันทึกเสียงจากไมค์เข้าแทร็กที่เลือก (ที่ตำแหน่ง playhead)" : "ยังไม่มีแทร็กให้บันทึก"}
           style={{ color: mic.recording ? "#ff5050" : undefined }}
-        >{mic.busy ? "…" : "●"}</button>
+        >{mic.busy ? "..." : <Icon name="record" size={12} />}</button>
         {mic.recording && <MicRecordIndicator recording={mic.recording} elapsed={mic.elapsed} />}
-        {mic.error && <span className="cliptl-unit" style={{ color: "#ff5050" }} title={mic.error}>⚠ {mic.error}</span>}
+        {mic.error && <span className="cliptl-warning" title={mic.error}><Icon name="spark" size={12} /> {mic.error}</span>}
         <label className="cliptl-unit" style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }} title="เมื่อบันทึกเสร็จ จะเพิ่มเสียงนี้เข้าคลังเสียงเป็นเสียงอ้างอิงสำหรับโคลนด้วย">
           <input type="checkbox" checked={asRefVoice} onChange={(e) => setAsRefVoice(e.target.checked)} />
           ตั้งเป็น reference voice
@@ -596,33 +615,33 @@ export function ClipTimeline({
           <span className="cliptl-fxk"><span className="cliptl-unit">ECHO</span>
             <input type="range" min={0} max={1} step={0.01} value={echo} onChange={(e) => onEcho(Number(e.target.value))} /></span>
           <button className={`tl-btn ${comp ? "play" : ""}`} onClick={() => onComp(!comp)} title="Compressor">CMP</button>
-          <button className={`tl-btn ${snapOn ? "play" : ""}`} onClick={() => setSnapOn((s) => !s)} title="Snap to grid">⊞</button>
+          <button className={`tl-btn ${snapOn ? "play" : ""}`} onClick={() => setSnapOn((s) => !s)} title="Snap to grid"><Icon name="grid" size={12} /></button>
           <button
             className={`tl-btn ${loopOn ? "play" : ""}`}
             onClick={() => setLoopOn((v) => !v)}
             title={loopRegion ? "เปิด/ปิดวนซ้ำช่วงที่เลือก (ลากบนไม้บรรทัดเพื่อกำหนดช่วง)" : "ลากบนไม้บรรทัดเพื่อกำหนดช่วงวนซ้ำก่อน"}
-          >🔁</button>
+          ><Icon name="loop" size={12} /></button>
           <button
             className={`tl-btn ${metroOn ? "play" : ""}`}
             onClick={() => setMetroOn((v) => !v)}
             title="Metronome click-track"
-          >🎵</button>
+          ><Icon name="metro" size={12} /></button>
         </span>
         <StereoMeter analyserL={analysers?.l} analyserR={analysers?.r} active={playing} height={26} />
         <span className="cliptl-gap" />
-        <button className="tl-btn" onClick={engine.undo} disabled={!engine.canUndo} title="Undo (Ctrl+Z)">↶</button>
-        <button className="tl-btn" onClick={engine.redo} disabled={!engine.canRedo} title="Redo (Ctrl+Shift+Z)">↷</button>
+        <button className="tl-btn" onClick={engine.undo} disabled={!engine.canUndo} title="Undo (Ctrl+Z)"><Icon name="undo" size={12} /></button>
+        <button className="tl-btn" onClick={engine.redo} disabled={!engine.canRedo} title="Redo (Ctrl+Shift+Z)"><Icon name="redo" size={12} /></button>
         <span className="cliptl-zoom">
           <button className="tl-btn" onClick={() => setPps((p) => Math.max(15, p - 15))}>−</button>
           <button className="tl-btn" onClick={() => setPps((p) => Math.min(200, p + 15))}>+</button>
         </span>
-        <button className={`tl-btn ${showKeys ? "play" : ""}`} onClick={() => setShowKeys((s) => !s)} title="คีย์ลัด (Premiere-style)">⌨</button>
+        <button className={`tl-btn ${showKeys ? "play" : ""}`} onClick={() => setShowKeys((s) => !s)} title="คีย์ลัด (Premiere-style)">K</button>
       </div>
 
       {showKeys && (
         <div className="kb-pop" onClick={() => setShowKeys(false)}>
           <div className="kb-card glass" onClick={(e) => e.stopPropagation()}>
-            <div className="kb-title">⌨ คีย์ลัด · Premiere-style</div>
+            <div className="kb-title">K คีย์ลัด · Premiere-style</div>
             <div className="kb-grid">
               {[
                 ["Ctrl+N / O / S", "ไฟล์ใหม่ / เปิด / บันทึก"],
@@ -905,7 +924,7 @@ export function ClipTimeline({
                       onFade={engine.setFade}
                     />
                   ))}
-                  {!t.clips.length && <span className="cliptl-empty">— โหลดไฟล์เสียงจากปุ่ม 🎤 Source / 🥁 Beat ด้านบน — หรือลากไฟล์จาก Library มาวาง —</span>}
+                  {!t.clips.length && <span className="cliptl-empty">— โหลดไฟล์จาก Source / Beat ด้านบน หรือ drag จาก Library มาวางได้เลย —</span>}
                 </div>
               </div>
             );

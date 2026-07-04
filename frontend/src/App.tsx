@@ -50,6 +50,13 @@ export default function App() {
             <span className="ctx-icon">{current && <Icon name={current.icon} size={16} />}</span>
             <span className="ctx-name">{current?.label}</span>
           </div>
+          <div className="topbar-meta mono">
+            <span className={`topbar-pill ${backend.online ? "live" : backend.online === false ? "down" : ""}`}>
+              <span className={`dot ${backend.online ? "up" : backend.online === false ? "down" : ""}`} />
+              {backend.online == null ? "CONNECTING" : backend.online ? "READY" : "OFFLINE"}
+            </span>
+            <span className="topbar-pill">{backend.brainName || "brain —"}</span>
+          </div>
           <div className="topbar-right">
             <UpdateChecker />
           </div>
@@ -69,7 +76,7 @@ export default function App() {
             ))}
           </nav>
 
-          <main className="stage">
+          <main className={`stage ${backendReady && STUDIO_TABS.has(tab) ? "stage-studio" : ""}`}>
             {!backendReady ? (
               <BackendGate readiness={backend} />
             ) : tab === "remix" ? (
@@ -91,7 +98,7 @@ export default function App() {
           </main>
         </div>
 
-        {backendReady && STUDIO_TABS.has(tab) && <StudioDock />}
+        {backendReady && STUDIO_TABS.has(tab) && tab !== "remix" && <StudioDock />}
 
         <footer className="statusbar mono">
           <span className="status-item">

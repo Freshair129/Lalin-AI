@@ -46,12 +46,22 @@ export function useClipEngine() {
   }, []);
 
   // ── source sync (จาก RemixPanel) ──────────────────────────
-  const setTrackSource = useCallback((trackId: string, url: string | null, color: string) => {
+  const setTrackSource = useCallback((
+    trackId: string,
+    url: string | null,
+    color: string,
+    options?: { start?: number; offset?: number },
+  ) => {
+    const start = Math.max(0, options?.start ?? 0);
+    const offset = Math.max(0, options?.offset ?? 0);
     silent((p) => ({
       ...p,
       tracks: p.tracks.map((t) =>
         t.id !== trackId ? t :
-          { ...t, clips: url ? [{ id: uid("clip"), src: url, start: 0, duration: 0, offset: 0, gain: 1, muted: false, color }] : [] }
+          {
+            ...t,
+            clips: url ? [{ id: uid("clip"), src: url, start, duration: 0, offset, gain: 1, muted: false, color }] : [],
+          }
       ),
     }));
   }, [silent]);

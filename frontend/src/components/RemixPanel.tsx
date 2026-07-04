@@ -28,6 +28,8 @@ import { FxRack } from "./FxRack";
 import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
 import { StemMixer, DEFAULT_STEM_GAINS, type StemGains } from "./StemMixer";
+import { StudioDock } from "./StudioDock";
+import { Icon } from "./icons";
 
 // สี lane (DAW) — ส่งเป็น hex เพราะ SVG attribute ไม่ resolve var()
 const C = { vocal: "#9b6cf0", beat: "#3d9be0", master: "#c7f046" };
@@ -40,7 +42,7 @@ function CinemaroNode({ data }: NodeProps<Node<NodeData>>) {
       <Handle type="target" position={Position.Left} />
       <div className="remix-node-head">
         <span className="remix-node-dot" />
-        <div>
+        <div className="remix-toolbar-head">
           <div className="remix-node-title">{data.title}</div>
           {data.sub && <div className="remix-node-sub">{data.sub}</div>}
         </div>
@@ -132,6 +134,8 @@ export function RemixPanel() {
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
   const customSeq = useRef(0);
   const loadingRef = useRef(false);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [leftBounds, setLeftBounds] = useState({ min: 200, max: 360 });
 
   // ── Adobe-style project file (New/Open/Save/Save As + dirty) ──
   const buildSnapshot = useCallback(() => ({
@@ -215,6 +219,10 @@ export function RemixPanel() {
     job?.status === "done" && typeof (job.result?.bpm as Record<string, unknown> | undefined)?.stretch === "number"
       ? ((job.result?.bpm as Record<string, unknown>).stretch as number)
       : null;
+
+  const previewOffsetSec = offsetAuto ? 0 : offsetMs / 1000;
+  const vocalPreviewStart = Math.max(0, previewOffsetSec);
+  const beatPreviewStart = Math.max(0, -previewOffsetSec);
 
   // ── เนื้อหาแต่ละโหนด (เน้น visual: knob/meter/waveform) ─────
   const buildData = (id: string): NodeData => {
@@ -351,12 +359,46 @@ export function RemixPanel() {
   };
 
   // ── sync source/beat/master เข้า clip engine (ข้ามตอนกำลังโหลด workspace) ──
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("vocal", source ? files.inputUrl(source) : null, "#9b6cf0"); }, [source]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("beat", beat ? files.inputUrl(beat) : null, "#3d9be0"); }, [beat]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!loadingRef.current) {
+      engine.setTrackSource(
+        "vocal",
+        source ? files.inputUrl(source) : null,
+        "#9b6cf0",
+        { start: vocalPreviewStart },
+      );
+    }
+  }, [source, vocalPreviewStart]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!loadingRef.current) {
+      engine.setTrackSource(
+        "beat",
+        beat ? files.inputUrl(beat) : null,
+        "#3d9be0",
+        { start: beatPreviewStart },
+      );
+    }
+  }, [beat, beatPreviewStart]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? files.downloadUrl(outputName) : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เลือก clip → สลับไปแท็บ Track อัตโนมัติ
   useEffect(() => { if (engine.selClip) setLeftTab("track"); }, [engine.selClip]);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const measure = () => {
+      const width = el.clientWidth;
+      const min = Math.max(190, Math.min(240, Math.round(width * 0.18)));
+      const max = Math.max(min + 40, Math.min(360, Math.round(width * 0.32)));
+      setLeftBounds({ min, max });
+      setLeftW((w) => clamp(w, min, max));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [setLeftW]);
 
   // ── คีย์ลัด project-level (Adobe-style) ────────────────
   useEffect(() => {
@@ -397,21 +439,24 @@ export function RemixPanel() {
     <div className="remix-wrap">
       <div className="remix-toolbar">
         <div>
-          <h2 style={{ margin: 0, fontSize: 16 }}>🎵 Remix · Finishing Studio</h2>
+          <span className="remix-kicker mono">REMIX WORKSPACE</span>
+          <h2 style={{ margin: 0, fontSize: 16 }}>Finishing Studio</h2>
           <span className="hint mono" style={{ margin: 0 }}>
-            {job ? job.message || job.error : "Source + Beat → Run"}
+            {job ? job.message || job.error : "Arrange · align · mix · export"}
           </span>
         </div>
         <div className="remix-toolbar-right">
-          <label className="seg-add" title={source ? `Source: ${source}` : "โหลดไฟล์เสียงต้นฉบับ (vocal)"}>
+          <label className={`seg-add tool-chip ${source ? "ready" : ""}`} title={source ? `Source: ${source}` : "โหลดไฟล์เสียงต้นฉบับ (vocal)"}>
             <input type="file" accept="audio/*,video/*" hidden
               onChange={(e) => upload(e.target.files?.[0] ?? null, setSource)} />
-            🎤 Source{source ? " ✓" : ""}
+            <Icon name="voices" size={14} />
+            <span>Source</span>
           </label>
-          <label className="seg-add" title={beat ? `Beat: ${beat}` : "โหลดไฟล์บีต (instrumental)"}>
+          <label className={`seg-add tool-chip ${beat ? "ready" : ""}`} title={beat ? `Beat: ${beat}` : "โหลดไฟล์บีต (instrumental)"}>
             <input type="file" accept="audio/*,video/*" hidden
               onChange={(e) => upload(e.target.files?.[0] ?? null, setBeat)} />
-            🥁 Beat{beat ? " ✓" : ""}
+            <Icon name="remix" size={14} />
+            <span>Beat</span>
           </label>
           <span className="remix-tb-sep" />
           <div className="proj-title" title={file.currentId ? `id: ${file.currentId}` : "ยังไม่ได้บันทึก"}>
@@ -424,29 +469,30 @@ export function RemixPanel() {
             />
             <span className={`proj-dot ${file.dirty ? "dirty" : "clean"}`} title={file.dirty ? "มีการเปลี่ยนแปลงที่ยังไม่บันทึก" : file.saving ? "กำลังบันทึก…" : "บันทึกแล้ว"}>●</span>
           </div>
-          <button className="seg-add" onClick={file.newProject} title="โปรเจกต์ใหม่ (Ctrl+N)">📄 New</button>
-          <button className="seg-add" onClick={file.openDialog} title="เปิดโปรเจกต์ (Ctrl+O)">📂 Open</button>
-          <button className="seg-add" onClick={file.save} disabled={file.saving || (!file.dirty && !!file.currentId)} title="บันทึก (Ctrl+S)">💾 Save</button>
-          <button className="seg-add" onClick={file.saveAs} disabled={file.saving} title="บันทึกเป็น (Ctrl+Shift+S)">📋 Save As</button>
+          <button className="seg-add tool-chip" onClick={file.newProject} title="โปรเจกต์ใหม่ (Ctrl+N)"><Icon name="doc" size={14} /><span>New</span></button>
+          <button className="seg-add tool-chip" onClick={file.openDialog} title="เปิดโปรเจกต์ (Ctrl+O)"><Icon name="folder" size={14} /><span>Open</span></button>
+          <button className="seg-add tool-chip" onClick={file.save} disabled={file.saving || (!file.dirty && !!file.currentId)} title="บันทึก (Ctrl+S)"><Icon name="save" size={14} /><span>Save</span></button>
+          <button className="seg-add tool-chip" onClick={file.saveAs} disabled={file.saving} title="บันทึกเป็น (Ctrl+Shift+S)"><Icon name="saveAs" size={14} /><span>Save As</span></button>
           <div className="seg-toggle">
-            <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Standard</button>
-            <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>+ Node</button>
+            <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Arrange</button>
+            <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>Node Flow</button>
           </div>
           {layout === "node" && (
-            <button className="seg-add" onClick={() => setShowDesigner(true)} title="Custom Node Designer">＋ Custom</button>
+            <button className="seg-add tool-chip" onClick={() => setShowDesigner(true)} title="Custom Node Designer"><span>+</span><span>Custom</span></button>
           )}
           {job && (job.status === "running" || job.status === "queued") && (
-            <div className="bar" style={{ width: 160 }}>
+            <div className="bar remix-toolbar-progress" style={{ width: 160 }}>
               <div className="bar-fill" style={{ width: `${Math.round(job.progress * 100)}%` }} />
             </div>
           )}
           {job?.status === "done" && (
-            <span className="hint mono">
+            <span className="hint mono tool-metric">
               {resultKey ? `Key ${resultKey}` : "Key -"} · {resultOffset != null ? `Offset ${Math.round(resultOffset)}ms` : "Offset -"} · {resultStretch != null ? `Stretch ${resultStretch.toFixed(3)}x` : "Stretch -"} · {resultLufs != null ? `LUFS ${resultLufs.toFixed(1)}` : "LUFS -"}
             </span>
           )}
-          <button className="primary" onClick={run} disabled={busy || !source || !beat}>
-            {busy ? "กำลังทำ…" : "▶ Run"}
+          <button className="primary tool-run" onClick={run} disabled={busy || !source || !beat}>
+            <Icon name="play" size={15} />
+            <span>{busy ? "Rendering…" : "Run"}</span>
           </button>
         </div>
       </div>
@@ -455,13 +501,13 @@ export function RemixPanel() {
         <div className="recover-banner">
           <span>พบงานที่ยังไม่ได้บันทึกจาก {new Date(file.recoverable.savedAt).toLocaleTimeString("th-TH")} — กู้คืน / ทิ้ง</span>
           <div className="recover-actions">
-            <button className="seg-add" onClick={file.recoverDraft}>♻ กู้คืน</button>
-            <button className="seg-add" onClick={file.discardDraft}>🗑 ทิ้ง</button>
+            <button className="seg-add tool-chip" onClick={file.recoverDraft}><Icon name="refresh" size={14} /><span>กู้คืน</span></button>
+            <button className="seg-add tool-chip" onClick={file.discardDraft}><Icon name="close" size={14} /><span>ทิ้ง</span></button>
           </div>
         </div>
       )}
 
-      <div className="remix-body">
+      <div className="remix-body" ref={bodyRef}>
         <div className="remix-left" style={{ width: leftW }}>
           <div className="remix-lefttabs">
             <button className={leftTab === "library" ? "on" : ""} onClick={() => setLeftTab("library")}>Library</button>
@@ -479,7 +525,11 @@ export function RemixPanel() {
             />
           )}
         </div>
-        <Splitter axis="x" onDelta={(d) => setLeftW((w) => clamp(w + d, 170, 460))} onReset={() => setLeftW(230)} />
+        <Splitter
+          axis="x"
+          onDelta={(d) => setLeftW((w) => clamp(w + d, leftBounds.min, leftBounds.max))}
+          onReset={() => setLeftW(clamp(230, leftBounds.min, leftBounds.max))}
+        />
 
         <div className="remix-main">
           {layout === "node" ? (
@@ -499,7 +549,11 @@ export function RemixPanel() {
               </ReactFlow>
             </div>
           ) : (
-            <div className="remix-rack" style={{ flex: 1, overflow: "auto" }}>
+            <div className="remix-standard">
+              <div className="remix-timeline-shell">
+                <StudioDock embedded />
+              </div>
+              <div className="remix-bottom-dock">
               <FxRack
                 reverb={reverb} setReverb={setReverb}
                 delay={delay} setDelay={setDelay}
@@ -512,7 +566,7 @@ export function RemixPanel() {
                 mEcho={mEcho} setMEcho={setMEcho}
                 mComp={mComp} setMComp={setMComp}
               />
-              <div className="bento-tile glass wide" style={{ marginTop: 12 }}>
+              <div className="bento-tile glass wide remix-stem-dock" style={{ marginTop: 12 }}>
                 <div className="bento-head">
                   <span className="bento-dot" style={{ background: "#e0863d" }} />
                   <b>Stem Mixer</b>
@@ -531,6 +585,7 @@ export function RemixPanel() {
                   )}
                 </div>
               </div>
+              </div>
             </div>
           )}
         </div>
@@ -542,15 +597,15 @@ export function RemixPanel() {
       {file.list && (
         <div className="mkt-overlay" onClick={file.closeDialog}>
           <div className="ws-load glass" onClick={(e) => e.stopPropagation()}>
-            <h3>📂 เปิดโปรเจกต์</h3>
+            <h3><Icon name="folder" size={16} /> เปิดโปรเจกต์</h3>
             {file.list.length === 0 && <p className="hint">ยังไม่มีโปรเจกต์ที่บันทึก</p>}
             {file.list.map((p) => (
               <div key={p.id} className="ws-row">
                 <button className="ws-item" onClick={() => file.openProject(p.id)} title="เปิดโปรเจกต์นี้">
-                  <span>{p.name}{file.currentId === p.id ? "  ✓" : ""}</span>
+                  <span>{p.name}{file.currentId === p.id ? "  • Current" : ""}</span>
                   <span className="mono ws-id">{p.id}</span>
                 </button>
-                <button className="ws-del" onClick={() => file.removeProject(p.id)} title="ลบ">🗑</button>
+                <button className="ws-del" onClick={() => file.removeProject(p.id)} title="ลบ"><Icon name="close" size={14} /></button>
               </div>
             ))}
             <button className="ws-close" onClick={file.closeDialog}>ปิด</button>

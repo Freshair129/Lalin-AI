@@ -45,7 +45,7 @@ Suno เจนเพลง / เดโม่ตัวเอง  →  [G-Music]  
 | **Beat-sync ระดับโปร** | ⚠️ global phase ได้ แต่ drift/phrase ยังไม่จัด | **Manual nudge UI** (ให้คนเลื่อน ms + เลือกห้องเริ่ม) — DAW จริงก็ให้คนคุม |
 | Piecewise warp | ❌ artifact + พึ่ง beat detection ที่ไม่เสถียร | ยังไม่คุ้ม — ใช้ manual แทน |
 | Key match minor↔major | ⚠️ detect ถูก แต่ force mode อาจเพี้ยน melody | ให้ผู้ใช้ override คีย์ได้ |
-| LUFS หลัง FX ตก (-17 แทน -14) | ✅ แก้แล้ว / smoke-gated | `backend/smoke_remix.py` วัดไฟล์ output จริง: target -14 LUFS, tolerance ±0.5, sample peak ceiling -1 dBFS |
+| LUFS หลัง FX ตก / drift จาก target | ✅ ดีขึ้นแล้ว แต่ยังต้องยืนยัน acceptance window | ใช้ smoke gate ตรวจ output จริง พร้อม target/tolerance และ peak ceiling |
 | Formant ตอน pitch-shift มาก | ⚠️ เพี้ยน timbre เมื่อ shift > 4 semitone | pyworld (formant-preserving) ถ้าต้องการ |
 | ค่า FX ตอนนี้ fix | — | UI ให้ปรับ reverb/delay/autotune strength (param มีใน `vocal_fx`/`run_remix` แล้ว) |
 
@@ -102,21 +102,41 @@ uv pip install demucs psola pedalboard
 
 **Manual offset:** `run_remix(..., offset_ms=174)` — `None`=auto, ตัวเลข=กำหนดเอง (ms)
 
+**API truth (ปัจจุบัน):**
+- `POST /music/remix` — รัน pipeline remix เป็น background job
+- `POST /music/export` — export/master FX จาก output ที่ render แล้ว
+- `POST /mastering` — mastering flow แยกต่างหากสำหรับเพลงต้นฉบับ
+
 ---
 
 ## 7. แผนถัดไป (เรียงตาม priority)
 
 ### 🟢 เฟส A — เอาของที่พิสูจน์แล้วขึ้นแอป
-- [ ] เพิ่ม deps เป็น optional install ใน setup script (+ ตรวจตอน runtime)
+- [x] เพิ่ม deps เป็น optional install ใน setup script (+ ตรวจตอน runtime)
 - [x] Router truth-sync: `POST /music/remix`, `POST /music/export`, and `POST /mastering` are implemented through `jobs.spawn()`.
 - [x] Remix LUFS/peak gate: `backend/smoke_remix.py` now verifies output LUFS and peak ceiling after writing the file.
-- [ ] UI: หน้า "Remix" — อัป source + beat, toggle autotune/FX, ปุ่มสร้าง + progress
+- [x] UI: หน้า "Remix" ใช้งานได้แล้วในแอป มี source + beat upload, autotune/FX toggle, manual/auto offset, target LUFS, progress, และ output feedback
+- [x] เอกสารและ setup path sync ตรงกับ implementation ปัจจุบัน
+
+#### Definition of Done — Phase A
+- ผู้ใช้เข้าแท็บ Remix จากแอปได้จริง
+- backend รับงานผ่าน `POST /music/remix` และคืน `job_id`
+- งาน remix แสดง progress และ output ได้ใน UI
+- mastering path มี smoke verification ระดับไฟล์ output จริง
+- setup/runtime path อธิบาย optional dependency ชัดเจน
+- เอกสาร roadmap และ UI sitemap สะท้อนสถานะจริงตรงกับโค้ด
 
 ### 🟡 เฟส B — Manual mixer (แก้จุดที่ยังไม่เนียน)
-- [ ] Manual nudge: slider เลื่อน vocal (ms) + preview
-- [ ] ปรับ reverb/delay/autotune strength ใน UI (param พร้อมแล้ว)
-- [ ] เลือก/override คีย์ + จุดเริ่มห้อง (phrase)
-- [ ] Stem mixer: fader ทีละ stem (vocal/drums/bass/other)
+- [x] B1: Manual nudge complete — slider เลื่อน vocal (ms) + timeline preview + run result parity
+- [ ] B2: FX control complete — reverb/delay + autotune strength ใน UI และ backend contract
+- [ ] B3: Musical override — เลือก/override คีย์ + จุดเริ่มห้อง (phrase)
+- [ ] B4: Stem mixer complete — fader ทีละ stem (vocal/drums/bass/other) พร้อม audible effect ครบ
+
+#### Definition of Done — Phase B1 (Manual nudge)
+- ผู้ใช้ปรับ `offset_ms` ได้ทั้งค่าบวกและลบ
+- เมื่อปิด auto-sync, preview ใน timeline/engine สะท้อน offset ที่ตั้งก่อนกด Run
+- หลัง Run, result offset ใน job feedback ตรงกับค่าที่ผู้ใช้ตั้งหรือ auto-detect ตาม mode
+- ไม่มี regression กับเส้นทาง auto-sync เดิม
 
 ### 🔴 เฟส C — ขั้นสูง (ถ้าจำเป็น)
 - [ ] pyworld formant-preserving สำหรับ pitch-shift มากๆ

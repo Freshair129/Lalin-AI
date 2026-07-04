@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 
 import numpy as np
@@ -59,6 +60,21 @@ def _to_wav(src: str, dst: str) -> str:
 STEM_NAMES = ("vocals", "drums", "bass", "other")
 
 
+def _optional_install_hint(packages: str) -> str:
+    return (
+        f"ติดตั้งเพิ่มด้วย `uv pip install {packages}` "
+        f"หรือรัน `..\\scripts\\setup_windows.ps1 -InstallOptionalRemixDeps`"
+    )
+
+
+def _require_optional_module(module_name: str, *, packages: str, feature: str) -> None:
+    if find_spec(module_name) is not None:
+        return
+    raise RuntimeError(
+        f"ยังไม่ได้ติดตั้ง {module_name} สำหรับ {feature} — {_optional_install_hint(packages)}"
+    )
+
+
 def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
                     full: bool = False) -> dict:
     """แยกเสียงด้วย Demucs (htdemucs).
@@ -71,7 +87,14 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
     try:
         import torch  # noqa: F401
     except ImportError as e:  # noqa: BLE001
-        raise RuntimeError("ยังไม่ได้ติดตั้ง torch") from e
+        raise RuntimeError(
+            "ยังไม่ได้ติดตั้ง torch — รัน scripts/setup_windows.ps1 ก่อน"
+        ) from e
+    _require_optional_module(
+        "demucs",
+        packages="demucs",
+        feature="การแยก stem ของ Remix",
+    )
     import torch
 
     dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -79,11 +102,16 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
     name = Path(audio).stem
 
     if full:
-        subprocess.run(
-            [sys.executable, "-m", "demucs", "-d", dev,
-             "-o", str(sep_root), audio],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "demucs", "-d", dev,
+                 "-o", str(sep_root), audio],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(
+                "Demucs รันไม่สำเร็จระหว่างแยก stem เต็ม 4 ทาง"
+            ) from e
         torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
         base = sep_root / "htdemucs" / name
         result = {stem: str(base / f"{stem}.wav") for stem in STEM_NAMES}
@@ -93,11 +121,16 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
         )
         return result
 
-    subprocess.run(
-        [sys.executable, "-m", "demucs", "--two-stems=vocals", "-d", dev,
-         "-o", str(sep_root), audio],
-        check=True,
-    )
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "demucs", "--two-stems=vocals", "-d", dev,
+             "-o", str(sep_root), audio],
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            "Demucs รันไม่สำเร็จระหว่างแยก vocals/instrumental"
+        ) from e
     torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
     base = sep_root / "htdemucs" / name
     return {
@@ -194,8 +227,10 @@ def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str) -> np.ndarray:
     try:
         import psola
     except ImportError:
-        print("⚠️ ไม่พบ psola — ข้ามขั้น auto-tune "
-              "(ติดตั้ง `uv pip install psola` เพื่อเปิดใช้ auto-tune)")
+        print(
+            "⚠️ ไม่พบ psola — ข้ามขั้น auto-tune "
+            f"({_optional_install_hint('psola')})"
+        )
         return vocal_stereo
 
     allowed = np.array(sorted({(key_idx + s) % 12 for s in _SCALE[mode]}))
@@ -239,8 +274,10 @@ def vocal_fx(vocal_stereo: np.ndarray, *, reverb: float = 0.16,
                                 HighShelfFilter, LowShelfFilter, NoiseGate,
                                 Pedalboard, Reverb)
     except ImportError:
-        print("⚠️ ไม่พบ pedalboard — ข้ามขั้นใส่เอฟเฟกต์เสียงร้อง (vocal FX) "
-              "(ติดตั้ง `uv pip install pedalboard` เพื่อเปิดใช้)")
+        print(
+            "⚠️ ไม่พบ pedalboard — ข้ามขั้นใส่เอฟเฟกต์เสียงร้อง (vocal FX) "
+            f"({_optional_install_hint('pedalboard')})"
+        )
         return vocal_stereo
 
     board = Pedalboard([
@@ -357,8 +394,10 @@ def _master_to_target(
         mastered = np.ascontiguousarray(board_output.T if is_samples_first else board_output)
     except ImportError:
         # pedalboard ไม่มี (optional/GPL dep) → fallback peak-scale แบบเดิมกันพังตรงนี้
-        print("⚠️ ไม่พบ pedalboard — ใช้ peak-scaling สำรองแทน brickwall limiter "
-              "(ติดตั้ง `uv pip install pedalboard` เพื่อคุณภาพมาสเตอร์ที่ดีกว่า)")
+        print(
+            "⚠️ ไม่พบ pedalboard — ใช้ peak-scaling สำรองแทน brickwall limiter "
+            f"({_optional_install_hint('pedalboard')})"
+        )
         peak = float(np.max(np.abs(mastered)))
         if peak > ceiling:
             mastered *= ceiling / peak
@@ -539,8 +578,10 @@ def apply_master_fx(
     try:
         from pedalboard import Pedalboard, Reverb, Delay, Compressor
     except ImportError:
-        print("⚠️ ไม่พบ pedalboard — ข้ามการใส่ master FX (reverb/echo/compressor) "
-              "(ติดตั้ง `uv pip install pedalboard` เพื่อเปิดใช้) — คัดลอกไฟล์ต้นฉบับแทน")
+        print(
+            "⚠️ ไม่พบ pedalboard — ข้ามการใส่ master FX (reverb/echo/compressor) "
+            f"({_optional_install_hint('pedalboard')}) — คัดลอกไฟล์ต้นฉบับแทน"
+        )
         sf.write(out_path, data, sr)
         return out_path
 

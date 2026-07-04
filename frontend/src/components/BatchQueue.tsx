@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { voices, type Voice } from "../api";
 import { useBatchQueue, type BatchKind, type BatchItem } from "../useBatchQueue";
 
 // แผงคิวประมวลผลแบบชุด (Batch Queue) — เพิ่มงานหลายชิ้น แล้วให้ระบบรันทีละงานตามลำดับ
@@ -12,6 +13,13 @@ export function BatchQueue() {
   const [voiceId, setVoiceId] = useState("");
   const [sourceAudio, setSourceAudio] = useState("");
   const [referenceAudio, setReferenceAudio] = useState("");
+  const [voiceOptions, setVoiceOptions] = useState<Voice[]>([]);
+
+  useEffect(() => {
+    voices.list()
+      .then((r) => setVoiceOptions(r.voices ?? []))
+      .catch(() => setVoiceOptions([]));
+  }, []);
 
   const doneCount = items.filter((it) => it.status === "done").length;
   const total = items.length;
@@ -67,8 +75,14 @@ export function BatchQueue() {
                 placeholder="พิมพ์ข้อความที่ต้องการให้อ่าน…" />
             </label>
             <label className="field"><span>รหัสเสียง (voice id)</span>
-              <input type="text" value={voiceId} onChange={(e) => setVoiceId(e.target.value)}
-                placeholder="เช่น v_001" />
+              <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)}>
+                <option value="">เลือกเสียง…</option>
+                {voiceOptions.map((voice) => (
+                  <option key={voice.id} value={voice.id}>
+                    {voice.id} — {voice.name}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
         )}
@@ -80,8 +94,14 @@ export function BatchQueue() {
                 placeholder="ชื่อไฟล์ที่อัปโหลดแล้ว…" />
             </label>
             <label className="field"><span>รหัสเสียง (voice id)</span>
-              <input type="text" value={voiceId} onChange={(e) => setVoiceId(e.target.value)}
-                placeholder="เช่น v_001" />
+              <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)}>
+                <option value="">เลือกเสียง…</option>
+                {voiceOptions.map((voice) => (
+                  <option key={voice.id} value={voice.id}>
+                    {voice.id} — {voice.name}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
         )}

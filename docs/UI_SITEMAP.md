@@ -18,8 +18,12 @@ G-Music (single-window desktop app, Tauri)
 │   │   ├─ 🗣️ อ่านข้อความ      → TTSPanel
 │   │   ├─ 🎬 พากย์เสียง        → DubbingPanel
 │   │   ├─ 🎚️ Mastering        → MasteringPanel
-│   │   ├─ 🎵 Remix  [ใหม่]     → RemixPanel (node workflow)
-│   │   └─ 🧠 สมอง              → BrainPanel
+│   │   ├─ 🎵 Remix            → RemixPanel (node workflow)
+│   │   ├─ 📁 Files            → FileManager
+│   │   ├─ 🛒 Marketplace      → MarketplacePanel
+│   │   ├─ 🧾 คิวงาน           → BatchQueue
+│   │   ├─ 🎛️ ปลั๊กอิน         → PluginsPanel
+│   │   └─ 🧠 สมอง             → BrainPanel
 │   └─ Sidebar-bottom
 │       ├─ UpdateChecker (ปุ่ม 🔄 / overlay dialog)
 │       └─ Connection status (dot + provider)
@@ -33,8 +37,10 @@ Overlay (ลอยทับทุกหน้า)
 
 **สถานะร่วม (App.tsx):**
 - `tab` — view ปัจจุบัน
-- `online` — backend ติดต่อได้ไหม (ping ทุก 10 วิ)
-- `brainName` — provider ของสมองปัจจุบัน (แสดงที่ status)
+- `online` — backend ติดต่อได้ไหม
+- `brainName` — provider ของสมองปัจจุบัน
+- `BackendGate` — บังหน้าใช้งานเมื่อ sidecar/backend ยังไม่พร้อม
+- `StudioDock` — แสดงในกลุ่มงาน studio (`remix`, `tts`, `dubbing`, `mastering`)
 
 ---
 
@@ -122,7 +128,7 @@ Overlay (ลอยทับทุกหน้า)
 
 ---
 
-### 3.5 🎵 Remix — `RemixPanel` [ใหม่ — node workflow]
+### 3.5 🎵 Remix — `RemixPanel` [implemented — static node workflow]
 **หน้าที่:** เก็บงานเพลง (Suno finishing studio) — วางเสียงร้องบน beat อื่น + autotune + FX + master
 **Paradigm:** Node workflow (กราฟโหนด สไตล์ Cinemaro Workflow) — full-width canvas ไม่ใช่ `.panel`
 
@@ -152,11 +158,22 @@ Overlay (ลอยทับทุกหน้า)
 | **Stem Split** | (auto) แยก vocal/inst | Demucs |
 | **Auto-tune** | toggle เปิด/ปิด | `do_autotune` |
 | **Vocal FX** | slider `reverb`, `delay` + toggle | `do_fx`, `reverb`, `delay` |
-| **Mix** | slider `offset (ms)` (None=auto), `vocal/beat gain` | `offset_ms` |
+| **Mix** | slider `offset (ms)` (None=auto), auto/manual sync, preview alignment ใน timeline, stem mix support | `offset_ms`, `stem_gains` |
 | **Master** | `LUFS` (-14/-16/-9) | `target_lufs` |
 | **Output** | player + ดาวน์โหลด (read-only) | `result.output` |
 
 **Flow:** กรอกค่าในโหนด → กด **▶ Run** → `POST /music/remix` (ส่งทุก param รวมกัน) → `JobProgress` แสดง stage (แยกร้อง→BPM→autotune→FX→mix→master) → โหนด Output โชว์ผล
+
+**Manual preview behavior (Phase B1):**
+- เมื่อ `Auto-sync` ปิดอยู่ การหมุน `Offset ms` ต้องเลื่อนตำแหน่ง preview clip ของ vocal เทียบกับ beat ทันที
+- preview นี้เป็น non-destructive UI state จนกว่าจะกด `Run`
+
+**Result feedback ที่มีแล้วใน UI:**
+- แสดง output file
+- แสดง `Key`
+- แสดง `Offset`
+- แสดง `Stretch`
+- แสดง `LUFS`
 
 **หมายเหตุ:** เวอร์ชันแรกเป็น **static graph** (โหนดตายตัวตาม pipeline) — ยังไม่ใช่ drag-connect แบบ ComfyUI เต็ม (ดู roadmap)
 
@@ -203,10 +220,11 @@ Overlay (ลอยทับทุกหน้า)
 
 ## 6. สิ่งที่ยังไม่ทำ (UI backlog)
 
-- [ ] `RemixPanel` (node workflow) — **กำลังจะทำ** (เฟส A)
-- [ ] เพิ่มแท็บ Remix ใน `App.tsx` NAV
-- [ ] Manual mixer ใน Mix node (slider offset + preview) — เฟส B
+- [x] `RemixPanel` (static node workflow) ถูก implement แล้ว
+- [x] เพิ่มแท็บ Remix ใน `App.tsx` NAV แล้ว
+- [x] Manual mixer ใน Mix node ครบ definition ของ Phase B1 แล้ว: offset slider + live preview parity
+- [ ] Key override / phrase start control — เฟส B
 - [ ] Drag-connect node graph เต็ม (ตอนนี้ static) — ภายหลัง
-- [ ] Stem fader (vocal/drums/bass/other) — เฟส B
+- [ ] Stem fader ให้มี audible effect ครบทุก stem — เฟส B4
 - [ ] หน้า Timeline (ถ้าต้องการ paradigm ที่ 2 ของ Cinemaro)
 - [ ] ปรับ component เดิม (Voices/TTS/Dubbing/Mastering/Brain) ให้ใช้ `.card` ทุกตัวให้สม่ำเสมอ

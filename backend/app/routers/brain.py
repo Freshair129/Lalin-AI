@@ -22,6 +22,7 @@ async def set_config(req: BrainConfigRequest):
     brain = reconfigure(
         BrainConfig(
             provider=req.provider,
+            ollama_base_url=req.ollama_base_url,
             ollama_model=req.ollama_model,
             cloud_provider=req.cloud_provider,
             cloud_model=req.cloud_model,
