@@ -47,7 +47,7 @@ export function MasteringPanel() {
   };
 
   return (
-    <div className="panel">
+    <div className="panel card">
       <h2>🎚️ Mastering เพลง</h2>
       <p className="hint">
         มี 2 โหมด: ใส่เพลงอ้างอิง → ปรับให้ "เหมือน" เพลงนั้น (Matchering),

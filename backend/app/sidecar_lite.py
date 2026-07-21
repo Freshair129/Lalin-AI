@@ -15,7 +15,7 @@ def create_app() -> FastAPI:
     get_settings()
     configure_ffmpeg()
 
-    from .routers import agent, brain, files, fs, health, jobs, packs, plugins, projects, voices
+    from .routers import agent, brain, files, fs, health, jobs, packs, plugins, projects, speech, voices
 
     app = FastAPI(
         title="G-Music API",
@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    for router_module in (health, brain, voices, files, fs, packs, projects, jobs, agent, plugins):
+    for router_module in (health, brain, voices, files, fs, packs, projects, jobs, agent, plugins, speech):
         app.include_router(router_module.router)
 
     @app.get("/")

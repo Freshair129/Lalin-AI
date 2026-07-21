@@ -1,0 +1,16 @@
+{
+  "id": "DOC-0005",
+  "points_to": ".brain/rca/2026-07-19-remix-masterplan-gate.md",
+  "type": "doc",
+  "version": "0.1.0",
+  "status": "draft",
+  "superseded_by": null,
+  "sha256": "5012e2052c0ef93709eab2591ddf7c1d206e2d40f55d58dbbf387cecde165ee9",
+  "relations": { "depends_on": ["DOC-0003", "DOC-0004"], "referenced_by": [] },
+  "attributes": { "doc_type": "rca", "domain": "governance" },
+  "created_at": "2026-07-19T12:18:30+07:00",
+  "updated_at": "2026-07-19T12:18:30+07:00",
+  "changelog": [
+    { "version": "0.1.0", "date": "2026-07-19T12:18:30+07:00", "kind": "register", "change": "initial evidence-backed governance RCA", "ref": "INC-2026-07-19-REMIX-MASTERPLAN-GATE", "agent": "ATHER", "commit": "b2c2d0d" }
+  ]
+}

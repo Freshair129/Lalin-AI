@@ -42,7 +42,7 @@ export function TTSPanel() {
   };
 
   return (
-    <div className="panel">
+    <div className="panel card">
       <h2>🗣️ อ่านข้อความด้วยเสียงโคลน (Voice Cloning)</h2>
       <p className="hint">พิมพ์ข้อความ เลือกเสียงจากคลัง แล้วให้ AI อ่านด้วยเสียงนั้น</p>
 

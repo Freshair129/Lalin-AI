@@ -1,0 +1,17 @@
+{
+  "id": "DOC-0003",
+  "points_to": "docs/MASTER_PLAN.md",
+  "type": "doc",
+  "version": "0.1.1",
+  "status": "draft",
+  "superseded_by": null,
+  "sha256": "89bd3931adde04400da2fa1e2fad473e33e49df0091125de7484f48e9f079705",
+  "relations": { "depends_on": ["DOC-0001", "DOC-0002"], "referenced_by": ["DOC-0004"] },
+  "attributes": { "doc_type": "master-plan", "domain": "remix-arrange-workspace" },
+  "created_at": "2026-07-19T12:07:51+07:00",
+  "updated_at": "2026-07-19T12:16:30+07:00",
+  "changelog": [
+    { "version": "0.1.1", "date": "2026-07-19T12:16:30+07:00", "kind": "patch", "change": "clarified sub-gate, traceability, governed scope, and snapshot contract after review", "ref": "REVIEW-GATE-001", "agent": "ATHER", "commit": "b2c2d0d" },
+    { "version": "0.1.0", "date": "2026-07-19T12:07:51+07:00", "kind": "register", "change": "initial Phase 0 master plan", "ref": "PHASE-0", "agent": "ATHER", "commit": "b2c2d0d" }
+  ]
+}

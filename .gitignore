@@ -10,6 +10,11 @@ backend/.env
 keys/
 
 # Data (เสียง/งาน/โมเดล)
+runtime/
+data/
+output/
+queue/
+state/
 backend/data/
 *.wav
 *.mp3

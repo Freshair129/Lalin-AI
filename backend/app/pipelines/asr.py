@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from ..config import get_settings
 
 _model = None  # cached WhisperModel
+_model_name: str | None = None
 
 
 @dataclass
@@ -33,19 +34,29 @@ class Transcript:
 
 
 def _get_model():
-    global _model
-    if _model is None:
+    global _model, _model_name
+    s = get_settings()
+    if _model is None or _model_name != s.asr_model:
         try:
             from faster_whisper import WhisperModel
         except ImportError as e:  # noqa: BLE001
             raise RuntimeError(
                 "ยังไม่ได้ติดตั้ง faster-whisper — รัน scripts/setup_windows.ps1 ก่อน"
             ) from e
-        s = get_settings()
         _model = WhisperModel(
             s.asr_model, device=s.asr_device, compute_type=s.asr_compute_type
         )
+        _model_name = s.asr_model
     return _model
+
+
+def set_model(name: str) -> None:
+    """Select the model for the next transcription and release the cached instance."""
+    global _model, _model_name
+    settings = get_settings()
+    settings.asr_model = name
+    _model = None
+    _model_name = None
 
 
 def transcribe(audio_path: str, language: str | None = None) -> Transcript:

@@ -16,10 +16,12 @@ import numpy as np
 import pyloudnorm as pyln
 import soundfile as sf
 
+from app.config import get_settings
 from app.pipelines.music import run_remix
 
-SOURCE = Path("data/uploads/desire.mp3")
-BEAT = Path("data/uploads/beat.mp4")
+settings = get_settings()
+SOURCE = settings.uploads_dir / "desire.mp3"
+BEAT = settings.uploads_dir / "beat.mp4"
 TARGET_LUFS = -14.0
 LUFS_TOLERANCE = 0.5
 PEAK_CEILING_DB = -1.0

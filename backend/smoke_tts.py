@@ -3,8 +3,9 @@
 ดาวน์โหลด ref จาก repo + โมเดล แล้วสังเคราะห์ 1 ประโยค
 """
 import sys, time
-from pathlib import Path
 from huggingface_hub import hf_hub_download
+
+from app.config import get_settings
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -15,8 +16,9 @@ print(">>> downloading Thai reference audio...", flush=True)
 ref = hf_hub_download("VIZINTZOR/F5-TTS-THAI", "sample/ref_audio.wav")
 print("    ref:", ref, flush=True)
 
-out = str(Path("data/outputs/smoke_thai.wav").resolve())
-Path("data/outputs").mkdir(parents=True, exist_ok=True)
+settings = get_settings()
+out = str((settings.outputs_dir / "smoke_thai.wav").resolve())
+settings.outputs_dir.mkdir(parents=True, exist_ok=True)
 
 print(">>> loading model + synthesizing (first run downloads ~1.3GB)...", flush=True)
 t0 = time.time()

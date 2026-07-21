@@ -2,13 +2,23 @@
 
 คู่มือสำหรับ Codex เมื่อทำงานในโปรเจกต์นี้ (อ่านก่อนเริ่ม)
 
+## Agent identity
+
+- **Name:** LALIN (ลลิน)
+- **Role:** Product-minded software engineer and technical architect for the G-Music-to-Lalin AI rename and local AI audio workstation.
+
 ## ภาพรวม
 โปรแกรม AI งานเสียง: **โคลนเสียง · พากย์เสียง (dubbing) · mastering · music remix** ภาษาไทย+อังกฤษ
 "สมอง" (LLM) สลับ **Cloud** (Codex/OpenAI/OpenRouter) ↔ **Ollama (local)** ได้สดผ่าน abstraction layer เดียว
 มีระบบ **auto-update** (Tauri updater + GitHub Releases) + ตัวติดตั้ง **NSIS .exe**
 
 ## เอกสาร (อ่านก่อนทำงานใหญ่)
-อยู่ใน `docs/` — `PRD.md` `SRS.md` `SPEC.md` (ผลิตภัณฑ์/requirement/เทคนิค), `COMPETITIVE_BRIEF.md` (คู่แข่ง+กลยุทธ์ local-first+BYOM), `ROADMAP_MUSIC.md` (music pipeline ที่พิสูจน์แล้ว+licenses), `UI_SITEMAP.md` (ทุก view+layout+Remix node graph), `BLUEPRINT.yaml` (machine-readable spec)
+เอกสาร canonical อยู่ที่ root และ `docs/`:
+- `PRODUCT.md`, `DESIGN.md`, `docs/DOCS_INDEX.md`
+- product: `docs/product/PRD.md`, `docs/product/SRS.md`, `docs/product/ROADMAP_MUSIC.md`, `docs/product/COMPETITIVE_BRIEF.md`
+- architecture: `docs/architecture/SPEC.md`, `docs/architecture/BLUEPRINT.yaml`, `docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md`
+- design: `docs/design/LALIN_LAYOUT_SOT.md`, `docs/design/LALIN_SITEMAP_SOT.md`, `docs/design/LALIN_UI_SOT.md`
+- archive: `docs/archive/UI_SITEMAP.md` และเอกสาร GM6/proposal ที่ superseded
 
 ## โครงสร้าง
 - `backend/` — FastAPI + ML pipelines (Python **3.11**)
@@ -18,7 +28,11 @@
   - `app/services/voices.py` — คลังเสียง, `app/utils/ffmpeg.py` — ffmpeg แบบฝังในตัว
 - `frontend/` — Tauri + React + Vite (แท็บ: คลังเสียง/อ่านข้อความ/พากย์/mastering/สมอง + **Remix** กำลังทำ) — theme: **Cinemaro** (นีออนไลม์) ใน `src/styles.css`
 - `keys/` — Tauri updater signing key (**gitignored** — อย่า commit)
-- `scripts/` — `setup_windows.ps1`, `make_icons.py`, `build_installer.ps1` (build .exe)
+- `tools/dev/` — developer setup and runtime utilities (`setup_windows.ps1`, `prewarm_ollama.ps1`)
+- `tools/build/` — build utilities (`make_icons.py`, `build_sidecar.ps1`, `build_installer.ps1`)
+- `tools/verify/` — smoke and release verification utilities
+- `scripts/` — compatibility shims for older commands; canonical scripts live in `tools/*`
+- `runtime/` — local generated/user state; gitignored (`runtime/data` owns uploads, outputs, voices, projects, workspace)
 
 ## คำสั่งที่ใช้บ่อย
 ```powershell
@@ -36,7 +50,7 @@ npm run build        # ตรวจ TypeScript + build
 cd D:\G-Music\backend ; .venv\Scripts\python.exe smoke_tts.py
 
 # build ตัวติดตั้ง .exe (NSIS + เซ็น updater)
-powershell -ExecutionPolicy Bypass -File scripts\build_installer.ps1
+powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 ```
 
 ## สภาพแวดล้อม (เครื่องนี้)

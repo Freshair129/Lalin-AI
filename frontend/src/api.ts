@@ -43,14 +43,36 @@ export interface Voice {
   name: string;
   ref_text: string;
   language: string;
+  source?: "upload" | "microphone";
+  consent?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const voices = {
   list: () => req<{ voices: Voice[] }>("/voices"),
   upload: (form: FormData) =>
     req<Voice>("/voices", { method: "POST", body: form }),
+  update: (id: string, patch: Pick<Voice, "name" | "ref_text" | "language">) =>
+    req<Voice>(`/voices/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }),
   remove: (id: string) =>
     req<{ deleted: string }>(`/voices/${id}`, { method: "DELETE" }),
+};
+
+export interface SpeechProfile { id: string; label: string; note: string; }
+export interface SpeechConfig {
+  asr_model: string;
+  asr_device: string;
+  asr_compute_type: string;
+  profiles: SpeechProfile[];
+  asr_available: boolean;
+  tts_available: boolean;
+}
+export const speech = {
+  getConfig: () => req<SpeechConfig>("/speech/config"),
+  setASRModel: (model: string) => req<{ ok: boolean; asr_model?: string; error?: string }>("/speech/config", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model }),
+  }),
 };
 
 // ── Agent (mix copilot — LLM เสนอ mutations ให้ apply เอง) ──
@@ -215,6 +237,29 @@ export interface Job {
   error?: string;
 }
 
+export interface RuntimeActivityStatus {
+  telemetry: {
+    cpu_percent: number | null;
+    ram_used_bytes: number | null;
+    ram_total_bytes: number | null;
+    gpu_name: string | null;
+    gpu_percent: number | null;
+    vram_used_bytes: number | null;
+    vram_total_bytes: number | null;
+  };
+  runtime: {
+    profile: "full" | "lite" | null;
+    model: string | null;
+    agent: string | null;
+  };
+  activity: {
+    job_id: string | null;
+    label: string | null;
+    state: string | null;
+    progress: number | null;
+  };
+}
+
 export const jobs = {
   get: (id: string) => req<Job>(`/jobs/${id}`),
   // ติดตามความคืบหน้าผ่าน WebSocket
@@ -223,6 +268,10 @@ export const jobs = {
     ws.onmessage = (e) => onUpdate(JSON.parse(e.data));
     return () => ws.close();
   },
+};
+
+export const runtime = {
+  status: () => req<RuntimeActivityStatus>("/runtime/status"),
 };
 
 export async function health() {

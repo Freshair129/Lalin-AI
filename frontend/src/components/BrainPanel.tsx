@@ -53,7 +53,7 @@ export function BrainPanel({ onChange }: { onChange?: (c: BrainConfig) => void }
   };
 
   return (
-    <div className="panel">
+    <div className="panel card">
       <h2>🧠 สมอง (Brain)</h2>
       <p className="hint">เลือกว่าจะใช้สมองตัวไหนสำหรับงานแปล/เขียนสคริปต์ในการพากย์เสียง</p>
 

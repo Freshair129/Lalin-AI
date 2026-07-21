@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from datetime import datetime, timezone
 
 from ..config import get_settings
 from ..utils.ids import short_id
@@ -21,15 +22,29 @@ def _wav_path(voice_id: str) -> Path:
     return get_settings().voices_dir / f"{voice_id}.wav"
 
 
-def save_voice(name: str, wav_bytes: bytes, ref_text: str = "", language: str = "th") -> dict:
+def save_voice(
+    name: str,
+    wav_bytes: bytes,
+    ref_text: str = "",
+    language: str = "th",
+    consent: bool = False,
+    source: str = "upload",
+) -> dict:
+    if not consent:
+        raise ValueError("ต้องยืนยันสิทธิ์ในการใช้เสียงก่อนสร้าง voice profile")
     vid = short_id()
     _wav_path(vid).write_bytes(wav_bytes)
+    now = datetime.now(timezone.utc).isoformat()
     meta = {
         "id": vid,
         "name": name,
         "ref_text": ref_text,
         "language": language,
         "wav": str(_wav_path(vid)),
+        "source": source,
+        "consent": True,
+        "created_at": now,
+        "updated_at": now,
     }
     _meta_path(vid).write_text(json.dumps(meta, ensure_ascii=False, indent=2), "utf-8")
     return meta
@@ -56,6 +71,18 @@ def delete_voice(voice_id: str) -> bool:
             p.unlink()
             ok = True
     return ok
+
+
+def update_voice(voice_id: str, *, name: str | None = None, ref_text: str | None = None, language: str | None = None) -> dict | None:
+    meta = get_voice(voice_id)
+    if not meta:
+        return None
+    for key, value in {"name": name, "ref_text": ref_text, "language": language}.items():
+        if value is not None:
+            meta[key] = value
+    meta["updated_at"] = datetime.now(timezone.utc).isoformat()
+    _meta_path(voice_id).write_text(json.dumps(meta, ensure_ascii=False, indent=2), "utf-8")
+    return meta
 
 
 def resolve_ref(voice_id: str | None) -> tuple[str, str]:

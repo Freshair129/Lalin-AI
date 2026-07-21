@@ -12,9 +12,11 @@ import numpy as np
 import pyloudnorm as pyln
 import soundfile as sf
 
+from app.config import get_settings
 from app.pipelines.mastering import run_mastering
 
-SOURCE = Path("data/uploads/desire.mp3")
+settings = get_settings()
+SOURCE = settings.uploads_dir / "desire.mp3"
 TARGET_LUFS = -14.0
 LUFS_TOLERANCE = 0.5
 PEAK_CEILING_DB = -1.0

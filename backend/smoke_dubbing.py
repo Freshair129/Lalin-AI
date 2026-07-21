@@ -19,12 +19,14 @@ os.environ["TTS_DEVICE"] = "cpu"
 import soundfile as sf
 from huggingface_hub import hf_hub_download
 
+from app.config import get_settings
 from app.pipelines.dubbing import run_dubbing
 from app.pipelines.tts import synthesize
 
 REF_TEXT = "ฉันเดินทางไปเที่ยวที่จังหวัดเชียงใหม่ในช่วงฤดูหนาวเพื่อสัมผัสอากาศเย็นสบาย"
 GEN_TEXT = "สวัสดีครับ นี่คือการทดสอบพากย์เสียงแบบครบวงจรของโปรแกรมจีมิวสิค"
-SOURCE = Path("data/outputs/smoke_thai.wav")
+settings = get_settings()
+SOURCE = settings.outputs_dir / "smoke_thai.wav"
 MIN_OUTPUT_SECONDS = 1.0
 
 
@@ -77,8 +79,8 @@ async def main_async() -> int:
 
     srt_name = result.get("subtitle_srt")
     vtt_name = result.get("subtitle_vtt")
-    srt_path = Path("data/outputs") / srt_name if srt_name else None
-    vtt_path = Path("data/outputs") / vtt_name if vtt_name else None
+    srt_path = settings.outputs_dir / srt_name if srt_name else None
+    vtt_path = settings.outputs_dir / vtt_name if vtt_name else None
 
     payload = {
         "elapsed_sec": round(dt, 1),

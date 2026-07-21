@@ -6,11 +6,13 @@ import {
   Controls,
   Handle,
   Position,
+  addEdge,
   useNodesState,
   useEdgesState,
   type Node,
   type Edge,
   type NodeProps,
+  type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { API_BASE, files, music } from "../api";
@@ -33,8 +35,21 @@ import { Icon } from "./icons";
 
 // สี lane (DAW) — ส่งเป็น hex เพราะ SVG attribute ไม่ resolve var()
 const C = { vocal: "#9b6cf0", beat: "#3d9be0", master: "#c7f046" };
+const KEY_OPTIONS = [
+  "auto",
+  "C maj", "C min", "C# maj", "C# min", "D maj", "D min", "D# maj", "D# min",
+  "E maj", "E min", "F maj", "F min", "F# maj", "F# min", "G maj", "G min",
+  "G# maj", "G# min", "A maj", "A min", "A# maj", "A# min", "B maj", "B min",
+];
 
 type NodeData = { title: string; sub?: string; body?: React.ReactNode; tone?: "lime" | "purple" | "beat" };
+type PatchNodeSnapshot = {
+  id: string;
+  position: { x: number; y: number };
+  custom?: { title: string; sub?: string; tone?: "lime" | "purple" | "beat" };
+};
+type PatchGraphSnapshot = { nodes: PatchNodeSnapshot[]; edges: Edge[] };
+type DeviceDockTab = "fx" | "mix" | null;
 
 function CinemaroNode({ data }: NodeProps<Node<NodeData>>) {
   return (
@@ -76,6 +91,23 @@ const INIT_EDGES: Edge[] = [
   { id: "e7", source: "master", target: "output", animated: true },
 ];
 
+function toPatchSnapshot(nodes: Node<NodeData>[], edges: Edge[]): PatchGraphSnapshot {
+  return {
+    nodes: nodes.map((node) => ({
+      id: node.id,
+      position: node.position,
+      custom: node.id.startsWith("custom_")
+        ? {
+            title: node.data.title,
+            sub: node.data.sub,
+            tone: node.data.tone,
+          }
+        : undefined,
+    })),
+    edges,
+  };
+}
+
 export function RemixPanel() {
   // ── recipe/master-fx/panel-size/UI-layout state (ย้ายไป Zustand store แล้ว) ──
   const source = useRemixStore((s) => s.source);
@@ -84,12 +116,18 @@ export function RemixPanel() {
   const setBeat = useRemixStore((s) => s.setBeat);
   const autotune = useRemixStore((s) => s.autotune);
   const setAutotune = useRemixStore((s) => s.setAutotune);
+  const autotuneStrength = useRemixStore((s) => s.autotuneStrength);
+  const setAutotuneStrength = useRemixStore((s) => s.setAutotuneStrength);
+  const keyOverride = useRemixStore((s) => s.keyOverride);
+  const setKeyOverride = useRemixStore((s) => s.setKeyOverride);
   const fx = useRemixStore((s) => s.fx);
   const setFx = useRemixStore((s) => s.setFx);
   const reverb = useRemixStore((s) => s.reverb);
   const setReverb = useRemixStore((s) => s.setReverb);
   const delay = useRemixStore((s) => s.delay);
   const setDelay = useRemixStore((s) => s.setDelay);
+  const phraseBars = useRemixStore((s) => s.phraseBars);
+  const setPhraseBars = useRemixStore((s) => s.setPhraseBars);
   const offsetAuto = useRemixStore((s) => s.offsetAuto);
   const setOffsetAuto = useRemixStore((s) => s.setOffsetAuto);
   const offsetMs = useRemixStore((s) => s.offsetMs);
@@ -121,6 +159,7 @@ export function RemixPanel() {
   // stem_gains (WP 3.4 per-stem faders) — เก็บ local state ไม่เข้า store กลาง
   // (store ยังไม่มี field นี้ + ไม่ต้อง persist ข้าม snapshot ตอนนี้)
   const [stemGains, setStemGains] = useState<StemGains>({ ...DEFAULT_STEM_GAINS });
+  const [deviceDockTab, setDeviceDockTab] = useState<DeviceDockTab>("fx");
   // stem mixer มีผลจริงเมื่อค่าต่างจาก default อย่างน้อยหนึ่ง stem — ไม่งั้นส่ง undefined
   // ให้ backend ใช้เส้นทาง two-stems=vocals แบบเดิม (เร็วกว่า ไม่ต้องแยก stem เต็ม 4 ทาง)
   const stemGainsActive = (Object.keys(stemGains) as (keyof StemGains)[]).some(
@@ -136,14 +175,16 @@ export function RemixPanel() {
   const loadingRef = useRef(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const [leftBounds, setLeftBounds] = useState({ min: 200, max: 360 });
+  const patchGraphRef = useRef<PatchGraphSnapshot>({ nodes: [], edges: INIT_EDGES });
 
   // ── Adobe-style project file (New/Open/Save/Save As + dirty) ──
   const buildSnapshot = useCallback(() => ({
-    source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs,
+    source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs,
     mReverb, mEcho, mComp,
     leftW, tlH, rackH, // ขนาด panel ที่ลากไว้
     project: engine.project,
-  }), [source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
+    patchGraph: patchGraphRef.current,
+  }), [source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
 
   const applySnapshot = useCallback((d: Record<string, unknown>) => {
     loadingRef.current = true; // กัน setTrackSource เขียนทับ arrangement ที่โหลด
@@ -157,9 +198,12 @@ export function RemixPanel() {
       source: (d.source as string | null) ?? null,
       beat: (d.beat as string | null) ?? null,
       autotune: d.autotune == null ? true : Boolean(d.autotune),
+      autotuneStrength: Number(d.autotuneStrength ?? 1),
+      keyOverride: String(d.keyOverride ?? "auto"),
       fx: d.fx == null ? true : Boolean(d.fx),
       reverb: Number(d.reverb ?? 0.16),
       delay: Number(d.delay ?? 0.12),
+      phraseBars: Number(d.phraseBars ?? 0),
       offsetAuto: d.offsetAuto == null ? true : Boolean(d.offsetAuto),
       offsetMs: Number(d.offsetMs ?? 0),
       lufs: Number(d.lufs ?? -14),
@@ -170,6 +214,16 @@ export function RemixPanel() {
       tlH: Number(d.tlH ?? 230),
       rackH: Number(d.rackH ?? 190),
     });
+    const graph = d.patchGraph as PatchGraphSnapshot | undefined;
+    setNodes(createPatchNodes(graph?.nodes));
+    setEdges(graph?.edges ?? INIT_EDGES);
+    customSeq.current = Math.max(
+      0,
+      ...(graph?.nodes ?? [])
+        .map((node) => /^custom_(\d+)$/.exec(node.id))
+        .filter((match): match is RegExpExecArray => !!match)
+        .map((match) => Number(match[1])),
+    );
     setTimeout(() => { loadingRef.current = false; }, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -189,7 +243,10 @@ export function RemixPanel() {
         source_audio: source,
         beat_audio: beat,
         do_autotune: autotune,
+        autotune_strength: autotuneStrength,
+        key_override: keyOverride === "auto" ? null : keyOverride,
         do_fx: fx,
+        phrase_bars: phraseBars,
         offset_ms: offsetAuto ? null : offsetMs,
         reverb,
         delay,
@@ -212,15 +269,21 @@ export function RemixPanel() {
       ? (job.result.offset_ms as number)
       : null;
   const resultKey =
-    job?.status === "done" && typeof (job.result?.key as Record<string, unknown> | undefined)?.beat === "string"
-      ? String((job.result?.key as Record<string, unknown>).beat)
+    job?.status === "done"
+      ? (
+          typeof (job.result?.key as Record<string, unknown> | undefined)?.target === "string"
+            ? String((job.result?.key as Record<string, unknown>).target)
+            : typeof (job.result?.key as Record<string, unknown> | undefined)?.beat === "string"
+              ? String((job.result?.key as Record<string, unknown>).beat)
+              : null
+        )
       : null;
   const resultStretch =
     job?.status === "done" && typeof (job.result?.bpm as Record<string, unknown> | undefined)?.stretch === "number"
       ? ((job.result?.bpm as Record<string, unknown>).stretch as number)
       : null;
 
-  const previewOffsetSec = offsetAuto ? 0 : offsetMs / 1000;
+  const previewOffsetSec = offsetAuto ? 0 : (phraseBars * 2) + (offsetMs / 1000);
   const vocalPreviewStart = Math.max(0, previewOffsetSec);
   const beatPreviewStart = Math.max(0, -previewOffsetSec);
 
@@ -255,10 +318,20 @@ export function RemixPanel() {
         return {
           title: "Auto-tune", sub: "psola · key match",
           body: (
-            <label className="remix-check">
-              <input type="checkbox" checked={autotune} onChange={(e) => setAutotune(e.target.checked)} />
-              {autotune ? "On" : "Off"}
-            </label>
+            <>
+              <Knob value={autotuneStrength} min={0} max={1} onChange={setAutotuneStrength}
+                label="Strength" color={C.vocal} disabled={!autotune}
+                format={(v) => `${Math.round(v * 100)}`} />
+              <select value={keyOverride} onChange={(e) => setKeyOverride(e.target.value)}>
+                {KEY_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt === "auto" ? "Auto key" : opt}</option>
+                ))}
+              </select>
+              <label className="remix-check">
+                <input type="checkbox" checked={autotune} onChange={(e) => setAutotune(e.target.checked)} />
+                {autotune ? "On" : "Off"}
+              </label>
+            </>
           ),
         };
       case "fx":
@@ -289,6 +362,12 @@ export function RemixPanel() {
               <Knob value={offsetMs} min={-1000} max={1000} onChange={(v) => setOffsetMs(Math.round(v))}
                 label="Offset ms" color={C.beat} disabled={offsetAuto}
                 format={(v) => `${Math.round(v)}`} />
+              <select value={phraseBars} onChange={(e) => setPhraseBars(Number(e.target.value))}>
+                <option value={0}>Phrase 1</option>
+                <option value={1}>Phrase 2</option>
+                <option value={2}>Phrase 3</option>
+                <option value={3}>Phrase 4</option>
+              </select>
               <label className="remix-check">
                 <input type="checkbox" checked={offsetAuto} onChange={(e) => setOffsetAuto(e.target.checked)} />
                 Auto-sync
@@ -332,17 +411,48 @@ export function RemixPanel() {
     }
   };
 
+  const createPatchNodes = (saved?: PatchNodeSnapshot[]) => {
+    const baseNodes = Object.keys(POSITIONS).map((id) => {
+      const snapshot = saved?.find((node) => node.id === id);
+      return {
+        id,
+        type: "cinemaro",
+        position: snapshot?.position ?? POSITIONS[id],
+        data: buildData(id),
+      } satisfies Node<NodeData>;
+    });
+    const customNodes = (saved ?? [])
+      .filter((node) => node.id.startsWith("custom_") && node.custom)
+      .map((node) => ({
+        id: node.id,
+        type: "cinemaro",
+        position: node.position,
+        data: {
+          title: node.custom?.title ?? node.id,
+          sub: node.custom?.sub,
+          tone: node.custom?.tone ?? "lime",
+        },
+      } satisfies Node<NodeData>));
+    return [...baseNodes, ...customNodes];
+  };
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>(
-    Object.keys(POSITIONS).map((id) => ({
-      id, type: "cinemaro", position: POSITIONS[id], data: buildData(id),
-    }))
+    createPatchNodes()
   );
-  const [edges, , onEdgesChange] = useEdgesState(INIT_EDGES);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(INIT_EDGES);
 
   useEffect(() => {
     setNodes((nds) => nds.map((n) => (n.id.startsWith("custom_") ? n : { ...n, data: buildData(n.id) })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs, outputName, resultLufs, busy]);
+  }, [source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs, outputName, resultLufs, busy]);
+
+  const onConnect = useCallback((connection: Connection) => {
+    setEdges((existing) => addEdge({ ...connection, id: `e_${Date.now()}_${existing.length}`, animated: true }, existing));
+  }, [setEdges]);
+
+  useEffect(() => {
+    patchGraphRef.current = toPatchSnapshot(nodes, edges);
+  }, [nodes, edges]);
 
   // เพิ่ม custom node เข้ากราฟ (จาก Node Designer)
   const addCustomNode = (cfg: CustomNodeConfig) => {
@@ -415,6 +525,19 @@ export function RemixPanel() {
     return () => window.removeEventListener("keydown", onKey);
   }, [file]);
 
+  // The shared M0 owns project commands while this panel retains project state.
+  useEffect(() => {
+    const onCommand = (event: Event) => {
+      const command = (event as CustomEvent<"new" | "open" | "save" | "saveAs">).detail;
+      if (command === "new") file.newProject();
+      if (command === "open") file.openDialog();
+      if (command === "save") file.save();
+      if (command === "saveAs") file.saveAs();
+    };
+    window.addEventListener("lalin:command", onCommand);
+    return () => window.removeEventListener("lalin:command", onCommand);
+  }, [file]);
+
   // track ที่เลือก → properties panel
   const selTrackObj = engine.project.tracks.find((t) => t.id === engine.selTrack);
   const selectedView: TrackView | null = selTrackObj
@@ -438,12 +561,19 @@ export function RemixPanel() {
   return (
     <div className="remix-wrap">
       <div className="remix-toolbar">
-        <div>
-          <span className="remix-kicker mono">REMIX WORKSPACE</span>
-          <h2 style={{ margin: 0, fontSize: 16 }}>Finishing Studio</h2>
+        <div className="remix-toolbar-head">
+          <div className="remix-toolbar-headline">
+            <span className="remix-kicker mono">ARRANGE WORKSPACE</span>
+            <span className="remix-workspace-view">Timeline</span>
+          </div>
           <span className="hint mono" style={{ margin: 0 }}>
             {job ? job.message || job.error : "Arrange · align · mix · export"}
           </span>
+          <div className="remix-head-badges">
+            <span className="tool-metric">DAW layout</span>
+            <span className="tool-metric">{layout === "standard" ? "Arrange active" : "Patch active"}</span>
+            <span className="tool-metric">{source && beat ? "Ready to run" : "Load source + beat"}</span>
+          </div>
         </div>
         <div className="remix-toolbar-right">
           <label className={`seg-add tool-chip ${source ? "ready" : ""}`} title={source ? `Source: ${source}` : "โหลดไฟล์เสียงต้นฉบับ (vocal)"}>
@@ -469,16 +599,12 @@ export function RemixPanel() {
             />
             <span className={`proj-dot ${file.dirty ? "dirty" : "clean"}`} title={file.dirty ? "มีการเปลี่ยนแปลงที่ยังไม่บันทึก" : file.saving ? "กำลังบันทึก…" : "บันทึกแล้ว"}>●</span>
           </div>
-          <button className="seg-add tool-chip" onClick={file.newProject} title="โปรเจกต์ใหม่ (Ctrl+N)"><Icon name="doc" size={14} /><span>New</span></button>
-          <button className="seg-add tool-chip" onClick={file.openDialog} title="เปิดโปรเจกต์ (Ctrl+O)"><Icon name="folder" size={14} /><span>Open</span></button>
-          <button className="seg-add tool-chip" onClick={file.save} disabled={file.saving || (!file.dirty && !!file.currentId)} title="บันทึก (Ctrl+S)"><Icon name="save" size={14} /><span>Save</span></button>
-          <button className="seg-add tool-chip" onClick={file.saveAs} disabled={file.saving} title="บันทึกเป็น (Ctrl+Shift+S)"><Icon name="saveAs" size={14} /><span>Save As</span></button>
           <div className="seg-toggle">
             <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Arrange</button>
-            <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>Node Flow</button>
+            <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>Patch</button>
           </div>
           {layout === "node" && (
-            <button className="seg-add tool-chip" onClick={() => setShowDesigner(true)} title="Custom Node Designer"><span>+</span><span>Custom</span></button>
+            <button className="seg-add tool-chip" onClick={() => setShowDesigner(true)} title="Custom Patch Node"><span>+</span><span>Custom</span></button>
           )}
           {job && (job.status === "running" || job.status === "queued") && (
             <div className="bar remix-toolbar-progress" style={{ width: 160 }}>
@@ -533,40 +659,89 @@ export function RemixPanel() {
 
         <div className="remix-main">
           {layout === "node" ? (
-            <div className="remix-canvas" style={{ flex: 1 }}>
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                fitView
-                nodesConnectable={false}
-                proOptions={{ hideAttribution: true }}
-              >
-                <Background gap={22} color="#1c1f26" />
-                <Controls showInteractive={false} />
-              </ReactFlow>
+            <div className="remix-patch-shell">
+              <aside className="remix-patch-sidecar">
+                <span className="remix-kicker mono">PATCH VIEW</span>
+                <strong>Advanced pipeline map</strong>
+                <p className="hint" style={{ margin: 0 }}>
+                  Drag nodes, connect stages, and keep custom patch notes in the same studio workspace.
+                </p>
+                <div className="remix-patch-stats">
+                  <span className="tool-metric">{nodes.length} modules</span>
+                  <span className="tool-metric">{edges.length} links</span>
+                </div>
+                <div className="remix-patch-tips">
+                  <span>Arrange is the default editing surface.</span>
+                  <span>Patch is for routing, process visibility, and custom notes.</span>
+                  <span>Delete selected items with Backspace or Delete.</span>
+                </div>
+              </aside>
+              <div className="remix-canvas remix-patch-canvas" style={{ flex: 1 }}>
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={nodeTypes}
+                  fitView
+                  nodesConnectable
+                  elementsSelectable
+                  edgesReconnectable
+                  deleteKeyCode={["Backspace", "Delete"]}
+                  proOptions={{ hideAttribution: true }}
+                >
+                  <Background gap={22} color="#1c1f26" />
+                  <Controls showInteractive={false} />
+                </ReactFlow>
+              </div>
             </div>
           ) : (
             <div className="remix-standard">
               <div className="remix-timeline-shell">
                 <StudioDock embedded />
               </div>
-              <div className="remix-bottom-dock">
+              <section className={`remix-bottom-dock ${deviceDockTab ?? "closed"}`} aria-label="Device dock">
+                <div className="remix-device-tabs" role="tablist" aria-label="Remix processors">
+                  <span className="remix-kicker mono">DEVICE DOCK</span>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={deviceDockTab === "fx"}
+                    className={deviceDockTab === "fx" ? "on" : ""}
+                    onClick={() => setDeviceDockTab((tab) => tab === "fx" ? null : "fx")}
+                  >
+                    Process
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={deviceDockTab === "mix"}
+                    className={deviceDockTab === "mix" ? "on" : ""}
+                    onClick={() => setDeviceDockTab((tab) => tab === "mix" ? null : "mix")}
+                  >
+                    Mix & Master
+                  </button>
+                  <span className="hint mono remix-device-summary">
+                    {deviceDockTab ? "Click the active tab to maximize timeline" : "Timeline maximized"}
+                  </span>
+                </div>
               <FxRack
                 reverb={reverb} setReverb={setReverb}
                 delay={delay} setDelay={setDelay}
                 autotune={autotune} setAutotune={setAutotune}
+                autotuneStrength={autotuneStrength} setAutotuneStrength={setAutotuneStrength}
+                keyOverride={keyOverride} setKeyOverride={setKeyOverride}
                 fx={fx} setFx={setFx}
                 lufs={lufs} setLufs={setLufs}
                 offsetAuto={offsetAuto} setOffsetAuto={setOffsetAuto}
+                phraseBars={phraseBars} setPhraseBars={setPhraseBars}
                 offsetMs={offsetMs} setOffsetMs={setOffsetMs}
                 mReverb={mReverb} setMReverb={setMReverb}
                 mEcho={mEcho} setMEcho={setMEcho}
                 mComp={mComp} setMComp={setMComp}
               />
-              <div className="bento-tile glass wide remix-stem-dock" style={{ marginTop: 12 }}>
+              <div className="bento-tile glass wide remix-stem-dock">
                 <div className="bento-head">
                   <span className="bento-dot" style={{ background: "#e0863d" }} />
                   <b>Stem Mixer</b>
@@ -585,7 +760,7 @@ export function RemixPanel() {
                   )}
                 </div>
               </div>
-              </div>
+              </section>
             </div>
           )}
         </div>

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { agent, type AgentMutation } from "../api";
+import { agent, speech, tts, voices, type AgentMutation, type SpeechConfig, type Voice } from "../api";
 import type { ClipEngine } from "../timeline/useClipEngine";
+import { useJob } from "../useJob";
+import { JobProgress } from "./JobProgress";
 
 /**
  * MixCopilot — แชทสั่งงาน mix ด้วย LLM (WP 4.3)
@@ -165,6 +167,19 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceProfiles, setVoiceProfiles] = useState<Voice[]>([]);
+  const [voiceId, setVoiceId] = useState("");
+  const [speakReplies, setSpeakReplies] = useState(false);
+  const [speechConfig, setSpeechConfig] = useState<SpeechConfig | null>(null);
+  const { job: voiceJob, busy: voiceBusy, start: startVoice } = useJob();
+
+  useEffect(() => {
+    voices.list().then((result) => {
+      setVoiceProfiles(result.voices);
+      if (result.voices[0]) setVoiceId(result.voices[0].id);
+    }).catch(() => {});
+    speech.getConfig().then(setSpeechConfig).catch(() => {});
+  }, []);
 
   const send = async () => {
     const message = text.trim();
@@ -184,6 +199,10 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
         applied: new Set(),
       };
       setEntries((es) => [...es, agentEntry]);
+      const selectedVoice = voiceProfiles.find((voice) => voice.id === voiceId);
+      if (speakReplies && speechConfig?.tts_available && selectedVoice && res.reply.trim()) {
+        startVoice(() => tts.synth({ text: res.reply, voice_id: selectedVoice.id, language: selectedVoice.language }));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -225,6 +244,19 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
     <div style={styles.panel}>
       <div style={styles.header}>
         <span>🤖 Mix Copilot</span>
+      </div>
+      <div style={{ display: "grid", gap: 6 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <input type="checkbox" checked={speakReplies} onChange={(e) => setSpeakReplies(e.target.checked)} disabled={!voiceId || voiceBusy || !speechConfig?.tts_available} />
+          <span>อ่านคำตอบด้วยเสียง</span>
+        </label>
+        <select aria-label="Agent voice profile" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} disabled={!voiceProfiles.length || voiceBusy} style={styles.input}>
+          {!voiceProfiles.length && <option value="">ยังไม่มี voice profile</option>}
+          {voiceProfiles.map((voice) => <option key={voice.id} value={voice.id}>{voice.name} ({voice.language})</option>)}
+        </select>
+        {!speechConfig && <span style={styles.disabledNote}>กำลังตรวจสอบความพร้อมของ Agent Voice…</span>}
+        {speechConfig?.tts_available === false && <span style={styles.disabledNote}>Agent Voice ใช้ได้เฉพาะ full local runtime ที่มี TTS</span>}
+        {speakReplies && !voiceId && <span style={styles.disabledNote}>สร้าง voice profile ก่อนจึงจะเปิดอ่านคำตอบได้</span>}
       </div>
       <div style={styles.log}>
         {entries.length === 0 && (
@@ -268,6 +300,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
         ))}
         {error && <div style={{ color: "#e05a5a" }}>ผิดพลาด: {error}</div>}
       </div>
+      {speakReplies && <JobProgress job={voiceJob} />}
       <div style={styles.inputRow}>
         <input
           style={styles.input}

@@ -11,7 +11,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
-            let (_rx, child) = app.shell().sidecar("g-music-backend")?.spawn()?;
+            let (_rx, child) = app
+                .shell()
+                .sidecar("g-music-backend")?
+                .env("GMUSIC_BACKEND_PROFILE", "full")
+                .spawn()?;
             app.manage(child);
             Ok(())
         })

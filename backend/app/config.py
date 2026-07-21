@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -17,6 +18,16 @@ CloudProvider = Literal["anthropic", "openai", "openrouter"]
 TtsEngine = Literal["f5", "xtts"]
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _default_data_dir() -> Path:
+    if value := os.getenv("GMUSIC_DATA_DIR"):
+        return Path(value)
+    return _repo_root() / "runtime" / "data"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
@@ -25,7 +36,7 @@ class Settings(BaseSettings):
     # ── Server ──────────────────────────────────────────────
     host: str = "127.0.0.1"
     port: int = 8756
-    data_dir: Path = Path("./data")
+    data_dir: Path = Field(default_factory=_default_data_dir)
 
     # ── Brain ───────────────────────────────────────────────
     brain_provider: BrainProvider = "ollama"
@@ -62,6 +73,8 @@ class Settings(BaseSettings):
         return self.data_dir / "voices"
 
     def ensure_dirs(self) -> None:
+        if not self.data_dir.is_absolute():
+            self.data_dir = (_repo_root() / self.data_dir).resolve()
         for d in (self.uploads_dir, self.outputs_dir, self.voices_dir):
             d.mkdir(parents=True, exist_ok=True)
 

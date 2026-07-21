@@ -28,7 +28,7 @@ def create_app(profile: str | None = None) -> FastAPI:
     get_settings()
     configure_ffmpeg()
 
-    from .routers import agent, brain, files, fs, health, jobs, packs, plugins, projects, voices
+    from .routers import agent, brain, files, fs, health, jobs, packs, plugins, projects, speech, voices
 
     app = FastAPI(
         title="G-Music API",
@@ -44,7 +44,7 @@ def create_app(profile: str | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    router_modules = [health, brain, voices, files, fs, packs, projects, jobs, agent, plugins]
+    router_modules = [health, brain, voices, files, fs, packs, projects, jobs, agent, plugins, speech]
     if selected_profile == "full":
         from .routers import dubbing, mastering, music, tts
 

@@ -8,12 +8,18 @@ export function FxRack({
   setDelay,
   autotune,
   setAutotune,
+  autotuneStrength,
+  setAutotuneStrength,
+  keyOverride,
+  setKeyOverride,
   fx,
   setFx,
   lufs,
   setLufs,
   offsetAuto,
   setOffsetAuto,
+  phraseBars,
+  setPhraseBars,
   offsetMs,
   setOffsetMs,
   mReverb,
@@ -29,12 +35,18 @@ export function FxRack({
   setDelay: (v: number) => void;
   autotune: boolean;
   setAutotune: (v: boolean) => void;
+  autotuneStrength: number;
+  setAutotuneStrength: (v: number) => void;
+  keyOverride: string;
+  setKeyOverride: (v: string) => void;
   fx: boolean;
   setFx: (v: boolean) => void;
   lufs: number;
   setLufs: (v: number) => void;
   offsetAuto: boolean;
   setOffsetAuto: (v: boolean) => void;
+  phraseBars: number;
+  setPhraseBars: (v: number) => void;
   offsetMs: number;
   setOffsetMs: (v: number) => void;
   mReverb: number;
@@ -50,14 +62,32 @@ export function FxRack({
         <div className="bento-head">
           <span className="bento-dot" style={{ background: "#9b6cf0" }} />
           <b>Vocal FX</b>
-          <span className="bento-sub">REVERB · DELAY</span>
+          <span className="bento-sub">TUNE · REVERB · DELAY</span>
         </div>
         <div className="bento-knobs">
+          <Knob value={autotuneStrength} min={0} max={1} onChange={setAutotuneStrength} label="Tune" color="#9b6cf0" disabled={!autotune} format={(v) => `${Math.round(v * 100)}`} />
           <Knob value={reverb} min={0} max={0.5} onChange={setReverb} label="Reverb" color="#9b6cf0" disabled={!fx} format={(v) => `${Math.round(v * 100)}`} />
           <Knob value={delay} min={0} max={0.4} onChange={setDelay} label="Delay" color="#9b6cf0" disabled={!fx} format={(v) => `${Math.round(v * 100)}`} />
           <div className="bento-toggles">
             <label className="remix-check"><input type="checkbox" checked={fx} onChange={(e) => setFx(e.target.checked)} />FX</label>
             <label className="remix-check"><input type="checkbox" checked={autotune} onChange={(e) => setAutotune(e.target.checked)} />Auto-tune</label>
+            <select value={keyOverride} onChange={(e) => setKeyOverride(e.target.value)} style={{ width: 116 }}>
+              <option value="auto">Auto key</option>
+              <option value="C maj">C maj</option>
+              <option value="C min">C min</option>
+              <option value="D maj">D maj</option>
+              <option value="D min">D min</option>
+              <option value="E maj">E maj</option>
+              <option value="E min">E min</option>
+              <option value="F maj">F maj</option>
+              <option value="F min">F min</option>
+              <option value="G maj">G maj</option>
+              <option value="G min">G min</option>
+              <option value="A maj">A maj</option>
+              <option value="A min">A min</option>
+              <option value="B maj">B maj</option>
+              <option value="B min">B min</option>
+            </select>
           </div>
         </div>
       </Tilt>
@@ -81,6 +111,12 @@ export function FxRack({
           />
           <div className="bento-toggles">
             <label className="remix-check"><input type="checkbox" checked={offsetAuto} onChange={(e) => setOffsetAuto(e.target.checked)} />Auto-sync</label>
+            <select value={phraseBars} onChange={(e) => setPhraseBars(Number(e.target.value))}>
+              <option value={0}>Phrase 1</option>
+              <option value={1}>Phrase 2</option>
+              <option value={2}>Phrase 3</option>
+              <option value={3}>Phrase 4</option>
+            </select>
           </div>
         </div>
       </Tilt>

@@ -67,7 +67,10 @@ class RemixRequest(BaseModel):
     beat_audio: str = Field(description="beat ปลายทางใน uploads/ (mp3/mp4/wav)")
     target_lufs: float = -14.0
     do_autotune: bool = True
+    autotune_strength: float = 1.0
+    key_override: str | None = None
     do_fx: bool = True
+    phrase_bars: int = 0
     offset_ms: float | None = Field(
         default=None, description="เลื่อนเสียงร้อง (ms); None = หา phase อัตโนมัติ"
     )

@@ -100,7 +100,7 @@ export function DubbingPanel() {
   };
 
   return (
-    <div className="panel">
+    <div className="panel card">
       <h2>🎬 พากย์เสียง (Dubbing)</h2>
       <p className="hint">ถอดเสียงต้นฉบับ → แปลด้วยสมอง → พากย์ทับด้วยเสียงที่โคลน ให้ตรงจังหวะเดิม</p>
 

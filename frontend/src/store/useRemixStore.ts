@@ -13,9 +13,12 @@ export interface RemixRecipeState {
   source: string | null;
   beat: string | null;
   autotune: boolean;
+  autotuneStrength: number;
+  keyOverride: string;
   fx: boolean;
   reverb: number;
   delay: number;
+  phraseBars: number;
   offsetAuto: boolean;
   offsetMs: number;
   lufs: number;
@@ -47,9 +50,12 @@ export interface RemixStoreState
   setSource: (v: string | null) => void;
   setBeat: (v: string | null) => void;
   setAutotune: (v: boolean) => void;
+  setAutotuneStrength: (v: number) => void;
+  setKeyOverride: (v: string) => void;
   setFx: (v: boolean) => void;
   setReverb: (v: number) => void;
   setDelay: (v: number) => void;
+  setPhraseBars: (v: number) => void;
   setOffsetAuto: (v: boolean) => void;
   setOffsetMs: (v: number) => void;
   setLufs: (v: number) => void;
@@ -74,9 +80,12 @@ const DEFAULTS: RemixRecipeState & RemixMasterFxState & RemixPanelSizeState & Re
   source: null,
   beat: null,
   autotune: true,
+  autotuneStrength: 1,
+  keyOverride: "auto",
   fx: true,
   reverb: 0.16,
   delay: 0.12,
+  phraseBars: 0,
   offsetAuto: true,
   offsetMs: 0,
   lufs: -14,
@@ -97,9 +106,12 @@ export const useRemixStore = create<RemixStoreState>((set) => ({
   setSource: (v) => set({ source: v }),
   setBeat: (v) => set({ beat: v }),
   setAutotune: (v) => set({ autotune: v }),
+  setAutotuneStrength: (v) => set({ autotuneStrength: v }),
+  setKeyOverride: (v) => set({ keyOverride: v }),
   setFx: (v) => set({ fx: v }),
   setReverb: (v) => set({ reverb: v }),
   setDelay: (v) => set({ delay: v }),
+  setPhraseBars: (v) => set({ phraseBars: v }),
   setOffsetAuto: (v) => set({ offsetAuto: v }),
   setOffsetMs: (v) => set({ offsetMs: v }),
   setLufs: (v) => set({ lufs: v }),

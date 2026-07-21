@@ -48,7 +48,9 @@ G-Music/
 │  ├─ requirements.txt
 │  └─ .env.example
 ├─ frontend/           Tauri + React (Phase 2)
-├─ scripts/            setup + ดาวน์โหลดโมเดล
+├─ tools/              dev/build/verify tooling
+├─ scripts/            compatibility shims for older commands
+├─ runtime/            local generated/user state (gitignored)
 └─ README.md
 ```
 
@@ -61,7 +63,7 @@ cd D:\G-Music\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt          # ไลบรารีหลัก (เบา)
-# ติดตั้ง PyTorch + โมเดลเสียงเมื่อพร้อม:  ดู scripts/setup_windows.ps1
+# ติดตั้ง PyTorch + โมเดลเสียงเมื่อพร้อม:  ดู tools/dev/setup_windows.ps1
 
 copy .env.example .env                    # ตั้งค่า API key / โหมดสมอง
 uvicorn app.main:app --reload --port 8756

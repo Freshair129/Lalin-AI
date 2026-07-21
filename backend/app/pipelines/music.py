@@ -34,6 +34,23 @@ _MIN = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.3
 _SCALE = {"maj": [0, 2, 4, 5, 7, 9, 11], "min": [0, 2, 3, 5, 7, 8, 10]}
 
 
+def parse_key_override(value: str | None) -> tuple[str, str, int] | None:
+    if not value:
+        return None
+    raw = value.strip()
+    if not raw:
+        return None
+    parts = raw.replace("-", " ").split()
+    if len(parts) != 2:
+        raise ValueError("key_override ต้องอยู่ในรูปแบบเช่น 'C maj' หรือ 'A min'")
+    tonic, mode = parts[0].upper(), parts[1].lower()
+    if tonic not in _NOTES:
+        raise ValueError(f"ไม่รองรับคีย์ {tonic}")
+    if mode not in ("maj", "min"):
+        raise ValueError("mode ของ key_override ต้องเป็น maj หรือ min")
+    return tonic, mode, _NOTES.index(tonic)
+
+
 # ════════════════════════════════════════════════════════════
 #  Helpers: โหลดเสียง (รองรับ mp3/mp4/wav ผ่าน ffmpeg)
 # ════════════════════════════════════════════════════════════
@@ -219,10 +236,14 @@ def detect_key(path: str) -> tuple[str, str, int]:
 # ════════════════════════════════════════════════════════════
 #  3) Auto-tune (psola) — snap เข้าสเกลของ target key
 # ════════════════════════════════════════════════════════════
-def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str) -> np.ndarray:
+def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str, *, strength: float = 1.0) -> np.ndarray:
     """Snap เสียงร้องเข้าคีย์ด้วย psola. ถ้าไม่มี psola (optional/GPL dep) →
     คืนเสียงต้นฉบับโดยไม่แก้พิตช์ (ข้ามขั้น auto-tune) พร้อม log แจ้งเตือน."""
     import librosa
+
+    mix = float(np.clip(strength, 0.0, 1.0))
+    if mix <= 0:
+        return vocal_stereo
 
     try:
         import psola
@@ -251,11 +272,14 @@ def autotune(vocal_stereo: np.ndarray, key_idx: int, mode: str) -> np.ndarray:
 
     target = np.array([_snap(f) for f in f0])
     target = np.where(np.isnan(target), f0, target)
-    return np.stack([
+    tuned = np.stack([
         psola.vocode(vocal_stereo[c].astype(np.float64), sample_rate=SR,
                      target_pitch=target, fmin=fmin, fmax=fmax)
         for c in range(vocal_stereo.shape[0])
     ]).astype(np.float32)
+    if mix >= 1:
+        return tuned
+    return ((vocal_stereo.astype(np.float32) * (1.0 - mix)) + (tuned * mix)).astype(np.float32)
 
 
 # ════════════════════════════════════════════════════════════
@@ -430,7 +454,10 @@ def run_remix(
     beat_audio: str,         # beat ปลายทาง — mp3/mp4/wav
     target_lufs: float = -14.0,
     do_autotune: bool = True,
+    autotune_strength: float = 1.0,
+    key_override: str | None = None,
     do_fx: bool = True,
+    phrase_bars: int = 0,
     offset_ms: float | None = None,   # None = auto phase-sync, ตัวเลข = กำหนดเอง
     beat_gain_db: float = -2.0,
     vocal_gain: float = 0.95,
@@ -479,6 +506,7 @@ def run_remix(
     _p(0.55, "วิเคราะห์ BPM / คีย์…")
     bpm_b, bpm_v = detect_bpm(beat_wav), detect_bpm(src_wav)
     key_b = detect_key(beat_wav)
+    target_key = parse_key_override(key_override) or key_b
     ratio = bpm_b / bpm_v
     while ratio > 1.4:
         ratio /= 2
@@ -495,9 +523,10 @@ def run_remix(
         v = np.stack([librosa.effects.time_stretch(v[c], rate=ratio) for c in range(2)])
 
     # 4) auto-tune เข้าคีย์ beat (ถ้าไม่มี psola จะข้ามขั้นนี้ให้อัตโนมัติ — ดู autotune())
-    if do_autotune:
+    autotune_strength = float(np.clip(autotune_strength, 0.0, 1.0))
+    if do_autotune and autotune_strength > 0:
         _p(0.65, "ปรับเสียงเข้าคีย์ (auto-tune)…")
-        v = autotune(v, key_b[2], key_b[1])
+        v = autotune(v, target_key[2], target_key[1], strength=autotune_strength)
 
     # 5) vocal FX (ถ้าไม่มี pedalboard จะข้ามขั้นนี้ให้อัตโนมัติ — ดู vocal_fx())
     if do_fx:
@@ -511,15 +540,29 @@ def run_remix(
         v = v[:, nz[0]:]
 
     # 7) offset: auto phase-sync หรือกำหนดเอง
+    phrase_bars = max(0, int(phrase_bars))
+    phrase_offset = int(phrase_bars * 4 * (60.0 / bpm_b) * SR)
     if offset_ms is None:
-        offset = auto_phase_offset(beat_wav, src_wav, bpm_b)
+        offset = auto_phase_offset(beat_wav, src_wav, bpm_b) + phrase_offset
     else:
-        offset = int(offset_ms / 1000.0 * SR)
+        offset = int(offset_ms / 1000.0 * SR) + phrase_offset
 
     # 8) มิกซ์
     _p(0.9, "มิกซ์เสียงร้องกับ beat + มาสเตอร์…")
     b, _ = sf.read(beat_wav)
     b = (np.stack([b, b], axis=1).T if b.ndim == 1 else b.T)
+    source_inst_active = bool(stem_gains) and any(
+        abs(float((stem_gains or {}).get(name, 1.0)) - 1.0) > 1e-6
+        for name in ("drums", "bass", "other")
+    )
+    if source_inst_active and stems.get("instrumental"):
+        src_inst, _ = sf.read(stems["instrumental"])
+        src_inst = (np.stack([src_inst, src_inst], axis=1).T if src_inst.ndim == 1 else src_inst.T).astype(np.float32)
+        total_len = max(b.shape[1], src_inst.shape[1])
+        beat_mix = np.zeros((2, total_len), dtype=np.float32)
+        beat_mix[:, :b.shape[1]] += b.astype(np.float32)
+        beat_mix[:, :src_inst.shape[1]] += src_inst
+        b = beat_mix
     mix = _mix_with_offset(
         b,
         v,
@@ -538,12 +581,19 @@ def run_remix(
     return {
         "output": out_path,
         "bpm": {"beat": round(bpm_b, 1), "vocal": round(bpm_v, 1), "stretch": round(ratio, 3)},
-        "key": {"beat": f"{key_b[0]} {key_b[1]}"},
+        "key": {
+            "beat": f"{key_b[0]} {key_b[1]}",
+            "target": f"{target_key[0]} {target_key[1]}",
+            "override": key_override,
+        },
         "offset_ms": round(offset / SR * 1000, 1),
+        "phrase_bars": phrase_bars,
         "lufs": round(final_lufs, 1),
         "autotune": do_autotune,
+        "autotune_strength": autotune_strength,
         "fx": do_fx,
         "stem_gains": stem_gains or None,
+        "source_instrumental_layered": source_inst_active,
     }
 
 
