@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Phase 1, Phase 2, and Phase 3 are executed. Later phases are still candidate plans and must not be treated as already migrated.
+Phase 1, Phase 2, Phase 3, and Phase 4 are executed. Later phases are still candidate plans and must not be treated as already migrated.
 
 ## Goals
 
@@ -73,6 +73,9 @@ Acceptance: existing projects, voices, uploads, and outputs remain discoverable.
 
 ## Phase 4: App Folder Migration
 
+Executed. See `docs/architecture/PHASE4_APP_FOLDER_MIGRATION_PLAN.md` and
+`docs/architecture/PHASE4_APP_MOVE_MAP.md`.
+
 Move app source:
 
 - `frontend/` to `apps/desktop/`
@@ -106,6 +109,8 @@ Acceptance: desktop imports contracts from `packages/contracts`, not from API in
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.6b | 2026-07-22 | beta | Phase 4 app folder migration executed. | uncommitted | LALIN |
+| 0.1.5b | 2026-07-22 | beta | Added Phase 4 app folder migration plan pointer and kept phase candidate-gated. | uncommitted | LALIN |
 | 0.1.4b | 2026-07-22 | beta | Phase 3 runtime config and data migration executed. | uncommitted | LALIN |
 | 0.1.3b | 2026-07-22 | beta | Added Phase 3 runtime audit result and gated implementation plan pointer. | uncommitted | LALIN |
 | 0.1.2b | 2026-07-22 | beta | Phase 2 tooling consolidation executed with compatibility shims. | uncommitted | LALIN |

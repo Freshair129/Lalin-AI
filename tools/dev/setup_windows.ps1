@@ -1,68 +1,99 @@
-# ═══════════════════════════════════════════════════════════════════
-#  G-Music — ติดตั้งสภาพแวดล้อมบน Windows (PowerShell)
-#  ต้องมี Python 3.11 (ML stack ยังไม่รองรับ 3.12/3.13)
-#  รัน:  cd D:\G-Music\backend ; ..\scripts\setup_windows.ps1
-# ═══════════════════════════════════════════════════════════════════
+# ============================================================================
+#  Lalin AI / G-Music - Windows API runtime setup
+#  Requires Python 3.11. Run from:
+#    cd D:\G-Music\apps\api ; ..\..\tools\dev\setup_windows.ps1
+# ============================================================================
 param(
   [switch]$InstallOptionalRemixDeps
 )
 
 $ErrorActionPreference = "Stop"
 
-# ── หา Python 3.11 ──────────────────────────────────────────────────
+function Invoke-PipInstall {
+  param(
+    [Parameter(Mandatory=$true)]
+    [string[]]$Arguments,
+    [Parameter(Mandatory=$true)]
+    [bool]$UseUv
+  )
+
+  if ($UseUv) {
+    uv pip install @Arguments
+  } else {
+    pip install @Arguments
+  }
+}
+
+# Find Python 3.11.
 $py311 = $null
-# 1) uv-managed (เร็วสุด)
 $uvPy = Get-ChildItem "$env:APPDATA\uv\python\cpython-3.11*\python.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($uvPy) { $py311 = $uvPy.FullName }
-# 2) py launcher
-if (-not $py311) { try { & py -3.11 --version *> $null; if ($?) { $py311 = "py -3.11" } } catch {} }
-if (-not $py311) { throw "ไม่พบ Python 3.11 — ติดตั้งก่อน เช่น  uv python install 3.11" }
-Write-Host "==> ใช้ Python 3.11: $py311" -ForegroundColor Cyan
 
-# ── ตรวจ uv (ถ้ามีใช้ uv, ไม่มีใช้ venv+pip) ────────────────────────
+if (-not $py311) {
+  try {
+    & py -3.11 --version *> $null
+    if ($?) { $py311 = "py" }
+  } catch {}
+}
+
+if (-not $py311) {
+  throw "Python 3.11 was not found. Install it first, for example: uv python install 3.11"
+}
+
+Write-Host "==> Using Python 3.11: $py311" -ForegroundColor Cyan
+
+# Prefer uv when available; otherwise use venv + pip.
 $hasUv = $false
-try { uv --version *> $null; $hasUv = $? } catch {}
+try {
+  uv --version *> $null
+  $hasUv = $?
+} catch {}
 
 if ($hasUv) {
-  Write-Host "==> สร้าง venv ด้วย uv" -ForegroundColor Cyan
-  uv venv --python "$py311" .venv
+  Write-Host "==> Creating .venv with uv" -ForegroundColor Cyan
+  if ($py311 -eq "py") {
+    uv venv --python 3.11 .venv
+  } else {
+    uv venv --python "$py311" .venv
+  }
   $env:VIRTUAL_ENV = "$PWD\.venv"
-  $pipInstall = { param($a) uv pip install @a }
 } else {
-  Write-Host "==> สร้าง venv ด้วย venv+pip" -ForegroundColor Cyan
-  & $py311 -m venv .venv
+  Write-Host "==> Creating .venv with venv + pip" -ForegroundColor Cyan
+  if ($py311 -eq "py") {
+    & py -3.11 -m venv .venv
+  } else {
+    & $py311 -m venv .venv
+  }
   . .\.venv\Scripts\Activate.ps1
   python -m pip install --upgrade pip
-  $pipInstall = { param($a) pip install @a }
 }
 
-Write-Host "==> ติดตั้งไลบรารีหลัก (API)" -ForegroundColor Cyan
-& $pipInstall @("-r", "requirements.txt")
+Write-Host "==> Installing API requirements" -ForegroundColor Cyan
+Invoke-PipInstall -UseUv $hasUv -Arguments @("-r", "requirements.txt")
 
-Write-Host "==> ติดตั้ง PyTorch (CUDA 12.1 — เหมาะกับ RTX 3060)" -ForegroundColor Cyan
-& $pipInstall @("torch", "torchaudio", "--index-url", "https://download.pytorch.org/whl/cu121")
+Write-Host "==> Installing PyTorch CUDA 12.1 runtime" -ForegroundColor Cyan
+Invoke-PipInstall -UseUv $hasUv -Arguments @("torch", "torchaudio", "--index-url", "https://download.pytorch.org/whl/cu121")
 
-Write-Host "==> ติดตั้งโมเดลเสียง" -ForegroundColor Cyan
-& $pipInstall @("faster-whisper")          # ASR
-& $pipInstall @("f5-tts")                   # voice clone (ไทย/อังกฤษ)
-& $pipInstall @("matchering", "pyloudnorm") # mastering
-& $pipInstall @("librosa")                  # time-stretch สำหรับ dubbing
-# XTTS (ทางเลือก) — ติดตั้งเมื่อต้องการ:  & $pipInstall @("coqui-tts")
+Write-Host "==> Installing speech and mastering models/dependencies" -ForegroundColor Cyan
+Invoke-PipInstall -UseUv $hasUv -Arguments @("faster-whisper")
+Invoke-PipInstall -UseUv $hasUv -Arguments @("f5-tts")
+Invoke-PipInstall -UseUv $hasUv -Arguments @("matchering", "pyloudnorm")
+Invoke-PipInstall -UseUv $hasUv -Arguments @("librosa")
 
 if ($InstallOptionalRemixDeps) {
-  Write-Host "==> ติดตั้ง optional Remix deps (Demucs / PSOLA / pedalboard)" -ForegroundColor Cyan
-  & $pipInstall @("demucs", "psola", "pedalboard")
+  Write-Host "==> Installing optional Remix dependencies: Demucs / PSOLA / pedalboard" -ForegroundColor Cyan
+  Invoke-PipInstall -UseUv $hasUv -Arguments @("demucs", "psola", "pedalboard")
 } else {
-  Write-Host "==> ข้าม optional Remix deps" -ForegroundColor Yellow
-  Write-Host "   ถ้าต้องการเปิดใช้ stem split / auto-tune / vocal FX แบบเต็ม:" -ForegroundColor DarkYellow
-  Write-Host "   ..\\scripts\\setup_windows.ps1 -InstallOptionalRemixDeps" -ForegroundColor DarkYellow
-  Write-Host "   หมายเหตุ: psola/pedalboard มีผลด้าน license ตาม docs/ROADMAP_MUSIC.md" -ForegroundColor DarkYellow
+  Write-Host "==> Skipping optional Remix dependencies" -ForegroundColor Yellow
+  Write-Host "   To enable full stem split / auto-tune / vocal FX support:" -ForegroundColor DarkYellow
+  Write-Host "   ..\..\tools\dev\setup_windows.ps1 -InstallOptionalRemixDeps" -ForegroundColor DarkYellow
+  Write-Host "   Note: psola/pedalboard have license implications. See docs/product/ROADMAP_MUSIC.md" -ForegroundColor DarkYellow
 }
 
-Write-Host "==> เตรียมไฟล์ config" -ForegroundColor Cyan
+Write-Host "==> Preparing .env" -ForegroundColor Cyan
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 
 Write-Host ""
-Write-Host "เสร็จแล้ว! รันเซิร์ฟเวอร์ด้วย:" -ForegroundColor Green
+Write-Host "Done. Start the API with:" -ForegroundColor Green
 Write-Host "  .\.venv\Scripts\Activate.ps1 ; uvicorn app.main:app --port 8756" -ForegroundColor Yellow
-Write-Host "เปิด http://127.0.0.1:8756/docs"
+Write-Host "Open http://127.0.0.1:8756/docs"

@@ -1,12 +1,49 @@
-{
-  "registry_version": "1.0.0",
-  "governed_scope": ["README.md", "MEMORY.md", "docs/MASTER_PLAN.md", "docs/PHASE_0_REVIEW.md", ".brain/rca/2026-07-19-remix-masterplan-gate.md", "docs/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md"],
-  "items": [
-    { "id": "DOC-0001", "path": "README.md", "version": "0.1.0", "status": "draft" },
-    { "id": "DOC-0002", "path": "MEMORY.md", "version": "0.1.0", "status": "draft" },
-    { "id": "DOC-0003", "path": "docs/MASTER_PLAN.md", "version": "0.1.1", "status": "draft" },
-    { "id": "DOC-0004", "path": "docs/PHASE_0_REVIEW.md", "version": "0.1.1", "status": "draft" },
-    { "id": "DOC-0005", "path": ".brain/rca/2026-07-19-remix-masterplan-gate.md", "version": "0.1.0", "status": "draft" },
-    { "id": "DOC-0006", "path": "docs/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md", "version": "0.1.1", "status": "beta" }
-  ]
+﻿{
+    "registry_version":  "1.0.0",
+    "governed_scope":  [
+                           "README.md",
+                           "MEMORY.md",
+                           "docs/MASTER_PLAN.md",
+                           "docs/PHASE_0_REVIEW.md",
+                           ".brain/rca/2026-07-19-remix-masterplan-gate.md",
+                           "docs/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md"
+                       ],
+    "items":  [
+                  {
+                      "id":  "DOC-0001",
+                      "path":  "README.md",
+                      "version":  "0.1.1",
+                      "status":  "draft"
+                  },
+                  {
+                      "id":  "DOC-0002",
+                      "path":  "MEMORY.md",
+                      "version":  "0.1.0",
+                      "status":  "draft"
+                  },
+                  {
+                      "id":  "DOC-0003",
+                      "path":  "docs/MASTER_PLAN.md",
+                      "version":  "0.1.1",
+                      "status":  "draft"
+                  },
+                  {
+                      "id":  "DOC-0004",
+                      "path":  "docs/PHASE_0_REVIEW.md",
+                      "version":  "0.1.1",
+                      "status":  "draft"
+                  },
+                  {
+                      "id":  "DOC-0005",
+                      "path":  ".brain/rca/2026-07-19-remix-masterplan-gate.md",
+                      "version":  "0.1.0",
+                      "status":  "draft"
+                  },
+                  {
+                      "id":  "DOC-0006",
+                      "path":  "docs/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md",
+                      "version":  "0.1.1",
+                      "status":  "beta"
+                  }
+              ]
 }

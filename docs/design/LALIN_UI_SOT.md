@@ -23,7 +23,7 @@ thing.
 | Settings-specific runtime, model, storage, update, and impact layout | [LALIN_SETTINGS_TAB_SPEC.md](LALIN_SETTINGS_TAB_SPEC.md) |
 | Approved-design implementation sequence and exit checks | [LALIN_UI_IMPLEMENTATION_PLAN.md](LALIN_UI_IMPLEMENTATION_PLAN.md) |
 | Colour, typography, components, and visual language | [GM6_DESIGN_SYSTEM.md](GM6_DESIGN_SYSTEM.md) |
-| Current CSS tokens and component implementation | [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and `frontend/src/` |
+| Current CSS tokens and component implementation | [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and `apps/desktop/src/` |
 | Name and product-language decision | [GM6_NAMING_DECISION.md](GM6_NAMING_DECISION.md) |
 
 ## Precedence

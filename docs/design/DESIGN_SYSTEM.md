@@ -1,7 +1,7 @@
 # G-Music Design System
 
 **Status:** active
-**Source implementation:** `frontend/src/styles.css`
+**Source implementation:** `apps/desktop/src/styles.css`
 **Scope:** desktop Tauri workspace, including voice cloning profiles, Whisper configuration, and Agent Voice.
 
 **Lalin AI proposal:** [GM6_DESIGN_SYSTEM.md](GM6_DESIGN_SYSTEM.md) defines the name-locked future visual system. It does not replace this active implementation system until the controlled UI migration begins.

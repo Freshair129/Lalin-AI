@@ -16,7 +16,7 @@ The lite NSIS installer is the MVP desktop shell:
 
 The full ML workstation distribution is the production feature track for TTS, dubbing, mastering, and remix:
 
-- Uses the backend Python 3.11 venv as the current executable runtime surface.
+- Uses the API Python 3.11 venv as the current executable runtime surface; this workspace still has a legacy fallback at `backend/.venv`.
 - Requires workstation ML modules such as `torch`, `torchaudio`, `faster_whisper`, `f5_tts`, `matchering`, `pyloudnorm`, `librosa`, `demucs`, `psola`, `pedalboard`, `soundfile`, and `imageio_ffmpeg`.
 - Uses model caches outside source control, primarily Hugging Face cache and tool-specific caches.
 - Treats GPL-sensitive components as BYOM/optional components instead of bundling them into the lite installer.
@@ -49,7 +49,7 @@ This validates the current workstation surface:
 
 Define an installable or launchable workstation artifact that can be validated outside the source checkout. Acceptable candidates:
 
-- A signed workstation bootstrapper that creates/repairs the backend venv, installs optional BYOM components, and launches the lite desktop shell against the workstation backend.
+- A signed workstation bootstrapper that creates/repairs the API venv, installs optional BYOM components, and launches the lite desktop shell against the workstation backend.
 - A separate workstation sidecar bundle with explicit license prompts and optional component gates.
 - A documented local workstation mode with one-click launchers and mandatory smoke output capture.
 

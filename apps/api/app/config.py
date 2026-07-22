@@ -19,6 +19,9 @@ TtsEngine = Literal["f5", "xtts"]
 
 
 def _repo_root() -> Path:
+    for parent in Path(__file__).resolve().parents:
+        if (parent / ".git").exists() or (parent / "PRODUCT.md").exists():
+            return parent
     return Path(__file__).resolve().parents[2]
 
 

@@ -7,7 +7,7 @@ import struct
 import zlib
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[2] / "frontend" / "src-tauri" / "icons"
+OUT = Path(__file__).resolve().parents[2] / "apps" / "desktop" / "src-tauri" / "icons"
 OUT.mkdir(parents=True, exist_ok=True)
 
 BG = (74, 107, 255)   # accent

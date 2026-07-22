@@ -18,14 +18,17 @@ This document defines the target repository architecture. Phase 1 consolidated d
 
 ## Current Tree Truth
 
-- `frontend/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
-- `backend/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
+- `apps/desktop/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
+- `apps/api/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
 - `tools/`: canonical developer, build, and verification tooling.
 - `scripts/`: compatibility shims that forward old commands to `tools/*`.
 - `docs/`: product, design, architecture, operations, validation, RCA, and archive folders after Phase 1.
 - `runtime/`: canonical local runtime state after Phase 3. `runtime/data` owns uploads, outputs, voices, projects, and workspace files.
+- `backend/`: legacy generated artifacts and local venv fallback; no longer app source.
+- `frontend/`: legacy generated artifacts; no longer app source.
 - `backend/data/`: legacy runtime location; no longer canonical after Phase 3.
 - `data/`, `output/`, `queue/`, `state/`: root placeholder or legacy local state folders; not canonical runtime architecture.
+- `apps/`: canonical app root after Phase 4.
 - `keys/`: updater signing key material and related secrets; must remain gitignored.
 - `.brain/rca/`: RCA evidence currently outside `docs/`.
 
@@ -101,8 +104,8 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 
 ## Verification Gates
 
-- Frontend build: `cd frontend && npm run build`
-- Backend compile: `cd backend && .venv\Scripts\python.exe -m compileall -q app`
+- Frontend build: `cd apps\desktop && npm run build`
+- Backend compile: `cd apps\api && ..\..\backend\.venv\Scripts\python.exe -m compileall -q app`
 - Diff hygiene: `git diff --check`
 - Runtime smoke gates live in `tools/verify`; `scripts/` wrappers remain valid for old commands.
 
@@ -110,6 +113,8 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.6b | 2026-07-22 | beta | Updated current tree truth after Phase 4 app source migration. | uncommitted | LALIN |
+| 0.1.5b | 2026-07-22 | beta | Added Phase 4 target app root note while preserving current frontend/backend truth. | uncommitted | LALIN |
 | 0.1.4b | 2026-07-22 | beta | Updated current tree truth after Phase 3 runtime migration. | uncommitted | LALIN |
 | 0.1.3b | 2026-07-22 | beta | Recorded Phase 3 runtime audit truth: actual data is still under backend/data. | uncommitted | LALIN |
 | 0.1.2b | 2026-07-22 | beta | Updated tooling truth after Phase 2 scripts-to-tools consolidation. | uncommitted | LALIN |

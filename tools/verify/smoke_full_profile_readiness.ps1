@@ -5,9 +5,12 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
-$backendDir = Join-Path $root "backend"
+$backendDir = Join-Path $root "apps\api"
 if ([string]::IsNullOrWhiteSpace($PythonPath)) {
     $PythonPath = Join-Path $backendDir ".venv\Scripts\python.exe"
+    if (-not (Test-Path $PythonPath)) {
+        $PythonPath = Join-Path $root "backend\.venv\Scripts\python.exe"
+    }
 }
 
 if (-not (Test-Path $PythonPath)) {

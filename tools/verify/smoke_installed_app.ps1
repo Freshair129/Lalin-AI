@@ -8,15 +8,15 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
 if ([string]::IsNullOrWhiteSpace($InstallerPath)) {
-    $InstallerPath = Join-Path $root "frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe"
+    $InstallerPath = Join-Path $root "apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe"
 }
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
-    $InstallDir = Join-Path $root "frontend\src-tauri\target\installed-smoke"
+    $InstallDir = Join-Path $root "apps\desktop\src-tauri\target\installed-smoke"
 }
 
 $installer = Resolve-Path -LiteralPath $InstallerPath -ErrorAction Stop
 $installRoot = [System.IO.Path]::GetFullPath($InstallDir)
-$repoTarget = [System.IO.Path]::GetFullPath((Join-Path $root "frontend\src-tauri\target"))
+$repoTarget = [System.IO.Path]::GetFullPath((Join-Path $root "apps\desktop\src-tauri\target"))
 
 function Test-PathWithinRoot {
     param(

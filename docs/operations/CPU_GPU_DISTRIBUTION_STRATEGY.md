@@ -11,7 +11,7 @@ G-Music has two runtime lanes:
 
 ## Current Workstation Evidence
 
-`backend\runtime_device_report.py` reports this workstation state:
+`apps\api\runtime_device_report.py` reports this workstation state:
 
 - Python: `3.11.15`
 - ASR config default: `cuda`, `float16`
@@ -44,10 +44,10 @@ $env:TTS_DEVICE = "cpu"
 
 ## Validation Command
 
-Run from `backend\`:
+Run from `apps\api\`:
 
 ```powershell
-.\.venv\Scripts\python.exe runtime_device_report.py
+..\..\backend\.venv\Scripts\python.exe runtime_device_report.py
 ```
 
 The command must exit nonzero if required runtime modules are missing.

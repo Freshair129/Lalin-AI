@@ -336,7 +336,7 @@ data/
 
 ### 6.3 Configuration Schema
 
-ดูรายละเอียดทั้งหมดใน `backend/app/config.py` — ทุกค่าตั้งผ่าน environment variables / `.env`
+ดูรายละเอียดทั้งหมดใน `apps/api/app/config.py` — ทุกค่าตั้งผ่าน environment variables / `.env`
 
 ---
 

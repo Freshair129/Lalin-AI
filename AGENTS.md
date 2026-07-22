@@ -21,40 +21,41 @@
 - archive: `docs/archive/UI_SITEMAP.md` และเอกสาร GM6/proposal ที่ superseded
 
 ## โครงสร้าง
-- `backend/` — FastAPI + ML pipelines (Python **3.11**)
+- `apps/api/` — FastAPI + ML pipelines (Python **3.11**)
   - `app/brain/` — สมอง LLM (`base.py` interface, `ollama_provider.py`, `cloud_provider.py`, `factory.py` สลับสด)
   - `app/pipelines/` — `asr.py` (faster-whisper), `tts.py` (F5-TTS โคลนเสียง), `dubbing.py` (orchestrate), `mastering.py` (Matchering), `music.py` (remix: Demucs/autotune/FX/mix/master)
   - `app/routers/` — REST endpoints (รวม `music.py` → `POST /music/remix`), `app/jobs/` — งานเบื้องหลัง + WebSocket progress
   - `app/services/voices.py` — คลังเสียง, `app/utils/ffmpeg.py` — ffmpeg แบบฝังในตัว
-- `frontend/` — Tauri + React + Vite (แท็บ: คลังเสียง/อ่านข้อความ/พากย์/mastering/สมอง + **Remix** กำลังทำ) — theme: **Cinemaro** (นีออนไลม์) ใน `src/styles.css`
+- `apps/desktop/` — Tauri + React + Vite (แท็บ: คลังเสียง/อ่านข้อความ/พากย์/mastering/สมอง + **Remix** กำลังทำ) — theme: **Cinemaro** (นีออนไลม์) ใน `src/styles.css`
 - `keys/` — Tauri updater signing key (**gitignored** — อย่า commit)
 - `tools/dev/` — developer setup and runtime utilities (`setup_windows.ps1`, `prewarm_ollama.ps1`)
 - `tools/build/` — build utilities (`make_icons.py`, `build_sidecar.ps1`, `build_installer.ps1`)
 - `tools/verify/` — smoke and release verification utilities
 - `scripts/` — compatibility shims for older commands; canonical scripts live in `tools/*`
 - `runtime/` — local generated/user state; gitignored (`runtime/data` owns uploads, outputs, voices, projects, workspace)
+- `backend/` / `frontend/` — legacy generated artifacts only after Phase 4; app source lives in `apps/*`
 
 ## คำสั่งที่ใช้บ่อย
 ```powershell
 # backend (เปิด venv ก่อนเสมอ)
-cd D:\G-Music\backend ; .\.venv\Scripts\Activate.ps1
+cd D:\G-Music\apps\api ; ..\..\backend\.venv\Scripts\Activate.ps1
 uvicorn app.main:app --port 8756          # http://127.0.0.1:8756/docs
 
 # frontend
-cd D:\G-Music\frontend
+cd D:\G-Music\apps\desktop
 npm run dev          # เบราว์เซอร์ (เร็ว ทดสอบ UI)
 npm run tauri dev    # desktop app
 npm run build        # ตรวจ TypeScript + build
 
 # smoke test โคลนเสียงไทย
-cd D:\G-Music\backend ; .venv\Scripts\python.exe smoke_tts.py
+cd D:\G-Music\apps\api ; ..\..\backend\.venv\Scripts\python.exe smoke_tts.py
 
 # build ตัวติดตั้ง .exe (NSIS + เซ็น updater)
 powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 ```
 
 ## สภาพแวดล้อม (เครื่องนี้)
-- **ต้องใช้ Python 3.11** — torch/f5-tts ยังไม่มี wheel สำหรับ 3.12/3.13. venv อยู่ที่ `backend/.venv` (สร้างด้วย `uv`)
+- **ต้องใช้ Python 3.11** — torch/f5-tts ยังไม่มี wheel สำหรับ 3.12/3.13. venv ปัจจุบันยังอยู่ที่ `backend/.venv` เป็น legacy local fallback; canonical ใหม่คือ `apps/api/.venv` เมื่อสร้างใหม่
 - GPU: **RTX 3060 12GB**, torch **2.5.1+cu121** (CUDA True)
 - ติดตั้งใช้ `uv pip install`; torch ต้องระบุ `--index-url https://download.pytorch.org/whl/cu121`
 - **Ollama รันอยู่แล้ว** บนเครื่อง — โมเดลภาษาไทยที่ดี: `hf.co/iapp/chinda-qwen3-4b-gguf:Q4_K_M`

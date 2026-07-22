@@ -1,7 +1,7 @@
 # Roadmap — Music / "Suno Finishing Studio"
 
 **วันที่:** 2026-06-28
-**สถานะ:** Proof-of-concept พิสูจน์แล้วบน RTX 3060 12GB — โค้ดรวมที่ [backend/app/pipelines/music.py](../backend/app/pipelines/music.py)
+**สถานะ:** Proof-of-concept พิสูจน์แล้วบน RTX 3060 12GB — โค้ดรวมที่ [apps/api/app/pipelines/music.py](../../apps/api/app/pipelines/music.py)
 **ที่มา:** ทดลองจริงกับเพลง Suno (`D:\suno\*.mp3`) + reference beat (`D:\ref1\*.mp4`)
 
 ---
@@ -89,7 +89,7 @@ uv pip install demucs psola pedalboard
 
 ## 6. โครงสร้างโค้ด
 
-[`backend/app/pipelines/music.py`](../backend/app/pipelines/music.py) — โมดูลรวม (lazy import ทุก heavy dep):
+[`apps/api/app/pipelines/music.py`](../../apps/api/app/pipelines/music.py) — โมดูลรวม (lazy import ทุก heavy dep):
 
 | ฟังก์ชัน | หน้าที่ |
 |---------|--------|
@@ -114,7 +114,7 @@ uv pip install demucs psola pedalboard
 ### 🟢 เฟส A — เอาของที่พิสูจน์แล้วขึ้นแอป
 - [x] เพิ่ม deps เป็น optional install ใน setup script (+ ตรวจตอน runtime)
 - [x] Router truth-sync: `POST /music/remix`, `POST /music/export`, and `POST /mastering` are implemented through `jobs.spawn()`.
-- [x] Remix LUFS/peak gate: `backend/smoke_remix.py` now verifies output LUFS and peak ceiling after writing the file.
+- [x] Remix LUFS/peak gate: `apps/api/smoke_remix.py` now verifies output LUFS and peak ceiling after writing the file.
 - [x] UI: หน้า "Remix" ใช้งานได้แล้วในแอป มี source + beat upload, autotune/FX toggle, manual/auto offset, target LUFS, progress, และ output feedback
 - [x] เอกสารและ setup path sync ตรงกับ implementation ปัจจุบัน
 

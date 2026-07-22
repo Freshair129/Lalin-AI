@@ -6,17 +6,17 @@ Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS i
 
 Validated:
 - `powershell -ExecutionPolicy Bypass -File tools\build\build_sidecar.ps1`
-- `cargo check --manifest-path frontend\src-tauri\Cargo.toml`
-- Direct sidecar runtime smoke: launch `frontend\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe`, then `GET http://127.0.0.1:8756/health`
+- `cargo check --manifest-path apps\desktop\src-tauri\Cargo.toml`
+- Direct sidecar runtime smoke: launch `apps\desktop\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe`, then `GET http://127.0.0.1:8756/health`
 - `powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1`
-- Local NSIS artifact: `frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe`
+- Local NSIS artifact: `apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe`
 - `powershell -ExecutionPolicy Bypass -File tools\verify\smoke_installed_app.ps1`
-- Installed-app layout: `G-Music.exe`, `g-music-backend.exe`, and adjacent `_internal` under `frontend\src-tauri\target\installed-smoke`
+- Installed-app layout: `G-Music.exe`, `g-music-backend.exe`, and adjacent `_internal` under `apps\desktop\src-tauri\target\installed-smoke`
 - `powershell -ExecutionPolicy Bypass -File tools\verify\smoke_full_profile_readiness.ps1`
 - Full-profile readiness: ML workstation modules are installed and TTS/dubbing/mastering/remix routes mount under `create_app("full")`
 - `powershell -ExecutionPolicy Bypass -File tools\verify\smoke_workstation_features.ps1`
 - Workstation feature smoke: F5 Thai TTS, dubbing, auto mastering, and remix write real outputs and pass subtitles/loudness/peak gates where applicable
-- `cd backend; .\.venv\Scripts\python.exe runtime_device_report.py`
+- `cd apps\api; ..\..\backend\.venv\Scripts\python.exe runtime_device_report.py`
 - CPU/GPU strategy: this workstation has CUDA-capable Torch/CTranslate2 on RTX 3060, while ASR/TTS speech smokes use CPU fallback when CUDA speech libraries are unstable
 
 Still not fully production-complete:
@@ -40,13 +40,13 @@ The default packaged sidecar uses the lite backend profile. It serves shell/MVP 
 
 ## Source Files
 
-- `backend/sidecar_entry.py`: versioned PyInstaller entrypoint. It imports `app.sidecar_lite.app` so local packaging does not collect ML-heavy router dependencies.
-- `backend/app/sidecar_lite.py`: lite FastAPI app for packaged MVP shell endpoints.
-- `backend/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
-- `tools/build/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `frontend/src-tauri/binaries/`.
+- `apps/api/sidecar_entry.py`: versioned PyInstaller entrypoint. It imports `app.sidecar_lite.app` so local packaging does not collect ML-heavy router dependencies.
+- `apps/api/app/sidecar_lite.py`: lite FastAPI app for packaged MVP shell endpoints.
+- `apps/api/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
+- `tools/build/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `apps/desktop/src-tauri/binaries/`.
 - `tools/build/build_installer.ps1`: builds the Tauri NSIS installer from the generated sidecar. Default local validation mode gates on a stable setup executable because this Windows Tauri wrapper may not reliably exit after artifact generation.
-- `frontend/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and maps `binaries/_internal/` to installed `_internal/` so PyInstaller resources sit beside the installed sidecar executable.
-- `frontend/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup and stores the child process in Tauri state.
+- `apps/desktop/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and maps `binaries/_internal/` to installed `_internal/` so PyInstaller resources sit beside the installed sidecar executable.
+- `apps/desktop/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup and stores the child process in Tauri state.
 
 ## Build Flow
 
@@ -57,26 +57,26 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_sidecar.ps1
 ```
 
 The script:
-- Requires `backend\.venv\Scripts\python.exe`.
-- Requires `backend\sidecar_entry.py`.
+- Requires `backend\.venv\Scripts\python.exe` legacy fallback or `apps\api\.venv\Scripts\python.exe`.
+- Requires `apps\api\sidecar_entry.py`.
 - Bootstraps `pip` with `ensurepip` if needed.
-- Installs `pyinstaller` into the backend venv if missing.
+- Installs `pyinstaller` into the API venv if missing.
 - Detects the Rust target triple with `rustc -vV`, falling back to `x86_64-pc-windows-msvc`.
-- Removes stale `backend\dist`, `backend\build`, and `backend\g-music-backend.spec`.
+- Removes stale `apps\api\dist`, `apps\api\build`, and `apps\api\g-music-backend.spec`.
 - Runs PyInstaller in `--onedir --console` mode.
-- Copies the onedir output into `frontend\src-tauri\binaries\`.
+- Copies the onedir output into `apps\desktop\src-tauri\binaries\`.
 - Renames the executable to `g-music-backend-<target-triple>.exe`, which Tauri expects for `externalBin`.
 
 Current lite-profile payload evidence:
 
 ```text
-frontend\src-tauri\binaries total: 167,857,355 bytes (160.08 MB)
+apps\desktop\src-tauri\binaries total: 167,857,355 bytes (160.08 MB)
 ```
 
 Expected local build output:
 
 ```text
-frontend/src-tauri/binaries/
+apps/desktop/src-tauri/binaries/
   g-music-backend-x86_64-pc-windows-msvc.exe
   _internal/
 ```
@@ -88,7 +88,7 @@ These files are generated artifacts and are intentionally ignored by git.
 After building the sidecar, run:
 
 ```powershell
-cargo check --manifest-path frontend\src-tauri\Cargo.toml
+cargo check --manifest-path apps\desktop\src-tauri\Cargo.toml
 ```
 
 This validates that:
@@ -99,7 +99,7 @@ This validates that:
 Runtime smoke:
 
 ```powershell
-$exe = Resolve-Path frontend\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe
+$exe = Resolve-Path apps\desktop\src-tauri\binaries\g-music-backend-x86_64-pc-windows-msvc.exe
 $p = Start-Process -FilePath $exe -WorkingDirectory (Split-Path $exe) -WindowStyle Hidden -PassThru
 Invoke-RestMethod -Uri "http://127.0.0.1:8756/health"
 Stop-Process -Id $p.Id -Force
@@ -137,7 +137,7 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 Expected local artifact:
 
 ```text
-frontend\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe
+apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe
 ```
 
 Current artifact evidence:

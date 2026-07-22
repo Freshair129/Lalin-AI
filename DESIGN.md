@@ -53,12 +53,12 @@ The rail order is fixed:
 
 ## Current Implementation Anchors
 
-- Shell: `frontend/src/App.tsx`
-- Global styles and shell dimensions: `frontend/src/styles.css`
-- Runtime footer source: `frontend/src/hooks/useRuntimeActivity.ts`
-- Runtime status endpoint: `backend/app/routers/health.py`
-- Arrange editor: `frontend/src/components/RemixPanel.tsx`
-- Timeline dock: `frontend/src/components/StudioDock.tsx`
+- Shell: `apps/desktop/src/App.tsx`
+- Global styles and shell dimensions: `apps/desktop/src/styles.css`
+- Runtime footer source: `apps/desktop/src/hooks/useRuntimeActivity.ts`
+- Runtime status endpoint: `apps/api/app/routers/health.py`
+- Arrange editor: `apps/desktop/src/components/RemixPanel.tsx`
+- Timeline dock: `apps/desktop/src/components/StudioDock.tsx`
 
 ## Component Rules
 

@@ -6,14 +6,14 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
 $keyPath = Join-Path $root "keys\g-music.key"
-$frontendDir = Join-Path $root "frontend"
-$bundleDir = Join-Path $root "frontend\src-tauri\target\release\bundle\nsis"
+$frontendDir = Join-Path $root "apps\desktop"
+$bundleDir = Join-Path $frontendDir "src-tauri\target\release\bundle\nsis"
 $tauriCli = Join-Path $frontendDir "node_modules\.bin\tauri.cmd"
 $setupPath = Join-Path $bundleDir "G-Music_0.1.0_x64-setup.exe"
 $setupSigPath = Join-Path $bundleDir "G-Music_0.1.0_x64-setup.exe.sig"
-$buildLog = Join-Path $root "frontend\src-tauri\target\release\bundle\tauri-build.log"
-$buildErr = Join-Path $root "frontend\src-tauri\target\release\bundle\tauri-build.err"
-$releaseBuildConfig = Join-Path $root "frontend\src-tauri\target\release\bundle\tauri-release-no-updater.json"
+$buildLog = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-build.log"
+$buildErr = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-build.err"
+$releaseBuildConfig = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-release-no-updater.json"
 
 function Test-ArtifactReady {
     param(
@@ -104,7 +104,7 @@ if (-not $WithUpdaterArtifacts) {
 
 if (-not (Test-Path $tauriCli)) {
     Write-Host "[!] Missing local Tauri CLI: $tauriCli" -ForegroundColor Red
-    Write-Host "    Run npm install in frontend first." -ForegroundColor Yellow
+    Write-Host "    Run npm install in apps\desktop first." -ForegroundColor Yellow
     exit 1
 }
 

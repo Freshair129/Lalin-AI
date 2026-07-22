@@ -36,7 +36,9 @@
 
 ```
 G-Music/
-├─ backend/            FastAPI + ML pipelines (Python)
+├─ apps/
+│  ├─ api/             FastAPI + ML pipelines (Python)
+│  └─ desktop/         Tauri + React desktop app
 │  ├─ app/
 │  │  ├─ main.py
 │  │  ├─ config.py
@@ -47,7 +49,8 @@ G-Music/
 │  │  └─ jobs/         งานเบื้องหลัง
 │  ├─ requirements.txt
 │  └─ .env.example
-├─ frontend/           Tauri + React (Phase 2)
+├─ backend/            legacy generated artifacts / local venv fallback
+├─ frontend/           legacy generated artifacts
 ├─ tools/              dev/build/verify tooling
 ├─ scripts/            compatibility shims for older commands
 ├─ runtime/            local generated/user state (gitignored)
@@ -59,7 +62,7 @@ G-Music/
 ต้องมี **Python 3.10/3.11** และ (แนะนำ) GPU NVIDIA + CUDA
 
 ```powershell
-cd D:\G-Music\backend
+cd D:\G-Music\apps\api
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt          # ไลบรารีหลัก (เบา)
@@ -91,7 +94,7 @@ CLOUD_MODEL=claude-opus-4-8
 ## รัน Frontend (Tauri / เว็บ)
 
 ```powershell
-cd D:\G-Music\frontend
+cd D:\G-Music\apps\desktop
 npm install
 npm run dev            # เปิดในเบราว์เซอร์ http://localhost:5173
 # หรือเป็น desktop app:

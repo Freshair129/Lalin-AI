@@ -6,14 +6,18 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
-$backendDir = Join-Path $root "backend"
-$venvPy = Join-Path $backendDir ".venv\Scripts\python.exe"
-$venvPyInstaller = Join-Path $backendDir ".venv\Scripts\pyinstaller.exe"
+$backendDir = Join-Path $root "apps\api"
+$venvDir = Join-Path $backendDir ".venv"
+if (-not (Test-Path (Join-Path $venvDir "Scripts\python.exe"))) {
+    $venvDir = Join-Path $root "backend\.venv"
+}
+$venvPy = Join-Path $venvDir "Scripts\python.exe"
+$venvPyInstaller = Join-Path $venvDir "Scripts\pyinstaller.exe"
 $distDir = Join-Path $backendDir "dist"
 $buildDir = Join-Path $backendDir "build"
 $specName = "g-music-backend"
 $specFile = Join-Path $backendDir "$specName.spec"
-$sidecarDir = Join-Path $root "frontend\src-tauri\binaries"
+$sidecarDir = Join-Path $root "apps\desktop\src-tauri\binaries"
 $entryScript = Join-Path $backendDir "sidecar_entry.py"
 $profile = $Profile
 if ([string]::IsNullOrWhiteSpace($profile)) {
@@ -29,7 +33,7 @@ Write-Host "=====================================================" -ForegroundCo
 
 if (-not (Test-Path $venvPy)) {
     Write-Host "[!] Missing backend venv: $venvPy" -ForegroundColor Red
-    Write-Host "    Run: powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1" -ForegroundColor Yellow
+    Write-Host "    Run from apps\api: powershell -ExecutionPolicy Bypass -File ..\..\tools\dev\setup_windows.ps1" -ForegroundColor Yellow
     exit 1
 }
 Write-Host "[*] Found venv: $venvPy" -ForegroundColor Green
