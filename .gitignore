@@ -39,6 +39,10 @@ apps/desktop/dist/
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/target-stale*/
 apps/desktop/src-tauri/binaries/
+apps/mcp/node_modules/
+apps/mcp/dist/
+packages/contracts/node_modules/
+packages/contracts/dist/
 
 # Packaging build artifacts
 backend/build/

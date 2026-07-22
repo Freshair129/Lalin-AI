@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Phase 1, Phase 2, Phase 3, and Phase 4 are executed. Later phases are still candidate plans and must not be treated as already migrated.
+Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 are executed.
 
 ## Goals
 
@@ -88,15 +88,18 @@ Acceptance:
 - sidecar packaging still finds its binary and resources.
 - updater config is unchanged unless a rename release gate approves it.
 
-## Phase 5: Contracts Package
+## Phase 5: Contracts Package + MCP
+
+Executed. See `docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md`.
 
 Create `packages/contracts/` only when at least one shared contract is generated or hand-maintained:
 
 - OpenAPI schema snapshot.
 - TypeScript client or shared API types.
 - job/runtime status schemas.
+- MCP tool input/output schemas.
 
-Acceptance: desktop imports contracts from `packages/contracts`, not from API internals.
+Acceptance: desktop and MCP import contracts from `packages/contracts`, not from API internals.
 
 ## Rollback Rules
 
@@ -109,6 +112,8 @@ Acceptance: desktop imports contracts from `packages/contracts`, not from API in
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.8b | 2026-07-22 | beta | Phase 5 contracts package and safe MCP server executed. | uncommitted | LALIN |
+| 0.1.7b | 2026-07-22 | beta | Added Phase 5 contracts and MCP candidate plan pointer. | uncommitted | LALIN |
 | 0.1.6b | 2026-07-22 | beta | Phase 4 app folder migration executed. | uncommitted | LALIN |
 | 0.1.5b | 2026-07-22 | beta | Added Phase 4 app folder migration plan pointer and kept phase candidate-gated. | uncommitted | LALIN |
 | 0.1.4b | 2026-07-22 | beta | Phase 3 runtime config and data migration executed. | uncommitted | LALIN |

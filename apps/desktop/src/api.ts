@@ -1,5 +1,26 @@
 // API client สำหรับคุยกับ G-Music backend (FastAPI ที่พอร์ต 8756)
 
+import type {
+  AgentActResult,
+  BrainConfig,
+  HealthResponse,
+  ProjectDocument,
+  ProjectMeta,
+  SpeechConfig,
+  Voice,
+} from "@lalin/contracts";
+
+export type {
+  AgentActResult,
+  AgentMutation,
+  BrainConfig,
+  HealthResponse,
+  ProjectDocument,
+  ProjectMeta,
+  SpeechConfig,
+  Voice,
+} from "@lalin/contracts";
+
 export const API_BASE =
   (import.meta as any).env?.VITE_API_BASE ?? "http://127.0.0.1:8756";
 
@@ -12,15 +33,6 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
 }
 
 // ── Brain ─────────────────────────────────────────────────
-export interface BrainConfig {
-  provider: string;
-  model?: string;
-  ollama_base_url?: string;
-  cloud_provider?: string;
-  base_url?: string;
-  has_api_key?: boolean;
-}
-
 export const brain = {
   getConfig: () => req<{ config: BrainConfig; health: any }>("/brain/config"),
   setConfig: (body: Record<string, unknown>) =>
@@ -38,17 +50,6 @@ export const brain = {
 };
 
 // ── Voices ────────────────────────────────────────────────
-export interface Voice {
-  id: string;
-  name: string;
-  ref_text: string;
-  language: string;
-  source?: "upload" | "microphone";
-  consent?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export const voices = {
   list: () => req<{ voices: Voice[] }>("/voices"),
   upload: (form: FormData) =>
@@ -59,15 +60,6 @@ export const voices = {
     req<{ deleted: string }>(`/voices/${id}`, { method: "DELETE" }),
 };
 
-export interface SpeechProfile { id: string; label: string; note: string; }
-export interface SpeechConfig {
-  asr_model: string;
-  asr_device: string;
-  asr_compute_type: string;
-  profiles: SpeechProfile[];
-  asr_available: boolean;
-  tts_available: boolean;
-}
 export const speech = {
   getConfig: () => req<SpeechConfig>("/speech/config"),
   setASRModel: (model: string) => req<{ ok: boolean; asr_model?: string; error?: string }>("/speech/config", {
@@ -76,14 +68,6 @@ export const speech = {
 };
 
 // ── Agent (mix copilot — LLM เสนอ mutations ให้ apply เอง) ──
-export interface AgentMutation {
-  op: string;
-  args: Record<string, unknown>;
-}
-export interface AgentActResult {
-  reply: string;
-  mutations: AgentMutation[];
-}
 export const agent = {
   act: (message: string, project: Record<string, unknown>) =>
     req<AgentActResult>("/agent/act", {
@@ -199,7 +183,6 @@ export const plugins = {
 };
 
 // ── Projects (workspace save/load) ────────────────────────
-export interface ProjectMeta { id: string; name: string; }
 export const projects = {
   list: () => req<{ projects: ProjectMeta[] }>("/projects"),
   save: (name: string, data: Record<string, unknown>) =>
@@ -208,7 +191,7 @@ export const projects = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, data }),
     }),
-  get: (id: string) => req<{ id: string; name: string; data: Record<string, unknown> }>(`/projects/${id}`),
+  get: (id: string) => req<ProjectDocument>(`/projects/${id}`),
   update: (id: string, name: string, data: Record<string, unknown>) =>
     req<{ id: string; name: string }>(`/projects/${id}`, {
       method: "PUT",
@@ -275,5 +258,5 @@ export const runtime = {
 };
 
 export async function health() {
-  return req<{ status: string; brain: any }>("/health");
+  return req<HealthResponse>("/health");
 }

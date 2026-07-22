@@ -20,6 +20,8 @@ This document defines the target repository architecture. Phase 1 consolidated d
 
 - `apps/desktop/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
 - `apps/api/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
+- `apps/mcp/`: local stdio MCP server that exposes read/propose tools backed by the API.
+- `packages/contracts/`: shared TypeScript contracts and JSON Schemas for desktop/API/MCP boundaries.
 - `tools/`: canonical developer, build, and verification tooling.
 - `scripts/`: compatibility shims that forward old commands to `tools/*`.
 - `docs/`: product, design, architecture, operations, validation, RCA, and archive folders after Phase 1.
@@ -67,7 +69,7 @@ This document defines the target repository architecture. Phase 1 consolidated d
 |---|---|---|
 | `apps/desktop` | Tauri shell, React UI, desktop packaging config | `frontend/` |
 | `apps/api` | FastAPI routes, ML pipelines, sidecar profiles | `backend/` |
-| `packages/contracts` | Shared API schemas and generated client types | not yet extracted |
+| `packages/contracts` | Shared API, runtime, job, agent, and MCP schemas | extracted in Phase 5 |
 | `tools/dev` | local launchers and developer workflows | moved setup/runtime scripts |
 | `tools/build` | sidecar, installer, updater build steps | moved build scripts |
 | `tools/verify` | smoke tests and release checks | moved smoke scripts, validation docs |
@@ -88,6 +90,7 @@ Do not add Nx, Turborepo, Bazel, or Lerna in the first migration. The repo curre
 - `apps/desktop` may call `apps/api` through HTTP/WebSocket contracts only.
 - `apps/api` must not import frontend code.
 - `packages/contracts` must not import app runtime code.
+- `apps/mcp` may call `apps/api` through HTTP/WebSocket contracts only and must import shared schemas from `packages/contracts`.
 - `tools/*` may orchestrate apps but must not become runtime dependencies.
 - `runtime/*` is local generated state, not an import root.
 
@@ -104,7 +107,9 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 
 ## Verification Gates
 
+- Contracts build: `cd packages\contracts && npm run build`
 - Frontend build: `cd apps\desktop && npm run build`
+- MCP build: `cd apps\mcp && npm run build`
 - Backend compile: `cd apps\api && ..\..\backend\.venv\Scripts\python.exe -m compileall -q app`
 - Diff hygiene: `git diff --check`
 - Runtime smoke gates live in `tools/verify`; `scripts/` wrappers remain valid for old commands.
@@ -113,6 +118,8 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.8b | 2026-07-22 | beta | Updated tree truth and verification gates after Phase 5 contracts and MCP implementation. | uncommitted | LALIN |
+| 0.1.7b | 2026-07-22 | beta | Added Phase 5 MCP dependency boundary and contract consumer rule. | uncommitted | LALIN |
 | 0.1.6b | 2026-07-22 | beta | Updated current tree truth after Phase 4 app source migration. | uncommitted | LALIN |
 | 0.1.5b | 2026-07-22 | beta | Added Phase 4 target app root note while preserving current frontend/backend truth. | uncommitted | LALIN |
 | 0.1.4b | 2026-07-22 | beta | Updated current tree truth after Phase 3 runtime migration. | uncommitted | LALIN |

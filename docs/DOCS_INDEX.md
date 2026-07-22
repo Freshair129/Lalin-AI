@@ -29,6 +29,7 @@ attributes:
 - `docs/architecture/PHASE3_RUNTIME_MOVE_MAP.md`: exact runtime data move map and rollback guide.
 - `docs/architecture/PHASE4_APP_FOLDER_MIGRATION_PLAN.md`: app folder migration audit, move policy, blockers, and validation gates.
 - `docs/architecture/PHASE4_APP_MOVE_MAP.md`: exact app source move map and rollback guide.
+- `docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md`: executed shared contracts and MCP integration plan.
 - `docs/architecture/SPEC.md`: technical system specification.
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
@@ -95,6 +96,8 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.8b | 2026-07-22 | beta | Updated Phase 5 contracts and MCP plan status after implementation. | uncommitted | LALIN |
+| 0.1.7b | 2026-07-22 | beta | Added Phase 5 contracts and MCP plan to the canonical architecture index. | uncommitted | LALIN |
 | 0.1.6b | 2026-07-22 | beta | Added Phase 4 executed app move map to the canonical architecture index. | uncommitted | LALIN |
 | 0.1.5b | 2026-07-22 | beta | Added Phase 4 app folder migration plan to the canonical architecture index. | uncommitted | LALIN |
 | 0.1.4b | 2026-07-22 | beta | Added executed Phase 3 runtime move map to the canonical architecture index. | uncommitted | LALIN |
