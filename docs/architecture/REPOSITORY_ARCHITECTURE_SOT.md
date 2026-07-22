@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-This document defines the target repository architecture. Phase 1 consolidated documentation folders. Phase 2 consolidated executable tooling under `tools/`; `scripts/` now contains compatibility shims only.
+This document defines the target repository architecture. Phase 1 consolidated documentation folders. Phase 2 consolidated executable tooling under `tools/`; `scripts/` now contains compatibility shims only. Phase 5 added the first shared contracts package and local MCP app. Phase 6A added root workspace orchestration.
 
 ## Current Tree Truth
 
@@ -83,7 +83,14 @@ This document defines the target repository architecture. Phase 1 consolidated d
 
 ## Tooling Decision
 
-Do not add Nx, Turborepo, Bazel, or Lerna in the first migration. The repo currently has two real applications and no extracted shared package. Native package scripts plus stable wrapper scripts are enough until `packages/contracts` becomes active or CI needs affected-build orchestration.
+Do not add Nx, Turborepo, Bazel, or Lerna in Phase 6. The repo now has a real shared package, so root orchestration is justified, but native npm workspaces are still the smallest adequate tool.
+
+Phase 6A executed target:
+
+- private root npm workspace;
+- workspaces: `apps/desktop`, `apps/mcp`, `packages/contracts`;
+- root scripts for Node builds, API compile, and Tauri check;
+- no child lockfile deletion in the first workspace slice.
 
 ## Dependency Boundaries
 
@@ -113,11 +120,14 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 - Backend compile: `cd apps\api && ..\..\backend\.venv\Scripts\python.exe -m compileall -q app`
 - Diff hygiene: `git diff --check`
 - Runtime smoke gates live in `tools/verify`; `scripts/` wrappers remain valid for old commands.
+- Root full check: `npm run check:all`
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.10b | 2026-07-22 | beta | Marked Phase 6A root workspace orchestration executed and added root check gate. | uncommitted | LALIN |
+| 0.1.9b | 2026-07-22 | candidate | Added Phase 6 native npm workspace orchestration target after contracts became active. | uncommitted | LALIN |
 | 0.1.8b | 2026-07-22 | beta | Updated tree truth and verification gates after Phase 5 contracts and MCP implementation. | uncommitted | LALIN |
 | 0.1.7b | 2026-07-22 | beta | Added Phase 5 MCP dependency boundary and contract consumer rule. | uncommitted | LALIN |
 | 0.1.6b | 2026-07-22 | beta | Updated current tree truth after Phase 4 app source migration. | uncommitted | LALIN |

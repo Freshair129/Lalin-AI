@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 are executed.
+Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6A are executed.
 
 ## Goals
 
@@ -101,6 +101,18 @@ Create `packages/contracts/` only when at least one shared contract is generated
 
 Acceptance: desktop and MCP import contracts from `packages/contracts`, not from API internals.
 
+## Phase 6: Root Workspace Orchestration
+
+Executed. See `docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md`.
+
+Add root-level orchestration after the repo gained a real shared package and MCP app:
+
+- private native npm workspace metadata;
+- root build/check scripts for contracts, MCP, desktop, API compile, and Tauri check;
+- optional minimal CI that calls the root scripts.
+
+Acceptance: root validation runs from the repo root while existing per-package commands continue to work.
+
 ## Rollback Rules
 
 - Every move phase must produce a move map.
@@ -112,6 +124,8 @@ Acceptance: desktop and MCP import contracts from `packages/contracts`, not from
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.10b | 2026-07-22 | beta | Phase 6A native workspace orchestration executed. | uncommitted | LALIN |
+| 0.1.9b | 2026-07-22 | candidate | Added Phase 6 native workspace orchestration proposal. | uncommitted | LALIN |
 | 0.1.8b | 2026-07-22 | beta | Phase 5 contracts package and safe MCP server executed. | uncommitted | LALIN |
 | 0.1.7b | 2026-07-22 | beta | Added Phase 5 contracts and MCP candidate plan pointer. | uncommitted | LALIN |
 | 0.1.6b | 2026-07-22 | beta | Phase 4 app folder migration executed. | uncommitted | LALIN |
