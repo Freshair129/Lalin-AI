@@ -31,6 +31,7 @@ attributes:
 - `docs/architecture/PHASE4_APP_MOVE_MAP.md`: exact app source move map and rollback guide.
 - `docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md`: executed shared contracts and MCP integration plan.
 - `docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md`: executed root workspace orchestration plan.
+- `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`: executed GitHub Actions release workflow repair plan.
 - `docs/architecture/SPEC.md`: technical system specification.
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
@@ -79,6 +80,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 - `docs/validation/SPRINT*_VALIDATION.md`
 - `.brain/rca/*.md`
+- `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
 - `docs/rca/RCA--LOCAL-LLM-DISPATCH.md`
 - `docs/rca/REPORT--LOCAL-LLM-DISPATCH.md`
 
@@ -97,6 +99,8 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.12b | 2026-07-23 | beta | Updated Phase 7 release workflow plan and RCA status after implementation. | uncommitted | LALIN |
+| 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow plan and RCA pointer. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Updated Phase 6 workspace orchestration plan status after implementation. | uncommitted | LALIN |
 | 0.1.9b | 2026-07-22 | candidate | Added Phase 6 workspace orchestration plan to the canonical architecture index. | uncommitted | LALIN |
 | 0.1.8b | 2026-07-22 | beta | Updated Phase 5 contracts and MCP plan status after implementation. | uncommitted | LALIN |

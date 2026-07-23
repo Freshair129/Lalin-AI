@@ -121,11 +121,14 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 - Diff hygiene: `git diff --check`
 - Runtime smoke gates live in `tools/verify`; `scripts/` wrappers remain valid for old commands.
 - Root full check: `npm run check:all`
+- Release workflow path repair is executed in `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.12b | 2026-07-23 | beta | Marked Phase 7 release workflow repair executed. | uncommitted | LALIN |
+| 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow repair pointer. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Marked Phase 6A root workspace orchestration executed and added root check gate. | uncommitted | LALIN |
 | 0.1.9b | 2026-07-22 | candidate | Added Phase 6 native npm workspace orchestration target after contracts became active. | uncommitted | LALIN |
 | 0.1.8b | 2026-07-22 | beta | Updated tree truth and verification gates after Phase 5 contracts and MCP implementation. | uncommitted | LALIN |

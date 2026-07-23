@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6A are executed.
+Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6A, and Phase 7 are executed.
 
 ## Goals
 
@@ -113,6 +113,14 @@ Add root-level orchestration after the repo gained a real shared package and MCP
 
 Acceptance: root validation runs from the repo root while existing per-package commands continue to work.
 
+## Phase 7: Release Workflow Repair
+
+Executed. See `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`.
+
+Repair GitHub Actions release automation after the app source moved from `frontend/` to `apps/desktop/`.
+
+Acceptance: release workflow points at canonical app paths, runs root validation before packaging, and remains draft-only.
+
 ## Rollback Rules
 
 - Every move phase must produce a move map.
@@ -124,6 +132,8 @@ Acceptance: root validation runs from the repo root while existing per-package c
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.12b | 2026-07-23 | beta | Phase 7 release workflow repair executed. | uncommitted | LALIN |
+| 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow repair proposal. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Phase 6A native workspace orchestration executed. | uncommitted | LALIN |
 | 0.1.9b | 2026-07-22 | candidate | Added Phase 6 native workspace orchestration proposal. | uncommitted | LALIN |
 | 0.1.8b | 2026-07-22 | beta | Phase 5 contracts package and safe MCP server executed. | uncommitted | LALIN |
