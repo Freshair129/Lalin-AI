@@ -20,8 +20,9 @@ This file is the new product-level source of truth. It documents the intended pr
 
 - Public brand: Lalin AI
 - Desktop product: Lalin Studio
-- Current repository and compatibility name: G-Music
-- Current GitHub remote: `https://github.com/Freshair129/G-Music.git`
+- Current repository: `Freshair129/Lalin-AI`
+- Legacy compatibility name: G-Music
+- Current GitHub remote: `https://github.com/Freshair129/Lalin-AI.git`
 - Current desktop package identity: `G-Music`, `com.gmusic.app`, `g-music-backend`
 
 ## Register
@@ -78,4 +79,5 @@ The approved desktop shell has eight top-level tabs:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-07-24 | beta | Updated repository identity after GitHub rename to Lalin-AI. | uncommitted | LALIN |
 | 0.1.0b | 2026-07-22 | beta | Created product identity SOT from current codebase and approved Lalin direction. | uncommitted | Codex |

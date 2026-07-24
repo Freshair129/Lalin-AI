@@ -33,6 +33,7 @@ This document defines the target repository architecture. Phase 1 consolidated d
 - `apps/`: canonical app root after Phase 4.
 - `keys/`: updater signing key material and related secrets; must remain gitignored.
 - `.brain/rca/`: RCA evidence currently outside `docs/`.
+- GitHub repository: `Freshair129/Lalin-AI`.
 
 ## Target Tree
 
@@ -112,6 +113,8 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 - sidecar binary name
 - existing data paths and project files
 
+The repository name is no longer a compatibility identifier; it is now `Lalin-AI`.
+
 ## Verification Gates
 
 - Contracts build: `cd packages\contracts && npm run build`
@@ -127,6 +130,7 @@ The Lalin rename is product-facing first. The following identifiers stay in comp
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.13b | 2026-07-24 | beta | Updated repository identity after GitHub rename to Lalin-AI. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Marked Phase 7 release workflow repair executed. | uncommitted | LALIN |
 | 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow repair pointer. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Marked Phase 6A root workspace orchestration executed and added root check gate. | uncommitted | LALIN |

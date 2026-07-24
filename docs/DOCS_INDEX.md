@@ -32,6 +32,7 @@ attributes:
 - `docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md`: executed shared contracts and MCP integration plan.
 - `docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md`: executed root workspace orchestration plan.
 - `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`: executed GitHub Actions release workflow repair plan.
+- `docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md`: executed GitHub repository rename and presentation readiness note.
 - `docs/architecture/SPEC.md`: technical system specification.
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
@@ -95,10 +96,16 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 - proposal packs beginning with `docs/archive/PROPOSED_`
 - old sprint and RC planning files once their facts are represented in canonical docs.
 
+## Presentation Docs
+
+- `docs/presentation/lalin-ai-launch/index.html`: local presentation landing page for the internal demo.
+- `docs/presentation/lalin-ai-launch/READINESS.md`: real/mockup/pending readiness note.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.13b | 2026-07-24 | beta | Added Phase 8 repo rename and presentation readiness docs. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Updated Phase 7 release workflow plan and RCA status after implementation. | uncommitted | LALIN |
 | 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow plan and RCA pointer. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Updated Phase 6 workspace orchestration plan status after implementation. | uncommitted | LALIN |

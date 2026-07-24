@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6A, and Phase 7 are executed.
+Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6A, Phase 7, and Phase 8 repository rename are executed.
 
 ## Goals
 
@@ -121,6 +121,12 @@ Repair GitHub Actions release automation after the app source moved from `fronte
 
 Acceptance: release workflow points at canonical app paths, runs root validation before packaging, and remains draft-only.
 
+## Phase 8: Repository Rename + Presentation Readiness
+
+Executed. See `docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md`.
+
+Repository identity moved from `Freshair129/G-Music` to `Freshair129/Lalin-AI`. Packaging identifiers remain compatibility-bound until a separate migration gate.
+
 ## Rollback Rules
 
 - Every move phase must produce a move map.
@@ -132,6 +138,7 @@ Acceptance: release workflow points at canonical app paths, runs root validation
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.13b | 2026-07-24 | beta | Recorded GitHub repo rename to Lalin-AI and presentation readiness package. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Phase 7 release workflow repair executed. | uncommitted | LALIN |
 | 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow repair proposal. | uncommitted | LALIN |
 | 0.1.10b | 2026-07-22 | beta | Phase 6A native workspace orchestration executed. | uncommitted | LALIN |
