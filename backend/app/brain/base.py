@@ -4,6 +4,7 @@
   • แปลภาษา (สำหรับ dubbing)  • เขียน/ปรับสคริปต์  • สรุป/จัดรูปข้อความ
 โค้ดส่วนอื่นเรียกผ่าน interface นี้เท่านั้น จึงสลับ cloud ↔ ollama ได้อิสระ
 """
+# @req FR-05 — interface LLMProvider กลางของทุก provider (เอื้อ NFR-06)
 from __future__ import annotations
 
 import abc

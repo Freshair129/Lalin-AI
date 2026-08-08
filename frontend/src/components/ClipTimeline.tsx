@@ -1,3 +1,4 @@
+// @req FR-09 — clip timeline หลัก (ลาก/ตัด/เล่น + metronome)
 import { useEffect, useRef, useState } from "react";
 import type { ClipEngine } from "../timeline/useClipEngine";
 import { uid, makeClip, type Clip } from "../timeline/clipModel";

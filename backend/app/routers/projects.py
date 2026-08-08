@@ -1,4 +1,5 @@
 """บันทึก/โหลดโปรเจกต์ (workspace) — แชร์ข้ามเครื่องที่ต่อ backend เดียวกันได้"""
+# @req FR-10 — projects: บันทึก/โหลด workspace
 from __future__ import annotations
 
 import json

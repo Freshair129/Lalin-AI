@@ -1,3 +1,4 @@
+# @req FR-03 — dubbing เต็มสาย: ASR → แปล → clone → fit → mix → subtitle → mux
 """Dubbing pipeline — พากย์เสียงทับวิดีโอ/เสียงต้นฉบับ
 
 ขั้นตอน:

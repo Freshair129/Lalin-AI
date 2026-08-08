@@ -1,4 +1,5 @@
 """จัดการคลังเสียง: อัปโหลด/ดู/ลบ ตัวอย่างเสียงสำหรับโคลน"""
+# @req FR-01 — คลังเสียง (อัปโหลด/ลิสต์/ลบ)
 from __future__ import annotations
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile

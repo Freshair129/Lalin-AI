@@ -1,3 +1,5 @@
+// @req FR-14 — Mix Copilot: คุยกับ agent แล้ว commit mutations แบบ undo ได้
+// @spec AI-AGT-001 — ฝั่ง frontend ของ propose-only agent
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { agent, type AgentMutation } from "../api";

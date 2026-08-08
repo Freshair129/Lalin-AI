@@ -1,3 +1,4 @@
+// @req FR-05 — UI ตั้งค่าสมอง (สลับ local/cloud)
 import { useEffect, useState } from "react";
 import { brain, type BrainConfig } from "../api";
 

@@ -1,3 +1,4 @@
+// @req FR-09 — clip operations (pure/immutable) ของ timeline
 /**
  * ops.ts — Pure, immutable operations on the clip-timeline Project model.
  * ไม่มี side effects, ไม่ mutate input — ทุก function คืน Project ใหม่เสมอ

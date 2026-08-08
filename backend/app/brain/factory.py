@@ -3,6 +3,7 @@
 เก็บ instance ปัจจุบันไว้ใน module-level state เพื่อให้สลับ cloud ↔ ollama
 ได้สดผ่าน /brain/config โดยไม่ต้องรีสตาร์ตเซิร์ฟเวอร์
 """
+# @req FR-05 — hot-swap provider ตอนรันไทม์ (FR-05.3)
 from __future__ import annotations
 
 from dataclasses import dataclass

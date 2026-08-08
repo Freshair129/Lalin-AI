@@ -1,4 +1,5 @@
 """ดูสถานะงาน + ติดตามความคืบหน้าแบบเรียลไทม์ผ่าน WebSocket"""
+# @req FR-06 — job system + WebSocket progress
 from __future__ import annotations
 
 import asyncio

@@ -1,3 +1,4 @@
+// @req FR-01 — UI คลังเสียง (อัปโหลด/ลิสต์/ลบ)
 import { useEffect, useState } from "react";
 import { voices, type Voice } from "../api";
 

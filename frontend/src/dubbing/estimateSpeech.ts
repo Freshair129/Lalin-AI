@@ -1,3 +1,4 @@
+// @req FR-03 — ประมาณความยาวเสียงพูด ใช้เกลาบทให้พอดี slot (FR-03.6)
 // estimateSpeech.ts — ประมาณความยาวเสียงพูดจากข้อความ (heuristic) ใช้เกลาบทให้พอดี slot
 // สร้างโดย local model (Ollama qwen3:14.8B, warm=5.6s) ผ่าน anti-error-loop + Verify Gate ✅
 // (acceptance: "hello world"/en=1.014, ""/en=0, "สวัสดีครับ"/th=2.3)

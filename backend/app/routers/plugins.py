@@ -1,3 +1,5 @@
+# @req FR-11 — plugin manager
+# @spec AI-ETH-003 BR-002 — dep GPL เป็น optional เสมอ ห้าม bundle ใน core ที่ขาย
 """Plugins — สถานะ dep เสริม (optional/GPL, BYOM: Bring-Your-Own-Model/plugin)
 
 เช็คว่า pedalboard/psola/matchering ติดตั้งอยู่ไหม (ด้วยการ import ลองดู) เพื่อให้

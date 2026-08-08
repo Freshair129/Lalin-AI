@@ -1,3 +1,4 @@
+# @req NFR-02 — health check สถานะ server + brain (รองรับ FR-05.6)
 from fastapi import APIRouter
 
 from ..brain import current_summary, get_brain

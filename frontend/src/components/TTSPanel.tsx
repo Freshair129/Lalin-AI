@@ -1,3 +1,4 @@
+// @req FR-02 — UI อ่านข้อความ + โคลนเสียง
 import { useEffect, useState } from "react";
 import { files, tts, voices as voicesApi, type Voice } from "../api";
 import { useJob } from "../useJob";

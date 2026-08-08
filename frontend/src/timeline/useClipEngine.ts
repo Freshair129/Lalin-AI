@@ -1,3 +1,4 @@
+// @req FR-09 — timeline engine: Project state + undo/redo + selection
 import { useCallback, useRef, useState } from "react";
 import { type Project, type Clip, uid } from "./clipModel";
 import * as ops from "./ops";

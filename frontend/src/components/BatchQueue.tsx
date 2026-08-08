@@ -1,3 +1,4 @@
+// @req FR-13 — UI คิวประมวลผลชุด
 import { useState } from "react";
 import { useBatchQueue, type BatchKind, type BatchItem } from "../useBatchQueue";
 

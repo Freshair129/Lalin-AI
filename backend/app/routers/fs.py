@@ -1,4 +1,5 @@
 """File-system manager — browse/create/rename/move/delete ภายใน workspace dir"""
+# @req FR-15 — file manager ใน workspace
 from __future__ import annotations
 
 import shutil

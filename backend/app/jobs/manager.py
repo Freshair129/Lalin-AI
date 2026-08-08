@@ -3,6 +3,7 @@
 ไปป์ไลน์เสียงใช้เวลานาน (โหลดโมเดล/สังเคราะห์) จึงรันเป็น job แล้วให้ UI
 subscribe ฟังความคืบหน้าแบบเรียลไทม์
 """
+# @req FR-06 — job manager + progress ผ่าน WebSocket
 from __future__ import annotations
 
 import asyncio

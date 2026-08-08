@@ -1,3 +1,4 @@
+// @req FR-09 — มุมมอง timeline (waveform track view)
 import { useEffect, useRef, useState } from "react";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 

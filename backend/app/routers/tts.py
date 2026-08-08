@@ -1,4 +1,5 @@
 """สังเคราะห์เสียงจากข้อความด้วยเสียงที่โคลน (รันเป็น job)"""
+# @req FR-02 — TTS + voice cloning (progress ผ่าน job/WS ตาม FR-02.7)
 from __future__ import annotations
 
 import asyncio
