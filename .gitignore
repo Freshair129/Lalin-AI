@@ -34,3 +34,21 @@ Thumbs.db
 # backend runtime logs (transient)
 backend/backend.log
 backend/backend.err
+
+# ── Monorepo scaffolds / build artifacts (ไม่มี source จริง — ดู E-risk R-009) ──
+# apps/* ตรวจแล้ว (2026-08-09) เป็น ghosts ทั้งหมด: api=.pyc, mcp=dist+node_modules,
+# desktop=sidecar bundle ~55k ไฟล์ — source of truth จริงคือ backend/ + frontend/
+# ⚠️ ถ้าจะย้าย source เข้า monorepo จริง ให้ลบ apps/ กับ packages/ ออกจากไฟล์นี้ก่อน
+apps/
+packages/
+
+# PyInstaller sidecar build output (ตัว .spec track ไว้แล้ว — output ไม่เอา)
+backend/build/
+backend/dist/
+backend/sidecar-smoke.*
+
+# Runtime state/data ของผู้ใช้ (workspace/projects)
+runtime/
+
+# Dev-swarm orchestration (เครื่องมือเฉพาะเครื่อง + bench data + ledger)
+orchestration/
