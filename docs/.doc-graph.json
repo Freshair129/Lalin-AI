@@ -1,0 +1,3067 @@
+{
+  "version": "1.0.0",
+  "generated_by": "rwang:doc-graph",
+  "generated_at": "2026-08-09T06:19:02+07:00",
+  "template": "aiml-project (hybrid merge — เอกสารเดิมคงที่, เพิ่ม ai-system/ + appendices/)",
+  "id_scheme": {
+    "note": "FR/NFR ใช้เลข 2 หลักตามธรรมเนียมเดิมใน SRS (FR-01, FR-04b) — prefix ใหม่ใช้ 3 หลัก",
+    "counters": {
+      "FR": "FR-09",
+      "NFR": "NFR-07",
+      "SDD": "SDD-001",
+      "SEC": "SEC-001",
+      "AI-AGT": "AI-AGT-006",
+      "AI-ETH": "AI-ETH-005",
+      "BR": "BR-003",
+      "AC": "AC-001",
+      "DR": "DR-004",
+      "IR": "IR-001",
+      "R": "R-010"
+    }
+  },
+  "standards": [
+    "IEEE 29148-2018",
+    "IEEE 1016-2009",
+    "ISO/IEC 42001",
+    "IEEE 830-1998 (legacy — SRS เดิม)"
+  ],
+  "stats": {
+    "total_nodes": 180,
+    "total_edges": 222,
+    "stale_edges": 8,
+    "stale_nodes": 2,
+    "contradiction_edges": 0,
+    "coverage": {
+      "requirements_with_code_annotations": "61% (22/36)",
+      "requirements_with_tests": "2% (1/36)",
+      "code_files_referenced_by_docs": "2% (2/76)",
+      "code_files_with_tests": "3% (3/76)",
+      "structured_annotations_found": 55,
+      "unstructured_req_refs_found": 59
+    }
+  },
+  "nodes": [
+    {
+      "id": "api:DELETE:/fs",
+      "type": "api_endpoint",
+      "label": "DELETE /fs",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:DELETE:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "DELETE /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:DELETE:/voices/{voice_id}",
+      "type": "api_endpoint",
+      "label": "DELETE /voices/{voice_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/brain/config",
+      "type": "api_endpoint",
+      "label": "GET /brain/config",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/files/download/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/download/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/files/export/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/export/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/files/input/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/input/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/fs",
+      "type": "api_endpoint",
+      "label": "GET /fs",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/health",
+      "type": "api_endpoint",
+      "label": "GET /health",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/jobs",
+      "type": "api_endpoint",
+      "label": "GET /jobs",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/jobs/{job_id}",
+      "type": "api_endpoint",
+      "label": "GET /jobs/{job_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/packs",
+      "type": "api_endpoint",
+      "label": "GET /packs",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/packs/{pack_id}",
+      "type": "api_endpoint",
+      "label": "GET /packs/{pack_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/plugins",
+      "type": "api_endpoint",
+      "label": "GET /plugins",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/projects",
+      "type": "api_endpoint",
+      "label": "GET /projects",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "GET /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:GET:/voices",
+      "type": "api_endpoint",
+      "label": "GET /voices",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/agent/act",
+      "type": "api_endpoint",
+      "label": "POST /agent/act",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/brain/chat",
+      "type": "api_endpoint",
+      "label": "POST /brain/chat",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/brain/config",
+      "type": "api_endpoint",
+      "label": "POST /brain/config",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/brain/translate",
+      "type": "api_endpoint",
+      "label": "POST /brain/translate",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/dubbing",
+      "type": "api_endpoint",
+      "label": "POST /dubbing",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/dubbing/refine",
+      "type": "api_endpoint",
+      "label": "POST /dubbing/refine",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/files/upload",
+      "type": "api_endpoint",
+      "label": "POST /files/upload",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/fs/folder",
+      "type": "api_endpoint",
+      "label": "POST /fs/folder",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/fs/move",
+      "type": "api_endpoint",
+      "label": "POST /fs/move",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/fs/rename",
+      "type": "api_endpoint",
+      "label": "POST /fs/rename",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/fs/upload",
+      "type": "api_endpoint",
+      "label": "POST /fs/upload",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/mastering",
+      "type": "api_endpoint",
+      "label": "POST /mastering",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/music/export",
+      "type": "api_endpoint",
+      "label": "POST /music/export",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/music/remix",
+      "type": "api_endpoint",
+      "label": "POST /music/remix",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/packs/{pack_id}/download",
+      "type": "api_endpoint",
+      "label": "POST /packs/{pack_id}/download",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/plugins/{name}/install",
+      "type": "api_endpoint",
+      "label": "POST /plugins/{name}/install",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/projects",
+      "type": "api_endpoint",
+      "label": "POST /projects",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/tts",
+      "type": "api_endpoint",
+      "label": "POST /tts",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:POST:/voices",
+      "type": "api_endpoint",
+      "label": "POST /voices",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:PUT:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "PUT /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "api:WS:/jobs/ws/{job_id}",
+      "type": "api_endpoint",
+      "label": "WS /jobs/ws/{job_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:A-api-spec",
+      "type": "appendix",
+      "path": "docs/appendices/A-api-spec.md",
+      "title": "Appendix A — API Specification",
+      "hash": "6e31a8cfb2d1",
+      "prev_hash": "6e31a8cfb2d1",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:B-storage-schema",
+      "type": "appendix",
+      "path": "docs/appendices/B-storage-schema.md",
+      "title": "Appendix B — Storage Schema",
+      "hash": "268238990c10",
+      "prev_hash": "268238990c10",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:C-model-cards",
+      "type": "appendix",
+      "path": "docs/appendices/C-model-cards.md",
+      "title": "Appendix C — Model Cards Index",
+      "hash": "12121011964d",
+      "prev_hash": "12121011964d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:D-traceability",
+      "type": "appendix",
+      "path": "docs/appendices/D-traceability.md",
+      "title": "Appendix D — Traceability Matrix",
+      "hash": "37703735958c",
+      "prev_hash": "37703735958c",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:E-risk-matrix",
+      "type": "appendix",
+      "path": "docs/appendices/E-risk-matrix.md",
+      "title": "Appendix E — Risk Matrix",
+      "hash": "4db53ebde0e0",
+      "prev_hash": "4db53ebde0e0",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "appendix:F-glossary",
+      "type": "appendix",
+      "path": "docs/appendices/F-glossary.md",
+      "title": "Appendix F — Glossary",
+      "hash": "93b3dac62ad3",
+      "prev_hash": "93b3dac62ad3",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/brain/base.py",
+      "type": "code_file",
+      "path": "backend/app/brain/base.py",
+      "hash": "0a6fb2edae8f",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/brain/cloud_provider.py",
+      "type": "code_file",
+      "path": "backend/app/brain/cloud_provider.py",
+      "hash": "209bf8d4c6f1",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/brain/factory.py",
+      "type": "code_file",
+      "path": "backend/app/brain/factory.py",
+      "hash": "b027a5b18a1a",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/brain/ollama_provider.py",
+      "type": "code_file",
+      "path": "backend/app/brain/ollama_provider.py",
+      "hash": "e7ae03c099b6",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/jobs/manager.py",
+      "type": "code_file",
+      "path": "backend/app/jobs/manager.py",
+      "hash": "1a5878af1d22",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/main.py",
+      "type": "code_file",
+      "path": "backend/app/main.py",
+      "hash": "0f1778cd815b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/pipelines/asr.py",
+      "type": "code_file",
+      "path": "backend/app/pipelines/asr.py",
+      "hash": "e3d9da01dd48",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/pipelines/dubbing.py",
+      "type": "code_file",
+      "path": "backend/app/pipelines/dubbing.py",
+      "hash": "79ae57604652",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/pipelines/mastering.py",
+      "type": "code_file",
+      "path": "backend/app/pipelines/mastering.py",
+      "hash": "93e747f95083",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/pipelines/music.py",
+      "type": "code_file",
+      "path": "backend/app/pipelines/music.py",
+      "hash": "bee14675c38b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/pipelines/tts.py",
+      "type": "code_file",
+      "path": "backend/app/pipelines/tts.py",
+      "hash": "f3375cfadd3d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/agent.py",
+      "type": "code_file",
+      "path": "backend/app/routers/agent.py",
+      "hash": "0c52193f22dc",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/brain.py",
+      "type": "code_file",
+      "path": "backend/app/routers/brain.py",
+      "hash": "0cbb67e8fe92",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/dubbing.py",
+      "type": "code_file",
+      "path": "backend/app/routers/dubbing.py",
+      "hash": "ac8df5dc5251",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/files.py",
+      "type": "code_file",
+      "path": "backend/app/routers/files.py",
+      "hash": "eccf6b1de6db",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/fs.py",
+      "type": "code_file",
+      "path": "backend/app/routers/fs.py",
+      "hash": "edeaf56e550d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/health.py",
+      "type": "code_file",
+      "path": "backend/app/routers/health.py",
+      "hash": "b490568d76dd",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/jobs.py",
+      "type": "code_file",
+      "path": "backend/app/routers/jobs.py",
+      "hash": "23222df26bbc",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/mastering.py",
+      "type": "code_file",
+      "path": "backend/app/routers/mastering.py",
+      "hash": "06121d0a1fa6",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/music.py",
+      "type": "code_file",
+      "path": "backend/app/routers/music.py",
+      "hash": "4b6123e15cbd",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/packs.py",
+      "type": "code_file",
+      "path": "backend/app/routers/packs.py",
+      "hash": "1a5974cc2658",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/plugins.py",
+      "type": "code_file",
+      "path": "backend/app/routers/plugins.py",
+      "hash": "2d8061b3bdf7",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/projects.py",
+      "type": "code_file",
+      "path": "backend/app/routers/projects.py",
+      "hash": "42e04cf1ba0d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/tts.py",
+      "type": "code_file",
+      "path": "backend/app/routers/tts.py",
+      "hash": "e94e7ae35849",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/routers/voices.py",
+      "type": "code_file",
+      "path": "backend/app/routers/voices.py",
+      "hash": "61178e197ea0",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/services/voices.py",
+      "type": "code_file",
+      "path": "backend/app/services/voices.py",
+      "hash": "8bfc69e00a05",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/utils/audio.py",
+      "type": "code_file",
+      "path": "backend/app/utils/audio.py",
+      "hash": "1d00a5da45ac",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/utils/ffmpeg.py",
+      "type": "code_file",
+      "path": "backend/app/utils/ffmpeg.py",
+      "hash": "c826fb77302b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:backend/app/utils/ids.py",
+      "type": "code_file",
+      "path": "backend/app/utils/ids.py",
+      "hash": "b9ab9d37666c",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/App.tsx",
+      "type": "code_file",
+      "path": "frontend/src/App.tsx",
+      "hash": "8bcabad79f38",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/api.ts",
+      "type": "code_file",
+      "path": "frontend/src/api.ts",
+      "hash": "ee0106739bb5",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/BatchQueue.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/BatchQueue.tsx",
+      "hash": "4b83bba57580",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/BrainPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/BrainPanel.tsx",
+      "hash": "a5ad4faa9c7e",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/ChannelMeterBalance.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/ChannelMeterBalance.tsx",
+      "hash": "f99a14a294ff",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/ClipTimeline.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/ClipTimeline.tsx",
+      "hash": "93f4bef5b70b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/ContextMenu.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/ContextMenu.tsx",
+      "hash": "8f307ca1a19a",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Dialog.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Dialog.tsx",
+      "hash": "2390a1a3c68b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/DubbingPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/DubbingPanel.tsx",
+      "hash": "3239125def60",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/FileManager.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/FileManager.tsx",
+      "hash": "67f0fa85404d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/FxRack.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/FxRack.tsx",
+      "hash": "23fcd8e96d26",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/JobProgress.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/JobProgress.tsx",
+      "hash": "4fdb41eb5d20",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Knob.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Knob.tsx",
+      "hash": "7efdad6ab874",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/LibraryPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/LibraryPanel.tsx",
+      "hash": "7b4b5f112929",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/MarketplacePanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/MarketplacePanel.tsx",
+      "hash": "9ec06db42999",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/MasteringPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/MasteringPanel.tsx",
+      "hash": "1aaebacfe752",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Meter.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Meter.tsx",
+      "hash": "dabd099c0ce7",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/MicRecorder.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/MicRecorder.tsx",
+      "hash": "106e8e1e0e67",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/MixCopilot.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/MixCopilot.tsx",
+      "hash": "e9338749200a",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/NodeDesigner.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/NodeDesigner.tsx",
+      "hash": "fb5c2c767812",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/PluginsPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/PluginsPanel.tsx",
+      "hash": "d499a0e2e03b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/PropertiesPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/PropertiesPanel.tsx",
+      "hash": "bde894a9ab74",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/RemixPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/RemixPanel.tsx",
+      "hash": "35d57ba992a0",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Splitter.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Splitter.tsx",
+      "hash": "8cec32c89e37",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/StemMixer.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/StemMixer.tsx",
+      "hash": "daf251394933",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/StereoMeter.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/StereoMeter.tsx",
+      "hash": "9a9fc0dfbd4b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/StudioDock.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/StudioDock.tsx",
+      "hash": "18dc3c9b786b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/TTSPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/TTSPanel.tsx",
+      "hash": "8f4b5021198c",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Tilt.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Tilt.tsx",
+      "hash": "5dda88181ad1",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Timeline.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Timeline.tsx",
+      "hash": "834e49e26df7",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/UpdateChecker.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/UpdateChecker.tsx",
+      "hash": "3a0c4a4111ec",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/VoicesPanel.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/VoicesPanel.tsx",
+      "hash": "62e7fbb9180d",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/Waveform.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/Waveform.tsx",
+      "hash": "486253ec0a04",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/components/icons.tsx",
+      "type": "code_file",
+      "path": "frontend/src/components/icons.tsx",
+      "hash": "785f62b58fb2",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/dubbing/estimateSpeech.ts",
+      "type": "code_file",
+      "path": "frontend/src/dubbing/estimateSpeech.ts",
+      "hash": "e6c581c8bb55",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/hooks/useProjectFile.ts",
+      "type": "code_file",
+      "path": "frontend/src/hooks/useProjectFile.ts",
+      "hash": "6ac9e45888a5",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/main.tsx",
+      "type": "code_file",
+      "path": "frontend/src/main.tsx",
+      "hash": "47a739ddb07c",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/store/engineContext.tsx",
+      "type": "code_file",
+      "path": "frontend/src/store/engineContext.tsx",
+      "hash": "66ab8257d6ce",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/store/useRemixStore.ts",
+      "type": "code_file",
+      "path": "frontend/src/store/useRemixStore.ts",
+      "hash": "d1d091bbf7fe",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/styles.css",
+      "type": "code_file",
+      "path": "frontend/src/styles.css",
+      "hash": "563ace404639",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/timeline/clipModel.ts",
+      "type": "code_file",
+      "path": "frontend/src/timeline/clipModel.ts",
+      "hash": "619c6dffa01f",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/timeline/grid.ts",
+      "type": "code_file",
+      "path": "frontend/src/timeline/grid.ts",
+      "hash": "78e1dc5fd364",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/timeline/ops.ts",
+      "type": "code_file",
+      "path": "frontend/src/timeline/ops.ts",
+      "hash": "d14dfd0869ee",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/timeline/peaks.ts",
+      "type": "code_file",
+      "path": "frontend/src/timeline/peaks.ts",
+      "hash": "c410d3dd5336",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/timeline/useClipEngine.ts",
+      "type": "code_file",
+      "path": "frontend/src/timeline/useClipEngine.ts",
+      "hash": "12238d6b3da1",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/useBatchQueue.ts",
+      "type": "code_file",
+      "path": "frontend/src/useBatchQueue.ts",
+      "hash": "0761e5d0f198",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "code:frontend/src/useJob.ts",
+      "type": "code_file",
+      "path": "frontend/src/useJob.ts",
+      "hash": "664b5ab648bf",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:BLUEPRINT",
+      "type": "document",
+      "path": "docs/BLUEPRINT.yaml",
+      "title": "Machine-readable Blueprint",
+      "hash": "264f6770db76",
+      "prev_hash": "264f6770db76",
+      "status": "stale",
+      "last_verified": "2026-08-09T06:19:02+07:00",
+      "stale_reason": "26 frontend components not in doc: BatchQueue, ChannelMeterBalance, ClipTimeline, ContextMenu, Dialog, FileManager, FxRack, JobProgress..."
+    },
+    {
+      "id": "doc:COMPETITIVE_BRIEF",
+      "type": "document",
+      "path": "docs/COMPETITIVE_BRIEF.md",
+      "title": "Competitive Brief",
+      "hash": "b27956e87f82",
+      "prev_hash": "b27956e87f82",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:LOCAL_MODEL_LEDGER",
+      "type": "ledger",
+      "path": "docs/LOCAL_MODEL_LEDGER.md",
+      "title": "Local Model Dispatch Ledger (dev-time)",
+      "hash": "e1d339133620",
+      "prev_hash": "e1d339133620",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:PACKAGING_SIDECAR",
+      "type": "document",
+      "path": "docs/PACKAGING_SIDECAR.md",
+      "title": "Packaging: Backend เป็น Tauri Sidecar",
+      "hash": "c7315facb170",
+      "prev_hash": "c7315facb170",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:PRD",
+      "type": "document",
+      "path": "docs/PRD.md",
+      "title": "Product Requirements Document",
+      "hash": "953e74b0db3f",
+      "prev_hash": "953e74b0db3f",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:ROADMAP_MUSIC",
+      "type": "document",
+      "path": "docs/ROADMAP_MUSIC.md",
+      "title": "Roadmap — Music / Suno Finishing Studio",
+      "hash": "e8c3de4caff8",
+      "prev_hash": "e8c3de4caff8",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:SPEC",
+      "type": "document",
+      "path": "docs/SPEC.md",
+      "title": "Technical Specification",
+      "hash": "33f7e5d8af12",
+      "prev_hash": "33f7e5d8af12",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:SRS",
+      "type": "document",
+      "path": "docs/SRS.md",
+      "title": "Software Requirements Specification",
+      "hash": "baec5ff6db36",
+      "prev_hash": "baec5ff6db36",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:SWARM_PLAN",
+      "type": "document",
+      "path": "docs/SWARM_PLAN.md",
+      "title": "Agent Swarm Plan (dev-time)",
+      "hash": "3497e94d68e1",
+      "prev_hash": "3497e94d68e1",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:UI_SITEMAP",
+      "type": "document",
+      "path": "docs/UI_SITEMAP.md",
+      "title": "UI Sitemap · Layout · View Details",
+      "hash": "910735108f67",
+      "prev_hash": "910735108f67",
+      "status": "stale",
+      "last_verified": "2026-08-09T06:19:02+07:00",
+      "stale_reason": "26 frontend components not in doc: BatchQueue, ChannelMeterBalance, ClipTimeline, ContextMenu, Dialog, FileManager, FxRack, JobProgress..."
+    },
+    {
+      "id": "doc:ai-agent-architecture",
+      "type": "document",
+      "path": "docs/ai-system/agent-architecture.md",
+      "title": "AI Agent Architecture",
+      "hash": "42db1e456563",
+      "prev_hash": "42db1e456563",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:ai-data-pipeline",
+      "type": "document",
+      "path": "docs/ai-system/data-pipeline.md",
+      "title": "Data Pipeline",
+      "hash": "721dc32d5957",
+      "prev_hash": "721dc32d5957",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:ai-ethics-governance",
+      "type": "document",
+      "path": "docs/ai-system/ethics-governance.md",
+      "title": "AI Ethics & Governance",
+      "hash": "f8649b01ef41",
+      "prev_hash": "f8649b01ef41",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:ai-model-lifecycle",
+      "type": "document",
+      "path": "docs/ai-system/model-lifecycle.md",
+      "title": "Model Lifecycle",
+      "hash": "f3b5bf83942e",
+      "prev_hash": "f3b5bf83942e",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "doc:ai-prompt-engineering",
+      "type": "document",
+      "path": "docs/ai-system/prompt-engineering.md",
+      "title": "Prompt Engineering",
+      "hash": "1a5fd1bd311b",
+      "prev_hash": "1a5fd1bd311b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:TEMPLATE",
+      "type": "template",
+      "path": "docs/ai-system/model-cards/TEMPLATE.md",
+      "title": "Model Card Template",
+      "hash": "65a9fd2845ff",
+      "prev_hash": "65a9fd2845ff",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:chinda-qwen3-4b",
+      "type": "model-card",
+      "path": "docs/ai-system/model-cards/chinda-qwen3-4b.md",
+      "title": "chinda-qwen3-4b (Brain local)",
+      "hash": "15ee683eac42",
+      "prev_hash": "15ee683eac42",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:f5-tts-thai",
+      "type": "model-card",
+      "path": "docs/ai-system/model-cards/f5-tts-thai.md",
+      "title": "F5-TTS-THAI",
+      "hash": "4f44893f993b",
+      "prev_hash": "4f44893f993b",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:faster-whisper-large-v3",
+      "type": "model-card",
+      "path": "docs/ai-system/model-cards/faster-whisper-large-v3.md",
+      "title": "faster-whisper large-v3",
+      "hash": "d51176e7d7be",
+      "prev_hash": "d51176e7d7be",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:htdemucs",
+      "type": "model-card",
+      "path": "docs/ai-system/model-cards/htdemucs.md",
+      "title": "Demucs htdemucs",
+      "hash": "08d36cbc9497",
+      "prev_hash": "08d36cbc9497",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "model:xtts-v2",
+      "type": "model-card",
+      "path": "docs/ai-system/model-cards/xtts-v2.md",
+      "title": "XTTS v2",
+      "hash": "f13f041462ee",
+      "prev_hash": "f13f041462ee",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-AGT-001",
+      "type": "requirement",
+      "label": "AI-AGT-001",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-AGT-002",
+      "type": "requirement",
+      "label": "AI-AGT-002",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-AGT-003",
+      "type": "requirement",
+      "label": "AI-AGT-003",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-AGT-004",
+      "type": "requirement",
+      "label": "AI-AGT-004",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-AGT-005",
+      "type": "requirement",
+      "label": "AI-AGT-005",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-ETH-001",
+      "type": "requirement",
+      "label": "AI-ETH-001",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-ETH-002",
+      "type": "requirement",
+      "label": "AI-ETH-002",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-ETH-003",
+      "type": "requirement",
+      "label": "AI-ETH-003",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:AI-ETH-004",
+      "type": "requirement",
+      "label": "AI-ETH-004",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:BR-001",
+      "type": "requirement",
+      "label": "BR-001",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:BR-002",
+      "type": "requirement",
+      "label": "BR-002",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:DR-001",
+      "type": "requirement",
+      "label": "DR-001",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:DR-002",
+      "type": "requirement",
+      "label": "DR-002",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:DR-003",
+      "type": "requirement",
+      "label": "DR-003",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-01",
+      "type": "requirement",
+      "label": "FR-01",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-02",
+      "type": "requirement",
+      "label": "FR-02",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-03",
+      "type": "requirement",
+      "label": "FR-03",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-04",
+      "type": "requirement",
+      "label": "FR-04",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-04b",
+      "type": "requirement",
+      "label": "FR-04b",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-05",
+      "type": "requirement",
+      "label": "FR-05",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-06",
+      "type": "requirement",
+      "label": "FR-06",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-07",
+      "type": "requirement",
+      "label": "FR-07",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-08",
+      "type": "requirement",
+      "label": "FR-08",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-09",
+      "type": "requirement",
+      "label": "FR-09",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-10",
+      "type": "requirement",
+      "label": "FR-10",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-11",
+      "type": "requirement",
+      "label": "FR-11",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-12",
+      "type": "requirement",
+      "label": "FR-12",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-13",
+      "type": "requirement",
+      "label": "FR-13",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-14",
+      "type": "requirement",
+      "label": "FR-14",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:FR-15",
+      "type": "requirement",
+      "label": "FR-15",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-01",
+      "type": "requirement",
+      "label": "NFR-01",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-02",
+      "type": "requirement",
+      "label": "NFR-02",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-03",
+      "type": "requirement",
+      "label": "NFR-03",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-04",
+      "type": "requirement",
+      "label": "NFR-04",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-05",
+      "type": "requirement",
+      "label": "NFR-05",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "req:NFR-06",
+      "type": "requirement",
+      "label": "NFR-06",
+      "defined_in": "docs/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "test:frontend/src/timeline/grid.test.ts",
+      "type": "test",
+      "path": "frontend/src/timeline/grid.test.ts",
+      "hash": "37249eee03db",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "test:frontend/src/timeline/ops.test.ts",
+      "type": "test",
+      "path": "frontend/src/timeline/ops.test.ts",
+      "hash": "c208481535bb",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    },
+    {
+      "id": "test:frontend/src/timeline/useClipEngine.test.ts",
+      "type": "test",
+      "path": "frontend/src/timeline/useClipEngine.test.ts",
+      "hash": "bc383670c398",
+      "status": "current",
+      "last_verified": "2026-08-09T06:19:02+07:00"
+    }
+  ],
+  "edges": [
+    {
+      "from": "appendix:A-api-spec",
+      "to": "appendix:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:A-api-spec",
+      "to": "doc:BLUEPRINT",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "appendix:A-api-spec",
+      "to": "req:AI-AGT-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:A-api-spec",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:A-api-spec",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:A-api-spec",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "doc:SRS",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "req:DR-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "req:DR-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "req:DR-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:B-storage-schema",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "appendix:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:TEMPLATE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:chinda-qwen3-4b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:f5-tts-thai",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:faster-whisper-large-v3",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:htdemucs",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "model:xtts-v2",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:C-model-cards",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "doc:PACKAGING_SIDECAR",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "doc:SPEC",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:AI-AGT-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:AI-AGT-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:BR-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-04",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-07",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-08",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-09",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-10",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-11",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-12",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-13",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:FR-15",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-04",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:D-traceability",
+      "to": "req:NFR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "appendix:D-traceability",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "doc:PACKAGING_SIDECAR",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "doc:ai-model-lifecycle",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "req:BR-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:E-risk-matrix",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "appendix:F-glossary",
+      "to": "doc:SRS",
+      "type": "references",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "code:backend/app/brain/base.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/brain/base.py",
+      "to": "req:NFR-06",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/brain/cloud_provider.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/brain/factory.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/brain/ollama_provider.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/jobs/manager.py",
+      "to": "req:FR-06",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/asr.py",
+      "to": "req:FR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/dubbing.py",
+      "to": "req:FR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/mastering.py",
+      "to": "req:FR-04",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/music.py",
+      "to": "req:AI-ETH-003",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/music.py",
+      "to": "req:FR-04b",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/pipelines/tts.py",
+      "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/agent.py",
+      "to": "api:POST:/agent/act",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/agent.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "1 endpoint(s) in code not in BLUEPRINT api: POST /agent/act"
+    },
+    {
+      "from": "code:backend/app/routers/agent.py",
+      "to": "req:AI-AGT-001",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/agent.py",
+      "to": "req:FR-14",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/brain.py",
+      "to": "api:GET:/brain/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/brain.py",
+      "to": "api:POST:/brain/chat",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/brain.py",
+      "to": "api:POST:/brain/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/brain.py",
+      "to": "api:POST:/brain/translate",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/brain.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/dubbing.py",
+      "to": "api:POST:/dubbing",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/dubbing.py",
+      "to": "api:POST:/dubbing/refine",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/dubbing.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "1 endpoint(s) in code not in BLUEPRINT api: POST /dubbing/refine"
+    },
+    {
+      "from": "code:backend/app/routers/dubbing.py",
+      "to": "req:FR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "api:GET:/files/download/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "api:GET:/files/export/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "api:GET:/files/input/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "api:POST:/files/upload",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "2 endpoint(s) in code not in BLUEPRINT api: GET /files/input/{name}, GET /files/export/{name}"
+    },
+    {
+      "from": "code:backend/app/routers/files.py",
+      "to": "req:FR-07",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:DELETE:/fs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:GET:/fs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:POST:/fs/folder",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:POST:/fs/move",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:POST:/fs/rename",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "api:POST:/fs/upload",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "6 endpoint(s) in code not in BLUEPRINT api: GET /fs, POST /fs/folder, POST /fs/rename, POST /fs/move..."
+    },
+    {
+      "from": "code:backend/app/routers/fs.py",
+      "to": "req:FR-15",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/health.py",
+      "to": "api:GET:/health",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/health.py",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/health.py",
+      "to": "req:NFR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/jobs.py",
+      "to": "api:GET:/jobs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/jobs.py",
+      "to": "api:GET:/jobs/{job_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/jobs.py",
+      "to": "api:WS:/jobs/ws/{job_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/jobs.py",
+      "to": "req:FR-06",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/mastering.py",
+      "to": "api:POST:/mastering",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/mastering.py",
+      "to": "req:FR-04",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/music.py",
+      "to": "api:POST:/music/export",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/music.py",
+      "to": "api:POST:/music/remix",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/music.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "1 endpoint(s) in code not in BLUEPRINT api: POST /music/export"
+    },
+    {
+      "from": "code:backend/app/routers/music.py",
+      "to": "req:FR-04b",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/packs.py",
+      "to": "api:GET:/packs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/packs.py",
+      "to": "api:GET:/packs/{pack_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/packs.py",
+      "to": "api:POST:/packs/{pack_id}/download",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/packs.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "3 endpoint(s) in code not in BLUEPRINT api: GET /packs, GET /packs/{pack_id}, POST /packs/{pack_id}/download"
+    },
+    {
+      "from": "code:backend/app/routers/packs.py",
+      "to": "req:FR-11",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "api:GET:/plugins",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "api:POST:/plugins/{name}/install",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "2 endpoint(s) in code not in BLUEPRINT api: GET /plugins, POST /plugins/{name}/install"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "req:AI-ETH-003",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "req:BR-002",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/plugins.py",
+      "to": "req:FR-11",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "api:DELETE:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "api:GET:/projects",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "api:GET:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "api:POST:/projects",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "api:PUT:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "5 endpoint(s) in code not in BLUEPRINT api: GET /projects, POST /projects, GET /projects/{pid}, PUT /projects/{pid}..."
+    },
+    {
+      "from": "code:backend/app/routers/projects.py",
+      "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/tts.py",
+      "to": "api:POST:/tts",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/tts.py",
+      "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/voices.py",
+      "to": "api:DELETE:/voices/{voice_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/voices.py",
+      "to": "api:GET:/voices",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/voices.py",
+      "to": "api:POST:/voices",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/routers/voices.py",
+      "to": "req:FR-01",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/services/voices.py",
+      "to": "req:FR-01",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:backend/app/utils/ffmpeg.py",
+      "to": "req:NFR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/BatchQueue.tsx",
+      "to": "req:FR-13",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/BrainPanel.tsx",
+      "to": "req:FR-05",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/ClipTimeline.tsx",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/DubbingPanel.tsx",
+      "to": "req:FR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/FileManager.tsx",
+      "to": "req:FR-15",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/JobProgress.tsx",
+      "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/JobProgress.tsx",
+      "to": "req:FR-06",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/MarketplacePanel.tsx",
+      "to": "req:FR-11",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/MasteringPanel.tsx",
+      "to": "req:FR-04",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/MicRecorder.tsx",
+      "to": "req:FR-12",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/MixCopilot.tsx",
+      "to": "req:AI-AGT-001",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/MixCopilot.tsx",
+      "to": "req:FR-14",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/PluginsPanel.tsx",
+      "to": "req:FR-11",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/RemixPanel.tsx",
+      "to": "req:FR-04b",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/StudioDock.tsx",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/TTSPanel.tsx",
+      "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/Timeline.tsx",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/UpdateChecker.tsx",
+      "to": "req:FR-08",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/components/VoicesPanel.tsx",
+      "to": "req:FR-01",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/dubbing/estimateSpeech.ts",
+      "to": "req:FR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/hooks/useProjectFile.ts",
+      "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/timeline/clipModel.ts",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/timeline/grid.ts",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/timeline/ops.ts",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/timeline/peaks.ts",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/timeline/useClipEngine.ts",
+      "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:frontend/src/useBatchQueue.ts",
+      "to": "req:FR-13",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "doc:PRD",
+      "type": "syncs_with",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "syncs_with",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "doc:SPEC",
+      "type": "syncs_with",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "doc:SRS",
+      "type": "syncs_with",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "doc:UI_SITEMAP",
+      "type": "syncs_with",
+      "source": "architect-seed",
+      "status": "current"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:UI_SITEMAP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ROADMAP_MUSIC",
+      "to": "code:backend/app/pipelines/music.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ROADMAP_MUSIC",
+      "to": "doc:COMPETITIVE_BRIEF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SPEC",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SWARM_PLAN",
+      "to": "req:AI-AGT-004",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:UI_SITEMAP",
+      "to": "code:frontend/src/styles.css",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-agent-architecture",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-agent-architecture",
+      "to": "doc:SWARM_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-agent-architecture",
+      "to": "model:chinda-qwen3-4b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-agent-architecture",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-data-pipeline",
+      "to": "appendix:B-storage-schema",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-data-pipeline",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-data-pipeline",
+      "to": "req:AI-ETH-004",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-data-pipeline",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-data-pipeline",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-ethics-governance",
+      "to": "doc:COMPETITIVE_BRIEF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-ethics-governance",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "appendix:C-model-cards",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-model-lifecycle",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-prompt-engineering",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ai-prompt-engineering",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:TEMPLATE",
+      "to": "appendix:C-model-cards",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:chinda-qwen3-4b",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:chinda-qwen3-4b",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "appendix:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:f5-tts-thai",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:faster-whisper-large-v3",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:faster-whisper-large-v3",
+      "to": "doc:ai-model-lifecycle",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:faster-whisper-large-v3",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:htdemucs",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:htdemucs",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:htdemucs",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:xtts-v2",
+      "to": "appendix:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:xtts-v2",
+      "to": "doc:ai-ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:xtts-v2",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "model:xtts-v2",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/grid.test.ts",
+      "to": "code:frontend/src/timeline/grid.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/grid.test.ts",
+      "to": "req:FR-09",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/ops.test.ts",
+      "to": "code:frontend/src/timeline/ops.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/ops.test.ts",
+      "to": "req:FR-09",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/useClipEngine.test.ts",
+      "to": "code:frontend/src/timeline/useClipEngine.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:frontend/src/timeline/useClipEngine.test.ts",
+      "to": "req:FR-09",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    }
+  ]
+}

@@ -6,6 +6,20 @@
 > ⚠️ ก่อนเชื่อว่าใช้งานได้ ดู [Known limitations](#known-limitations--สิ่งที่ยังไม่ validate)
 > ท้ายเอกสาร
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | **Draft** (SCAFFOLDING — ยังไม่เคย build จริง → ดู E-risk R-006) |
+| **Author** | Boss |
+| **Created** | — (WP 5.2, ~2026-07-02) |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | ~2026-07-02 | Boss | ฉบับแรก (scaffolding) |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+
 ## เป้าหมาย
 
 ทำให้ G-Music เป็นแอป **one-click install** ที่ไม่ต้องให้ผู้ใช้ปลายทางเปิด

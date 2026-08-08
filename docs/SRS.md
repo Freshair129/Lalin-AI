@@ -3,7 +3,22 @@
 **ระบบ:** G-Music — AI Audio Studio
 **เวอร์ชัน:** 0.1.0
 **วันที่:** 2026-06-27
-**มาตรฐานอ้างอิง:** IEEE 830-1998
+**มาตรฐานอ้างอิง:** IEEE 830-1998 · IEEE 29148-2018
+
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.1.0 |
+| **Status** | Active |
+| **Author** | Boss |
+| **Created** | 2026-06-27 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-06-27 | Boss | ฉบับแรก |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+| 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
 
 ---
 
@@ -179,6 +194,89 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | FR-08.3 | ระบบต้องแสดง version ใหม่ + release notes ก่อนติดตั้ง | Must |
 | FR-08.4 | ระบบต้องดาวน์โหลด + ติดตั้ง + รีสตาร์ทได้ในแอป | Must |
 | FR-08.5 | ระบบต้องตรวจสอบ signature ก่อนติดตั้ง (minisign) | Must |
+
+### FR-09: Workspace / Timeline (พื้น DAW + clips)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-09.1 | ระบบต้องมี timeline dock เป็น "พื้น" ถาวรของ workspace แสดงบนแท็บกลุ่ม studio (Remix/TTS/Dubbing/Mastering) โดยใช้ clip engine ตัวเดียวร่วมกันทั้งแอป | Must |
+| FR-09.2 | โปรเจกต์ต้องมีโครงสร้าง tracks → clips (start/duration/offset/gain/mute/สี/fade in-out) พร้อม bpm และ key | Must |
+| FR-09.3 | ระบบต้องรองรับการแก้ไข clip: ลากย้าย (snap ตาม beat grid), slice ณ ตำแหน่งที่กำหนด, clone, ลบ, วางเพิ่ม (paste), ปรับ gain (0–1), mute, ตั้ง fade in/out ด้วยการลาก handle บน clip | Must |
+| FR-09.4 | operation แก้ไขทั้งหมดต้องเป็น pure function (ไม่ mutate input) และ undo/redo ได้ (history ≥ 100 ขั้น) | Must |
+| FR-09.5 | ระบบต้องรองรับการจัดการ track: เปลี่ยนชื่อ, เปลี่ยนสี, mute/solo/lock, ลากสลับลำดับ | Must |
+| FR-09.6 | ระบบต้องแสดง waveform ของ clip จาก audio peaks ที่ decode แล้ว | Must |
+| FR-09.7 | ระบบต้องเล่นเสียงรวมทุก track ผ่าน Web Audio API โดยเคารพ start/offset/gain/fade/mute/solo, มี pan + level meter ต่อ track และ master FX (reverb/echo/compressor) + stereo meter | Must |
+| FR-09.8 | ระบบต้องรองรับ loop region (ลากบน ruler, playback วนในช่วง) และ metronome click ตาม BPM/time signature โดย beat grid ต้องไม่มี drift สะสม | Should |
+| FR-09.9 | ระบบต้องมี stem mixer ปรับ gain แยกตาม stem (vocals/drums/bass/other, 0–1.5×) ส่งให้ remix pipeline เป็น `stem_gains` | Should |
+| FR-09.10 | โมดูล timeline หลัก (grid, ops, clip engine) ต้องมี unit test | Must |
+
+### FR-10: Projects (บันทึก/โหลดโปรเจกต์)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-10.1 | ระบบต้องบันทึกโปรเจกต์ (state ของ workspace) เป็น JSON บน backend ที่ `data/projects/<id>.json` พร้อมสร้าง id สั้นอัตโนมัติ | Must |
+| FR-10.2 | ระบบต้องมี REST CRUD: รายการ (id+name), บันทึกใหม่, โหลด, บันทึกทับ (คง id เดิม), ลบ — พร้อมตรวจ id กัน path traversal | Must |
+| FR-10.3 | UI ต้องมีวงจรไฟล์แบบ Adobe: New / Open / Save / Save As / Rename / Delete | Must |
+| FR-10.4 | ระบบต้องติดตาม dirty state (เทียบ snapshot ปัจจุบันกับ baseline ที่บันทึกล่าสุด) และถามยืนยันก่อนทิ้งงานที่ยังไม่บันทึก (New/Open) รวมทั้งเตือนก่อนปิดแอป (beforeunload) | Must |
+| FR-10.5 | ระบบต้อง autosave draft ลง localStorage ทุก 60 วินาทีเมื่อ dirty และเสนอกู้คืนเมื่อเปิดแอปใหม่หาก draft ใหม่กว่าการบันทึกล่าสุด (เลือกกู้คืนหรือทิ้งได้) | Must |
+| FR-10.6 | โปรเจกต์ที่บันทึกไว้ต้องเปิดจากเครื่องอื่นที่ต่อ backend เดียวกันได้ | Should |
+
+### FR-11: Plugin Manager + Marketplace (BYOM)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-11.1 | ระบบต้องตรวจสถานะ optional deps (pedalboard/psola/matchering) ว่าติดตั้งหรือยังโดยไม่ import จริง (`importlib.util.find_spec`) และรายงานฟีเจอร์ที่ปลดล็อก + license ของแต่ละตัว | Must |
+| FR-11.2 | ระบบต้องแสดงคำเตือน license (GPL/copyleft) ชัดเจนก่อนผู้ใช้ตัดสินใจติดตั้ง | Must |
+| FR-11.3 | ระบบต้องให้คำสั่งติดตั้ง (`uv pip install <pkg>`) พร้อมปุ่มคัดลอก โดยไม่รัน pip อัตโนมัติ (ผู้ใช้รันเองใน venv ของ backend — by design) | Must |
+| FR-11.4 | ระบบต้องมี Marketplace: แคตตาล็อก sample pack + สถานะติดตั้ง + ดาวน์โหลดรายชิ้น (v0.1: catalog mock, สถานะ in-memory — reset เมื่อรีสตาร์ต backend) | Should |
+| FR-11.5 | progress ที่ไม่มีข้อมูลความคืบหน้าจริงจาก backend ต้องแสดงแบบ indeterminate เท่านั้น (ห้ามแสดง % จำลอง) | Must |
+| FR-11.6 | UI ต้องรีเฟรชสถานะ plugin ได้ และแสดง error พร้อมปุ่มลองใหม่เมื่อดาวน์โหลด pack ล้มเหลว | Should |
+
+### FR-12: Mic Recording (บันทึกเสียงจากไมค์)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-12.1 | ระบบต้องบันทึกเสียงจากไมโครโฟนผ่าน getUserMedia + MediaRecorder (start/stop/cancel) | Must |
+| FR-12.2 | ระหว่างบันทึกต้องแสดง indicator (จุดแดงกะพริบ) + เวลาที่ผ่านไป | Must |
+| FR-12.3 | เมื่อหยุดบันทึก ระบบต้องอัปโหลดไฟล์ขึ้น backend อัตโนมัติ (`mic_<timestamp>.webm|wav`) แล้ววางเป็น clip ลงแทร็กที่ arm ไว้ (แทร็กที่เลือกอยู่) ณ ตำแหน่ง playhead | Must |
+| FR-12.4 | ระบบต้องแจ้ง error เป็นภาษาไทยเมื่อ: ไม่ได้รับสิทธิ์ไมค์ / เบราว์เซอร์ไม่รองรับ MediaRecorder / ไฟล์บันทึกว่างเปล่า / อัปโหลดล้มเหลว | Must |
+| FR-12.5 | ระบบต้องปล่อย mic stream เสมอเมื่อยกเลิกหรือ unmount (ไมค์ต้องไม่ค้าง) และกันการกดเริ่มซ้ำระหว่างรอสิทธิ์ | Must |
+| FR-12.6 | ระบบควรบันทึกเสียงที่อัดเป็นเสียงอ้างอิงเข้าคลังเสียงได้ (ตัวเลือก "ตั้งเป็น reference voice") | Should |
+
+### FR-13: Batch Queue (คิวประมวลผลชุด)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-13.1 | ระบบต้องรองรับคิวงานหลายรายการชนิด TTS / Dubbing / Mastering พร้อมชื่อรายการและพารามิเตอร์ต่อรายการ | Must |
+| FR-13.2 | คิวต้องรันทีละงานตามลำดับ — ส่งงานถัดไปเมื่องานก่อนหน้าจบ (backend รันเบื้องหลังตาม FR-06, frontend ควบคุมจังหวะการส่ง) | Must |
+| FR-13.3 | ระบบต้องติดตาม progress ของงานปัจจุบันผ่าน WebSocket จนจบ (done/error) | Must |
+| FR-13.4 | งานที่ error ต้องไม่หยุดคิว — บันทึก error ที่รายการนั้นแล้วรันงานถัดไป | Must |
+| FR-13.5 | ระบบต้อง pause ได้แบบ "หยุดหลังงานปัจจุบันเสร็จ" (ไม่ยกเลิกงานที่กำลังรัน) และกันการรันคิวซ้อนหลาย instance | Must |
+| FR-13.6 | ระบบต้องจัดการคิวได้: ลบรายการ / ล้างคิว / เลื่อนลำดับขึ้น-ลง | Must |
+| FR-13.7 | UI ต้องแสดงความคืบหน้ารวม (เสร็จ x/y + %) และสถานะรายรายการ (รอคิว/กำลังทำงาน/เสร็จ/ผิดพลาด) | Must |
+
+### FR-14: Workspace Agent + Mix Copilot
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-14.1 | ระบบต้องมี endpoint `POST /agent/act` รับคำสั่งภาษาธรรมชาติ (ไทย/อังกฤษ) พร้อม project state ปัจจุบัน | Must |
+| FR-14.2 | Brain ต้องทำงานผ่าน tool-use: read tools (get_project_state, analyze_project — ตอบแบบ deterministic ผ่าน context ไม่ต้อง round-trip) + write tools 8 ชนิด (move_clip, set_gain, set_pan, set_fx, set_lufs, mute_clip, slice_clip, reorder_track) | Must |
+| FR-14.3 | endpoint ต้อง "เสนอ" mutation เท่านั้น — ห้ามแก้ project เอง และทุก mutation ต้องผ่าน validation (op รู้จัก + required args ครบ ไม่ผ่านให้ตัดทิ้ง) | Must |
+| FR-14.4 | เมื่อคำสั่งกำกวมหรือขาดข้อมูล (เช่น ไม่รู้ clip_id) agent ต้องถามกลับแทนการเดา | Must |
+| FR-14.5 | Mix Copilot UI ต้องให้ผู้ใช้ยืนยัน mutation รายตัว ("ใช้") หรือทั้งชุด ("ใช้ทั้งหมด") ก่อน apply เสมอ | Must |
+| FR-14.6 | mutation ที่ apply ต้องผ่าน engine commit → undo ได้ (Ctrl+Z) ทุกการแก้ไขของ AI | Must |
+| FR-14.7 | op ที่ engine ยังไม่รองรับ (set_pan/set_fx/set_lufs) ต้องแสดงเป็นข้อเสนออ่านอย่างเดียวพร้อมข้อความแจ้งว่ายังไม่รองรับการ apply อัตโนมัติ | Must |
+
+### FR-15: File Manager (จัดการไฟล์ workspace)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-15.1 | ระบบต้องมี REST `/fs`: list (โฟลเดอร์ขึ้นก่อน เรียงตามชื่อ) / สร้างโฟลเดอร์ / rename / move / delete / upload ภายใต้ `data/workspace/` | Must |
+| FR-15.2 | ทุก endpoint ต้อง resolve path แล้วบังคับให้อยู่ใต้ workspace root เท่านั้น (กัน path traversal — ตอบ 400 เมื่อหลุดขอบเขต) | Must |
+| FR-15.3 | ระบบต้องห้ามลบ workspace root, ชื่อซ้ำตอบ 409, ไม่พบตอบ 404 | Must |
+| FR-15.4 | UI ต้อง browse ด้วย breadcrumb + ปุ่มขึ้นบน, สลับมุมมอง grid/list ได้, double-click เปิดโฟลเดอร์ | Must |
+| FR-15.5 | UI ต้องมี context menu คลิกขวา (Open/Rename/Delete ของรายการ, New Folder/Refresh ของพื้นหลัง) + rename แบบ inline | Must |
+| FR-15.6 | UI ควรแสดงไอคอนตามชนิด (โฟลเดอร์/ไฟล์เสียง/เอกสาร) และขนาดไฟล์ในมุมมอง list | Should |
 
 ---
 

@@ -3,6 +3,20 @@
 > แผนทำงานแบบ autonomous ขนาน อ้างอิงผลวิเคราะห์ refinement (2026-07-02)
 > ครอบคลุม: UX/UI เป็น DAW + mobile-ready · lib upgrade · agent ใน workspace · feature ที่ขาด
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | Active (dev-time — ไม่ ship ในผลิตภัณฑ์) |
+| **Author** | Boss |
+| **Created** | 2026-07-02 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-07-02 | Boss | ฉบับแรก |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph — สรุปย่ออยู่ใน ai-system/agent-architecture.md (AI-AGT-004) |
+
 ---
 
 ## 1. โครงสร้างกำลังพล (Swarm Topology)

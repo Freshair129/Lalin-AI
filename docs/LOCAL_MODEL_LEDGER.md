@@ -3,6 +3,15 @@
 ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-MODEL-ANTI-ERROR-LOOP §6/§L0.
 ก่อน dispatch งานคล้ายกันครั้งถัดไป → อ่าน "❌ PAST MISTAKES" ที่เกี่ยวข้องแล้วฉีดเข้า prompt.
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | Active (living ledger — append-only, ประวัติดูใน git) |
+| **Author** | Boss |
+| **Created** | — (ยุค swarm, ~2026-07) |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
 ## ✅ PASSED
 | task | model | latency | note |
 |---|---|---|---|
