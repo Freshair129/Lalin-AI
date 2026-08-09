@@ -21,10 +21,11 @@
 | R-006 | **Sidecar packaging ยังไม่เคย build จริง** — เอกสารระบุ SCAFFOLDING เท่านั้น | H | M — block การ ship | ต้อง build + validate 1 รอบเต็มตาม [PACKAGING_SIDECAR.md](../PACKAGING_SIDECAR.md) ก่อนถือว่าใช้ได้ | Boss |
 | R-007 | **GGUF/chat-template เสีย** ใน local model (เคยเจอ: gemma-4-12B คืน token รั่ว) | M | L | Verify Gate + ban list ใน [LOCAL_MODEL_LEDGER.md](../LOCAL_MODEL_LEDGER.md) | Boss |
 | R-008 | **Backend ไม่มีเทสต์อัตโนมัติ** — regression เงียบใน pipeline | H | M | ช่องโหว่จาก [D-traceability](D-traceability.md) · ✏️ TODO เริ่มจาก unit ของ pure functions | Boss |
-| R-009 | **ซาก build artifacts ปลอมตัวเป็น monorepo** — สแกน 2026-08-09 พบ `apps/api` มีแต่ `.pyc` 75 ไฟล์ (ไม่มี `.py` เลย), `apps/mcp` มีแต่ dist/node_modules, `apps/desktop` มีแต่ src-tauri bundle ~55k ไฟล์ — เสี่ยงคน/agent เข้าใจผิดว่าเป็น source จริงแล้วไปแก้ผิดที่ | H | M | **source of truth จริง = `backend/` + `frontend/`** · เพิ่ม `apps/**` ที่เป็น artifact ลง .gitignore หรือลบทิ้ง · ถ้าจะทำ monorepo จริงค่อยย้าย source แล้วอัปเดต doc-graph | Boss |
+| R-009 | **ซาก build artifacts ปลอมตัวเป็น monorepo** — สแกน 2026-08-09 พบ `apps/api` มีแต่ `.pyc` 75 ไฟล์ (ไม่มี `.py` เลย), `apps/mcp` มีแต่ dist/node_modules, `apps/desktop` มีแต่ src-tauri bundle ~55k ไฟล์ — เสี่ยงคน/agent เข้าใจผิดว่าเป็น source จริงแล้วไปแก้ผิดที่ | L (เดิม H) | M | ✅ **MITIGATED 2026-08-09** (commit `389e346`): เพิ่ม `apps/` `packages/` `backend/build+dist` `runtime/` `orchestration/` ลง .gitignore พร้อมคำเตือนในไฟล์ — commit เผลอ ๆ เป็นไปไม่ได้แล้ว · **source of truth จริง = `backend/` + `frontend/`** · เศษที่เหลือ: ตัวไฟล์ยังอยู่บนดิสก์ (ลบทิ้งได้ถ้าอยากเคลียร์) · ถ้าจะทำ monorepo จริง ต้องถอด `apps/` ออกจาก .gitignore ก่อน | Boss |
 
 ## Version History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-08-09 | Boss | สร้างผ่าน rwang:doc-architect |
+| 1.1.0 | 2026-08-09 | Boss | R-009: reframe เป็น artifact ghosts (จากผลสแกน) → **MITIGATED** ด้วย .gitignore (commit 389e346), โอกาส H→L |

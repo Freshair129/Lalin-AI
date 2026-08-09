@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-09T06:19:02+07:00",
+  "generated_at": "2026-08-09T07:41:25+07:00",
   "template": "aiml-project (hybrid merge — เอกสารเดิมคงที่, เพิ่ม ai-system/ + appendices/)",
   "id_scheme": {
     "note": "FR/NFR ใช้เลข 2 หลักตามธรรมเนียมเดิมใน SRS (FR-01, FR-04b) — prefix ใหม่ใช้ 3 หลัก",
@@ -46,266 +46,266 @@
       "type": "api_endpoint",
       "label": "DELETE /fs",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:DELETE:/projects/{pid}",
       "type": "api_endpoint",
       "label": "DELETE /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:DELETE:/voices/{voice_id}",
       "type": "api_endpoint",
       "label": "DELETE /voices/{voice_id}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/brain/config",
       "type": "api_endpoint",
       "label": "GET /brain/config",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/files/download/{name}",
       "type": "api_endpoint",
       "label": "GET /files/download/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/files/export/{name}",
       "type": "api_endpoint",
       "label": "GET /files/export/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/files/input/{name}",
       "type": "api_endpoint",
       "label": "GET /files/input/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/fs",
       "type": "api_endpoint",
       "label": "GET /fs",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/health",
       "type": "api_endpoint",
       "label": "GET /health",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/jobs",
       "type": "api_endpoint",
       "label": "GET /jobs",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/jobs/{job_id}",
       "type": "api_endpoint",
       "label": "GET /jobs/{job_id}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/packs",
       "type": "api_endpoint",
       "label": "GET /packs",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/packs/{pack_id}",
       "type": "api_endpoint",
       "label": "GET /packs/{pack_id}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/plugins",
       "type": "api_endpoint",
       "label": "GET /plugins",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/projects",
       "type": "api_endpoint",
       "label": "GET /projects",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/projects/{pid}",
       "type": "api_endpoint",
       "label": "GET /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:GET:/voices",
       "type": "api_endpoint",
       "label": "GET /voices",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/agent/act",
       "type": "api_endpoint",
       "label": "POST /agent/act",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/brain/chat",
       "type": "api_endpoint",
       "label": "POST /brain/chat",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/brain/config",
       "type": "api_endpoint",
       "label": "POST /brain/config",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/brain/translate",
       "type": "api_endpoint",
       "label": "POST /brain/translate",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/dubbing",
       "type": "api_endpoint",
       "label": "POST /dubbing",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/dubbing/refine",
       "type": "api_endpoint",
       "label": "POST /dubbing/refine",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/files/upload",
       "type": "api_endpoint",
       "label": "POST /files/upload",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/fs/folder",
       "type": "api_endpoint",
       "label": "POST /fs/folder",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/fs/move",
       "type": "api_endpoint",
       "label": "POST /fs/move",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/fs/rename",
       "type": "api_endpoint",
       "label": "POST /fs/rename",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/fs/upload",
       "type": "api_endpoint",
       "label": "POST /fs/upload",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/mastering",
       "type": "api_endpoint",
       "label": "POST /mastering",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/music/export",
       "type": "api_endpoint",
       "label": "POST /music/export",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/music/remix",
       "type": "api_endpoint",
       "label": "POST /music/remix",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/packs/{pack_id}/download",
       "type": "api_endpoint",
       "label": "POST /packs/{pack_id}/download",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/plugins/{name}/install",
       "type": "api_endpoint",
       "label": "POST /plugins/{name}/install",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/projects",
       "type": "api_endpoint",
       "label": "POST /projects",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/tts",
       "type": "api_endpoint",
       "label": "POST /tts",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:POST:/voices",
       "type": "api_endpoint",
       "label": "POST /voices",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:PUT:/projects/{pid}",
       "type": "api_endpoint",
       "label": "PUT /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "api:WS:/jobs/ws/{job_id}",
       "type": "api_endpoint",
       "label": "WS /jobs/ws/{job_id}",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:A-api-spec",
@@ -315,7 +315,7 @@
       "hash": "6e31a8cfb2d1",
       "prev_hash": "6e31a8cfb2d1",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:B-storage-schema",
@@ -325,7 +325,7 @@
       "hash": "268238990c10",
       "prev_hash": "268238990c10",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:C-model-cards",
@@ -335,7 +335,7 @@
       "hash": "12121011964d",
       "prev_hash": "12121011964d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:D-traceability",
@@ -345,17 +345,17 @@
       "hash": "37703735958c",
       "prev_hash": "37703735958c",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:E-risk-matrix",
       "type": "appendix",
       "path": "docs/appendices/E-risk-matrix.md",
       "title": "Appendix E — Risk Matrix",
-      "hash": "4db53ebde0e0",
+      "hash": "de604fb014a9",
       "prev_hash": "4db53ebde0e0",
-      "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "status": "changed",
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "appendix:F-glossary",
@@ -365,7 +365,7 @@
       "hash": "93b3dac62ad3",
       "prev_hash": "93b3dac62ad3",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/brain/base.py",
@@ -373,7 +373,7 @@
       "path": "backend/app/brain/base.py",
       "hash": "0a6fb2edae8f",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/brain/cloud_provider.py",
@@ -381,7 +381,7 @@
       "path": "backend/app/brain/cloud_provider.py",
       "hash": "209bf8d4c6f1",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/brain/factory.py",
@@ -389,7 +389,7 @@
       "path": "backend/app/brain/factory.py",
       "hash": "b027a5b18a1a",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/brain/ollama_provider.py",
@@ -397,7 +397,7 @@
       "path": "backend/app/brain/ollama_provider.py",
       "hash": "e7ae03c099b6",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/jobs/manager.py",
@@ -405,7 +405,7 @@
       "path": "backend/app/jobs/manager.py",
       "hash": "1a5878af1d22",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/main.py",
@@ -413,7 +413,7 @@
       "path": "backend/app/main.py",
       "hash": "0f1778cd815b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/pipelines/asr.py",
@@ -421,7 +421,7 @@
       "path": "backend/app/pipelines/asr.py",
       "hash": "e3d9da01dd48",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/pipelines/dubbing.py",
@@ -429,7 +429,7 @@
       "path": "backend/app/pipelines/dubbing.py",
       "hash": "79ae57604652",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/pipelines/mastering.py",
@@ -437,7 +437,7 @@
       "path": "backend/app/pipelines/mastering.py",
       "hash": "93e747f95083",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/pipelines/music.py",
@@ -445,7 +445,7 @@
       "path": "backend/app/pipelines/music.py",
       "hash": "bee14675c38b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/pipelines/tts.py",
@@ -453,7 +453,7 @@
       "path": "backend/app/pipelines/tts.py",
       "hash": "f3375cfadd3d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/agent.py",
@@ -461,7 +461,7 @@
       "path": "backend/app/routers/agent.py",
       "hash": "0c52193f22dc",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/brain.py",
@@ -469,7 +469,7 @@
       "path": "backend/app/routers/brain.py",
       "hash": "0cbb67e8fe92",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/dubbing.py",
@@ -477,7 +477,7 @@
       "path": "backend/app/routers/dubbing.py",
       "hash": "ac8df5dc5251",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/files.py",
@@ -485,7 +485,7 @@
       "path": "backend/app/routers/files.py",
       "hash": "eccf6b1de6db",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/fs.py",
@@ -493,7 +493,7 @@
       "path": "backend/app/routers/fs.py",
       "hash": "edeaf56e550d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/health.py",
@@ -501,7 +501,7 @@
       "path": "backend/app/routers/health.py",
       "hash": "b490568d76dd",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/jobs.py",
@@ -509,7 +509,7 @@
       "path": "backend/app/routers/jobs.py",
       "hash": "23222df26bbc",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/mastering.py",
@@ -517,7 +517,7 @@
       "path": "backend/app/routers/mastering.py",
       "hash": "06121d0a1fa6",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/music.py",
@@ -525,7 +525,7 @@
       "path": "backend/app/routers/music.py",
       "hash": "4b6123e15cbd",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/packs.py",
@@ -533,7 +533,7 @@
       "path": "backend/app/routers/packs.py",
       "hash": "1a5974cc2658",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/plugins.py",
@@ -541,7 +541,7 @@
       "path": "backend/app/routers/plugins.py",
       "hash": "2d8061b3bdf7",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/projects.py",
@@ -549,7 +549,7 @@
       "path": "backend/app/routers/projects.py",
       "hash": "42e04cf1ba0d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/tts.py",
@@ -557,7 +557,7 @@
       "path": "backend/app/routers/tts.py",
       "hash": "e94e7ae35849",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/routers/voices.py",
@@ -565,7 +565,7 @@
       "path": "backend/app/routers/voices.py",
       "hash": "61178e197ea0",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/services/voices.py",
@@ -573,7 +573,7 @@
       "path": "backend/app/services/voices.py",
       "hash": "8bfc69e00a05",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/utils/audio.py",
@@ -581,7 +581,7 @@
       "path": "backend/app/utils/audio.py",
       "hash": "1d00a5da45ac",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/utils/ffmpeg.py",
@@ -589,7 +589,7 @@
       "path": "backend/app/utils/ffmpeg.py",
       "hash": "c826fb77302b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:backend/app/utils/ids.py",
@@ -597,7 +597,7 @@
       "path": "backend/app/utils/ids.py",
       "hash": "b9ab9d37666c",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/App.tsx",
@@ -605,7 +605,7 @@
       "path": "frontend/src/App.tsx",
       "hash": "8bcabad79f38",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/api.ts",
@@ -613,7 +613,7 @@
       "path": "frontend/src/api.ts",
       "hash": "ee0106739bb5",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/BatchQueue.tsx",
@@ -621,7 +621,7 @@
       "path": "frontend/src/components/BatchQueue.tsx",
       "hash": "4b83bba57580",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/BrainPanel.tsx",
@@ -629,7 +629,7 @@
       "path": "frontend/src/components/BrainPanel.tsx",
       "hash": "a5ad4faa9c7e",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/ChannelMeterBalance.tsx",
@@ -637,7 +637,7 @@
       "path": "frontend/src/components/ChannelMeterBalance.tsx",
       "hash": "f99a14a294ff",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/ClipTimeline.tsx",
@@ -645,7 +645,7 @@
       "path": "frontend/src/components/ClipTimeline.tsx",
       "hash": "93f4bef5b70b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/ContextMenu.tsx",
@@ -653,7 +653,7 @@
       "path": "frontend/src/components/ContextMenu.tsx",
       "hash": "8f307ca1a19a",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Dialog.tsx",
@@ -661,7 +661,7 @@
       "path": "frontend/src/components/Dialog.tsx",
       "hash": "2390a1a3c68b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/DubbingPanel.tsx",
@@ -669,7 +669,7 @@
       "path": "frontend/src/components/DubbingPanel.tsx",
       "hash": "3239125def60",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/FileManager.tsx",
@@ -677,7 +677,7 @@
       "path": "frontend/src/components/FileManager.tsx",
       "hash": "67f0fa85404d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/FxRack.tsx",
@@ -685,7 +685,7 @@
       "path": "frontend/src/components/FxRack.tsx",
       "hash": "23fcd8e96d26",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/JobProgress.tsx",
@@ -693,7 +693,7 @@
       "path": "frontend/src/components/JobProgress.tsx",
       "hash": "4fdb41eb5d20",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Knob.tsx",
@@ -701,7 +701,7 @@
       "path": "frontend/src/components/Knob.tsx",
       "hash": "7efdad6ab874",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/LibraryPanel.tsx",
@@ -709,7 +709,7 @@
       "path": "frontend/src/components/LibraryPanel.tsx",
       "hash": "7b4b5f112929",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/MarketplacePanel.tsx",
@@ -717,7 +717,7 @@
       "path": "frontend/src/components/MarketplacePanel.tsx",
       "hash": "9ec06db42999",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/MasteringPanel.tsx",
@@ -725,7 +725,7 @@
       "path": "frontend/src/components/MasteringPanel.tsx",
       "hash": "1aaebacfe752",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Meter.tsx",
@@ -733,7 +733,7 @@
       "path": "frontend/src/components/Meter.tsx",
       "hash": "dabd099c0ce7",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/MicRecorder.tsx",
@@ -741,7 +741,7 @@
       "path": "frontend/src/components/MicRecorder.tsx",
       "hash": "106e8e1e0e67",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/MixCopilot.tsx",
@@ -749,7 +749,7 @@
       "path": "frontend/src/components/MixCopilot.tsx",
       "hash": "e9338749200a",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/NodeDesigner.tsx",
@@ -757,7 +757,7 @@
       "path": "frontend/src/components/NodeDesigner.tsx",
       "hash": "fb5c2c767812",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/PluginsPanel.tsx",
@@ -765,7 +765,7 @@
       "path": "frontend/src/components/PluginsPanel.tsx",
       "hash": "d499a0e2e03b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/PropertiesPanel.tsx",
@@ -773,7 +773,7 @@
       "path": "frontend/src/components/PropertiesPanel.tsx",
       "hash": "bde894a9ab74",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/RemixPanel.tsx",
@@ -781,7 +781,7 @@
       "path": "frontend/src/components/RemixPanel.tsx",
       "hash": "35d57ba992a0",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Splitter.tsx",
@@ -789,7 +789,7 @@
       "path": "frontend/src/components/Splitter.tsx",
       "hash": "8cec32c89e37",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/StemMixer.tsx",
@@ -797,7 +797,7 @@
       "path": "frontend/src/components/StemMixer.tsx",
       "hash": "daf251394933",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/StereoMeter.tsx",
@@ -805,7 +805,7 @@
       "path": "frontend/src/components/StereoMeter.tsx",
       "hash": "9a9fc0dfbd4b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/StudioDock.tsx",
@@ -813,7 +813,7 @@
       "path": "frontend/src/components/StudioDock.tsx",
       "hash": "18dc3c9b786b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/TTSPanel.tsx",
@@ -821,7 +821,7 @@
       "path": "frontend/src/components/TTSPanel.tsx",
       "hash": "8f4b5021198c",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Tilt.tsx",
@@ -829,7 +829,7 @@
       "path": "frontend/src/components/Tilt.tsx",
       "hash": "5dda88181ad1",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Timeline.tsx",
@@ -837,7 +837,7 @@
       "path": "frontend/src/components/Timeline.tsx",
       "hash": "834e49e26df7",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/UpdateChecker.tsx",
@@ -845,7 +845,7 @@
       "path": "frontend/src/components/UpdateChecker.tsx",
       "hash": "3a0c4a4111ec",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/VoicesPanel.tsx",
@@ -853,7 +853,7 @@
       "path": "frontend/src/components/VoicesPanel.tsx",
       "hash": "62e7fbb9180d",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/Waveform.tsx",
@@ -861,7 +861,7 @@
       "path": "frontend/src/components/Waveform.tsx",
       "hash": "486253ec0a04",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/components/icons.tsx",
@@ -869,7 +869,7 @@
       "path": "frontend/src/components/icons.tsx",
       "hash": "785f62b58fb2",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/dubbing/estimateSpeech.ts",
@@ -877,7 +877,7 @@
       "path": "frontend/src/dubbing/estimateSpeech.ts",
       "hash": "e6c581c8bb55",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/hooks/useProjectFile.ts",
@@ -885,7 +885,7 @@
       "path": "frontend/src/hooks/useProjectFile.ts",
       "hash": "6ac9e45888a5",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/main.tsx",
@@ -893,7 +893,7 @@
       "path": "frontend/src/main.tsx",
       "hash": "47a739ddb07c",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/store/engineContext.tsx",
@@ -901,7 +901,7 @@
       "path": "frontend/src/store/engineContext.tsx",
       "hash": "66ab8257d6ce",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/store/useRemixStore.ts",
@@ -909,7 +909,7 @@
       "path": "frontend/src/store/useRemixStore.ts",
       "hash": "d1d091bbf7fe",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/styles.css",
@@ -917,7 +917,7 @@
       "path": "frontend/src/styles.css",
       "hash": "563ace404639",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/timeline/clipModel.ts",
@@ -925,7 +925,7 @@
       "path": "frontend/src/timeline/clipModel.ts",
       "hash": "619c6dffa01f",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/timeline/grid.ts",
@@ -933,7 +933,7 @@
       "path": "frontend/src/timeline/grid.ts",
       "hash": "78e1dc5fd364",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/timeline/ops.ts",
@@ -941,7 +941,7 @@
       "path": "frontend/src/timeline/ops.ts",
       "hash": "d14dfd0869ee",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/timeline/peaks.ts",
@@ -949,7 +949,7 @@
       "path": "frontend/src/timeline/peaks.ts",
       "hash": "c410d3dd5336",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/timeline/useClipEngine.ts",
@@ -957,7 +957,7 @@
       "path": "frontend/src/timeline/useClipEngine.ts",
       "hash": "12238d6b3da1",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/useBatchQueue.ts",
@@ -965,7 +965,7 @@
       "path": "frontend/src/useBatchQueue.ts",
       "hash": "0761e5d0f198",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "code:frontend/src/useJob.ts",
@@ -973,7 +973,7 @@
       "path": "frontend/src/useJob.ts",
       "hash": "664b5ab648bf",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:BLUEPRINT",
@@ -983,7 +983,7 @@
       "hash": "264f6770db76",
       "prev_hash": "264f6770db76",
       "status": "stale",
-      "last_verified": "2026-08-09T06:19:02+07:00",
+      "last_verified": "2026-08-09T07:41:25+07:00",
       "stale_reason": "26 frontend components not in doc: BatchQueue, ChannelMeterBalance, ClipTimeline, ContextMenu, Dialog, FileManager, FxRack, JobProgress..."
     },
     {
@@ -994,7 +994,7 @@
       "hash": "b27956e87f82",
       "prev_hash": "b27956e87f82",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:LOCAL_MODEL_LEDGER",
@@ -1004,7 +1004,7 @@
       "hash": "e1d339133620",
       "prev_hash": "e1d339133620",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:PACKAGING_SIDECAR",
@@ -1014,7 +1014,7 @@
       "hash": "c7315facb170",
       "prev_hash": "c7315facb170",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:PRD",
@@ -1024,7 +1024,7 @@
       "hash": "953e74b0db3f",
       "prev_hash": "953e74b0db3f",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:ROADMAP_MUSIC",
@@ -1034,7 +1034,7 @@
       "hash": "e8c3de4caff8",
       "prev_hash": "e8c3de4caff8",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:SPEC",
@@ -1044,7 +1044,7 @@
       "hash": "33f7e5d8af12",
       "prev_hash": "33f7e5d8af12",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:SRS",
@@ -1054,7 +1054,7 @@
       "hash": "baec5ff6db36",
       "prev_hash": "baec5ff6db36",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -1064,7 +1064,7 @@
       "hash": "3497e94d68e1",
       "prev_hash": "3497e94d68e1",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:UI_SITEMAP",
@@ -1074,7 +1074,7 @@
       "hash": "910735108f67",
       "prev_hash": "910735108f67",
       "status": "stale",
-      "last_verified": "2026-08-09T06:19:02+07:00",
+      "last_verified": "2026-08-09T07:41:25+07:00",
       "stale_reason": "26 frontend components not in doc: BatchQueue, ChannelMeterBalance, ClipTimeline, ContextMenu, Dialog, FileManager, FxRack, JobProgress..."
     },
     {
@@ -1085,7 +1085,7 @@
       "hash": "42db1e456563",
       "prev_hash": "42db1e456563",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:ai-data-pipeline",
@@ -1095,7 +1095,7 @@
       "hash": "721dc32d5957",
       "prev_hash": "721dc32d5957",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:ai-ethics-governance",
@@ -1105,7 +1105,7 @@
       "hash": "f8649b01ef41",
       "prev_hash": "f8649b01ef41",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:ai-model-lifecycle",
@@ -1115,7 +1115,7 @@
       "hash": "f3b5bf83942e",
       "prev_hash": "f3b5bf83942e",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "doc:ai-prompt-engineering",
@@ -1125,7 +1125,7 @@
       "hash": "1a5fd1bd311b",
       "prev_hash": "1a5fd1bd311b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:TEMPLATE",
@@ -1135,7 +1135,7 @@
       "hash": "65a9fd2845ff",
       "prev_hash": "65a9fd2845ff",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:chinda-qwen3-4b",
@@ -1145,7 +1145,7 @@
       "hash": "15ee683eac42",
       "prev_hash": "15ee683eac42",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:f5-tts-thai",
@@ -1155,7 +1155,7 @@
       "hash": "4f44893f993b",
       "prev_hash": "4f44893f993b",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:faster-whisper-large-v3",
@@ -1165,7 +1165,7 @@
       "hash": "d51176e7d7be",
       "prev_hash": "d51176e7d7be",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:htdemucs",
@@ -1175,7 +1175,7 @@
       "hash": "08d36cbc9497",
       "prev_hash": "08d36cbc9497",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "model:xtts-v2",
@@ -1185,7 +1185,7 @@
       "hash": "f13f041462ee",
       "prev_hash": "f13f041462ee",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-AGT-001",
@@ -1193,7 +1193,7 @@
       "label": "AI-AGT-001",
       "defined_in": "docs/ai-system/agent-architecture.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-AGT-002",
@@ -1201,7 +1201,7 @@
       "label": "AI-AGT-002",
       "defined_in": "docs/ai-system/agent-architecture.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-AGT-003",
@@ -1209,7 +1209,7 @@
       "label": "AI-AGT-003",
       "defined_in": "docs/ai-system/agent-architecture.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-AGT-004",
@@ -1217,7 +1217,7 @@
       "label": "AI-AGT-004",
       "defined_in": "docs/ai-system/agent-architecture.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-AGT-005",
@@ -1225,7 +1225,7 @@
       "label": "AI-AGT-005",
       "defined_in": "docs/ai-system/agent-architecture.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-ETH-001",
@@ -1233,7 +1233,7 @@
       "label": "AI-ETH-001",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-ETH-002",
@@ -1241,7 +1241,7 @@
       "label": "AI-ETH-002",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-ETH-003",
@@ -1249,7 +1249,7 @@
       "label": "AI-ETH-003",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:AI-ETH-004",
@@ -1257,7 +1257,7 @@
       "label": "AI-ETH-004",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:BR-001",
@@ -1265,7 +1265,7 @@
       "label": "BR-001",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:BR-002",
@@ -1273,7 +1273,7 @@
       "label": "BR-002",
       "defined_in": "docs/ai-system/ethics-governance.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:DR-001",
@@ -1281,7 +1281,7 @@
       "label": "DR-001",
       "defined_in": "docs/ai-system/data-pipeline.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:DR-002",
@@ -1289,7 +1289,7 @@
       "label": "DR-002",
       "defined_in": "docs/ai-system/data-pipeline.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:DR-003",
@@ -1297,7 +1297,7 @@
       "label": "DR-003",
       "defined_in": "docs/ai-system/data-pipeline.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-01",
@@ -1305,7 +1305,7 @@
       "label": "FR-01",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-02",
@@ -1313,7 +1313,7 @@
       "label": "FR-02",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-03",
@@ -1321,7 +1321,7 @@
       "label": "FR-03",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-04",
@@ -1329,7 +1329,7 @@
       "label": "FR-04",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-04b",
@@ -1337,7 +1337,7 @@
       "label": "FR-04b",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-05",
@@ -1345,7 +1345,7 @@
       "label": "FR-05",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-06",
@@ -1353,7 +1353,7 @@
       "label": "FR-06",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-07",
@@ -1361,7 +1361,7 @@
       "label": "FR-07",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-08",
@@ -1369,7 +1369,7 @@
       "label": "FR-08",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-09",
@@ -1377,7 +1377,7 @@
       "label": "FR-09",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-10",
@@ -1385,7 +1385,7 @@
       "label": "FR-10",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-11",
@@ -1393,7 +1393,7 @@
       "label": "FR-11",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-12",
@@ -1401,7 +1401,7 @@
       "label": "FR-12",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-13",
@@ -1409,7 +1409,7 @@
       "label": "FR-13",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-14",
@@ -1417,7 +1417,7 @@
       "label": "FR-14",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:FR-15",
@@ -1425,7 +1425,7 @@
       "label": "FR-15",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-01",
@@ -1433,7 +1433,7 @@
       "label": "NFR-01",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-02",
@@ -1441,7 +1441,7 @@
       "label": "NFR-02",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-03",
@@ -1449,7 +1449,7 @@
       "label": "NFR-03",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-04",
@@ -1457,7 +1457,7 @@
       "label": "NFR-04",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-05",
@@ -1465,7 +1465,7 @@
       "label": "NFR-05",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "req:NFR-06",
@@ -1473,7 +1473,7 @@
       "label": "NFR-06",
       "defined_in": "docs/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "test:frontend/src/timeline/grid.test.ts",
@@ -1481,7 +1481,7 @@
       "path": "frontend/src/timeline/grid.test.ts",
       "hash": "37249eee03db",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "test:frontend/src/timeline/ops.test.ts",
@@ -1489,7 +1489,7 @@
       "path": "frontend/src/timeline/ops.test.ts",
       "hash": "c208481535bb",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     },
     {
       "id": "test:frontend/src/timeline/useClipEngine.test.ts",
@@ -1497,7 +1497,7 @@
       "path": "frontend/src/timeline/useClipEngine.test.ts",
       "hash": "bc383670c398",
       "status": "current",
-      "last_verified": "2026-08-09T06:19:02+07:00"
+      "last_verified": "2026-08-09T07:41:25+07:00"
     }
   ],
   "edges": [
