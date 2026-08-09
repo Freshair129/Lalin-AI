@@ -10,6 +10,11 @@
 - ตรวจ drift: endpoints/components ในโค้ด vs docs/architecture/BLUEPRINT.yaml
 - preserve edges เดิมที่ไม่ได้มาจากการสแกน (source: manual/architect-seed)
 
+Idempotent: ประทับเวลา (last_verified/generated_at) เฉพาะ node ที่เนื้อหาเปลี่ยนจริง
+และถ้าผลลัพธ์เหมือนไฟล์เดิมทุกไบต์จะไม่เขียนทับเลย — สแกนซ้ำจึงไม่ทำ git status รก
+หมายเหตุ: หลังแก้เอกสาร ต้องสแกน 2 รอบถึงนิ่ง (รอบแรก mark status=changed +
+ตั้ง prev_hash, รอบสองเห็น hash ตรงแล้วจึงกลับเป็น current)
+
 รัน:  apps/api/.venv/Scripts/python.exe tools/doc_graph_scan.py
 (stdlib เท่านั้น — ไม่พึ่ง dependency)
 """
@@ -26,7 +31,14 @@ CODE_EXT = (".py", ".ts", ".tsx", ".rs", ".css")
 
 
 def sha(p: Path) -> str:
-    return hashlib.sha1(p.read_bytes()).hexdigest()[:12]
+    """content hash ที่ normalize newline ก่อน — CRLF/LF ต้องได้ hash เดียวกัน
+
+    repo นี้ตั้ง core.autocrlf=true: Windows เช็คเอาต์เป็น CRLF ส่วน Linux/CI เป็น LF
+    ถ้า hash จาก raw bytes ตรง ๆ ไฟล์เดียวกันจะได้คนละ hash คนละเครื่อง แล้ว scanner
+    จะ flag ว่าทุกไฟล์ "changed" ทั้งที่เนื้อหาเหมือนกันเป๊ะ
+    """
+    data = p.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha1(data).hexdigest()[:12]
 
 
 def read(p: Path) -> str:
@@ -305,10 +317,25 @@ stats = {
     },
 }
 
+# ── 10) timestamp policy: ประทับเวลาเฉพาะ node ที่เนื้อหาเปลี่ยน ──
+# ถ้าเขียนเวลาใหม่ทุกครั้งที่สแกน ไฟล์จะ dirty ทุกรอบแม้ไม่มี drift เลย
+# ทำให้ git status รก และแยกไม่ออกว่า diff ไหนคือ drift จริง
+for nid, n in nodes.items():
+    prev = old_nodes.get(nid)
+    if prev is None or not prev.get("last_verified"):
+        continue                        # node ใหม่ — ใช้เวลาปัจจุบัน
+    drop_ts = lambda d: {k: v for k, v in d.items() if k != "last_verified"}
+    if drop_ts(n) == drop_ts(prev):
+        n["last_verified"] = prev["last_verified"]
+
 out = {
     "version": "1.0.0",
     "generated_by": "rwang:doc-graph",
     "generated_at": now,
+    "timestamp_policy": (
+        "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน "
+        "— สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย"
+    ),
     "template": old.get("template"),
     "id_scheme": old.get("id_scheme"),
     "standards": old.get("standards"),
@@ -316,10 +343,21 @@ out = {
     "nodes": sorted(nodes.values(), key=lambda n: n["id"]),
     "edges": sorted(edges, key=lambda e: (e["from"], e["to"], e["type"])),
 }
-GRAPH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+# generated_at ก็เช่นกัน — คงเวลาเดิมถ้าทุกอย่างนอกจากมันเหมือนเดิม
+drop_gen = lambda d: {k: v for k, v in d.items() if k != "generated_at"}
+if old and drop_gen(out) == drop_gen(old):
+    out["generated_at"] = old.get("generated_at", now)
+
+payload = json.dumps(out, ensure_ascii=False, indent=2) + "\n"
+if GRAPH.exists() and GRAPH.read_text(encoding="utf-8") == payload:
+    wrote = False                       # ไม่แตะไฟล์เลย — mtime เดิม git ไม่เห็นเป็น dirty
+else:
+    GRAPH.write_text(payload, encoding="utf-8")
+    wrote = True
 
 # ── รายงาน (ASCII เท่านั้น — คอนโซล cp1252) ───────────────────────
-print("doc-graph updated:", GRAPH.relative_to(ROOT).as_posix())
+print("doc-graph", "updated:" if wrote else "unchanged:", GRAPH.relative_to(ROOT).as_posix())
 print("nodes:", stats["total_nodes"], "edges:", stats["total_edges"],
       "stale_edges:", stats["stale_edges"], "stale_nodes:", stats["stale_nodes"])
 for k, v in stats["coverage"].items():
