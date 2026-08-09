@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.14b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-07-22T00:00:00+07:00,Codex"
+last_update: "2026-08-09T00:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -55,6 +55,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/design/LALIN_JOBS_TAB_SPEC.md`
 - `docs/design/LALIN_SETTINGS_TAB_SPEC.md`
 - `docs/design/LALIN_UI_IMPLEMENTATION_PLAN.md`
+- `docs/design/COMPONENT_REGISTRY.md`
 
 ## Product and Runtime Docs
 
@@ -75,6 +76,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `tools/dev/`: canonical setup and local runtime utilities.
 - `tools/build/`: canonical icon, sidecar, installer, and release build utilities.
 - `tools/verify/`: canonical smoke and release verification utilities.
+- `tools/doc_graph_scan.py`: doc-graph scanner — เทียบ endpoint/component ในโค้ดกับ `docs/architecture/BLUEPRINT.yaml` แล้วเขียน `docs/.doc-graph.json`.
 - `scripts/`: compatibility shims that keep older commands working.
 
 ## Validation and Evidence Docs
@@ -105,6 +107,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.14b | 2026-08-09 | beta | Added component registry, doc-graph scanner, and full REST API spec (42 endpoints). | uncommitted | LALIN |
 | 0.1.13b | 2026-07-24 | beta | Added Phase 8 repo rename and presentation readiness docs. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Updated Phase 7 release workflow plan and RCA status after implementation. | uncommitted | LALIN |
 | 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow plan and RCA pointer. | uncommitted | LALIN |

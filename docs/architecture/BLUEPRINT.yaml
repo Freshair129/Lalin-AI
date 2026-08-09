@@ -69,12 +69,55 @@ sitemap:
       bottom: [UpdateChecker, connection_status]
     content: dynamic            # เปลี่ยนตาม nav
     overlay: [update_dialog]
-  shared_components:
-    JobProgress: badge(⏳/⚙️/✅/❌) + progress_bar + audio_player + download + error
-    UpdateChecker: ปุ่ม🔄 + overlay(version/notes/install/relaunch)
   global_state: [tab, online, brainName]   # App.tsx
+  stale_note: >
+    บล็อก shell + views ด้านล่างยังเป็นของยุค G-Music (sidebar 230px, 6 แท็บ)
+    ปัจจุบัน apps/desktop/src/App.tsx ใช้ 8 แท็บ (workspace·voice·dubbing·arrange·
+    mastering·library·jobs·settings) — SoT ของ nav อยู่ที่ docs/design/LALIN_SITEMAP_SOT.md
+    ส่วน section components: ด้านล่างสแกนตรงกับโค้ดจริงแล้ว
 
-# ── Views (nav tabs) ─────────────────────────────────────────
+# ── Component registry (ที่ไม่ใช่ view) — รายละเอียดใน docs/design/COMPONENT_REGISTRY.md ──
+components:
+  panels:                       # panel ระดับ view ที่ App.tsx ประกอบเข้าแท็บ (8 แท็บ — ดู LALIN_SITEMAP_SOT.md)
+    - {component: VoicesPanel.tsx,      tab: voice,     used_by: "App.tsx > VoiceStudioPanel", role: "คลังเสียงอ้างอิง (consent-first)", req: FR-01}
+    - {component: TTSPanel.tsx,         tab: voice,     used_by: "App.tsx > VoiceStudioPanel", role: "สังเคราะห์เสียง/โคลน", req: FR-02}
+    - {component: DubbingPanel.tsx,     tab: dubbing,   used_by: App.tsx, role: "พากย์เสียง", req: FR-03}
+    - {component: MasteringPanel.tsx,   tab: mastering, used_by: App.tsx, role: "มาสเตอร์", req: FR-04}
+    - {component: RemixPanel.tsx,       tab: arrange,   used_by: App.tsx, role: "node workflow + timeline (เรนเดอร์ StudioDock เอง)", req: FR-04b}
+    - {component: FileManager.tsx,      tab: library,   used_by: "App.tsx > LibraryHub", role: "จัดการไฟล์ใน data/workspace", req: FR-15}
+    - {component: MarketplacePanel.tsx, tab: library,   used_by: "App.tsx > LibraryHub", role: "แคตตาล็อก sample pack (mock)", req: FR-11.4}
+    - {component: PluginsPanel.tsx,     tab: library,   used_by: "App.tsx > LibraryHub", role: "สถานะ optional dep + คำสั่งติดตั้ง (เตือน license)", req: FR-11}
+    - {component: BatchQueue.tsx,       tab: jobs,      used_by: App.tsx, role: "คิวประมวลผลชุด (pause = หยุดหลังงานปัจจุบัน)", req: FR-13}
+    - {component: BrainPanel.tsx,       tab: settings,  used_by: App.tsx, role: "สลับ Ollama <-> Cloud สด", req: FR-05}
+  workspace:                    # FR-09 — DAW core
+    - {component: StudioDock.tsx,      used_by: [App.tsx, RemixPanel.tsx], role: "พื้น DAW: ห่อ ClipTimeline + ปุ่ม Copilot + context menu ของ clip; สูงลากได้ 130-620"}
+    - {component: ClipTimeline.tsx,    used_by: StudioDock.tsx, role: "timeline หลัก: grid/ลาก/slice/fade/playback/loop/metronome/master FX"}
+    - {component: Timeline.tsx,        used_by: none,           role: "มุมมองรุ่นแรก — ไม่ถูกเรนเดอร์แล้ว เหลือไว้เป็นแหล่ง type TrackView", status: deprecated}
+    - {component: PropertiesPanel.tsx, used_by: RemixPanel.tsx, role: "แก้พารามิเตอร์ของ track ที่เลือก (mute/solo/lock + export)"}
+    - {component: LibraryPanel.tsx,    used_by: RemixPanel.tsx, role: "คลัง sample/pack ลากไปวางบน timeline (CLIP_DRAG_MIME + LibraryDragPayload)"}
+    - {component: StemMixer.tsx,       used_by: RemixPanel.tsx, role: "เฟดเดอร์แยก stem 0-1.5x -> stem_gains", req: FR-09.9}
+    - {component: FxRack.tsx,          used_by: RemixPanel.tsx, role: "แร็ค FX: autotune/vocal FX/offset/LUFS/master FX"}
+    - {component: MicRecorder.tsx,     used_by: ClipTimeline.tsx, role: "hook useMicRecorder() + MicRecordIndicator", req: FR-12}
+  ai:
+    - {component: MixCopilot.tsx,      used_by: StudioDock.tsx, role: "UI ของ propose-only agent — ยืนยัน mutation ก่อน commit (undo ได้)", req: FR-14}
+  controls:                     # atoms: มิเตอร์ + คอนโทรล
+    - {component: Knob.tsx,               used_by: [FxRack.tsx, RemixPanel.tsx], role: "ลูกบิด SVG ลากแนวตั้ง"}
+    - {component: Meter.tsx,              used_by: RemixPanel.tsx,               role: "มิเตอร์ค่าเดี่ยว (ดีฟอลต์ LUFS)"}
+    - {component: StereoMeter.tsx,        used_by: ClipTimeline.tsx,             role: "มิเตอร์ L/R จาก AnalyserNode"}
+    - {component: ChannelMeterBalance.tsx, used_by: ClipTimeline.tsx,            role: "มิเตอร์ L/R + ลากปรับ pan (-1..1) ในตัวเดียว"}
+    - {component: Waveform.tsx,           used_by: RemixPanel.tsx,               role: "วาด waveform จาก URL"}
+  primitives:                   # shell / UI ทั่วไป
+    - {component: JobProgress.tsx,   used_by: [TTSPanel.tsx, DubbingPanel.tsx, MasteringPanel.tsx, MixCopilot.tsx], role: "badge + progress bar + player + download + error", req: FR-06}
+    - {component: UpdateChecker.tsx, used_by: App.tsx,                            role: "ตรวจอัปเดต + overlay dialog", req: FR-08}
+    - {component: ContextMenu.tsx,   used_by: [StudioDock.tsx, FileManager.tsx],  role: "เมนูคลิกขวา (icon/shortcut/danger/sep)"}
+    - {component: Dialog.tsx,        used_by: RemixPanel.tsx,                     role: "hook useDialogHost() แทน window.prompt/confirm"}
+    - {component: Splitter.tsx,      used_by: [StudioDock.tsx, RemixPanel.tsx],   role: "ลากย่อ/ขยาย panel (axis x|y, double-click reset)"}
+    - {component: Tilt.tsx,          used_by: [FxRack.tsx, MarketplacePanel.tsx], role: "parallax เอียงตามเมาส์ (เอฟเฟกต์ล้วน)"}
+    - {component: icons.tsx,         used_by: [App.tsx, ClipTimeline.tsx, ContextMenu.tsx, FileManager.tsx, LibraryPanel.tsx, RemixPanel.tsx], role: "ชุด line icon <Icon name size />"}
+  remix_node_ui:
+    - {component: NodeDesigner.tsx,  used_by: RemixPanel.tsx, role: "ออกแบบโหนดเอง -> CustomNodeConfig (ก้าวแรกสู่ drag-connect graph)"}
+
+# ── Views (nav tabs) — ⚠️ ยุค G-Music; ดู stale_note ด้านบน ────
 views:
   - id: voices
     icon: "🎤"
@@ -184,21 +227,60 @@ api:
     - {method: POST,   path: /brain/config,        body: [provider, ollama_model, cloud_provider, cloud_model, cloud_api_key]}
     - {method: POST,   path: /brain/chat,          body: [messages, temperature, max_tokens, stream]}
     - {method: POST,   path: /brain/translate,     body: [text, target_lang, source_lang]}
+    - {method: GET,    path: /runtime/status,      returns: "{telemetry, runtime, activity}", note: "best-effort สำหรับ status bar — ไม่มี side effect"}
+    - {method: GET,    path: /speech/config,       returns: "{asr_model, asr_device, asr_compute_type, profiles[], asr_available, tts_available}"}
+    - {method: POST,   path: /speech/config,       body: [model], returns: "{ok, asr_model}"}
     - {method: GET,    path: /voices}
-    - {method: POST,   path: /voices,              body: "multipart: name, ref_text, language, file"}
+    - {method: POST,   path: /voices,              body: "multipart: name, ref_text, language, consent, source, file"}
+    - {method: PATCH,  path: "/voices/{id}",       body: [name, ref_text, language]}
     - {method: DELETE, path: "/voices/{id}"}
     - {method: POST,   path: /files/upload,        body: "multipart: file"}
     - {method: GET,    path: "/files/download/{name}"}
+    - {method: GET,    path: "/files/input/{name}",  note: "เสิร์ฟต้นฉบับจาก uploads/ (วาด waveform)"}
+    - {method: GET,    path: "/files/export/{name}", query: [fmt(wav|mp3)]}
     - {method: POST,   path: /tts,                 body: [text, voice_id, language, speed],         returns: job_id}
     - {method: POST,   path: /dubbing,             body: [source_audio, voice_id, target_lang, translate, source_lang], returns: job_id}
+    - {method: POST,   path: /dubbing/refine,      body: [text, target_sec, "tone(formal|casual)"], returns: refined}
     - {method: POST,   path: /mastering,           body: [source_audio, reference_audio, target_lufs, target_format], returns: job_id}
-    - {method: POST,   path: /music/remix,         body: [source_audio, beat_audio, do_autotune, do_fx, offset_ms, reverb, delay, target_lufs], returns: job_id}
+    - {method: POST,   path: /music/remix,         body: [source_audio, beat_audio, do_autotune, do_fx, offset_ms, reverb, delay, target_lufs, stem_gains], returns: job_id}
+    - {method: POST,   path: /music/export,        body: [name, "fmt(wav|mp3)", reverb, echo, comp], returns: job_id}
     - {method: GET,    path: /jobs}
     - {method: GET,    path: "/jobs/{id}"}
     - {method: WS,     path: "/jobs/ws/{id}",      streams: Job}
+    # ── Wave 2-5: projects · plugins · packs · fs · agent (ดู product/SRS.md §5.1) ──
+    - {method: GET,    path: /projects,            returns: "projects[{id,name}]"}
+    - {method: POST,   path: /projects,            body: [name, data], returns: "{id,name}"}
+    - {method: GET,    path: "/projects/{pid}",    returns: "{id,name,data}"}
+    - {method: PUT,    path: "/projects/{pid}",    body: [name, data], returns: "{id,name}"}
+    - {method: DELETE, path: "/projects/{pid}",    returns: "{deleted}"}
+    - {method: GET,    path: /plugins,             returns: "{name:{available,label,unlocks,license}}"}
+    - {method: POST,   path: "/plugins/{name}/install", returns: "{name,command,note}", note: "คืนคำสั่ง ไม่รัน pip เอง"}
+    - {method: GET,    path: /packs,               returns: "packs[{id,name,author,size_mb,color,desc,installed}]"}
+    - {method: GET,    path: "/packs/{pack_id}"}
+    - {method: POST,   path: "/packs/{pack_id}/download", returns: "{installed,id}"}
+    - {method: GET,    path: /fs,                  query: [path], returns: "{path,entries[{name,type,size,modified,ext}]}"}
+    - {method: POST,   path: /fs/folder,           body: [path, name]}
+    - {method: POST,   path: /fs/rename,           body: [path, name]}
+    - {method: POST,   path: /fs/move,             body: [src, dst]}
+    - {method: DELETE, path: /fs,                  query: [path]}
+    - {method: POST,   path: /fs/upload,           body: "multipart: path, file"}
+    - {method: POST,   path: /agent/act,           body: [message, project], returns: "{reply, mutations[{op,args}]}"}
+  errors:                          # สัญญา error ร่วม (ดู product/SRS.md §5.1)
+    fs: {out_of_root: 400, not_found: 404, name_conflict: 409, delete_root: 400}
+    projects: {bad_pid: 404, not_found: 404, delete: idempotent}
+    voices: {no_consent: 422, unreadable_audio: 422, not_found: 404}
+  agent:
+    contract: propose-only          # ไม่แก้ project เอง — frontend commit() แบบ undo ได้
+    read_tools: [get_project_state, analyze_project]   # ตอบ deterministic ผ่าน context
+    write_tools: [move_clip, set_gain, set_pan, set_fx, set_lufs, mute_clip, slice_clip, reorder_track]
+    invalid_mutation: drop_silently # op ไม่รู้จัก/args ไม่ครบ → ตัดทิ้ง ไม่ error
+  backend_profile:                  # app.state.backend_profile
+    full: "ASR/TTS ใช้ได้"
+    lite: "/speech/config ปฏิเสธด้วย {ok:false, error:asr_unavailable_in_lite} (HTTP 200)"
   job:
     states: [queued, running, done, error]
     fields: [id, kind, status, progress(0-1), message, result, error]
+    cancel: none                    # ยังไม่มี endpoint ยกเลิก → batch queue pause ได้แค่ "หยุดหลังงานปัจจุบันเสร็จ"
 
 # ── Pipelines (backend) ──────────────────────────────────────
 pipelines:
