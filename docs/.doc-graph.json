@@ -1,7 +1,8 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-09T08:23:36+07:00",
+  "generated_at": "2026-08-09T08:31:25+07:00",
+  "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
@@ -954,30 +955,30 @@
       "type": "document",
       "path": "docs/architecture/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md",
       "title": "ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
-      "hash": "9dec1f23d986",
-      "prev_hash": "9dec1f23d986",
+      "hash": "7bf02d204bf3",
+      "prev_hash": "7bf02d204bf3",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:BLUEPRINT",
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "0d75b921b5be",
-      "prev_hash": "0d75b921b5be",
+      "hash": "f88d28f87377",
+      "prev_hash": "f88d28f87377",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:COMPETITIVE_BRIEF",
       "type": "document",
       "path": "docs/product/COMPETITIVE_BRIEF.md",
       "title": "COMPETITIVE_BRIEF",
-      "hash": "a748b158da71",
-      "prev_hash": "a748b158da71",
+      "hash": "ff6cec5f80bb",
+      "prev_hash": "ff6cec5f80bb",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:COMPONENT_REGISTRY",
@@ -987,987 +988,987 @@
       "hash": "d8250e1ee71b",
       "prev_hash": "d8250e1ee71b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:CPU_GPU_DISTRIBUTION_STRATEGY",
       "type": "document",
       "path": "docs/operations/CPU_GPU_DISTRIBUTION_STRATEGY.md",
       "title": "CPU_GPU_DISTRIBUTION_STRATEGY",
-      "hash": "d2bde25ba67c",
-      "prev_hash": "d2bde25ba67c",
+      "hash": "103afc9c0b8a",
+      "prev_hash": "103afc9c0b8a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
       "type": "document",
       "path": "docs/design/DESIGN_SYSTEM.md",
       "title": "DESIGN_SYSTEM",
-      "hash": "116d5f9df52c",
-      "prev_hash": "116d5f9df52c",
+      "hash": "9d9c8cf8bfd1",
+      "prev_hash": "9d9c8cf8bfd1",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:DOCS_INDEX",
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "41610fbea6fd",
-      "prev_hash": "41610fbea6fd",
+      "hash": "73bd51314acd",
+      "prev_hash": "73bd51314acd",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
       "type": "document",
       "path": "docs/architecture/DOCS_PHASE1_MOVE_MAP.md",
       "title": "DOCS_PHASE1_MOVE_MAP",
-      "hash": "0c57e0e9a690",
-      "prev_hash": "0c57e0e9a690",
+      "hash": "5288888028aa",
+      "prev_hash": "5288888028aa",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:DOCS_PHASE2_MOVE_MAP",
       "type": "document",
       "path": "docs/architecture/DOCS_PHASE2_MOVE_MAP.md",
       "title": "DOCS_PHASE2_MOVE_MAP",
-      "hash": "6909fcb9004e",
-      "prev_hash": "6909fcb9004e",
+      "hash": "ae198f894b1a",
+      "prev_hash": "ae198f894b1a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:GM6_BRAND_CI",
       "type": "document",
       "path": "docs/archive/GM6_BRAND_CI.md",
       "title": "GM6_BRAND_CI",
-      "hash": "1272b234e8ab",
-      "prev_hash": "1272b234e8ab",
+      "hash": "d98a0f96b6ec",
+      "prev_hash": "d98a0f96b6ec",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:GM6_DESIGN_SYSTEM",
       "type": "document",
       "path": "docs/archive/GM6_DESIGN_SYSTEM.md",
       "title": "GM6_DESIGN_SYSTEM",
-      "hash": "4f79307489a6",
-      "prev_hash": "4f79307489a6",
+      "hash": "a1b5c6983aa4",
+      "prev_hash": "a1b5c6983aa4",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:GM6_NAMING_DECISION",
       "type": "document",
       "path": "docs/archive/GM6_NAMING_DECISION.md",
       "title": "GM6_NAMING_DECISION",
-      "hash": "03e7763b4d93",
-      "prev_hash": "03e7763b4d93",
+      "hash": "27f72b5f54a5",
+      "prev_hash": "27f72b5f54a5",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:GM6_SITEMAP",
       "type": "document",
       "path": "docs/archive/GM6_SITEMAP.md",
       "title": "GM6_SITEMAP",
-      "hash": "fecca117e731",
-      "prev_hash": "fecca117e731",
+      "hash": "7794b02fe86e",
+      "prev_hash": "7794b02fe86e",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_ARRANGE_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_ARRANGE_TAB_SPEC.md",
       "title": "LALIN_ARRANGE_TAB_SPEC",
-      "hash": "2c99792082d5",
-      "prev_hash": "2c99792082d5",
+      "hash": "459ff36aad79",
+      "prev_hash": "459ff36aad79",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_ARRANGE_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_ARRANGE_V1_APPROVED.png",
       "title": "LALIN_ARRANGE_V1_APPROVED",
-      "hash": "f3ee2048d3af",
-      "prev_hash": "f3ee2048d3af",
+      "hash": "858e1929682c",
+      "prev_hash": "858e1929682c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_DUBBING_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_DUBBING_TAB_SPEC.md",
       "title": "LALIN_DUBBING_TAB_SPEC",
-      "hash": "8121864ec8f5",
-      "prev_hash": "8121864ec8f5",
+      "hash": "7f99d36e215a",
+      "prev_hash": "7f99d36e215a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_DUBBING_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_DUBBING_V1_APPROVED.png",
       "title": "LALIN_DUBBING_V1_APPROVED",
-      "hash": "5d2b3c23955d",
-      "prev_hash": "5d2b3c23955d",
+      "hash": "170b63a646d4",
+      "prev_hash": "170b63a646d4",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_JOBS_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_JOBS_TAB_SPEC.md",
       "title": "LALIN_JOBS_TAB_SPEC",
-      "hash": "a54a686d2064",
-      "prev_hash": "a54a686d2064",
+      "hash": "b8cc540fc3ad",
+      "prev_hash": "b8cc540fc3ad",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_JOBS_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_JOBS_V1_APPROVED.png",
       "title": "LALIN_JOBS_V1_APPROVED",
-      "hash": "0d9b24f81bf4",
-      "prev_hash": "0d9b24f81bf4",
+      "hash": "b988de460220",
+      "prev_hash": "b988de460220",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_LAYOUT_SOT",
       "type": "document",
       "path": "docs/design/LALIN_LAYOUT_SOT.md",
       "title": "LALIN_LAYOUT_SOT",
-      "hash": "78f4ab77ebd0",
-      "prev_hash": "78f4ab77ebd0",
+      "hash": "b659bc2f2fd2",
+      "prev_hash": "b659bc2f2fd2",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_LIBRARY_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_LIBRARY_TAB_SPEC.md",
       "title": "LALIN_LIBRARY_TAB_SPEC",
-      "hash": "9bcd30e254db",
-      "prev_hash": "9bcd30e254db",
+      "hash": "2131e1427b40",
+      "prev_hash": "2131e1427b40",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_LIBRARY_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_LIBRARY_V1_APPROVED.png",
       "title": "LALIN_LIBRARY_V1_APPROVED",
-      "hash": "033eb5bd8fcb",
-      "prev_hash": "033eb5bd8fcb",
+      "hash": "ba365b54777b",
+      "prev_hash": "ba365b54777b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_MASTERING_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_MASTERING_TAB_SPEC.md",
       "title": "LALIN_MASTERING_TAB_SPEC",
-      "hash": "dcab1dfc6a7a",
-      "prev_hash": "dcab1dfc6a7a",
+      "hash": "e85c5acca349",
+      "prev_hash": "e85c5acca349",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_MASTERING_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_MASTERING_V1_APPROVED.png",
       "title": "LALIN_MASTERING_V1_APPROVED",
-      "hash": "7aa5e5047570",
-      "prev_hash": "7aa5e5047570",
+      "hash": "e5db38c99201",
+      "prev_hash": "e5db38c99201",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
       "type": "document",
       "path": "docs/design/LALIN_RENAME_MIGRATION_PLAN.md",
       "title": "LALIN_RENAME_MIGRATION_PLAN",
-      "hash": "b9829c985886",
-      "prev_hash": "b9829c985886",
+      "hash": "70e2664509d2",
+      "prev_hash": "70e2664509d2",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_SETTINGS_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_SETTINGS_TAB_SPEC.md",
       "title": "LALIN_SETTINGS_TAB_SPEC",
-      "hash": "533745b85a18",
-      "prev_hash": "533745b85a18",
+      "hash": "b7650d5b2f20",
+      "prev_hash": "b7650d5b2f20",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_SETTINGS_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_SETTINGS_V1_APPROVED.png",
       "title": "LALIN_SETTINGS_V1_APPROVED",
-      "hash": "51dceee78fd0",
-      "prev_hash": "51dceee78fd0",
+      "hash": "865a58ff41de",
+      "prev_hash": "865a58ff41de",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_SHELL_SOT",
       "type": "document",
       "path": "docs/design/LALIN_SHELL_SOT.md",
       "title": "LALIN_SHELL_SOT",
-      "hash": "2d0ee597c6ab",
-      "prev_hash": "2d0ee597c6ab",
+      "hash": "af0ea4651e8d",
+      "prev_hash": "af0ea4651e8d",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_SITEMAP_SOT",
       "type": "document",
       "path": "docs/design/LALIN_SITEMAP_SOT.md",
       "title": "LALIN_SITEMAP_SOT",
-      "hash": "f6e81be14f49",
-      "prev_hash": "f6e81be14f49",
+      "hash": "0845ab010d5c",
+      "prev_hash": "0845ab010d5c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
       "type": "document",
       "path": "docs/design/LALIN_UI_IMPLEMENTATION_PLAN.md",
       "title": "LALIN_UI_IMPLEMENTATION_PLAN",
-      "hash": "eea52b913f4f",
-      "prev_hash": "eea52b913f4f",
+      "hash": "6e19d366df5c",
+      "prev_hash": "6e19d366df5c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_UI_SOT",
       "type": "document",
       "path": "docs/design/LALIN_UI_SOT.md",
       "title": "LALIN_UI_SOT",
-      "hash": "2790ee34237b",
-      "prev_hash": "2790ee34237b",
+      "hash": "f92fb200504a",
+      "prev_hash": "f92fb200504a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_VOICE_STUDIO_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_VOICE_STUDIO_TAB_SPEC.md",
       "title": "LALIN_VOICE_STUDIO_TAB_SPEC",
-      "hash": "3a2163364cd2",
-      "prev_hash": "3a2163364cd2",
+      "hash": "7793c3d0d721",
+      "prev_hash": "7793c3d0d721",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_VOICE_STUDIO_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_VOICE_STUDIO_V1_APPROVED.png",
       "title": "LALIN_VOICE_STUDIO_V1_APPROVED",
-      "hash": "0b0598cedfa9",
-      "prev_hash": "0b0598cedfa9",
+      "hash": "2e5ebffe1872",
+      "prev_hash": "2e5ebffe1872",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_SOURCE.png",
       "title": "LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
-      "hash": "9d7aa07db8d1",
-      "prev_hash": "9d7aa07db8d1",
+      "hash": "d345498e8b8a",
+      "prev_hash": "d345498e8b8a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED.png",
       "title": "LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
-      "hash": "93d386b261e6",
-      "prev_hash": "93d386b261e6",
+      "hash": "9098f2cfab12",
+      "prev_hash": "9098f2cfab12",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_WORKSPACE_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_WORKSPACE_TAB_SPEC.md",
       "title": "LALIN_WORKSPACE_TAB_SPEC",
-      "hash": "29341dbf71ab",
-      "prev_hash": "29341dbf71ab",
+      "hash": "80d28e5cb6d1",
+      "prev_hash": "80d28e5cb6d1",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LALIN_WORKSPACE_V1_APPROVED",
       "type": "document",
       "path": "docs/design/reference/lalin/LALIN_WORKSPACE_V1_APPROVED.png",
       "title": "LALIN_WORKSPACE_V1_APPROVED",
-      "hash": "248fc98bf203",
-      "prev_hash": "248fc98bf203",
+      "hash": "1b1bc1450520",
+      "prev_hash": "1b1bc1450520",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:LOCAL_MODEL_LEDGER",
       "type": "document",
       "path": "docs/product/LOCAL_MODEL_LEDGER.md",
       "title": "LOCAL_MODEL_LEDGER",
-      "hash": "55ec7af78c17",
-      "prev_hash": "55ec7af78c17",
+      "hash": "f3160df813ce",
+      "prev_hash": "f3160df813ce",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:MASTER_PLAN",
       "type": "document",
       "path": "docs/archive/MASTER_PLAN.md",
       "title": "MASTER_PLAN",
-      "hash": "959db27acec4",
-      "prev_hash": "959db27acec4",
+      "hash": "2f2f903a4ab9",
+      "prev_hash": "2f2f903a4ab9",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PACKAGING_SIDECAR",
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "451c97508baf",
-      "prev_hash": "451c97508baf",
+      "hash": "8198a28c525e",
+      "prev_hash": "8198a28c525e",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
       "type": "document",
       "path": "docs/architecture/PHASE3_RUNTIME_MOVE_MAP.md",
       "title": "PHASE3_RUNTIME_MOVE_MAP",
-      "hash": "727c5ea57aad",
-      "prev_hash": "727c5ea57aad",
+      "hash": "1e9a070acaa0",
+      "prev_hash": "1e9a070acaa0",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_STATE_PLAN",
       "type": "document",
       "path": "docs/architecture/PHASE3_RUNTIME_STATE_PLAN.md",
       "title": "PHASE3_RUNTIME_STATE_PLAN",
-      "hash": "dee39f2a25de",
-      "prev_hash": "dee39f2a25de",
+      "hash": "deb7a0a297d6",
+      "prev_hash": "deb7a0a297d6",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE4_APP_FOLDER_MIGRATION_PLAN",
       "type": "document",
       "path": "docs/architecture/PHASE4_APP_FOLDER_MIGRATION_PLAN.md",
       "title": "PHASE4_APP_FOLDER_MIGRATION_PLAN",
-      "hash": "d0b409562409",
-      "prev_hash": "d0b409562409",
+      "hash": "7bcaab7f1326",
+      "prev_hash": "7bcaab7f1326",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE4_APP_MOVE_MAP",
       "type": "document",
       "path": "docs/architecture/PHASE4_APP_MOVE_MAP.md",
       "title": "PHASE4_APP_MOVE_MAP",
-      "hash": "e968b89d5c34",
-      "prev_hash": "e968b89d5c34",
+      "hash": "eace4f06a92a",
+      "prev_hash": "eace4f06a92a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE5_CONTRACTS_MCP_PLAN",
       "type": "document",
       "path": "docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md",
       "title": "PHASE5_CONTRACTS_MCP_PLAN",
-      "hash": "e2cbf8cd683f",
-      "prev_hash": "e2cbf8cd683f",
+      "hash": "7777a60aea78",
+      "prev_hash": "7777a60aea78",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
       "type": "document",
       "path": "docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md",
       "title": "PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
-      "hash": "eed81e12a074",
-      "prev_hash": "eed81e12a074",
+      "hash": "045083f9882a",
+      "prev_hash": "045083f9882a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE7_RELEASE_WORKFLOW_PLAN",
       "type": "document",
       "path": "docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md",
       "title": "PHASE7_RELEASE_WORKFLOW_PLAN",
-      "hash": "c21d2faa177b",
-      "prev_hash": "c21d2faa177b",
+      "hash": "e3e2c5fc3b5f",
+      "prev_hash": "e3e2c5fc3b5f",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE8_REPO_RENAME_PRESENTATION_READINESS",
       "type": "document",
       "path": "docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md",
       "title": "PHASE8_REPO_RENAME_PRESENTATION_READINESS",
-      "hash": "512ab94914d4",
-      "prev_hash": "512ab94914d4",
+      "hash": "34f39585373c",
+      "prev_hash": "34f39585373c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PHASE_0_REVIEW",
       "type": "document",
       "path": "docs/validation/PHASE_0_REVIEW.md",
       "title": "PHASE_0_REVIEW",
-      "hash": "fd0eb94e2e0b",
-      "prev_hash": "fd0eb94e2e0b",
+      "hash": "5988297369ba",
+      "prev_hash": "5988297369ba",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PRD",
       "type": "document",
       "path": "docs/product/PRD.md",
       "title": "PRD",
-      "hash": "5c27c12dafb4",
-      "prev_hash": "5c27c12dafb4",
+      "hash": "1d2f6de03c8a",
+      "prev_hash": "1d2f6de03c8a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO",
       "type": "document",
       "path": "docs/archive/PROPOSED_V03_DUBBING_PRO.md",
       "title": "PROPOSED_V03_DUBBING_PRO",
-      "hash": "38f905df1f5c",
-      "prev_hash": "38f905df1f5c",
+      "hash": "0519268952e6",
+      "prev_hash": "0519268952e6",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO_SLICE_A",
       "type": "document",
       "path": "docs/archive/PROPOSED_V03_DUBBING_PRO_SLICE_A.md",
       "title": "PROPOSED_V03_DUBBING_PRO_SLICE_A",
-      "hash": "31148fd261b7",
-      "prev_hash": "31148fd261b7",
+      "hash": "e7e69cef7f07",
+      "prev_hash": "e7e69cef7f07",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
       "type": "document",
       "path": "docs/archive/PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md",
       "title": "PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
-      "hash": "5874fb331a91",
-      "prev_hash": "5874fb331a91",
+      "hash": "528cc02c6f9c",
+      "prev_hash": "528cc02c6f9c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:PROPOSED_VOICEBOX_CAPTURE_DICTATION",
       "type": "document",
       "path": "docs/archive/PROPOSED_VOICEBOX_CAPTURE_DICTATION.md",
       "title": "PROPOSED_VOICEBOX_CAPTURE_DICTATION",
-      "hash": "b312fcb3226f",
-      "prev_hash": "b312fcb3226f",
+      "hash": "f0876c05ebe7",
+      "prev_hash": "f0876c05ebe7",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:RCA--LOCAL-LLM-DISPATCH",
       "type": "document",
       "path": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
       "title": "RCA--LOCAL-LLM-DISPATCH",
-      "hash": "e73fd3656a1a",
-      "prev_hash": "e73fd3656a1a",
+      "hash": "e9c7a7452622",
+      "prev_hash": "e9c7a7452622",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:READINESS",
       "type": "document",
       "path": "docs/presentation/lalin-ai-launch/READINESS.md",
       "title": "READINESS",
-      "hash": "9bf132184a37",
-      "prev_hash": "9bf132184a37",
+      "hash": "7de22ae93777",
+      "prev_hash": "7de22ae93777",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:REFERENCE_MANIFEST",
       "type": "document",
       "path": "docs/design/reference/gm6/REFERENCE_MANIFEST.md",
       "title": "REFERENCE_MANIFEST",
-      "hash": "dda9c15e095b",
-      "prev_hash": "dda9c15e095b",
+      "hash": "8ed3f18c9dd1",
+      "prev_hash": "8ed3f18c9dd1",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:REPORT--LOCAL-LLM-DISPATCH",
       "type": "document",
       "path": "docs/rca/REPORT--LOCAL-LLM-DISPATCH.md",
       "title": "REPORT--LOCAL-LLM-DISPATCH",
-      "hash": "bd646372902c",
-      "prev_hash": "bd646372902c",
+      "hash": "e9728361bb86",
+      "prev_hash": "e9728361bb86",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:REPOSITORY_ARCHITECTURE_SOT",
       "type": "document",
       "path": "docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md",
       "title": "REPOSITORY_ARCHITECTURE_SOT",
-      "hash": "dbc4c84c1a03",
-      "prev_hash": "dbc4c84c1a03",
+      "hash": "9d8d6e5f916d",
+      "prev_hash": "9d8d6e5f916d",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:REPO_MIGRATION_PLAN",
       "type": "document",
       "path": "docs/architecture/REPO_MIGRATION_PLAN.md",
       "title": "REPO_MIGRATION_PLAN",
-      "hash": "bf25645c7374",
-      "prev_hash": "bf25645c7374",
+      "hash": "3c3a0108fabd",
+      "prev_hash": "3c3a0108fabd",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:ROADMAP_EXECUTION_BACKLOG",
       "type": "document",
       "path": "docs/product/ROADMAP_EXECUTION_BACKLOG.md",
       "title": "ROADMAP_EXECUTION_BACKLOG",
-      "hash": "c05f607f1e8a",
-      "prev_hash": "c05f607f1e8a",
+      "hash": "3ea3369f4691",
+      "prev_hash": "3ea3369f4691",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:ROADMAP_MUSIC",
       "type": "document",
       "path": "docs/product/ROADMAP_MUSIC.md",
       "title": "ROADMAP_MUSIC",
-      "hash": "cf6926100979",
-      "prev_hash": "cf6926100979",
+      "hash": "f7ba0618285c",
+      "prev_hash": "f7ba0618285c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPEC",
       "type": "document",
       "path": "docs/architecture/SPEC.md",
       "title": "SPEC",
-      "hash": "dc60f8e6098f",
-      "prev_hash": "dc60f8e6098f",
+      "hash": "85c72257b54e",
+      "prev_hash": "85c72257b54e",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT0_G_MUSIC_RC_PLAN",
       "type": "document",
       "path": "docs/archive/SPRINT0_G_MUSIC_RC_PLAN.md",
       "title": "SPRINT0_G_MUSIC_RC_PLAN",
-      "hash": "c76d70cfa381",
-      "prev_hash": "c76d70cfa381",
+      "hash": "82296b91791a",
+      "prev_hash": "82296b91791a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT10_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT10_VALIDATION.md",
       "title": "SPRINT10_VALIDATION",
-      "hash": "a1eef8c18bdc",
-      "prev_hash": "a1eef8c18bdc",
+      "hash": "1b39424ae8ed",
+      "prev_hash": "1b39424ae8ed",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT1_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT1_VALIDATION.md",
       "title": "SPRINT1_VALIDATION",
-      "hash": "693f0fb76617",
-      "prev_hash": "693f0fb76617",
+      "hash": "015142495abe",
+      "prev_hash": "015142495abe",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT2_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT2_VALIDATION.md",
       "title": "SPRINT2_VALIDATION",
-      "hash": "a758a47c9b23",
-      "prev_hash": "a758a47c9b23",
+      "hash": "2009605dc3d5",
+      "prev_hash": "2009605dc3d5",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT3_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT3_VALIDATION.md",
       "title": "SPRINT3_VALIDATION",
-      "hash": "11aa3237ecd4",
-      "prev_hash": "11aa3237ecd4",
+      "hash": "e128ca559903",
+      "prev_hash": "e128ca559903",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT4_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT4_VALIDATION.md",
       "title": "SPRINT4_VALIDATION",
-      "hash": "f759e7827027",
-      "prev_hash": "f759e7827027",
+      "hash": "79e7166387f3",
+      "prev_hash": "79e7166387f3",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT5_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT5_VALIDATION.md",
       "title": "SPRINT5_VALIDATION",
-      "hash": "9fc0a176a0dc",
-      "prev_hash": "9fc0a176a0dc",
+      "hash": "0838bf27a844",
+      "prev_hash": "0838bf27a844",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT6_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT6_VALIDATION.md",
       "title": "SPRINT6_VALIDATION",
-      "hash": "7c2281db6723",
-      "prev_hash": "7c2281db6723",
+      "hash": "71743a813749",
+      "prev_hash": "71743a813749",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT7_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT7_VALIDATION.md",
       "title": "SPRINT7_VALIDATION",
-      "hash": "7cfc1fa0b0ef",
-      "prev_hash": "7cfc1fa0b0ef",
+      "hash": "8db8ada8a7ee",
+      "prev_hash": "8db8ada8a7ee",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT8_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT8_VALIDATION.md",
       "title": "SPRINT8_VALIDATION",
-      "hash": "51c7626ba805",
-      "prev_hash": "51c7626ba805",
+      "hash": "0dce59f9adfe",
+      "prev_hash": "0dce59f9adfe",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SPRINT9_VALIDATION",
       "type": "document",
       "path": "docs/validation/SPRINT9_VALIDATION.md",
       "title": "SPRINT9_VALIDATION",
-      "hash": "eb3d2be28a4b",
-      "prev_hash": "eb3d2be28a4b",
+      "hash": "373e4ca30c49",
+      "prev_hash": "373e4ca30c49",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SRS",
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "74876dc4897c",
-      "prev_hash": "74876dc4897c",
+      "hash": "7321c2991f0b",
+      "prev_hash": "7321c2991f0b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
       "type": "document",
       "path": "docs/architecture/SWARM_PLAN.md",
       "title": "SWARM_PLAN",
-      "hash": "e76afa9678d3",
-      "prev_hash": "e76afa9678d3",
+      "hash": "658e06135179",
+      "prev_hash": "658e06135179",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:UI_SITEMAP",
       "type": "document",
       "path": "docs/archive/UI_SITEMAP.md",
       "title": "UI_SITEMAP",
-      "hash": "09b3f41bd4a5",
-      "prev_hash": "09b3f41bd4a5",
+      "hash": "652ec1a6bff3",
+      "prev_hash": "652ec1a6bff3",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
       "type": "document",
       "path": "docs/operations/WORKSTATION_DISTRIBUTION.md",
       "title": "WORKSTATION_DISTRIBUTION",
-      "hash": "687fa98c52b7",
-      "prev_hash": "687fa98c52b7",
+      "hash": "ea77ec777b3a",
+      "prev_hash": "ea77ec777b3a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7.png",
       "title": "codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
-      "hash": "94da957df959",
-      "prev_hash": "94da957df959",
+      "hash": "cb15e529dd8b",
+      "prev_hash": "cb15e529dd8b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658.png",
       "title": "codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
-      "hash": "911d1365bc55",
-      "prev_hash": "911d1365bc55",
+      "hash": "b2c631a57613",
+      "prev_hash": "b2c631a57613",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0.png",
       "title": "codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
-      "hash": "3fe3b4302b9e",
-      "prev_hash": "3fe3b4302b9e",
+      "hash": "12ca62ea6227",
+      "prev_hash": "12ca62ea6227",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545.png",
       "title": "codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
-      "hash": "a0cc8cfb9188",
-      "prev_hash": "a0cc8cfb9188",
+      "hash": "f37ba133099e",
+      "prev_hash": "f37ba133099e",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07.png",
       "title": "codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
-      "hash": "205ab92aad26",
-      "prev_hash": "205ab92aad26",
+      "hash": "79e59ebc5e99",
+      "prev_hash": "79e59ebc5e99",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487.png",
       "title": "codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
-      "hash": "72fb381786ff",
-      "prev_hash": "72fb381786ff",
+      "hash": "57c6e23616e8",
+      "prev_hash": "57c6e23616e8",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188.png",
       "title": "codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
-      "hash": "46e4bbc1ce80",
-      "prev_hash": "46e4bbc1ce80",
+      "hash": "b71529bd3e20",
+      "prev_hash": "b71529bd3e20",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36.png",
       "title": "codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
-      "hash": "44e783c7fd81",
-      "prev_hash": "44e783c7fd81",
+      "hash": "31eab538828b",
+      "prev_hash": "31eab538828b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d.png",
       "title": "codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
-      "hash": "c07cd5aacb68",
-      "prev_hash": "c07cd5aacb68",
+      "hash": "7c1f883cfde4",
+      "prev_hash": "7c1f883cfde4",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64.png",
       "title": "codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
-      "hash": "bc19e59edce9",
-      "prev_hash": "bc19e59edce9",
+      "hash": "0018853ca5e8",
+      "prev_hash": "0018853ca5e8",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e.png",
       "title": "codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
-      "hash": "86899aa8d076",
-      "prev_hash": "86899aa8d076",
+      "hash": "d4a1dd6da6c7",
+      "prev_hash": "d4a1dd6da6c7",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206.png",
       "title": "codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
-      "hash": "cff46fe33a4d",
-      "prev_hash": "cff46fe33a4d",
+      "hash": "5588739f9761",
+      "prev_hash": "5588739f9761",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef.png",
       "title": "codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
-      "hash": "06ff8b4088b0",
-      "prev_hash": "06ff8b4088b0",
+      "hash": "6507c6961267",
+      "prev_hash": "6507c6961267",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2.png",
       "title": "codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
-      "hash": "34ac810eaadb",
-      "prev_hash": "34ac810eaadb",
+      "hash": "7f5f159ecbb4",
+      "prev_hash": "7f5f159ecbb4",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766.png",
       "title": "codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
-      "hash": "859da5d9976a",
-      "prev_hash": "859da5d9976a",
+      "hash": "e041673bf2f3",
+      "prev_hash": "e041673bf2f3",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6.png",
       "title": "codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
-      "hash": "2fb184121c86",
-      "prev_hash": "2fb184121c86",
+      "hash": "07cc4f7989d0",
+      "prev_hash": "07cc4f7989d0",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b.png",
       "title": "codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
-      "hash": "88750d7a32f2",
-      "prev_hash": "88750d7a32f2",
+      "hash": "8a2cce3c22ec",
+      "prev_hash": "8a2cce3c22ec",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc.png",
       "title": "codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
-      "hash": "1466f3da5eee",
-      "prev_hash": "1466f3da5eee",
+      "hash": "dafae58ecb28",
+      "prev_hash": "dafae58ecb28",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f.png",
       "title": "codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
-      "hash": "bdd7c8d5e0fd",
-      "prev_hash": "bdd7c8d5e0fd",
+      "hash": "5d875b2b3206",
+      "prev_hash": "5d875b2b3206",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be.png",
       "title": "codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
-      "hash": "253add3fd85e",
-      "prev_hash": "253add3fd85e",
+      "hash": "bde002bcbab9",
+      "prev_hash": "bde002bcbab9",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3.png",
       "title": "codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
-      "hash": "52a968d61659",
-      "prev_hash": "52a968d61659",
+      "hash": "efb8d840d0d5",
+      "prev_hash": "efb8d840d0d5",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a.png",
       "title": "codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
-      "hash": "e156b392fd4e",
-      "prev_hash": "e156b392fd4e",
+      "hash": "ae836adb04e8",
+      "prev_hash": "ae836adb04e8",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
       "type": "document",
       "path": "docs/design/reference/gm6/codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd.png",
       "title": "codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
-      "hash": "fc46fffc635b",
-      "prev_hash": "fc46fffc635b",
+      "hash": "961022fc6e8d",
+      "prev_hash": "961022fc6e8d",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "doc:index",
       "type": "document",
       "path": "docs/presentation/lalin-ai-launch/index.html",
       "title": "index",
-      "hash": "2497e6804c7d",
-      "prev_hash": "2497e6804c7d",
+      "hash": "454798f2448d",
+      "prev_hash": "454798f2448d",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "req:FR-01",
@@ -2149,33 +2150,33 @@
       "id": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "type": "test",
       "path": "apps/desktop/src/hooks/useBackendReadiness.test.tsx",
-      "hash": "3f5a20d6fe2a",
+      "hash": "b20f74818afc",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/grid.test.ts",
       "type": "test",
       "path": "apps/desktop/src/timeline/grid.test.ts",
-      "hash": "37249eee03db",
+      "hash": "6d1ff902bdf2",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/ops.test.ts",
       "type": "test",
       "path": "apps/desktop/src/timeline/ops.test.ts",
-      "hash": "c208481535bb",
+      "hash": "515023c8bd36",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
       "type": "test",
       "path": "apps/desktop/src/timeline/useClipEngine.test.ts",
-      "hash": "bc383670c398",
+      "hash": "36bc91a9355c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-09T08:31:25+07:00"
     }
   ],
   "edges": [
