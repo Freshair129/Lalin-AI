@@ -1,0 +1,18 @@
+<|channel>thought
+Goal: implement `parseTimecode(s)` returning total seconds or -1 on invalid format.
+
+Format is fixed "MM:SS.mmm" — exactly two digits for MM, two for SS, three for mmm, with a colon and period in place. Any deviation (wrong length, non-digits, single-digit fields) must return -1.
+
+Approach: validate the full string against one regex `^\d{2}:\d{2}\.\d{3}$`, then parse each part as an integer and compute minutes*60 + seconds + milliseconds/1000. Using parseInt on substrings is safe because the regex guarantees only digits in those positions.
+
+Edge cases: "abc" fails regex -> -1; "1:02.500" (one-digit minute) fails -> -1; "99:59.999" → 3600+3999.999 = 4000.
+<channel|>```ts
+export function parseTimecode(s: string): number {
+  if (!/^\d{2}:\d{2}\.\d{3}$/.test(s)) return -1;
+
+  const [minStr, secMilli] = s.split(':');
+  const [secStr, mmmStr] = secMilli.split('.');
+
+  return Number(minStr) * 60 + Number(secStr) + Number(mmmStr) / 1000;
+}
+```

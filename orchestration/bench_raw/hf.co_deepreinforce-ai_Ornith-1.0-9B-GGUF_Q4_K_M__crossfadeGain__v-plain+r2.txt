@@ -1,0 +1,72 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Role: Focused code generator.
+    *   Task: Output ONLY a TypeScript file content in a single ````ts` code block. No prose, no imports (besides standard math functions if needed, but the prompt says "no imports" - usually meaning no external dependencies or unnecessary ones; `Math` is global).
+    *   Function Signature: `export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number }`
+    *   Logic:
+        *   Calculate progress $p = t / \text{durationSec}$.
+        *   Clamp $p$ to $[0, 1]$.
+        *   If $\text{durationSec} \le 0$ or not finite -> return `{ gainIn: 1, gainOut: 0 }`.
+        *   If $t$ is NaN -> treat as $t = 0$.
+        *   gainIn = $\sin(p \cdot \pi / 2)$.
+        *   gainOut = $\cos(p \cdot \pi / 2)$.
+    *   Constraints: Pure function, no imports (standard TS globals like `Math` are fine). Output ONLY the code block.
+
+2.  **Drafting the Code:**
+    ```typescript
+    export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+      if (!isFinite(durationSec) || durationSec <= 0) {
+        return { gainIn: 1, gainOut: 0 };
+      }
+
+      let effectiveT = t;
+      if (Number.isNaN(effectiveT)) {
+        effectiveT = 0;
+      }
+
+      const p = effectiveT / durationSec;
+      const clampedP = Math.max(0, Math.min(1, p));
+
+      return {
+        gainIn: Math.sin(clampedP * Math.PI / 2),
+        gainOut: Math.cos(clampedP * Math.PI / 2)
+      };
+    }
+    ```
+
+3.  **Verifying against test cases:**
+    *   `crossfadeGain(0, 2)`: durationSec=2 (finite > 0). t=0. p=0. clampedP=0. sin(0)=0, cos(0)=1. Result: `{gainIn: 0, gainOut: 1}`. Matches.
+    *   `crossfadeGain(1, 2)`: durationSec=2. t=1. p=0.5. clampedP=0.5. sin($\pi/4$) $\approx$ 0.707106781. cos($\pi/4$) $\approx$ 0.707106781. Matches within 1e-6.
+    *   `crossfadeGain(2, 2)`: durationSec=2. t=2. p=1. clampedP=1. sin($\pi/2$)=1, cos($\pi/2$)=0. Result: `{gainIn: 1, gainOut: 0}`. Matches.
+    *   `crossfadeGain(5, 2)`: durationSec=2. t=5. p=2.5. clampedP=1. sin($\pi/2$)=1, cos($\pi/2$)=0. Result: `{gainIn: 1, gainOut: 0}`. Matches.
+    *   Edge case: durationSec = -1 -> returns `{gainIn: 1, gainOut: 0}`. Matches rule.
+    *   Edge case: t = NaN -> effectiveT becomes 0. p=0. Returns `{gainIn: 0, gainOut: 1}`. Matches rule.
+
+4.  **Formatting:** Ensure ONLY the ```ts block is outputted, no surrounding text.
+
+5.  **Final Polish:** Check constraints again. "No imports". `Math` is global. No file imports needed for this single function. Looks good.
+
+6.  **Construct Output.**
+</think>
+
+```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (!isFinite(durationSec) || durationSec <= 0) {
+    return { gainIn: 1, gainOut: 0 };
+  }
+
+  let effectiveT = t;
+  if (Number.isNaN(effectiveT)) {
+    effectiveT = 0;
+  }
+
+  const p = effectiveT / durationSec;
+  const clampedP = Math.max(0, Math.min(1, p));
+
+  return {
+    gainIn: Math.sin(clampedP * Math.PI / 2),
+    gainOut: Math.cos(clampedP * Math.PI / 2)
+  };
+}
+```

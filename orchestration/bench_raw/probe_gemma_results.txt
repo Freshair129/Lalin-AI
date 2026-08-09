@@ -1,0 +1,6 @@
+model: hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M
+P1 /api/generate (model template): wall=1.0s eval_count=1 done_reason=stop -> output: '' (empty)
+P2 /api/chat + system role:        wall=2.8s eval_count=67 -> '<unused33><unused27>...[multimodal]...' (garbage)
+P3 raw:true + gemma4 <|turn> template:      wall=1.8s eval_count=33 -> '<unused32><unused30>...' (garbage)
+P4 raw:true + gemma <start_of_turn> template: wall=3.4s eval_count=83 -> '<unused26><unused33>...' (garbage)
+conclusion: broken at GGUF weights/vocab level (every prompting path fails incl. raw) - PERMANENT, not fixable via template/Modelfile. Contrast: gemma-4-12b-it (same arch gemma4 + same Jinja template) generates real text.

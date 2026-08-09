@@ -3,6 +3,10 @@ setlocal
 chcp 65001 >nul
 title G-Music Dev Launcher
 set "PYTHONIOENCODING=utf-8"
+set "API_DIR=%~dp0apps\api"
+set "DESKTOP_DIR=%~dp0apps\desktop"
+set "PYTHON_EXE=%~dp0apps\api\.venv\Scripts\python.exe"
+if not exist "%PYTHON_EXE%" set "PYTHON_EXE=%~dp0backend\.venv\Scripts\python.exe"
 
 echo.
 echo ==============================================
@@ -17,10 +21,10 @@ echo Freeing ports 8756 and 5173 if in use...
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8756 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
 
-start "G-Music Backend" cmd /k "chcp 65001 >nul && cd /d %~dp0backend && set PYTHONIOENCODING=utf-8 && .venv\Scripts\python.exe -m uvicorn app.main:app --port 8756"
+start "G-Music Backend" cmd /k "chcp 65001 >nul && cd /d %API_DIR% && set PYTHONIOENCODING=utf-8 && %PYTHON_EXE% -m uvicorn app.main:app --port 8756"
 timeout /t 3 /nobreak >nul
 
-start "G-Music Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
+start "G-Music Frontend" cmd /k "cd /d %DESKTOP_DIR% && npm run dev"
 timeout /t 4 /nobreak >nul
 start "" http://localhost:5173
 

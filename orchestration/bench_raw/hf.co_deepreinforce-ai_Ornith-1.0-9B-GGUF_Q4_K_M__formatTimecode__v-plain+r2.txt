@@ -1,0 +1,95 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Role: Focused code generator.
+    *   Task: Output ONLY a TypeScript file (`frontend/src/utils/formatTimecode.ts`).
+    *   Constraint: Single ````ts` code block. No prose. Pure function, no imports (except standard types if needed, but really just the implementation).
+    *   Function Signature: `export function formatTimecode(sec: number): string`.
+    *   Rules:
+        1.  Format: "MM:SS.mmm" (zero-padded, minutes at least 2 digits).
+        2.  Rounding: Round to nearest millisecond FIRST (total ms), then split. This means `Math.round(sec * 1000)` is the key step before division.
+        3.  Edge cases: Negative or non-finite -> "00:00.000".
+    *   Acceptance Tests:
+        *   `formatTimecode(62.5)` -> `"01:02.500"`
+        *   `formatTimecode(0)` -> `"00:00.000"`
+        *   `formatTimecode(-3)` -> `"00:00.000"`
+        *   `formatTimecode(659.999)` -> `"10:59.999"`
+
+2.  **Drafting the Implementation:**
+
+    *   Signature: `export function formatTimecode(sec: number): string`
+    *   Check for invalid input: `if (!Number.isFinite(sec) || sec < 0) return "00:00.000";`
+    *   Convert to milliseconds and round: `const ms = Math.round(sec * 1000);`
+    *   Calculate minutes, seconds, milliseconds from total ms:
+        *   `const totalMinutes = Math.floor(ms / 60000);`
+        *   `const remainingMs = ms % 60000;`
+        *   `const seconds = Math.floor(remainingMs / 1000);`
+        *   `const milliseconds = remainingMs % 1000;`
+    *   Format strings:
+        *   Minutes: `String(totalMinutes).padStart(2, "0")` (Rule says "at least 2 digits", standard timecode usually is exactly 2 for MM but could be more. Let's look at the example: `659.999 -> 10:59.999`. So it pads to at least 2, effectively just using `padStart(2)` or letting it grow naturally if > 99. Wait, "zero-padded (minutes at least 2 digits)". Usually means `MM` is padded to 2. If it goes past 99 minutes, standard timecode would need more. Let's stick to the examples. `659.999s = 10m 59.999s`. So `padStart(2)` works for the provided examples. However, "at least 2 digits" implies if it were 100 minutes, it should be `100:xx.xxx`? Or just standard pad to 2? Let's check common timecode behavior. Usually MM is fixed width in some contexts but here "at least 2 digits" suggests dynamic length >= 2. I will use `padStart(2)` for safety on the examples, but actually `String(val).padStart(2, '0')` handles both cases (if >9 it stays as is, if <10 it pads to 2).
+    *   Seconds: `padStart(2, "0")`.
+    *   Milliseconds: `padStart(3, "0")`.
+
+3.  **Refining Edge Cases:**
+    *   `sec = -3`: Finite but negative -> returns `"00:00.000"`. Correct per rule 3.
+    *   `sec = NaN/Infinity`: Non-finite -> returns `"00:00.000"`. Correct per rule 3.
+    *   `sec = 62.5`: `62500ms`. `1m 2s 500ms` -> `"01:02.500"`. Matches.
+    *   `sec = 0`: `0ms`. `0m 0s 0ms` -> `"00:00.000"`. Matches.
+    *   `sec = 659.999`: `659999ms`. Round(659999) = 659999. `10m 59s 999ms` -> `"10:59.999"`. Matches.
+
+4.  **Final Code Construction:**
+    ```typescript
+    export function formatTimecode(sec: number): string {
+      if (!Number.isFinite(sec) || sec < 0) return "00:00.000";
+      const ms = Math.round(sec * 1000);
+      const totalMinutes = Math.floor(ms / 60000);
+      const remainingMs = ms % 60000;
+      const seconds = Math.floor(remainingMs / 1000);
+      const milliseconds = remainingMs % 1000;
+      return (
+        String(totalMinutes).padStart(2, "0") + ":" +
+        String(seconds).padStart(2, "0") + ":" +
+        String(milliseconds).padStart(3, "0")
+      );
+    }
+    ```
+
+5.  **Review Constraints:**
+    *   Output ONLY the ````ts block? Yes.
+    *   No prose before/after? Yes.
+    *   Pure function, no imports? Yes (no `import` statements needed).
+
+6.  **Final Polish:** Combine into string template for readability or concatenation. Template literals are cleaner.
+
+    ```typescript
+    export function formatTimecode(sec: number): string {
+      if (!Number.isFinite(sec) || sec < 0) return "00:00.000";
+      const ms = Math.round(sec * 1000);
+      const totalMinutes = Math.floor(ms / 60000);
+      const remainingMs = ms % 60000;
+      const seconds = Math.floor(remainingMs / 1000);
+      const milliseconds = remainingMs % 1000;
+      return `${String(totalMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}:${String(milliseconds).padStart(3, "0")}`;
+    }
+    ```
+
+7.  **Final Check:** The prompt says "Output ONLY the ```ts block". I must ensure no markdown explanation surrounds it other than the code fence itself. Wait, usually "ONLY" means just the block content inside the fences. I will provide exactly that.
+
+    One specific constraint check: "minutes at least 2 digits". `padStart(2)` ensures this for values < 100. If value is >= 100 (e.g., hour+), string naturally has more digits, satisfying "at least 2". This matches the example `10:59.999`.
+
+    Ready to output.cw
+</think>
+
+```ts
+export function formatTimecode(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) return "00:00.000";
+
+  const ms = Math.round(sec * 1000);
+  const totalMinutes = Math.floor(ms / 60000);
+  const remainingMs = ms % 60000;
+  const seconds = Math.floor(remainingMs / 1000);
+  const milliseconds = remainingMs % 1000;
+
+  return `${String(totalMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}:${String(milliseconds).padStart(3, "0")}`;
+}
+```

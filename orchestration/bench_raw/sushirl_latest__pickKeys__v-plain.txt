@@ -1,0 +1,29 @@
+Let me think about how to approach this coding problem.
+
+Problem: You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/utils/pickKeys.ts:
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>
+
+Rules:
+- return a NEW object containing only the given keys (own enumerable properties of obj).
+- do not mutate the input object.
+- duplicate keys in the list must not duplicat
+
+Approach: TypeScript Generic Function for Picking Keys
+
+Let me implement this carefully, considering edge cases and type safety.
+</think>
+
+```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    if (key in obj && Object.prototype.hasOwnProperty.call(obj, key)) {
+      result[key] = obj[key];
+    }
+  }
+  return result;
+}
+```

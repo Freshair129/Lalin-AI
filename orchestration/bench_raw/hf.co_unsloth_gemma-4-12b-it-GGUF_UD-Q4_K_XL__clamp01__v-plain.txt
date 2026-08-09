@@ -1,0 +1,37 @@
+<|channel>thought
+*   Task: Implement `clamp01` function in TypeScript.
+    *   Signature: `export function clamp01(x: number): number`.
+    *   Rules:
+        *   Clamp $x$ to $[0, 1]$.
+        *   If $x$ is `NaN`, return 0.
+    *   Constraints: Output ONLY the code block. No prose. Pure function. No imports.
+
+    *   Input: `-1` -> Output: `0`.
+    *   Input: `0.5` -> Output: `0.5`.
+    *   Input: `2` -> Output: `1`.
+    *   Input: `NaN` -> Output: `0`.
+
+    ```typescript
+    export function clamp01(x: number): number {
+      if (isNaN(x)) return 0;
+      return Math.max(0, Math.min(1, x));
+    }
+    ```
+
+    *   Is it a pure function? Yes.
+    *   Are there imports? No.
+    *   Does it handle NaN correctly? `isNaN(NaN)` is true, returns 0. Correct.
+    *   Does it clamp -1 to 0? `Math.max(0, Math.min(1, -1))` -> `Math.max(0, -1)` -> `0`. Correct.
+    *   Does it clamp 2 to 1? `Math.max(0, Math.min(1, 2))` -> `Math.max(0, 1)` -> `1`. Correct.
+
+    ```ts
+    export function clamp01(x: number): number {
+      if (isNaN(x)) return 0;
+      return Math.max(0, Math.min(1, x));
+    }
+    ```<channel|>```ts
+export function clamp01(x: number): number {
+  if (isNaN(x)) return 0;
+  return Math.max(0, Math.min(1, x));
+}
+```

@@ -4,10 +4,14 @@ chcp 65001 >nul
 title G-Music Test
 set "PYTHONIOENCODING=utf-8"
 cd /d %~dp0
+set "API_DIR=%~dp0apps\api"
+set "DESKTOP_DIR=%~dp0apps\desktop"
+set "PYTHON_EXE=%~dp0apps\api\.venv\Scripts\python.exe"
+if not exist "%PYTHON_EXE%" set "PYTHON_EXE=%~dp0backend\.venv\Scripts\python.exe"
 
 echo.
 echo [1/3] TypeScript check (frontend)...
-cd frontend
+cd %DESKTOP_DIR%
 call .\node_modules\.bin\tsc.cmd --noEmit
 if errorlevel 1 (
   echo.
@@ -20,8 +24,8 @@ cd ..
 
 echo.
 echo [2/3] Backend import check...
-cd backend
-.venv\Scripts\python.exe -c "from app.main import app; print('     OK - backend imports,', len(app.routes), 'routes')"
+cd %API_DIR%
+%PYTHON_EXE% -c "from app.main import app; print('     OK - backend imports,', len(app.routes), 'routes')"
 if errorlevel 1 (
   echo.
   echo ^>^>^> BACKEND IMPORT FAILED
@@ -35,7 +39,7 @@ echo [3/3] Backend endpoints (quick boot + curl)...
 set "PID_FILE=%TEMP%\g-music-test-backend.pid"
 if exist "%PID_FILE%" del "%PID_FILE%" >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8756 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Start-Process -FilePath '%~dp0backend\\.venv\\Scripts\\python.exe' -ArgumentList '-m','uvicorn','app.main:app','--port','8756','--log-level','warning' -WorkingDirectory '%~dp0backend' -WindowStyle Hidden -PassThru; Set-Content -Path '%PID_FILE%' -Value $p.Id"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Start-Process -FilePath '%PYTHON_EXE%' -ArgumentList '-m','uvicorn','app.main:app','--port','8756','--log-level','warning' -WorkingDirectory '%API_DIR%' -WindowStyle Hidden -PassThru; Set-Content -Path '%PID_FILE%' -Value $p.Id"
 timeout /t 6 /nobreak >nul
 curl -s -o nul -w "      /health   -> %%{http_code}\n" http://127.0.0.1:8756/health
 curl -s -o nul -w "      /packs    -> %%{http_code}\n" http://127.0.0.1:8756/packs

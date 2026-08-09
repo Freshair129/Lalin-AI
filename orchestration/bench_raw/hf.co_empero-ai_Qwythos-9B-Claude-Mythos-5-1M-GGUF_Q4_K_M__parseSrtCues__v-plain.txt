@@ -1,0 +1,47 @@
+The user wants me to implement a TypeScript function `parseSrtCues` that parses SRT subtitle text into an array of objects with start/end times (in seconds) and concatenated text lines.
+
+I need to:
+- Split input by blank lines (one or more empty lines separate blocks).
+- For each block, parse the index line (skip it), then the time line "HH:MM:SS,mmm --> HH:MM:SS,mmm", then one or more text lines joined with "\n".
+- Convert times to seconds.
+- Handle both \n and \r\n line endings; trim each line.
+- Skip malformed blocks (no valid time line) instead of throwing.
+- Return empty array for empty or whitespace-only input.
+
+I'll write a pure function, no imports needed beyond built-in types. I'll use regex to match the time format: `^\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}$`. Then parse each part by splitting on ":" and ",".
+
+I'll split the input into blocks using a regex that matches one or more blank lines: `/\n\s*\n/` (or handle both \r\n). I'll use `split(/\r?\n\r?\n+/)` to get blocks, then filter out empty strings.
+
+For each block, I'll trim it and split by "\n" into lines. Then iterate through lines: skip the first line (index), check if second line matches time regex; if not, discard block. Then collect remaining lines as text, joining with "\n". Convert times to seconds using a helper function that parses "HH:MM:SS,mmm" -> HH*3600 + MM*60 + SS + mmm/1000.
+
+Return array of objects.
+
+I'll write the code in a single ```ts block, no prose. Ensure it's pure and matches signature exactly.
+
+Now produce final output with only the code block.
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  if (!srt || srt.trim() === "") return [];
+  
+  const blocks = srt.split(/\r?\n\r?\n+/).filter(b => b.trim());
+  const result: { start: number; end: number; text: string }[] = [];
+
+  for (const block of blocks) {
+    const lines = block.split("\n").map(l => l.trim()).filter(l => l !== "");
+    if (lines.length < 2) continue;
+
+    const timeLine = lines[1];
+    const match = timeLine.match(/^(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})$/);
+    if (!match) continue;
+
+    const start = parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60 + parseInt(match[3], 10) + parseInt(match[4], 10) / 1000;
+    const end = parseInt(match[5], 10) * 3600 + parseInt(match[6], 10) * 60 + parseInt(match[7], 10) + parseInt(match[8], 10) / 1000;
+
+    result.push({ start, end, text: lines.slice(2).join("\n") });
+  }
+
+  return result;
+}
+```

@@ -1,0 +1,77 @@
+<|channel>thought
+*   Task: Implement `parseTimecode(s: string): number`.
+    *   Input format: "MM:SS.mmm" (exactly 2-digit minutes, 2-digit seconds, 3-digit milliseconds).
+    *   Constraints:
+        *   Seconds: 00-59.
+        *   Minutes: 00-99.
+        *   Return total seconds as a number.
+        *   Invalid format/values -> return -1.
+    *   Specific examples:
+        *   "01:02.500" -> 62.5
+        *   "00:00.000" -> 0
+        *   "abc" -> -1
+        *   "1:02.500" -> -1 (must be 2 digits)
+
+    *   Regex is best for strict format checking.
+    *   Pattern: `^([0-9]{2}):([0-9]{2})\.([0-9]{3})$`
+    *   Capture groups: Minutes, Seconds, Milliseconds.
+    *   Validation logic:
+        1.  Check if string matches regex exactly.
+        2.  Extract minutes (M), seconds (S), milliseconds (ms).
+        3.  Convert to numbers.
+        4.  Validate S < 60 and M < 100.
+        5.  Calculate: `M * 60 + S + ms / 1000`.
+
+    *   "01:02.500": Matches regex. M=1, S=2, ms=500. Result = $1 \times 60 + 2 + 0.5 = 62.5$.
+    *   "00:00.000": Matches regex. M=0, S=0, ms=0. Result = 0.
+    *   "abc": No match. Return -1.
+    *   "1:02.500": No match (regex requires `[0-9]{2}`). Return -1.
+    *   "60:00.000": Matches regex? Yes. M=60, S=0. Result = 3600. Wait, rule says "minutes 00-99". So 60 is okay.
+    *   "00:60.000": Matches regex. M=0, S=60. Rule says seconds must be 00-59. Return -1.
+
+    ```typescript
+    export function parseTimecode(s: string): number {
+      const match = s.match(/^(\d{2}):(\d{2})\.(\d{3})$/);
+      if (!match) return -1;
+
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const milliseconds = parseInt(match[3], 10);
+
+      if (seconds > 59 || minutes > 99) {
+        return -1;
+      }
+
+      return minutes * 60 + seconds + milliseconds / 1000;
+    }
+    ```
+
+    *   "MM:SS.mmm" format? Yes.
+    *   Seconds 00-59? Yes.
+    *   Minutes 00-99? Yes.
+    *   Return total seconds? Yes.
+    *   Invalid -> -1? Yes.
+    *   Strict digit count (e.g., "1:02" fails)? Yes, `\d{2}` ensures this.
+
+    Wait, let's double check the regex for exactness. `^(\d{2}):(\d{2})\.(\d{3})$` handles exactly 2 digits, colon, 2 digits, dot, 3 digits.
+    Example "1:02.500" -> Regex fails because first group expects 2 digits. Correct.
+
+    One edge case: `parseTimecode("99:60.000")`.
+    Regex matches. Minutes=99 (<=99), Seconds=60 (>59). Returns -1. Correct.<channel|>```ts
+export function parseTimecode(s: string): number {
+  const match = s.match(/^(\d{2}):(\d{2})\.(\d{3})$/);
+  if (!match) {
+    return -1;
+  }
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59 || minutes > 99) {
+    return -1;
+  }
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```

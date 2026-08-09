@@ -1,0 +1,5 @@
+# ไฟล์ชั่วคราวของ Verify Gate (เขียนใหม่ทุก run) — เก็บเฉพาะ raw output (*.txt) เป็นหลักฐาน
+bench_raw/candidate_*.ts
+bench_raw/reextract/
+ledger_vec.json
+model_stats.jsonl

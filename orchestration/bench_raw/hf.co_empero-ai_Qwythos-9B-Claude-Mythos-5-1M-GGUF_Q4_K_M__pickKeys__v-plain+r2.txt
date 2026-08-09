@@ -1,0 +1,26 @@
+I need to implement a TypeScript function that picks specific keys from an object. The function signature is already given: `export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>`. This returns a new object with only the specified keys.
+
+First, I should verify the type constraints. The generic parameters are `T extends object` and `K extends keyof T`, which means `K` must be a union of valid property keys of `T`. The return type is `Pick<T, K>`, which correctly produces a new object with only those properties.
+
+Now, for the implementation: I need to iterate over the `keys` array and build a new object. Since duplicate keys shouldn't cause issues, I can simply collect all values into an object literal spread. Using `Object.fromEntries` is efficient and handles duplicates gracefully—duplicate entries in the mapping will just overwrite previous ones, but since we're constructing from the original object's own enumerable properties, this matches the requirement.
+
+I also need to ensure that I'm not mutating the input `obj`. Spreading into a new object literal and using `Object.fromEntries` both create fresh objects, so mutation is avoided.
+
+TypeScript strict mode will require that the keys passed in are indeed part of the type `K`, which is enforced by the generic constraint `K extends keyof T`. This guarantees that the resulting object is assignable to `Pick<T, K>`.
+
+Putting it together: I'll write a concise implementation using destructuring to extract each key-value pair, then spread them into an object literal. This is both readable and type-safe.
+
+I should also consider edge cases: empty keys array returns an empty object `{}`, which matches the expected behavior. The function works for any object type that extends `object`, so it's generic enough.
+
+Now, I'll craft the final code block with only the function definition, no imports or extra prose.
+</think>
+
+```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+    const result: Record<K, T[K]> = {};
+    for (const key of keys) {
+        result[key] = obj[key];
+    }
+    return result as Pick<T, K>;
+}
+```

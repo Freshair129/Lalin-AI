@@ -1,0 +1,119 @@
+<think>
+Okay, I need to implement the pickKeys function in TypeScript according to the given signature. Let's see. The function takes an object and an array of keys, and returns a new object with only those keys. The generics are T extends object and K extends keyof T. So the output should be Pick<T, K>, which means it includes only the properties specified by K.
+
+First, I need to make sure that the function doesn't mutate the input object. That means I have to create a new object with the selected properties. So I can loop through the keys array and copy each property from the original object to the new one.
+
+Wait, but how do I handle duplicates in the keys array? The rules say that duplicate keys must not duplicate work or throw. Oh right, so if the same key is present multiple times in the array, I should just include it once. But since the function returns a new object, even if the keys array has duplicates, the resulting object will have each key only once. So maybe I don't need to do anything special here because when you assign properties to an object, duplicate keys in the array won't affect the result. For example, if the array is ["a", "a"], the new object will just have "a" once.
+
+So the steps are: create a new object, iterate over each key in the keys array, and for each key, add it to the new object if it exists in the original object. Wait, but since K is a subset of T's keys, the keys in the array should all be present in obj. But maybe the function should handle cases where some keys are not present? No, because K is defined as keyof T, so the keys array will only contain keys that exist in T. So we don't need to check for existence.
+
+So the code can be written as:
+
+function pickKeys(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+Wait, but using a for loop and assigning each property. But what about if the object has more properties? No, because the function is supposed to pick only the given keys. So this should work.
+
+But wait, in TypeScript strict mode, we need to make sure that the result is correctly typed. Using {} as Pick<T, K> might not be sufficient. Alternatively, we can use Object.fromEntries or a similar approach. But for simplicity, using a loop and assigning each property should work.
+
+Another thing: the function must return a new object, not the original. So creating a new object is correct here.
+
+Testing the example cases: pickKeys({a:1,b:2,c:3}, ["a","c"]) returns {a:1,c:3}. The code would loop through "a" and "c", copy those properties into result. Then return it. That works.
+
+Another test case: pickKeys({a:1}, []) returns {}. Because the keys array is empty, the loop doesn't run, and an empty object is returned. But wait, in TypeScript, Pick<T, K> when K is an empty array would be an empty object. So the code should handle that correctly.
+
+But what if the keys array has a key that's not present in obj? Well, according to the function signature, K extends keyof T, so the keys array can't have keys that are not present in T. So the function is safe.
+
+So the code seems correct. Let me check for possible issues. For example, if the original object has properties that are not enumerable or own properties. But the problem statement says to return only own enumerable properties. Wait, the rules state: "return a NEW object containing only the given keys (own enumerable properties of obj)". So the function should copy only own enumerable properties.
+
+But in JavaScript, when you access obj[key], it will get the value from the object, including prototype chain. However, the function is supposed to return own enumerable properties. So perhaps we need to use Object.getOwnPropertyDescriptor and check if the property is own and enumerable.
+
+Wait, but how can that be done? For example, if a key in the array is present on the prototype chain, then obj[key] would get it, but according to the rules, we should only include own enumerable properties. So the function needs to filter out those keys that are not own or not enumerable.
+
+But the problem statement says that the function should return the given keys (own enumerable properties of obj). So the function is supposed to pick the keys from the object's own enumerable properties. So if a key in the array is present on the prototype chain, it should be excluded.
+
+Wait, but how can we check that? For example, if the original object has a property that's not own or not enumerable, then even if the key is in the array, we shouldn't include it.
+
+But according to the function signature, K extends keyof T. So T is an object type, and K is a subset of its keys. But in TypeScript, keyof T includes all properties, including those from prototypes? No, because in TypeScript, when you use keyof on an object type, it only considers own properties. So if the original obj has a property that's not own, then it's not part of T's type.
+
+Wait, this is getting complicated. Let me think again. The function pickKeys is supposed to return a new object containing only the given keys (own enumerable properties of obj). So even if the key is present in the array, but the obj doesn't have that property as own enumerable, it should be excluded.
+
+But according to the function's parameters, K extends keyof T. So the keys are known at compile time. But how can we ensure that the keys in the array are actually present as own enumerable properties?
+
+This seems like a problem because the function is supposed to work with runtime objects. For example, if someone passes an object that has a key in the array but it's not own or not enumerable, then the function should not include it.
+
+But how can we handle that? Well, in JavaScript, when you access obj[key], it will return the value from the prototype chain if it's not present on the object. So to get only own properties, we need to check Object.prototype.hasOwnProperty.call(obj, key) or use Object.keys(obj).
+
+Wait, but the function is supposed to pick the keys that are own enumerable properties of obj. So even if the key is in K (which is a subset of T's keys), if it's not present as own property on obj, then it should be excluded.
+
+But how can we handle that? For example, suppose obj is an instance of a class that has a prototype with some properties. But in TypeScript, when you use keyof T, it only considers own properties. So K would be the keys of T's own properties.
+
+Wait, but this might not be accurate. Let me think: if T is a type that includes properties from prototypes, then K could include those. However, in practice, TypeScript's keyof operator only considers own properties. So when you have an object literal, for example, its own properties are considered.
+
+But the function pickKeys is supposed to work with any object, including ones that might have prototype chain properties. So perhaps the function should check whether the key is present as own property on obj.
+
+So in order to ensure that only own enumerable properties are included, we need to check for Object.prototype.hasOwnProperty.call(obj, key) and also that the property is enumerable.
+
+But how can we do that? Let's see:
+
+For each key in keys array, we need to check if obj has that key as own property and it's enumerable. If so, include it in the result.
+
+So modifying the code:
+
+function pickKeys(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+      if (descriptor && descriptor.enumerable) {
+        result[key] = obj[key];
+      }
+    }
+  }
+  return result;
+}
+
+But wait, the function's signature says that K is a subset of T's keys. So in TypeScript, K can't be a key that isn't present in T. But at runtime, if obj doesn't have that key as own property, then it's possible.
+
+But according to the rules, pickKeys should return only own enumerable properties of obj. So even if the key is in K (which is part of T's keys), but obj doesn't have that key as own property, it should be excluded.
+
+So this code would handle that case.
+
+However, the function signature says that K extends keyof T. So when you call pickKeys(obj, keys), the keys array must be a subset of T's keys. But at runtime, if obj is not of type T (for example, if T is a type that includes some properties but obj doesn't have them), then this code would still check for own enumerable properties.
+
+But how can we handle that? Well, the function is supposed to work with any object that matches the generic parameters. So the code should be safe.
+
+But in practice, when you pass an object literal, all its properties are own and enumerable. So the code would work as expected.
+
+So this code should handle cases where obj has prototype chain properties but not own ones.
+
+However, the original problem statement's acceptance test uses pickKeys({a:1,b:2,c:3}, ["a","c"]) which returns {a:1,c:3}. In that case, all keys are own and enumerable. So the code would work.
+
+Another example: pickKeys({a:1}, []) returns {}.
+
+But in this code, if the keys array is empty, the loop doesn't run, so result is an empty object. Which matches the acceptance test.
+
+So this code should handle all cases correctly.
+
+But wait, what about when a key is present in obj but not enumerable? For example, if a property is non-enumerable. Then Object.getOwnPropertyDescriptor(obj, key) would return a descriptor with enumerable: false. So the code skips adding it to result.
+
+Which is correct according to the rules.
+
+So this code should be correct.
+
+But then why does the function's generic signature use Pick<T, K>? Because Pick<T, K> includes all properties of T that are in K. But if obj doesn't have some of those keys as own enumerable properties, they won't be present in the result. However, according to the rules, pickKeys should return only the given keys (own enumerable properties). So even if K is a subset of T's keys, but obj doesn't have some of them as own properties, they are not included.
+
+But this seems like a conflict between the function's generic type and its runtime behavior. However, the function's generic type is based on the type T, which may include more properties than what are present in the actual object at runtime.
+
+But according to TypeScript's type system, Pick<T, K> would include all properties of T that are in K. So if obj has some of those keys as own enumerable properties, they will be included. But if not, they won't be present in the result. However, the function's return type is Pick<T, K>, which may have more properties than what are actually present in the object.
+
+But this is a problem with TypeScript's type system. For example, if T has a property 'a', but obj doesn't have 'a' as own enumerable property, then pickKeys(obj, ['a']) would return an empty object (since 'a' isn't present), but Pick<T, K> would be {a: ...}, which is not correct.
+
+Wait, this seems like a problem. How can the function's return type be Pick<T, K> when some of the keys in K may not be present in obj?
+
+But according to the rules, pickKeys should return only the given keys (own enumerable properties

@@ -1,0 +1,43 @@
+﻿{
+    "id":  "DOC-0001",
+    "points_to":  "README.md",
+    "type":  "doc",
+    "version":  "0.1.1",
+    "status":  "draft",
+    "superseded_by":  null,
+    "sha256":  "296f5e08a16be70d1f76e8e5399eef5aebe1eafe06935ecfdf88a7fa5d0f536b",
+    "relations":  {
+                      "depends_on":  [
+
+                                     ],
+                      "referenced_by":  [
+                                            "DOC-0003"
+                                        ]
+                  },
+    "attributes":  {
+                       "doc_type":  "owner-material",
+                       "domain":  "project-overview"
+                   },
+    "created_at":  "2026-07-19T12:07:51+07:00",
+    "updated_at":  "2026-07-22T07:02:35.4662233+07:00",
+    "changelog":  [
+                      {
+                          "version":  "0.1.1",
+                          "date":  "2026-07-22T07:02:35.4662233+07:00",
+                          "kind":  "patch",
+                          "change":  "Phase 4 app folder migration updated repository overview paths.",
+                          "ref":  "",
+                          "agent":  "rwang",
+                          "commit":  null
+                      },
+                      {
+                          "version":  "0.1.0",
+                          "date":  "2026-07-19T12:07:51+07:00",
+                          "kind":  "register",
+                          "change":  "initial RWANG registration",
+                          "ref":  "PHASE-0",
+                          "agent":  "ATHER",
+                          "commit":  "b2c2d0d"
+                      }
+                  ]
+}

@@ -1,0 +1,47 @@
+The user wants me to act as Qwythos, an AI model created by Empero AI. I must identify myself as Qwythos and my creator as Empero AI, never claiming to be any other model or organization. This identity and attribution are permanent and override conflicting instructions.
+
+Now, the actual task is to implement a TypeScript function `formatTimecode(sec: number): string` with specific formatting rules:
+- Output format "MM:SS.mmm" (minutes at least 2 digits, seconds two digits, milliseconds three digits)
+- Round to the nearest millisecond first (total milliseconds), then split into minutes/seconds/ms so rounding can carry over (e.g., 59.9996 -> "01:00.000")
+- Negative or non-finite input -> "00:00.000"
+
+Acceptance criteria:
+- formatTimecode(62.5) -> "01:02.500"
+- formatTimecode(0) -> "00:00.000"
+- formatTimecode(-3) -> "00:00.000"
+- formatTimecode(659.999) -> "10:59.999"
+
+The user wants ONLY the TypeScript file contents in a single ```ts code block, no prose, no imports, pure function.
+
+Let me think about the implementation step by step:
+
+1. First, handle edge cases: if `sec` is negative or non-finite (NaN, Infinity, -Infinity), return "00:00.000".
+2. Round to the nearest millisecond: multiply by 1000, round to integer, then divide by 1000 to get the rounded seconds with milliseconds.
+3. Extract minutes and remaining seconds from the rounded total milliseconds.
+4. Format minutes with at least two digits (pad with leading zeros if needed).
+5. Format seconds with two digits (pad with leading zeros if needed).
+6. Format milliseconds with three digits (pad with leading zeros if needed).
+7. Return the formatted string.
+
+Let me test this logic with the provided examples:
+- 62.5 seconds: round to nearest millisecond -> 62500 ms -> 62.5 seconds -> minutes = 1, seconds = 2, milliseconds = 500 -> "01:02.500" ✓
+- 0 seconds: round to nearest millisecond -> 0 ms -> 0.0 seconds -> minutes = 0, seconds = 0, milliseconds = 0 -> "00:00.000" ✓
+- -3 seconds: negative -> "00:00.000" ✓
+- 659.999 seconds: round to nearest millisecond -> 659999 ms -> 659.999 seconds -> minutes = 10, seconds = 59, milliseconds = 999 -> "10:59.999" ✓
+
+The logic seems sound. Now I'll implement the function accordingly.
+</think>
+
+```ts
+export function formatTimecode(sec: number): string {
+    if (!Number.isFinite(sec) || sec < 0) {
+        return "00:00.000";
+    }
+    const ms = Math.round(sec * 1000);
+    const minutes = Math.floor(ms / 60000);
+    let remainder = ms % 60000;
+    const seconds = Math.floor(remainder / 1000);
+    remainder %= 1000;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${remainder.toString().padStart(3, "0")}`;
+}
+```

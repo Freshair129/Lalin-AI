@@ -22,11 +22,13 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: frontend/src-tauri
+          workspaces: apps/desktop/src-tauri
 
-      - name: Install frontend deps
-        working-directory: frontend
+      - name: Install workspace deps
         run: npm ci
+
+      - name: Verify workspace
+        run: npm run check:all
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
@@ -35,7 +37,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          projectPath: frontend
+          projectPath: apps/desktop
           tagName: v__VERSION__
           releaseName: "G-Music v__VERSION__"
           releaseBody: "ดูรายละเอียดการเปลี่ยนแปลงด้านล่าง"

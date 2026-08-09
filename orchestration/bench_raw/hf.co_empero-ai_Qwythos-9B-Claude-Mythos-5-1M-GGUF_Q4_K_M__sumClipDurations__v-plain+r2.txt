@@ -1,0 +1,76 @@
+Alright, the user wants me to output a single TypeScript file containing just the implementation of `sumClipDurations`. No prose, no imports—just the function definition. I need to follow the exact rules they gave:
+
+1. **Signature**: 
+   ```ts
+   export function sumClipDurations(clips: { start: number; end: number }[]): number
+   ```
+   So the function must be exported and take an array of objects with `start` and `end` properties.
+
+2. **Sum (end - start) over valid clips**:
+   - A clip is considered valid if both `start` and `end` are finite numbers (`!Number.isNaN(value)` and `Number.isFinite(value)`) AND `end > start`.
+   - For each valid clip, compute `end - start`.
+
+3. **Ignore invalid clips**:
+   - Any clip where `end <= start` should be ignored.
+   - Any clip where either `start` or `end` is not a finite number (NaN, Infinity) should also be ignored.
+
+4. **Round final sum to 3 decimals**:
+   - After summing all valid durations, round the result to 3 decimal places. I can use `Math.round(sum * 1000) / 1000` for that.
+
+5. **Empty array -> 0**:
+   - If the input array is empty, just return `0`. The sum will naturally be `0`, but I'll make sure to handle it explicitly (though not strictly necessary).
+
+Now, let's think about the implementation step by step:
+
+- **Step 1**: Define the function with the correct signature.
+- **Step 2**: Inside the function, initialize a variable `sum` to `0`.
+- **Step 3**: Iterate over each clip in the array.
+- **Step 4**: For each clip, check if both `start` and `end` are finite numbers. Using `Number.isFinite` is reliable for this.
+- **Step 5**: Also check that `end > start`. If any of these conditions fail, skip the clip.
+- **Step 6**: If the clip passes, add `end - start` to `sum`.
+- **Step 7**: After the loop, round `sum` to three decimal places.
+- **Step 8**: Return the rounded sum.
+
+That seems straightforward. I'll write the code accordingly:
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let sum = 0;
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start) {
+      sum += clip.end - clip.start;
+    }
+  }
+  return Math.round(sum * 1000) / 1000;
+}
+```
+
+Check if this matches the acceptance criteria:
+
+- For `[{start:0,end:1.5},{start:2,end:2}]`:
+  - First clip: valid, adds `1.5`.
+  - Second clip: `end <= start`, ignored.
+  - Sum = `1.5`. Rounded to three decimals = `1.5`. Correct.
+
+- For `[]`:
+  - Loop doesn't run, sum stays `0`. Return `0`. Correct.
+
+- For `[{start:1,end:0.5},{start:0,end:0.25}]`:
+  - First clip: `end <= start`, ignored.
+  - Second clip: valid, adds `0.25`.
+  - Sum = `0.25`. Rounded to three decimals = `0.25`. Correct.
+
+Looks good. I'll output just this code block, no extra text.
+</think>
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let sum = 0;
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start) {
+      sum += clip.end - clip.start;
+    }
+  }
+  return Math.round(sum * 1000) / 1000;
+}
+```

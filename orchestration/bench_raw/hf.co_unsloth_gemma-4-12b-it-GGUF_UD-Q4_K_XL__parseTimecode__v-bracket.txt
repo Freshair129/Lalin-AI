@@ -1,0 +1,86 @@
+<|channel>thought
+*   Role: Focused code generator.
+    *   Task: Implement `parseTimecode(s: string): number`.
+    *   Input format: "MM:SS.mmm" (exactly 2 digits minutes, colon, 2 digits seconds, dot, 3 digits milliseconds).
+    *   Constraints:
+        *   Seconds: 00-59.
+        *   Minutes: 00-99.
+        *   Return total seconds as a number.
+        *   Invalid format -> return -1.
+        *   Strictness: "1:02.500" is invalid (minutes must be 2 digits).
+    *   Output Format: Only one `ts` code block, no prose.
+
+    *   Regex for validation: `/^([0-9]{2}):([0-9]{2})\.([0-9]{3})$/`.
+    *   Capture groups: Minutes (MM), Seconds (SS), Milliseconds (mmm).
+    *   Validation logic:
+        1.  Check if string matches regex.
+        2.  Extract MM, SS, mmm.
+        3.  Convert to numbers.
+        4.  Verify SS < 60 and MM < 100 (though the regex `[0-9]{2}` already limits them to 00-99). Wait, "seconds part must be 00-59". So I need to check if seconds >= 60.
+    *   Calculation: `MM * 60 + SS + mmm / 1000`.
+
+    *   `parseTimecode("01:02.500")`: MM=01, SS=02, mmm=500 -> $1 \times 60 + 2 + 0.5 = 62.5$.
+    *   `parseTimecode("00:00.000")`: MM=00, SS=00, mmm=000 -> $0 \times 60 + 0 + 0 = 0$.
+    *   `parseTimecode("abc")`: No match -> -1.
+    *   `parseTimecode("1:02.500")`: No match (regex `[0-9]{2}` requires two digits) -> -1.
+
+    ```typescript
+    export function parseTimecode(s: string): number {
+      const regex = /^([0-9]{2}):([0-9]{2})\.([0-9]{3})$/;
+      const match = s.match(regex);
+
+      if (!match) return -1;
+
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const milliseconds = parseInt(match[3], 10);
+
+      // Seconds must be 00-59. Minutes are already limited to 00-99 by regex [0-9]{2}.
+      if (seconds >= 60) return -1;
+
+      return minutes * 60 + seconds + milliseconds / 1000;
+    }
+    ```
+
+    *   "MM:SS.mmm" format? Yes.
+    *   Seconds 00-59? Checked.
+    *   Minutes 00-99? Regex `[0-9]{2}` handles this (00 to 99).
+    *   Return total seconds? Yes.
+    *   Invalid -> -1? Yes.
+    *   "1:02.500" -> -1? Yes, regex requires two digits for minutes.
+
+    Wait, the prompt says "minutes 00-99". `[0-9]{2}` covers 00 to 99.
+    The prompt says "seconds part must be 00-59". I need a check for that.
+
+    Let's refine:
+    `const match = s.match(/^(\d{2}):(\d{2})\.(\d{3})$/);`
+    If `!match`, return -1.
+    `const m = parseInt(match[1], 10);`
+    `const s_val = parseInt(match[2], 10);`
+    `const ms = parseInt(match[3], 10);`
+    `if (s_val >= 60) return -1;`
+    Return `m * 60 + s_val + ms / 1000`.
+
+    One edge case: "99:59.999" is valid? Yes, minutes 00-99.
+
+    Wait, the prompt says "minutes 00-99".
+    Regex `\d{2}` matches 00 through 99. Correct.<channel|>```ts
+export function parseTimecode(s: string): number {
+  const match = s.match(/^(\d{2}):(\d{2})\.(\d{3})$/);
+
+  if (!match) {
+    return -1;
+  }
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  // Seconds must be 00-59. Minutes are already limited to 00-99 by the regex \d{2}.
+  if (seconds >= 60) {
+    return -1;
+  }
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```

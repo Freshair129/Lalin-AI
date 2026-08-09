@@ -1,0 +1,116 @@
+<|channel>thought
+*   Task: Implement `export function formatTimecode(sec: number): string` in `frontend/src/utils/formatTimecode.ts`.
+    *   Input: `sec` (number).
+    *   Output Format: "MM:SS.mmm" (zero-padded, minutes at least 2 digits).
+    *   Rounding Rule: Round to the nearest millisecond first (total milliseconds), then split into components.
+    *   Edge Cases: Negative or non-finite input -> "00:00.000".
+    *   Examples:
+        *   62.5 -> "01:02.500"
+        *   0 -> "00:00.000"
+        *   -3 -> "00:00.000"
+        *   659.999 -> "10:59.999"
+    *   Constraint: Output ONLY the code block, no prose, no imports.
+
+    *   Check if `sec` is finite and non-negative. If not, return "00:00.000".
+    *   Convert seconds to total milliseconds: `Math.round(sec * 1000)`.
+    *   Calculate minutes: `Math.floor(totalMs / 60000)`.
+    *   Calculate remaining seconds: `Math.floor((totalMs % 60000) / 1000)`.
+    *   Calculate milliseconds: `totalMs % 1000`.
+    *   Format the string:
+        *   Minutes: Pad to at least 2 digits (e.g., "01", "10", "100").
+        *   Seconds: Pad to 2 digits ("02").
+        *   Milliseconds: Pad to 3 digits ("500").
+
+    *   `sec = 62.5`: `totalMs = Math.round(62.5 * 1000) = 62500`.
+        *   Minutes: `Math.floor(62500 / 60000) = 1`.
+        *   Seconds: `Math.floor((62500 % 60000) / 1000) = Math.floor(2500 / 1000) = 2`.
+        *   Ms: `62500 % 1000 = 500`.
+        *   Result: "01:02.500". Correct.
+
+    *   `sec = 659.999`: `totalMs = Math.round(659.999 * 1000) = 660000`.
+        *   Wait, let's re-calculate: $659.999 \times 1000 = 659999$. `Math.round(659999)` is $659999$.
+        *   Minutes: `Math.floor(659999 / 60000) = 10`.
+        *   Seconds: `Math.floor((659999 % 60000) / 1000) = Math.floor(59999 / 1000) = 59`.
+        *   Ms: $659999 \pmod{1000} = 999$.
+        *   Result: "10:59.999". Correct.
+
+    *   `sec = 59.9996`: `totalMs = Math.round(59.9996 * 1000) = 60000`.
+        *   Minutes: `Math.floor(60000 / 60000) = 1`.
+        *   Seconds: `Math.floor((60000 % 60000) / 1000) = 0`.
+        *   Ms: $60000 \pmod{1000} = 0$.
+        *   Result: "01:00.000". Correct.
+
+    ```typescript
+    export function formatTimecode(sec: number): string {
+      if (!Number.isFinite(sec) || sec < 0) {
+        return "00:00.000";
+      }
+
+      const totalMs = Math.round(sec * 1000);
+      const minutes = Math.floor(totalMs / 60000);
+      const seconds = Math.floor((totalMs % 60000) / 1000);
+      const ms = totalMs % 1000;
+
+      const mm = String(minutes).padStart(2, '0');
+      const ss = String(seconds).padStart(2, '0');
+      const mmm = String(ms).padStart(3, '0');
+
+      return `${mm}:${ss}.${mmm}`;
+    }
+    ```
+
+    *   "MM:SS.mmm" zero-padded (minutes at least 2 digits). `String(minutes).padStart(2, '0')` handles this correctly for values < 10 and > 99.
+    *   Round to nearest millisecond first. Done (`Math.round(sec * 1000)`).
+    *   Negative/non-finite -> "00:00.000". Done.
+
+    Wait, `String(minutes).padStart(2, '0')` for minutes > 99 will just return the full number (e.g., "100"), which is correct as it's "at least 2 digits".
+
+    One edge case: `sec = 3599.9996`.
+    $3599.9996 \times 1000 = 3599999.6$. Round -> $3600000$.
+    Minutes: $3600000 / 60000 = 60$.
+    Seconds: $(3600000 \% 60000) / 1000 = 0$.
+    Ms: $0$.
+    Result: "60:00.000". Correct.
+
+    One edge case: `sec = -1`.
+    `Number.isFinite(-1)` is true, but `-1 < 0` is true. Returns "00:00.000". Correct.
+
+    One edge case: `sec = Infinity`.
+    `Number.isFinite(Infinity)` is false. Returns "00:00.000". Correct.
+
+    Final check on requirements:
+    - Output ONLY the code block.
+    - No prose.
+    - Pure function, no imports.
+
+    ```typescript
+    export function formatTimecode(sec: number): string {
+      if (!Number.isFinite(sec) || sec < 0) {
+        return "00:00.000";
+      }
+
+      const totalMs = Math.round(sec * 1000);
+      const minutes = Math.floor(totalMs / 60000);
+      const seconds = Math.floor((totalMs % 60000) / 1000);
+      const ms = totalMs % 1000;
+
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+    }
+    ```<channel|>```ts
+export function formatTimecode(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) {
+    return "00:00.000";
+  }
+
+  const totalMs = Math.round(sec * 1000);
+  const minutes = Math.floor(totalMs / 60000);
+  const seconds = Math.floor((totalMs % 60000) / 1000);
+  const ms = totalMs % 1000;
+
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  const mmm = String(ms).padStart(3, "0");
+
+  return `${mm}:${ss}.${mmm}`;
+}
+```

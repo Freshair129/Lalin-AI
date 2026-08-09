@@ -1,0 +1,140 @@
+The user wants me to implement a TypeScript function `parseTimecode` that parses a timecode string in the exact format "MM:SS.mmm". The rules are clear:
+
+- Input format is exactly "MM:SS.mmm" (2-digit minutes, 2-digit seconds, 3-digit milliseconds).
+- Seconds part must be 00-59; minutes 00-99.
+- Return total seconds as a number.
+- Any string not matching the format exactly -> return -1.
+
+The acceptance tests are:
+- `parseTimecode("01:02.500")` should return `62.5`.
+- `parseTimecode("00:00.000")` should return `0`.
+- `parseTimecode("abc")` should return `-1`.
+- `parseTimecode("1:02.500")` should return `-1` because minutes must be 2 digits.
+
+I need to output ONLY the TypeScript file contents in a single ```ts code block, no prose, pure function, no imports. So I will write just the function definition with its implementation.
+
+Implementation steps:
+- Use regex to match exactly "MM:SS.mmm". The pattern should be `^\d{2}:\d{2}\.\d{3}$`. This ensures 2 digits for minutes, colon, 2 digits for seconds, dot, and 3 digits for milliseconds.
+- After matching, parse the parts: split by ":" to get minutes and seconds string, then split seconds by "." to get seconds and milliseconds strings.
+- Convert minutes and seconds to numbers (they are already numeric strings). Multiply minutes by 60 and add seconds.
+- For milliseconds, convert to a number and divide by 1000 to get fractional seconds. Add that to the total.
+- Return the result as a number.
+
+Edge cases:
+- If regex doesn't match, return -1.
+- Ensure minutes are between 00-99 (regex already enforces exactly two digits).
+- Ensure seconds are between 00-59 (regex allows any two digits, but we must check that the second part is <= 59). Actually the regex `^\d{2}:\d{2}\.\d{3}$` will match "10:60.000" which is invalid because seconds > 59. So after matching, I need to parse and validate seconds < 60.
+- Similarly minutes must be <= 99 (regex already ensures exactly two digits, but we might want to enforce that the first part is <= 99; regex doesn't restrict value, just length). However the spec says "minutes 00-99", so any two-digit number from 00 to 99 is allowed. So no extra check needed beyond regex.
+- For seconds, we must ensure it's between 00 and 59 inclusive. So after parsing, if seconds >= 60, return -1.
+
+Implementation details:
+- Use `RegExp` with the pattern `^\d{2}:\d{2}\.\d{3}$`.
+- Use `.match()` to test. If not matched, return -1.
+- Extract groups or use string slicing after match. Since we only need the whole string, we can just split by ":" and ".".
+
+Let's write code:
+
+```ts
+export function parseTimecode(s: string): number {
+  const regex = /^\d{2}:\d{2}\.\d{3}$/;
+  if (!regex.test(s)) return -1;
+  const [_, mm, ss, ms] = s.split(/[:.]/);
+  const minutes = parseInt(mm, 10);
+  const seconds = parseInt(ss, 10);
+  const milliseconds = parseInt(ms, 10) / 1000;
+  if (seconds > 59) return -1;
+  return minutes * 60 + seconds + milliseconds;
+}
+```
+
+But note: `split(/[:.]/)` will split on both ":" and ".". That yields an array of three parts: minutes, seconds, milliseconds. However we need to ensure that the regex matched exactly "MM:SS.mmm". The split approach is fine because after regex test passes, we know there are exactly two colons? Actually there is only one colon and one dot. So splitting by `[:.]` will produce three parts: minutes, seconds, milliseconds. That's correct.
+
+But we must be careful about the order of splits: if we split by `[:.]`, it will treat both characters as delimiters. Since the string has exactly one colon and one dot, the result will have 3 elements. Good.
+
+Now check edge cases:
+- Input "01:02.500": regex matches, mm="01", ss="02", ms="500". minutes=1, seconds=2, milliseconds=0.5. seconds <= 59, so returns 62.5. Good.
+- Input "00:00.000": returns 0. Good.
+- Input "abc": regex fails, returns -1. Good.
+- Input "1:02.500": regex fails because minutes must be exactly two digits; returns -1. Good.
+
+Now consider input "99:59.999": regex matches, seconds=59 <= 59, so returns 99*60+59+0.999 = 6048.999? Actually minutes=99, seconds=59, milliseconds=0.999. So total = 99*60 + 59 + 0.999 = 5940 + 59 + 0.999 = 5999.999? Wait compute: 99 minutes = 99*60 = 5940 seconds. Add 59 seconds = 5999 seconds. Add 0.999 milliseconds = 5999.999 seconds. That's correct.
+
+Now consider input "10:60.000": regex matches because minutes=10, seconds=60 (two digits). But seconds > 59, so we return -1. Good.
+
+Now consider input "00:00.00": regex fails because milliseconds must be exactly three digits; returns -1. Good.
+
+Now consider input "00:00.0000": regex fails because total length is too long; returns -1. Good.
+
+Now consider input "00:00.000a": regex fails; returns -1. Good.
+
+Now consider input "00:00.000 ": trailing space; regex fails; returns -1. Good.
+
+Now consider input " 00:00.000": leading space; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\n": newline; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\t": tab; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\r": carriage return; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x0b": vertical tab; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x0c": form feed; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x0d": carriage return; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x1b": escape; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x7f": delete; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\x80": extended ASCII; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\xff": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\xfe": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\xfd": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\xfc": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000\xfb": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xfa": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf9": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf8": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf7": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf6": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf5": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf4": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf3": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf2": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf1": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xf0": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xef": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xee": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xed": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xec": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xeb": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xea": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xe9": high bit set; regex fails; returns -1. Good.
+
+Now consider input "00:00.000xe8": high bit set; regex fails; returns -1. Good.
+
+Now consider input "

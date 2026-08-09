@@ -1,0 +1,229 @@
+<|channel>thought
+*   Task: Implement `pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>`.
+    *   Location: `frontend/src/utils/pickKeys.ts`.
+    *   Rules:
+        1.  Return a *new* object with only the specified keys.
+        2.  Do not mutate input.
+        3.  Handle duplicate keys gracefully (no extra work, no errors).
+        4.  Must type-check in strict mode.
+    *   Constraints: Output ONLY the code block. No prose. Pure function. No imports.
+
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (key in obj) {
+          result[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    *   `Pick<T, K>` is a built-in utility type.
+    *   The loop iterates over `keys`.
+    *   `result[key] = obj[key]` might cause a TS error if not handled carefully because `obj[key]` could be anything and `result` expects specific types for specific keys.
+    *   Using `Object.fromEntries` or a simple reduction/loop with type casting is common.
+
+    Refined implementation:
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Wait, the prompt says "Pure function". `Object.fromEntries` is cleaner but might be harder to type perfectly without some casting. Let's stick to a loop or reduce.
+
+    Let's try:
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      keys.forEach((key) => {
+        if (key in obj) {
+          (result as any)[key] = obj[key];
+        }
+      });
+      return result;
+    }
+    ```
+
+    Actually, to satisfy strict mode perfectly without `any` if possible:
+    The standard way to implement this while satisfying the return type is often using a loop and casting the target object or the assignment. Since `Pick<T, K>` is what we must return, and `obj[key]` is guaranteed to be of type `T[K]`, a cast is usually necessary because TS can't track the dynamic nature of the array iteration perfectly against the static `Pick` type.
+
+    Let's check if there's a way without `any`.
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          result[key] = obj[key as keyof T]; // This still might complain about index signature
+        }
+      }
+      return result;
+    }
+    ```
+
+    Actually, the most robust way to satisfy `Pick<T, K>` is:
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (key in obj) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Wait, the prompt says "must type-check under TypeScript strict mode with the exact generic signature".
+    If I use `any`, it technically type-checks (it's just a cast).
+
+    Let's try to avoid `any` if possible.
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          result[key] = obj[key as K];
+        }
+      }
+      return result;
+    }
+    ```
+    Actually, `result[key]` where `result` is `Pick<T, K>` and `key` is `K` should work if the compiler can see that `obj[key]` matches.
+
+    Let's re-verify:
+    If `obj` is `{a: number, b: string}`, `keys` is `['a']`.
+    `result` is `{a: number}`.
+    `key` is `'a'`.
+    `obj[key]` is `number`.
+    `result[key] = obj[key]` should work.
+
+    One issue: `key in obj` check.
+    If I use a loop, the compiler doesn't know that `keys` only contains keys present in `obj` at runtime (even though the type system says so).
+
+    Let's go with the most standard implementation for this utility.
+
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Wait, I can do it without `any` by casting the assignment or using a record.
+    Actually, for "Pure function", no imports means I can't use anything outside standard JS/TS.
+
+    Final check on requirements:
+    - return NEW object: Yes.
+    - do not mutate: Yes.
+    - duplicate keys: Loop handles this (overwrites).
+    - type-check strict mode: Yes.
+
+    One more thing: `Pick<T, K>` is a built-in utility type in TS. It's available globally.
+
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (key in obj) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Actually, `Object.prototype.hasOwnProperty.call` is safer than `key in obj` because `in` checks the prototype chain. The prompt says "own enumerable properties". So I should use `hasOwnProperty`.
+
+    Wait, if I use `(result as any)[key] = obj[key]`, it's safe and satisfies the return type.
+
+    Let's refine:
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Wait, the prompt says "Pure function". `Object.prototype.hasOwnProperty.call` is standard.
+
+    One more check: `Pick<T, K>` requires that all keys in `K` exist in `T`. The input `keys` is of type `K[]`. So even if a key is missing from the object at runtime (which shouldn't happen given the types), the return type `Pick<T, K>` expects those keys to be there.
+
+    Actually, many implementations use:
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      keys.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      });
+      return result;
+    }
+    ```
+
+    Is there a way to do it without `any`?
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          result[key] = obj[key as K];
+        }
+      }
+      return result;
+    }
+    ```
+    In strict mode, `result[key]` might still complain because `key` is a generic and the compiler doesn't know if it's one of the keys in `Pick<T, K>`.
+
+    Let's stick to the most reliable way to satisfy the signature.
+
+    One detail: "own enumerable properties".
+    `Object.keys(obj)` returns own enumerable properties.
+    But we are given a list of keys. We just need to check if they exist on `obj`.
+
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    Wait, I'll use a slightly cleaner loop.
+
+    ```typescript
+    export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+      const result = {} as Pick<T, K>;
+      for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          (result as any)[key] = obj[key];
+        }
+      }
+      return result;
+    }
+    ```
+
+    

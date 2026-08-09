@@ -1,0 +1,67 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Role: Focused code generator.
+    *   Task: Output ONLY TypeScript file contents in a single ````ts` code block.
+    *   No prose, no explanations, no imports (pure function).
+    *   Specific implementation target: `frontend/src/timeline/sumClipDurations.ts`.
+    *   Function signature: `export function sumClipDurations(clips: { start: number; end: number }[]): number`
+    *   Rules:
+        1.  Sum `(end - start)` for valid clips where `end > start`.
+        2.  Ignore invalid clips: `end <= start`, or `start/end` not finite numbers (NaN, Infinity).
+        3.  Round final sum to 3 decimals.
+        4.  Empty array -> 0.
+
+2.  **Drafting the Code:**
+    *   Function name: `sumClipDurations`.
+    *   Parameter: `clips` array of `{ start, end }`.
+    *   Logic:
+        *   Initialize `total = 0`.
+        *   Iterate through `clips`.
+        *   Check validity: `!Number.isFinite(clip.start) || !Number.isFinite(clip.end)` -> skip.
+        *   Check duration > 0: `clip.end <= clip.start` -> skip.
+        *   Add `clip.end - clip.start` to `total`.
+    *   Rounding: `Math.round(total * 1000) / 1000`.
+    *   Return value: If no valid clips, return 0 (which is default).
+
+3.  **Refining Logic:**
+    *   Need to handle the case where `Number.isFinite` checks are needed for both properties.
+    *   Rounding: Standard approach `Math.round(total * 1000) / 1000`.
+
+4.  **Final Code Structure:**
+    ```typescript
+    export function sumClipDurations(clips: { start: number; end: number }[]): number {
+      let total = 0;
+      for (const clip of clips) {
+        if (!Number.isFinite(clip.start) || !Number.isFinite(clip.end)) continue;
+        if (clip.end <= clip.start) continue;
+        total += clip.end - clip.start;
+      }
+      return Math.round(total * 1000) / 1000;
+    }
+    ```
+
+5.  **Review against Constraints:**
+    *   Single ````ts` block? Yes.
+    *   No prose outside the block? Yes.
+    *   Exact signature? Yes.
+    *   Rules met?
+        *   Sum end-start where end > start: Yes.
+        *   Ignore invalid (end <= start, non-finite): Yes.
+        *   Round to 3 decimals: Yes.
+        *   Empty -> 0: Yes.
+
+6.  **Construct Output:** Just the code block.cw
+</think>
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let total = 0;
+  for (const clip of clips) {
+    if (!Number.isFinite(clip.start) || !Number.isFinite(clip.end)) continue;
+    if (clip.end <= clip.start) continue;
+    total += clip.end - clip.start;
+  }
+  return Math.round(total * 1000) / 1000;
+}
+```

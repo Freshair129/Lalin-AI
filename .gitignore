@@ -3,18 +3,27 @@ __pycache__/
 *.py[cod]
 .venv/
 backend/.venv/
+apps/api/.venv/
 
 # Config / secrets
 .env
 backend/.env
+apps/api/.env
 keys/
 
 # Data (เสียง/งาน/โมเดล)
+runtime/
+data/
+output/
+queue/
+state/
 backend/data/
+apps/api/data/
 *.wav
 *.mp3
 *.mp4
 !backend/app/**/sample*.wav
+!apps/api/app/**/sample*.wav
 
 # Models cache
 .cache/
@@ -24,6 +33,24 @@ models/
 frontend/node_modules/
 frontend/dist/
 frontend/src-tauri/target/
+frontend/src-tauri/binaries/
+apps/desktop/node_modules/
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/target-stale*/
+apps/desktop/src-tauri/binaries/
+apps/mcp/node_modules/
+apps/mcp/dist/
+packages/contracts/node_modules/
+packages/contracts/dist/
+
+# Packaging build artifacts
+backend/build/
+backend/dist/
+backend/*.spec
+apps/api/build/
+apps/api/dist/
+apps/api/*.spec
 
 # OS / IDE
 .DS_Store
@@ -34,3 +61,9 @@ Thumbs.db
 # backend runtime logs (transient)
 backend/backend.log
 backend/backend.err
+backend/sidecar-smoke.log
+backend/sidecar-smoke.err
+apps/api/backend.log
+apps/api/backend.err
+apps/api/sidecar-smoke.log
+apps/api/sidecar-smoke.err
