@@ -1,4 +1,5 @@
 """อัปโหลดไฟล์ต้นฉบับ + ดาวน์โหลดผลลัพธ์"""
+# @req FR-07 — จัดการไฟล์เข้า/ออก (upload/download/input/export)
 from __future__ import annotations
 
 from pathlib import Path

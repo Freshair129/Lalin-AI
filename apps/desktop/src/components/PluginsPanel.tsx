@@ -1,3 +1,4 @@
+// @req FR-11 — UI plugin manager (BYOM/GPL optional — FR-11.2)
 import { useEffect, useState } from "react";
 import { plugins, type PluginInfo, type PluginInstallInfo } from "../api";
 

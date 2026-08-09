@@ -1,4 +1,5 @@
 """จัดการคลังเสียง: อัปโหลด/ดู/ลบ ตัวอย่างเสียงสำหรับโคลน"""
+# @req FR-01 — คลังเสียง: อัปโหลด/ลิสต์/แก้/ลบ — consent-first (FR-01)
 from __future__ import annotations
 
 from io import BytesIO

@@ -10,6 +10,7 @@
 
 ฟังก์ชันนี้ออกแบบให้เรียกจาก job (async) พร้อมรายงานความคืบหน้า
 """
+# @req FR-03 — dubbing เต็มสาย: ASR -> แปล -> clone -> fit -> mix
 from __future__ import annotations
 
 import asyncio

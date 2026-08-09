@@ -1,3 +1,4 @@
+// @req FR-04b — ลูกบิดปรับพารามิเตอร์ของ remix/FX
 import { useRef, useState, useCallback } from "react";
 
 // ────────────────────────────────────────────────────────────

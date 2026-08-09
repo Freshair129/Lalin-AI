@@ -1,4 +1,5 @@
 """G-Music backend - FastAPI app."""
+# @req NFR-05 — boot + mount router ตาม backend profile (lite/full)
 from __future__ import annotations
 
 import os

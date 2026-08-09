@@ -1,3 +1,4 @@
+// @req NFR-04 — ชุดไอคอนของ rail/nav
 // ชุด line icon โมเดิร์น (stroke=currentColor) สำหรับ rail/nav
 type IconName = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "market" | "brain"
   | "files" | "folder" | "audio" | "doc" | "save" | "saveAs" | "play" | "stop"

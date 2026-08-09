@@ -1,3 +1,5 @@
+// @req NFR-04 — shell + nav ภาษาไทย
+// @req NFR-02 — gate ทุกแท็บจนกว่า backend พร้อม (BackendGate)
 import { useState } from "react";
 import { BrainPanel } from "./components/BrainPanel";
 import { VoicesPanel } from "./components/VoicesPanel";

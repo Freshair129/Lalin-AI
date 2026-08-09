@@ -1,3 +1,4 @@
+// @req FR-04b — store ของ RemixPanel (recipe / master-fx / layout)
 import { create } from "zustand";
 
 // ── RemixPanel state store ──────────────────────────────────

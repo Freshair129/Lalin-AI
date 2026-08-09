@@ -1,4 +1,5 @@
 """Speech runtime configuration that does not load ASR/TTS models by itself."""
+# @req FR-03 — โปรไฟล์ ASR ของสายพากย์ (ตั้งค่าอย่างเดียว ไม่โหลดโมเดลเอง)
 from __future__ import annotations
 
 from fastapi import APIRouter, Request

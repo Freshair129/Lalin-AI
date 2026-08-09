@@ -68,7 +68,7 @@
 ## 5. หนี้ที่พบระหว่างจด
 
 - [ ] ลบ `Timeline.tsx` ที่ไม่ถูกเรนเดอร์แล้ว — ต้องย้าย `export type TrackView` ออกไปที่ store/types ก่อน
-- [ ] `apps/desktop/src/components/` ยังไม่มี `@req` annotation (ถูกใส่ไว้ใน `backend/`+`frontend/` ยุคก่อน migration แล้วหายไปตอนย้ายเข้า `apps/`) — ทำให้ coverage ของ doc-graph อ่านเป็น 0%
+- [x] `@req` annotation ครบทั้ง `apps/api` + `apps/desktop` แล้ว (78 ไฟล์) — `requirements_with_code_annotations` = 100% (22/22)
 - [x] `BLUEPRINT.yaml § sitemap` + `§ views` resync กับ Lalin Studio shell 8 แท็บแล้ว — product IA ยังอ่านที่ [LALIN_SITEMAP_SOT.md](LALIN_SITEMAP_SOT.md)
 
 ---

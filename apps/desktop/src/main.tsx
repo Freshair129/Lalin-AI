@@ -1,3 +1,4 @@
+// @req NFR-04 — entry point ของ UI (mount React + theme)
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";

@@ -1,3 +1,4 @@
+# @req NFR-02 — health check + runtime status ให้ status bar (รองรับ FR-05.6)
 from __future__ import annotations
 
 from importlib import import_module

@@ -1,3 +1,4 @@
+// @req FR-06 — hook: spawn job แล้วติดตาม progress ผ่าน WebSocket
 import { useCallback, useRef, useState } from "react";
 import { jobs, type Job } from "./api";
 

@@ -1,3 +1,4 @@
+// @req FR-09 — beat grid/metronome ของ timeline (FR-09.8)
 // grid.ts — ตัวช่วยคำนวณจังหวะ metronome / beat grid
 // สร้างโดย local model (Ollama qwen3:14.8B) ผ่าน anti-error-loop dispatch
 // + Verify Gate (acceptance: metronomeTicks(120,4,2) = ticks 0/0.5/1/1.5, accent [T,F,F,F]) ✅

@@ -1,4 +1,5 @@
 """Ollama provider — สมองแบบ local ผ่าน Ollama HTTP API."""
+# @req FR-05 — local LLM (FR-05.1) + ตัด <think> (FR-05.5) + timeout 600s (FR-05.7)
 from __future__ import annotations
 
 import json

@@ -1,3 +1,4 @@
+// @req FR-09 — แก้พารามิเตอร์/สถานะของ track ที่เลือก (FR-09.5)
 import type { TrackView } from "./Timeline";
 
 // Properties dock — แก้พารามิเตอร์ของ track ที่เลือก (แนว AudioNodes)

@@ -1,3 +1,4 @@
+// @req FR-06 — UI progress ของ job (รองรับ FR-02.7/03.8/04b.8)
 import { API_BASE, type Job } from "../api";
 
 export function JobProgress({ job }: { job: Job | null }) {

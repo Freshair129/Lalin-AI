@@ -1,3 +1,4 @@
+// @req FR-13 — engine คิวประมวลผลชุด (tts/dubbing/mastering ทีละงาน)
 import { useCallback, useRef, useState } from "react";
 import { tts, dubbing, mastering, jobs, type Job } from "./api";
 

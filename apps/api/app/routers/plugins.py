@@ -4,6 +4,8 @@
 frontend โชว์สถานะ + ปลดล็อกฟีเจอร์ที่เกี่ยวข้องได้ถูกต้อง โดยไม่ทำให้แอปพัง
 ถ้ายังไม่ได้ติดตั้ง (deps เหล่านี้เป็น optional เสมอ — ดู docs/ROADMAP_MUSIC.md)
 """
+# @req FR-11 — plugin manager: สถานะ optional dep + คำสั่งติดตั้ง (FR-11.1/11.3)
+# @spec dep GPL เป็น optional/BYOM เสมอ ห้าม bundle ใน core ที่ขาย — ดู docs/product/ROADMAP_MUSIC.md
 from __future__ import annotations
 
 import importlib.util

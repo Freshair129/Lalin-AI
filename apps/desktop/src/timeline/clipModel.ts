@@ -1,3 +1,4 @@
+// @req FR-09 — โมเดล clip timeline (Project/Track/Clip — FR-09.2)
 /**
  * Clip-based timeline model — โครงสำหรับ editor แบบ DAW ในอนาคต
  * (ลาก/ตัด/slice/clone/undo) อ้างอิงแนว AudioNodes

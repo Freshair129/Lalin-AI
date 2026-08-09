@@ -1,4 +1,5 @@
 """พากย์เสียง (dubbing) — รันไปป์ไลน์เต็มเป็น job พร้อมรายงานความคืบหน้า"""
+# @req FR-03 — AI dubbing เต็มไปป์ไลน์ + refine บทต่อบรรทัด (FR-03.6)
 from __future__ import annotations
 
 from fastapi import APIRouter

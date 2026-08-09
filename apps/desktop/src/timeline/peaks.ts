@@ -1,3 +1,4 @@
+// @req FR-09 — decode audio + waveform peaks (FR-09.6)
 /**
  * browser audio decoding + waveform-peaks utility
  * ใช้สำหรับ clip-based timeline: decode ครั้งเดียว, cache AudioBuffer + peaks array

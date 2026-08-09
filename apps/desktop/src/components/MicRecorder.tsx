@@ -1,3 +1,4 @@
+// @req FR-12 — อัดเสียงจากไมค์เข้าแทร็ก
 /**
  * MicRecorder — บันทึกเสียงจากไมโครโฟน (getUserMedia + MediaRecorder)
  * ใช้ hook `useMicRecorder()` เพื่อ start/stop แล้วอัปโหลดไฟล์ที่ได้ขึ้น backend

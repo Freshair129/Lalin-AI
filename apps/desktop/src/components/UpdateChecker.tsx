@@ -1,3 +1,4 @@
+// @req FR-08 — auto-update ผ่าน Tauri updater + GitHub Releases
 import { useEffect, useState } from "react";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";

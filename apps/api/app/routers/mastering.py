@@ -1,4 +1,5 @@
 """Mastering — ปรับ/มาสเตอร์เสียงเพลง (รันเป็น job)"""
+# @req FR-04 — mastering (reference mode / auto LUFS)
 from __future__ import annotations
 
 import asyncio

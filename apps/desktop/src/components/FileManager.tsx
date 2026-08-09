@@ -1,3 +1,4 @@
+// @req FR-15 — UI file manager (คู่กับ routers/fs.py)
 import { useCallback, useEffect, useState } from "react";
 import { fs, type FsEntry } from "../api";
 import { ContextMenu, type MenuItem } from "./ContextMenu";

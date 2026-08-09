@@ -1,3 +1,4 @@
+// @req FR-09 — workspace dock: timeline + เครื่องมือรอบข้าง (FR-09.1)
 import { useEffect, useState } from "react";
 import { ClipTimeline, type ClipCtx } from "./ClipTimeline";
 import { ContextMenu, type MenuItem } from "./ContextMenu";

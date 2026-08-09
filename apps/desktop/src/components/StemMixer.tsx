@@ -1,3 +1,4 @@
+// @req FR-09 — เฟดเดอร์แยก stem -> stem_gains (FR-09.9)
 // StemMixer — เฟดเดอร์ปรับระดับเสียงแยกตาม stem (Demucs htdemucs: vocals/drums/bass/other)
 // ใช้คู่กับ run_remix(stem_gains=...) ฝั่ง backend (music.py) — ต้องแยก stem เต็ม 4 ทาง
 // ก่อนถึงจะมีผล (ถ้าไม่ส่ง stem_gains เลย backend จะใช้ two-stems=vocals แบบเดิม เร็วกว่า)

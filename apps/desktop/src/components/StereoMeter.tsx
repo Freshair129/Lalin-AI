@@ -1,3 +1,4 @@
+// @req FR-09 — stereo meter ของ master bus (FR-09.7)
 import { useEffect, useRef } from "react";
 
 export function StereoMeter({

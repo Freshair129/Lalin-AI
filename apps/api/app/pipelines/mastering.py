@@ -8,6 +8,7 @@
 
 มาตรฐานความดัง streaming ปกติ ~ -14 LUFS (Spotify/YouTube)
 """
+# @req FR-04 — mastering pipeline: reference (Matchering) / auto (target LUFS)
 from __future__ import annotations
 
 from pathlib import Path

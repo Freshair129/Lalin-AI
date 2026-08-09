@@ -1,3 +1,4 @@
+// @req NFR-02 — poll /runtime/status ให้ status bar (telemetry + งานที่ค้าง)
 import { useEffect, useState } from "react";
 import { runtime, type RuntimeActivityStatus } from "../api";
 

@@ -1,3 +1,4 @@
+// @req FR-09 — level meter + pan ต่อแทร็ก (FR-09.7)
 import { useEffect, useRef } from "react";
 
 /**

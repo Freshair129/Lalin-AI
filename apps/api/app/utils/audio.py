@@ -1,4 +1,5 @@
 """ตัวช่วยจัดการไฟล์เสียง (ใช้ pydub/soundfile)"""
+# @req FR-03 — วางคลิปเสียงพากย์ลงไทม์ไลน์ตอน mix (FR-03.7)
 from __future__ import annotations
 
 from pathlib import Path
