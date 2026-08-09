@@ -1,3 +1,4 @@
+// @req FR-10 — project: New/Open/Save/Save As/Close (คู่กับ routers/projects.py)
 import { useCallback, useEffect, useRef, useState } from "react";
 import { projects, type ProjectMeta } from "../api";
 

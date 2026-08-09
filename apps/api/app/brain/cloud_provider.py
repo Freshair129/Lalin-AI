@@ -6,6 +6,7 @@
 
 import SDK แบบ lazy เพื่อให้เซิร์ฟเวอร์บูตได้แม้ยังไม่ได้ติดตั้งครบ
 """
+# @req FR-05 — cloud LLM: Anthropic/OpenAI/OpenRouter (FR-05.2)
 from __future__ import annotations
 
 import json

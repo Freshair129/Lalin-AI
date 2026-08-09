@@ -1,3 +1,4 @@
+// @req FR-09 — track strip รุ่นแรก (ปัจจุบันเหลือไว้เป็นแหล่ง type TrackView)
 import { useEffect, useRef, useState } from "react";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 

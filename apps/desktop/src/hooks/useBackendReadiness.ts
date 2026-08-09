@@ -1,3 +1,4 @@
+// @req NFR-02 — poll /health + retry, gate UI จนกว่า backend พร้อม
 import { useEffect, useState } from "react";
 import { health } from "../api";
 

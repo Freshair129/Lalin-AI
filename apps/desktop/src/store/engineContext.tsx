@@ -1,3 +1,4 @@
+// @req FR-09 — ยก clip engine ขึ้นระดับ App ให้ทุกแท็บใช้ตัวเดียวกัน (FR-09.1)
 import { createContext, useContext, type ReactNode } from "react";
 import { useClipEngine, type ClipEngine } from "../timeline/useClipEngine";
 

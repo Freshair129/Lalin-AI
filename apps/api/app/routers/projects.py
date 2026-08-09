@@ -1,4 +1,6 @@
 """บันทึก/โหลดโปรเจกต์ (workspace) — แชร์ข้ามเครื่องที่ต่อ backend เดียวกันได้"""
+# @req FR-10 — projects: บันทึก/โหลด workspace (CRUD ตาม FR-10.2)
+# @req NFR-03 — ตรวจ pid กัน path traversal
 from __future__ import annotations
 
 import json

@@ -1,3 +1,4 @@
+// @req FR-04 — มิเตอร์ LUFS ของ mastering/remix
 export function Meter({
   value,
   min = -30,

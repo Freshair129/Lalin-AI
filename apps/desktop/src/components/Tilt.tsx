@@ -1,3 +1,4 @@
+// @req NFR-04 — เอฟเฟกต์การ์ดเอียง (ปิดเองเมื่อ prefers-reduced-motion)
 import { useRef, useState } from "react";
 
 const prefersReducedMotion =

@@ -13,6 +13,8 @@
 
 ⚠️ ทุกฟังก์ชันโหลดโมเดล/ประมวลผลทีละขั้น แล้วปล่อย VRAM (3060 12GB พอ ถ้าไม่โหลดพร้อมกัน)
 """
+# @req FR-04b — remix pipeline: stem split / BPM-key sync / FX / master
+# @spec deps GPL (psola/pedalboard) เป็น optional/BYOM เท่านั้น — ดู docs/product/ROADMAP_MUSIC.md
 from __future__ import annotations
 
 import subprocess

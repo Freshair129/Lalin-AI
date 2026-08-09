@@ -1,3 +1,4 @@
+// @req FR-04b — UI remix แบบ node graph (xyflow)
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRemixStore } from "../store/useRemixStore";
 import {

@@ -93,7 +93,9 @@ REQ_DEF = {
     "BR": "",
     "DR": "",
 }
-req_rx = re.compile(r"\b((?:FR|NFR|AI-AGT|AI-ETH|BR|DR)-[0-9]+[a-z]?)\b")
+# เลข >= 2 หลักตามธรรมเนียม ID ของโปรเจกต์ (FR-01..FR-15, FR-04b, NFR-01..06)
+# กัน false positive จากเอกสารที่ใช้เลขชุดของตัวเอง เช่น "FR-1"/"FR-4"/"FR-5" ใน docs/rca/
+req_rx = re.compile(r"\b((?:FR|NFR|AI-AGT|AI-ETH|BR|DR)-[0-9]{2,}[a-z]?)\b")
 req_mentions: dict[str, set] = {}
 doc_texts: dict[str, str] = {}
 for rel in doc_by_path:
@@ -193,9 +195,18 @@ for p in fe_files:
     add_node(nid, type="test" if is_test else "code_file", path=rel, hash=sha(p),
              status="current", last_verified=now)
     if is_test:
-        sibling = rel.replace(".test.", ".")
-        if (ROOT / sibling).exists():
-            add_edge(nid, "code:" + sibling, "tests", "code-scan")
+        # .test.tsx อาจคู่กับ .ts (เช่น useBackendReadiness.test.tsx -> useBackendReadiness.ts)
+        # จึงลองทั้งสองนามสกุล ไม่งั้น tests edge หาย -> requirements_with_tests ต่ำเกินจริง
+        base_rel = rel.replace(".test.", ".")
+        cands = [base_rel]
+        if base_rel.endswith(".tsx"):
+            cands.append(base_rel[:-4] + ".ts")
+        elif base_rel.endswith(".ts"):
+            cands.append(base_rel[:-3] + ".tsx")
+        for sibling in cands:
+            if (ROOT / sibling).exists():
+                add_edge(nid, "code:" + sibling, "tests", "code-scan")
+                break
 
 # ── 6) annotation scan (@req/@spec/@designs/@tested + FR-xxx เปล่า) ─
 ann_rx = re.compile(r"@(req|spec|designs|tested)[ :]")

@@ -5,6 +5,8 @@
 
 โหลดโมเดลแบบ lazy + cache ไว้ (โหลดครั้งเดียวต่อโปรเซส)
 """
+# @req FR-03 — ASR segments + timestamps + language detect (FR-03.2/03.3)
+# @req NFR-01 — เป้าความเร็ว transcription <= 0.5x realtime (NFR-01.3)
 from __future__ import annotations
 
 from dataclasses import dataclass, field

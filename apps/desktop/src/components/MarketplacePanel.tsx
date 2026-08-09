@@ -1,3 +1,4 @@
+// @req FR-11 — UI marketplace (sample packs — FR-11.4)
 import { useEffect, useState } from "react";
 import { packs, type Pack } from "../api";
 import { Tilt } from "./Tilt";

@@ -1,3 +1,4 @@
+// @req FR-13 — UI คิวประมวลผลชุด
 import { useEffect, useState } from "react";
 import { voices, type Voice } from "../api";
 import { useBatchQueue, type BatchKind, type BatchItem } from "../useBatchQueue";

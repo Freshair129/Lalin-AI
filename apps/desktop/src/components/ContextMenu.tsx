@@ -1,3 +1,4 @@
+// @req FR-09 — เมนูคลิกขวาของ clip (FR-09.3) และของ file manager (FR-15.5)
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────

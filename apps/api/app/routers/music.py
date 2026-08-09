@@ -2,6 +2,7 @@
 
 แยกเสียงร้องจากเพลง/เดโม่ → วางบน beat อื่น พร้อม BPM-sync/auto-tune/FX → มาสเตอร์
 """
+# @req FR-04b — music remix (Suno finishing studio) + export master FX
 from __future__ import annotations
 
 import asyncio

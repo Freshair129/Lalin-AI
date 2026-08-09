@@ -4,6 +4,7 @@
   voices/<id>.wav   ตัวอย่างเสียง (reference)
   voices/<id>.json  เมตาดาตา {name, ref_text, language, created}
 """
+# @req FR-01 — จัดเก็บคลังเสียง <id>.wav + <id>.json (FR-01.4/01.5)
 from __future__ import annotations
 
 import json

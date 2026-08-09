@@ -6,6 +6,8 @@
 
 โหลดโมเดลแบบ lazy + cache
 """
+# @req FR-02 — เอนจิน F5-TTS หลัก + XTTS สำรอง + fallback ไทย (FR-02.3/02.4/02.5)
+# @req NFR-01 — เป้า inference <= 15 วินาที/ประโยคบน GPU (NFR-01.2)
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,3 +1,4 @@
+// @req FR-10 — modal ยืนยันก่อนทิ้งงานที่ยังไม่บันทึก (FR-10.4)
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**

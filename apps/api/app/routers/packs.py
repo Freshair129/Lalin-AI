@@ -1,4 +1,5 @@
 """Packs — แคตตาล็อก sample pack + สถานะติดตั้ง (mock in-memory)"""
+# @req FR-11 — sample packs / marketplace (FR-11.4)
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException

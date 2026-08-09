@@ -1,3 +1,4 @@
+// @req FR-09 — วาด waveform จาก peaks (FR-09.6)
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 

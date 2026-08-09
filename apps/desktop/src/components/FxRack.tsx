@@ -1,3 +1,4 @@
+// @req FR-04b — แร็ค FX ของ remix (autotune/vocal FX/offset/LUFS)
 import { Knob } from "./Knob";
 import { Tilt } from "./Tilt";
 

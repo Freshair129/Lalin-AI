@@ -1,4 +1,5 @@
 """Endpoints ของสมอง: chat, stream, แปล, และสลับ provider (cloud/ollama)"""
+# @req FR-05 — brain: chat/แปล/สลับ provider สดโดยไม่รีสตาร์ต (FR-05.3)
 from __future__ import annotations
 
 from fastapi import APIRouter

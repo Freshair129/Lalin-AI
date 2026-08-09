@@ -1,4 +1,5 @@
 """Self-contained ffmpeg wiring via imageio-ffmpeg."""
+# @req NFR-05 — ffmpeg ฝังในตัว (portability: ไม่ต้องติดตั้งทั้งระบบ)
 from __future__ import annotations
 
 import os

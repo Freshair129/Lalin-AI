@@ -1,4 +1,6 @@
 """File-system manager — browse/create/rename/move/delete ภายใน workspace dir"""
+# @req FR-15 — file manager ใน workspace
+# @req NFR-03 — บังคับทุก path อยู่ใต้ workspace root (กัน traversal — FR-15.2)
 from __future__ import annotations
 
 import shutil

@@ -1,3 +1,4 @@
+# @req FR-06 — id สั้นของ job (ใช้เป็น project id ตาม FR-10.1 ด้วย)
 import uuid
 
 

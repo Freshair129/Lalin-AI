@@ -1,3 +1,4 @@
+// @req FR-06 — REST/WS client กลางของแอป (endpoint ทั้งหมดใน SRS §5.1)
 // API client สำหรับคุยกับ G-Music backend (FastAPI ที่พอร์ต 8756)
 
 import type {

@@ -1,3 +1,4 @@
+// @req FR-14 — Mix Copilot: คุยกับ agent แล้ว commit mutations แบบ undo ได้ (FR-14.5/14.6)
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { agent, speech, tts, voices, type AgentMutation, type SpeechConfig, type Voice } from "../api";

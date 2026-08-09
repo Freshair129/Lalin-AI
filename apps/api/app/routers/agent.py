@@ -5,6 +5,8 @@
 เพื่อ "เสนอ" การแก้ไข (mutation) — endpoint นี้ **ไม่แก้ไขอะไรเอง** แค่ normalize
 และ validate ผลลัพธ์จากสมอง แล้วส่ง mutations กลับไปให้ frontend commit() แบบ undo-able
 """
+# @req FR-14 — workspace agent: รับคำสั่งภาษาธรรมชาติ + project state
+# @spec propose-only — เสนอ mutation เท่านั้น frontend commit เองแบบ undo ได้ (FR-14.3)
 from __future__ import annotations
 
 from typing import Any

@@ -1,3 +1,4 @@
+// @req FR-04b — ออกแบบ custom node ของ remix canvas
 import { useState } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
