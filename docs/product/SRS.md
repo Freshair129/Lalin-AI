@@ -348,7 +348,7 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | POST | `/dubbing` | `{source_audio, voice_id, target_lang, translate, source_lang?}` | `{job_id}` | พากย์ |
 | POST | `/dubbing/refine` | `{text, target_sec, tone?}` (`tone` = `formal`\|`casual`) | `{refined}` | เกลาบทหนึ่งบรรทัดให้พูดพอดีช่องเวลา — FR-03; สมอง error → คืนข้อความเดิม |
 | POST | `/mastering` | `{source_audio, reference_audio?, target_lufs, target_format}` | `{job_id}` | มาสเตอร์ |
-| POST | `/music/remix` | `{source_audio, beat_audio, do_autotune?, do_fx?, offset_ms?, reverb?, delay?, target_lufs?, stem_gains?}` | `{job_id}` | Remix — FR-04b |
+| POST | `/music/remix` | `{source_audio, beat_audio, target_lufs?=-14, do_autotune?=true, autotune_strength?=1.0, key_override?, do_fx?=true, phrase_bars?=0, offset_ms?, reverb?=0.16, delay?=0.12, stem_gains?}` | `{job_id}` | Remix — FR-04b · `offset_ms=null` = หา phase อัตโนมัติ · `stem_gains=null` = ข้าม 4-stem (เร็วกว่า) |
 | POST | `/music/export` | `{name, fmt?, reverb?, echo?, comp?}` | `{job_id}` | เบค master FX แล้วส่งออก; ผล job = `{output}` — FR-04b |
 | GET | `/jobs` | — | `{jobs: [...]}` | รายการ jobs |
 | GET | `/jobs/{id}` | — | `Job` | ดู job |
