@@ -7,7 +7,7 @@
 - code nodes + api_endpoint nodes (parse APIRouter prefix จริง)
 - test nodes + edges (tests → code คู่ชื่อ)
 - edges จาก markdown links ระหว่างเอกสาร + doc → code
-- ตรวจ drift: endpoints/components ในโค้ด vs BLUEPRINT.yaml
+- ตรวจ drift: endpoints/components ในโค้ด vs docs/architecture/BLUEPRINT.yaml
 - preserve edges เดิมที่ไม่ได้มาจากการสแกน (source: manual/architect-seed)
 
 รัน:  apps/api/.venv/Scripts/python.exe tools/doc_graph_scan.py
@@ -86,10 +86,12 @@ for p in sorted(DOCS.rglob("*")):
 REQ_DEF = {
     "FR": "docs/product/SRS.md",
     "NFR": "docs/product/SRS.md",
-    "AI-AGT": "docs/ai-system/agent-architecture.md",
-    "AI-ETH": "docs/ai-system/ethics-governance.md",
-    "BR": "docs/ai-system/ethics-governance.md",
-    "DR": "docs/ai-system/data-pipeline.md",
+    # AI-AGT/AI-ETH/BR/DR: ยังไม่มีไฟล์นิยามในโครงสร้างปัจจุบัน (ไม่พบการใช้จริงใน docs/) —
+    # ทิ้ง prefix ไว้เฉยๆ ให้ fallback ไปหาไฟล์แรกที่กล่าวถึง (sorted(where)[0]) ถ้ามีการใช้ในอนาคต
+    "AI-AGT": "",
+    "AI-ETH": "",
+    "BR": "",
+    "DR": "",
 }
 req_rx = re.compile(r"\b((?:FR|NFR|AI-AGT|AI-ETH|BR|DR)-[0-9]+[a-z]?)\b")
 req_mentions: dict[str, set] = {}
@@ -132,7 +134,7 @@ for rel, nid in doc_by_path.items():
                      status="current", last_verified=now)
             add_edge(nid, cid, "references", "doc-scan")
 
-# ── 4) apps/api: code nodes + api endpoints ────────────────────────
+# ── 4) backend: code nodes + api endpoints ────────────────────────
 BAPP = ROOT / "apps" / "api" / "app"
 route_rx = re.compile(r"@router\.(get|post|put|delete|patch|websocket)\(\s*\"([^\"]*)\"")
 prefix_rx = re.compile(r"APIRouter\(([^)]*)\)")
@@ -162,7 +164,8 @@ for p in sorted((BAPP / "routers").glob("*.py")):
 
 main_py = BAPP / "main.py"
 if main_py.exists():
-    add_node("code:apps/api/app/main.py", type="code_file", path="apps/api/app/main.py",
+    main_rel = main_py.relative_to(ROOT).as_posix()
+    add_node("code:" + main_rel, type="code_file", path=main_rel,
              hash=sha(main_py), status="current", last_verified=now)
 
 for sub in ("pipelines", "brain", "services", "jobs", "utils"):
@@ -176,7 +179,7 @@ for sub in ("pipelines", "brain", "services", "jobs", "utils"):
         add_node("code:" + rel, type="code_file", path=rel, hash=sha(p),
                  status="current", last_verified=now)
 
-# ── 5) apps/desktop: code nodes + tests ───────────────────────────────
+# ── 5) frontend: code nodes + tests ───────────────────────────────
 FSRC = ROOT / "apps" / "desktop" / "src"
 fe_files: list[Path] = []
 if FSRC.is_dir():
@@ -214,6 +217,7 @@ for d in code_scan_dirs:
                 add_edge("code:" + rel, "req:" + rid, "implements", "code-scan")
 
 # ── 6b) verifies: test → requirement (ผ่านโค้ดที่มัน test) ────────
+# ถ้าไม่มีบล็อกนี้ coverage "requirements_with_tests" จะเป็น 0% เสมอ
 impl_by_code: dict[str, list[str]] = {}
 for e in edges:
     if e["type"] == "implements":
@@ -241,7 +245,10 @@ bp_components = set(re.findall(r"component:\s*(\w+)\.tsx", bp_text))
 fe_components = {p.stem for p in (FSRC / "components").glob("*.tsx")} if (FSRC / "components").is_dir() else set()
 undocumented_components = sorted(fe_components - bp_components)
 if undocumented_components:
-    for did in ("doc:COMPONENT_REGISTRY", "doc:BLUEPRINT"):
+    # docs/archive/UI_SITEMAP.md ถูก supersede โดย docs/design/LALIN_SITEMAP_SOT.md แล้ว —
+    # ไม่ flag ไฟล์ที่ archive ไว้ ให้ flag คู่ที่ยัง maintain component จริง:
+    # BLUEPRINT.yaml (machine-readable) + COMPONENT_REGISTRY.md (ฉบับอ่านคน)
+    for did in ("doc:BLUEPRINT", "doc:COMPONENT_REGISTRY"):
         if did in nodes:
             nodes[did]["status"] = "stale"
             nodes[did]["stale_reason"] = (f"{len(undocumented_components)} frontend components not in doc: "
