@@ -1,0 +1,2653 @@
+{
+  "version": "1.0.0",
+  "generated_by": "rwang:doc-graph",
+  "generated_at": "2026-08-09T08:02:08+07:00",
+  "template": null,
+  "id_scheme": null,
+  "standards": null,
+  "stats": {
+    "total_nodes": 243,
+    "total_edges": 89,
+    "stale_edges": 0,
+    "stale_nodes": 0,
+    "contradiction_edges": 0,
+    "coverage": {
+      "requirements_with_code_annotations": "0% (0/18)",
+      "requirements_with_tests": "0% (0/18)",
+      "code_files_referenced_by_docs": "1% (1/78)",
+      "code_files_with_tests": "3% (3/78)",
+      "structured_annotations_found": 0,
+      "unstructured_req_refs_found": 0
+    }
+  },
+  "nodes": [
+    {
+      "id": "api:DELETE:/fs",
+      "type": "api_endpoint",
+      "label": "DELETE /fs",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:DELETE:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "DELETE /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:DELETE:/voices/{voice_id}",
+      "type": "api_endpoint",
+      "label": "DELETE /voices/{voice_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/brain/config",
+      "type": "api_endpoint",
+      "label": "GET /brain/config",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/files/download/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/download/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/files/export/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/export/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/files/input/{name}",
+      "type": "api_endpoint",
+      "label": "GET /files/input/{name}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/fs",
+      "type": "api_endpoint",
+      "label": "GET /fs",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/health",
+      "type": "api_endpoint",
+      "label": "GET /health",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/jobs",
+      "type": "api_endpoint",
+      "label": "GET /jobs",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/jobs/{job_id}",
+      "type": "api_endpoint",
+      "label": "GET /jobs/{job_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/packs",
+      "type": "api_endpoint",
+      "label": "GET /packs",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/packs/{pack_id}",
+      "type": "api_endpoint",
+      "label": "GET /packs/{pack_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/plugins",
+      "type": "api_endpoint",
+      "label": "GET /plugins",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/projects",
+      "type": "api_endpoint",
+      "label": "GET /projects",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "GET /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/runtime/status",
+      "type": "api_endpoint",
+      "label": "GET /runtime/status",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/speech/config",
+      "type": "api_endpoint",
+      "label": "GET /speech/config",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:GET:/voices",
+      "type": "api_endpoint",
+      "label": "GET /voices",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:PATCH:/voices/{voice_id}",
+      "type": "api_endpoint",
+      "label": "PATCH /voices/{voice_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/agent/act",
+      "type": "api_endpoint",
+      "label": "POST /agent/act",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/brain/chat",
+      "type": "api_endpoint",
+      "label": "POST /brain/chat",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/brain/config",
+      "type": "api_endpoint",
+      "label": "POST /brain/config",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/brain/translate",
+      "type": "api_endpoint",
+      "label": "POST /brain/translate",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/dubbing",
+      "type": "api_endpoint",
+      "label": "POST /dubbing",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/dubbing/refine",
+      "type": "api_endpoint",
+      "label": "POST /dubbing/refine",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/files/upload",
+      "type": "api_endpoint",
+      "label": "POST /files/upload",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/fs/folder",
+      "type": "api_endpoint",
+      "label": "POST /fs/folder",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/fs/move",
+      "type": "api_endpoint",
+      "label": "POST /fs/move",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/fs/rename",
+      "type": "api_endpoint",
+      "label": "POST /fs/rename",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/fs/upload",
+      "type": "api_endpoint",
+      "label": "POST /fs/upload",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/mastering",
+      "type": "api_endpoint",
+      "label": "POST /mastering",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/music/export",
+      "type": "api_endpoint",
+      "label": "POST /music/export",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/music/remix",
+      "type": "api_endpoint",
+      "label": "POST /music/remix",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/packs/{pack_id}/download",
+      "type": "api_endpoint",
+      "label": "POST /packs/{pack_id}/download",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/plugins/{name}/install",
+      "type": "api_endpoint",
+      "label": "POST /plugins/{name}/install",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/projects",
+      "type": "api_endpoint",
+      "label": "POST /projects",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/speech/config",
+      "type": "api_endpoint",
+      "label": "POST /speech/config",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/tts",
+      "type": "api_endpoint",
+      "label": "POST /tts",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:POST:/voices",
+      "type": "api_endpoint",
+      "label": "POST /voices",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:PUT:/projects/{pid}",
+      "type": "api_endpoint",
+      "label": "PUT /projects/{pid}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "api:WS:/jobs/ws/{job_id}",
+      "type": "api_endpoint",
+      "label": "WS /jobs/ws/{job_id}",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/brain/base.py",
+      "type": "code_file",
+      "path": "apps/api/app/brain/base.py",
+      "hash": "783f690aeade",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/brain/cloud_provider.py",
+      "type": "code_file",
+      "path": "apps/api/app/brain/cloud_provider.py",
+      "hash": "b455d05aa2d4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/brain/factory.py",
+      "type": "code_file",
+      "path": "apps/api/app/brain/factory.py",
+      "hash": "254af5585793",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/brain/ollama_provider.py",
+      "type": "code_file",
+      "path": "apps/api/app/brain/ollama_provider.py",
+      "hash": "a789e0285c82",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/jobs/manager.py",
+      "type": "code_file",
+      "path": "apps/api/app/jobs/manager.py",
+      "hash": "48062f9c538c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/main.py",
+      "type": "code_file",
+      "path": "apps/api/app/main.py",
+      "hash": "71ea529cf353",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/asr.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/asr.py",
+      "hash": "c193debf7366",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/dubbing.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/dubbing.py",
+      "hash": "e45e4518e4cd",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/mastering.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/mastering.py",
+      "hash": "ba885927b042",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/music.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/music.py",
+      "hash": "7e519533c5cf",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/tts.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/tts.py",
+      "hash": "1843ede01653",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/agent.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/agent.py",
+      "hash": "c66ca77d674d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/brain.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/brain.py",
+      "hash": "582ad07a5063",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/dubbing.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/dubbing.py",
+      "hash": "7dce4aeb693c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/files.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/files.py",
+      "hash": "c6e990d9d73a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/fs.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/fs.py",
+      "hash": "544a46d08727",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/health.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/health.py",
+      "hash": "a71b7c83612b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/jobs.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/jobs.py",
+      "hash": "8463a665cbe5",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/mastering.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/mastering.py",
+      "hash": "171cb9416702",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/music.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/music.py",
+      "hash": "05bb6d622798",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/packs.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/packs.py",
+      "hash": "f6ef863b2616",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/plugins.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/plugins.py",
+      "hash": "552af86add5e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/projects.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/projects.py",
+      "hash": "702dea2be56d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/speech.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/speech.py",
+      "hash": "74a2386f2dc3",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/tts.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/tts.py",
+      "hash": "7c23d3f7dd7c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/voices.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/voices.py",
+      "hash": "24d12962b951",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/services/voices.py",
+      "type": "code_file",
+      "path": "apps/api/app/services/voices.py",
+      "hash": "dac663e9bb60",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/utils/audio.py",
+      "type": "code_file",
+      "path": "apps/api/app/utils/audio.py",
+      "hash": "1d00a5da45ac",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/utils/ffmpeg.py",
+      "type": "code_file",
+      "path": "apps/api/app/utils/ffmpeg.py",
+      "hash": "e57af192f064",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/api/app/utils/ids.py",
+      "type": "code_file",
+      "path": "apps/api/app/utils/ids.py",
+      "hash": "b9ab9d37666c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/App.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/App.tsx",
+      "hash": "06f0979515f5",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/api.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/api.ts",
+      "hash": "45c838c421e3",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/BatchQueue.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/BatchQueue.tsx",
+      "hash": "4a79f367e53e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/BrainPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/BrainPanel.tsx",
+      "hash": "1c6852d95817",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/ChannelMeterBalance.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/ChannelMeterBalance.tsx",
+      "hash": "f99a14a294ff",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/ClipTimeline.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/ClipTimeline.tsx",
+      "hash": "b9482a632734",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/ContextMenu.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/ContextMenu.tsx",
+      "hash": "8f307ca1a19a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Dialog.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Dialog.tsx",
+      "hash": "2390a1a3c68b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/DubbingPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/DubbingPanel.tsx",
+      "hash": "2d8948e77d60",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/FileManager.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/FileManager.tsx",
+      "hash": "c54ca2b60ca3",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/FxRack.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/FxRack.tsx",
+      "hash": "a8c8d2ecfa15",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/JobProgress.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/JobProgress.tsx",
+      "hash": "62cbadc426fa",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Knob.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Knob.tsx",
+      "hash": "7efdad6ab874",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/LibraryPanel.tsx",
+      "hash": "46c8a8694d75",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/MarketplacePanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/MarketplacePanel.tsx",
+      "hash": "ee76cb1722fb",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/MasteringPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/MasteringPanel.tsx",
+      "hash": "d58c1faa28db",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Meter.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Meter.tsx",
+      "hash": "dabd099c0ce7",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/MicRecorder.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/MicRecorder.tsx",
+      "hash": "2ad0cc6f3eb0",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/MixCopilot.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/MixCopilot.tsx",
+      "hash": "d265a4918507",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/NodeDesigner.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/NodeDesigner.tsx",
+      "hash": "fb5c2c767812",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/PluginsPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/PluginsPanel.tsx",
+      "hash": "1ad8f9b8008d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/PropertiesPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/PropertiesPanel.tsx",
+      "hash": "bde894a9ab74",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/RemixPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/RemixPanel.tsx",
+      "hash": "8fbdb2475f19",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Splitter.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Splitter.tsx",
+      "hash": "8cec32c89e37",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/StemMixer.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/StemMixer.tsx",
+      "hash": "daf251394933",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/StereoMeter.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/StereoMeter.tsx",
+      "hash": "9a9fc0dfbd4b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/StudioDock.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/StudioDock.tsx",
+      "hash": "bbff3e33f70c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/TTSPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/TTSPanel.tsx",
+      "hash": "d79e0f1f8f98",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Tilt.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Tilt.tsx",
+      "hash": "5dda88181ad1",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Timeline.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Timeline.tsx",
+      "hash": "ab2f2756e2fa",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/UpdateChecker.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/UpdateChecker.tsx",
+      "hash": "85178736ab64",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/VoicesPanel.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/VoicesPanel.tsx",
+      "hash": "44126dc50816",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/Waveform.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/Waveform.tsx",
+      "hash": "486253ec0a04",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/components/icons.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/icons.tsx",
+      "hash": "8eea524c2b6b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/dubbing/estimateSpeech.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/dubbing/estimateSpeech.ts",
+      "hash": "a9caadab1591",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/hooks/useBackendReadiness.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/hooks/useBackendReadiness.ts",
+      "hash": "6575cc3acf52",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/hooks/useProjectFile.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/hooks/useProjectFile.ts",
+      "hash": "a8efd1813c14",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/hooks/useRuntimeActivity.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/hooks/useRuntimeActivity.ts",
+      "hash": "3271f8b70838",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/main.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/main.tsx",
+      "hash": "47a739ddb07c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/store/engineContext.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/store/engineContext.tsx",
+      "hash": "66ab8257d6ce",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/store/useRemixStore.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/store/useRemixStore.ts",
+      "hash": "441c759798f0",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/clipModel.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/clipModel.ts",
+      "hash": "66eed621e68d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/grid.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/grid.ts",
+      "hash": "acf3fdbadf53",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/ops.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/ops.ts",
+      "hash": "b5bcf563a65a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/peaks.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/peaks.ts",
+      "hash": "6634d5fafd9e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/useClipEngine.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/useClipEngine.ts",
+      "hash": "6eeba5d7ebdd",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/useBatchQueue.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/useBatchQueue.ts",
+      "hash": "f99c8f302863",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/useJob.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/useJob.ts",
+      "hash": "664b5ab648bf",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
+      "type": "document",
+      "path": "docs/architecture/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md",
+      "title": "ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
+      "hash": "9dec1f23d986",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:BLUEPRINT",
+      "type": "document",
+      "path": "docs/architecture/BLUEPRINT.yaml",
+      "title": "BLUEPRINT",
+      "hash": "a8db70ab2480",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:COMPETITIVE_BRIEF",
+      "type": "document",
+      "path": "docs/product/COMPETITIVE_BRIEF.md",
+      "title": "COMPETITIVE_BRIEF",
+      "hash": "a748b158da71",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:CPU_GPU_DISTRIBUTION_STRATEGY",
+      "type": "document",
+      "path": "docs/operations/CPU_GPU_DISTRIBUTION_STRATEGY.md",
+      "title": "CPU_GPU_DISTRIBUTION_STRATEGY",
+      "hash": "d2bde25ba67c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:DESIGN_SYSTEM",
+      "type": "document",
+      "path": "docs/design/DESIGN_SYSTEM.md",
+      "title": "DESIGN_SYSTEM",
+      "hash": "116d5f9df52c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:DOCS_INDEX",
+      "type": "document",
+      "path": "docs/DOCS_INDEX.md",
+      "title": "DOCS_INDEX",
+      "hash": "0d5a44abc37c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:DOCS_PHASE1_MOVE_MAP",
+      "type": "document",
+      "path": "docs/architecture/DOCS_PHASE1_MOVE_MAP.md",
+      "title": "DOCS_PHASE1_MOVE_MAP",
+      "hash": "0c57e0e9a690",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:DOCS_PHASE2_MOVE_MAP",
+      "type": "document",
+      "path": "docs/architecture/DOCS_PHASE2_MOVE_MAP.md",
+      "title": "DOCS_PHASE2_MOVE_MAP",
+      "hash": "6909fcb9004e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:GM6_BRAND_CI",
+      "type": "document",
+      "path": "docs/archive/GM6_BRAND_CI.md",
+      "title": "GM6_BRAND_CI",
+      "hash": "1272b234e8ab",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:GM6_DESIGN_SYSTEM",
+      "type": "document",
+      "path": "docs/archive/GM6_DESIGN_SYSTEM.md",
+      "title": "GM6_DESIGN_SYSTEM",
+      "hash": "4f79307489a6",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:GM6_NAMING_DECISION",
+      "type": "document",
+      "path": "docs/archive/GM6_NAMING_DECISION.md",
+      "title": "GM6_NAMING_DECISION",
+      "hash": "03e7763b4d93",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:GM6_SITEMAP",
+      "type": "document",
+      "path": "docs/archive/GM6_SITEMAP.md",
+      "title": "GM6_SITEMAP",
+      "hash": "fecca117e731",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_ARRANGE_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_ARRANGE_TAB_SPEC.md",
+      "title": "LALIN_ARRANGE_TAB_SPEC",
+      "hash": "2c99792082d5",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_ARRANGE_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_ARRANGE_V1_APPROVED.png",
+      "title": "LALIN_ARRANGE_V1_APPROVED",
+      "hash": "f3ee2048d3af",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_DUBBING_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_DUBBING_TAB_SPEC.md",
+      "title": "LALIN_DUBBING_TAB_SPEC",
+      "hash": "8121864ec8f5",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_DUBBING_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_DUBBING_V1_APPROVED.png",
+      "title": "LALIN_DUBBING_V1_APPROVED",
+      "hash": "5d2b3c23955d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_JOBS_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_JOBS_TAB_SPEC.md",
+      "title": "LALIN_JOBS_TAB_SPEC",
+      "hash": "a54a686d2064",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_JOBS_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_JOBS_V1_APPROVED.png",
+      "title": "LALIN_JOBS_V1_APPROVED",
+      "hash": "0d9b24f81bf4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_LAYOUT_SOT",
+      "type": "document",
+      "path": "docs/design/LALIN_LAYOUT_SOT.md",
+      "title": "LALIN_LAYOUT_SOT",
+      "hash": "78f4ab77ebd0",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_LIBRARY_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_LIBRARY_TAB_SPEC.md",
+      "title": "LALIN_LIBRARY_TAB_SPEC",
+      "hash": "9bcd30e254db",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_LIBRARY_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_LIBRARY_V1_APPROVED.png",
+      "title": "LALIN_LIBRARY_V1_APPROVED",
+      "hash": "033eb5bd8fcb",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_MASTERING_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_MASTERING_TAB_SPEC.md",
+      "title": "LALIN_MASTERING_TAB_SPEC",
+      "hash": "dcab1dfc6a7a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_MASTERING_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_MASTERING_V1_APPROVED.png",
+      "title": "LALIN_MASTERING_V1_APPROVED",
+      "hash": "7aa5e5047570",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
+      "type": "document",
+      "path": "docs/design/LALIN_RENAME_MIGRATION_PLAN.md",
+      "title": "LALIN_RENAME_MIGRATION_PLAN",
+      "hash": "b9829c985886",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_SETTINGS_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_SETTINGS_TAB_SPEC.md",
+      "title": "LALIN_SETTINGS_TAB_SPEC",
+      "hash": "533745b85a18",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_SETTINGS_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_SETTINGS_V1_APPROVED.png",
+      "title": "LALIN_SETTINGS_V1_APPROVED",
+      "hash": "51dceee78fd0",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_SHELL_SOT",
+      "type": "document",
+      "path": "docs/design/LALIN_SHELL_SOT.md",
+      "title": "LALIN_SHELL_SOT",
+      "hash": "2d0ee597c6ab",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_SITEMAP_SOT",
+      "type": "document",
+      "path": "docs/design/LALIN_SITEMAP_SOT.md",
+      "title": "LALIN_SITEMAP_SOT",
+      "hash": "f6e81be14f49",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
+      "type": "document",
+      "path": "docs/design/LALIN_UI_IMPLEMENTATION_PLAN.md",
+      "title": "LALIN_UI_IMPLEMENTATION_PLAN",
+      "hash": "eea52b913f4f",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_UI_SOT",
+      "type": "document",
+      "path": "docs/design/LALIN_UI_SOT.md",
+      "title": "LALIN_UI_SOT",
+      "hash": "2790ee34237b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_VOICE_STUDIO_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_VOICE_STUDIO_TAB_SPEC.md",
+      "title": "LALIN_VOICE_STUDIO_TAB_SPEC",
+      "hash": "3a2163364cd2",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_VOICE_STUDIO_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_VOICE_STUDIO_V1_APPROVED.png",
+      "title": "LALIN_VOICE_STUDIO_V1_APPROVED",
+      "hash": "0b0598cedfa9",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_SOURCE.png",
+      "title": "LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
+      "hash": "9d7aa07db8d1",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED.png",
+      "title": "LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
+      "hash": "93d386b261e6",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_WORKSPACE_TAB_SPEC",
+      "type": "document",
+      "path": "docs/design/LALIN_WORKSPACE_TAB_SPEC.md",
+      "title": "LALIN_WORKSPACE_TAB_SPEC",
+      "hash": "29341dbf71ab",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LALIN_WORKSPACE_V1_APPROVED",
+      "type": "document",
+      "path": "docs/design/reference/lalin/LALIN_WORKSPACE_V1_APPROVED.png",
+      "title": "LALIN_WORKSPACE_V1_APPROVED",
+      "hash": "248fc98bf203",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:LOCAL_MODEL_LEDGER",
+      "type": "document",
+      "path": "docs/product/LOCAL_MODEL_LEDGER.md",
+      "title": "LOCAL_MODEL_LEDGER",
+      "hash": "55ec7af78c17",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:MASTER_PLAN",
+      "type": "document",
+      "path": "docs/archive/MASTER_PLAN.md",
+      "title": "MASTER_PLAN",
+      "hash": "959db27acec4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PACKAGING_SIDECAR",
+      "type": "document",
+      "path": "docs/operations/PACKAGING_SIDECAR.md",
+      "title": "PACKAGING_SIDECAR",
+      "hash": "451c97508baf",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
+      "type": "document",
+      "path": "docs/architecture/PHASE3_RUNTIME_MOVE_MAP.md",
+      "title": "PHASE3_RUNTIME_MOVE_MAP",
+      "hash": "727c5ea57aad",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE3_RUNTIME_STATE_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE3_RUNTIME_STATE_PLAN.md",
+      "title": "PHASE3_RUNTIME_STATE_PLAN",
+      "hash": "dee39f2a25de",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE4_APP_FOLDER_MIGRATION_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE4_APP_FOLDER_MIGRATION_PLAN.md",
+      "title": "PHASE4_APP_FOLDER_MIGRATION_PLAN",
+      "hash": "d0b409562409",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE4_APP_MOVE_MAP",
+      "type": "document",
+      "path": "docs/architecture/PHASE4_APP_MOVE_MAP.md",
+      "title": "PHASE4_APP_MOVE_MAP",
+      "hash": "e968b89d5c34",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE5_CONTRACTS_MCP_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md",
+      "title": "PHASE5_CONTRACTS_MCP_PLAN",
+      "hash": "e2cbf8cd683f",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md",
+      "title": "PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
+      "hash": "eed81e12a074",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE7_RELEASE_WORKFLOW_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md",
+      "title": "PHASE7_RELEASE_WORKFLOW_PLAN",
+      "hash": "c21d2faa177b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE8_REPO_RENAME_PRESENTATION_READINESS",
+      "type": "document",
+      "path": "docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md",
+      "title": "PHASE8_REPO_RENAME_PRESENTATION_READINESS",
+      "hash": "512ab94914d4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PHASE_0_REVIEW",
+      "type": "document",
+      "path": "docs/validation/PHASE_0_REVIEW.md",
+      "title": "PHASE_0_REVIEW",
+      "hash": "fd0eb94e2e0b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PRD",
+      "type": "document",
+      "path": "docs/product/PRD.md",
+      "title": "PRD",
+      "hash": "5c27c12dafb4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PROPOSED_V03_DUBBING_PRO",
+      "type": "document",
+      "path": "docs/archive/PROPOSED_V03_DUBBING_PRO.md",
+      "title": "PROPOSED_V03_DUBBING_PRO",
+      "hash": "38f905df1f5c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PROPOSED_V03_DUBBING_PRO_SLICE_A",
+      "type": "document",
+      "path": "docs/archive/PROPOSED_V03_DUBBING_PRO_SLICE_A.md",
+      "title": "PROPOSED_V03_DUBBING_PRO_SLICE_A",
+      "hash": "31148fd261b7",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
+      "type": "document",
+      "path": "docs/archive/PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md",
+      "title": "PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
+      "hash": "5874fb331a91",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:PROPOSED_VOICEBOX_CAPTURE_DICTATION",
+      "type": "document",
+      "path": "docs/archive/PROPOSED_VOICEBOX_CAPTURE_DICTATION.md",
+      "title": "PROPOSED_VOICEBOX_CAPTURE_DICTATION",
+      "hash": "b312fcb3226f",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:RCA--LOCAL-LLM-DISPATCH",
+      "type": "document",
+      "path": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
+      "title": "RCA--LOCAL-LLM-DISPATCH",
+      "hash": "e73fd3656a1a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:READINESS",
+      "type": "document",
+      "path": "docs/presentation/lalin-ai-launch/READINESS.md",
+      "title": "READINESS",
+      "hash": "9bf132184a37",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:REFERENCE_MANIFEST",
+      "type": "document",
+      "path": "docs/design/reference/gm6/REFERENCE_MANIFEST.md",
+      "title": "REFERENCE_MANIFEST",
+      "hash": "dda9c15e095b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:REPORT--LOCAL-LLM-DISPATCH",
+      "type": "document",
+      "path": "docs/rca/REPORT--LOCAL-LLM-DISPATCH.md",
+      "title": "REPORT--LOCAL-LLM-DISPATCH",
+      "hash": "bd646372902c",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "type": "document",
+      "path": "docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md",
+      "title": "REPOSITORY_ARCHITECTURE_SOT",
+      "hash": "dbc4c84c1a03",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:REPO_MIGRATION_PLAN",
+      "type": "document",
+      "path": "docs/architecture/REPO_MIGRATION_PLAN.md",
+      "title": "REPO_MIGRATION_PLAN",
+      "hash": "bf25645c7374",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:ROADMAP_EXECUTION_BACKLOG",
+      "type": "document",
+      "path": "docs/product/ROADMAP_EXECUTION_BACKLOG.md",
+      "title": "ROADMAP_EXECUTION_BACKLOG",
+      "hash": "c05f607f1e8a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:ROADMAP_MUSIC",
+      "type": "document",
+      "path": "docs/product/ROADMAP_MUSIC.md",
+      "title": "ROADMAP_MUSIC",
+      "hash": "cf6926100979",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPEC",
+      "type": "document",
+      "path": "docs/architecture/SPEC.md",
+      "title": "SPEC",
+      "hash": "dc60f8e6098f",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT0_G_MUSIC_RC_PLAN",
+      "type": "document",
+      "path": "docs/archive/SPRINT0_G_MUSIC_RC_PLAN.md",
+      "title": "SPRINT0_G_MUSIC_RC_PLAN",
+      "hash": "c76d70cfa381",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT10_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT10_VALIDATION.md",
+      "title": "SPRINT10_VALIDATION",
+      "hash": "a1eef8c18bdc",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT1_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT1_VALIDATION.md",
+      "title": "SPRINT1_VALIDATION",
+      "hash": "693f0fb76617",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT2_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT2_VALIDATION.md",
+      "title": "SPRINT2_VALIDATION",
+      "hash": "a758a47c9b23",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT3_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT3_VALIDATION.md",
+      "title": "SPRINT3_VALIDATION",
+      "hash": "11aa3237ecd4",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT4_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT4_VALIDATION.md",
+      "title": "SPRINT4_VALIDATION",
+      "hash": "f759e7827027",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT5_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT5_VALIDATION.md",
+      "title": "SPRINT5_VALIDATION",
+      "hash": "9fc0a176a0dc",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT6_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT6_VALIDATION.md",
+      "title": "SPRINT6_VALIDATION",
+      "hash": "7c2281db6723",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT7_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT7_VALIDATION.md",
+      "title": "SPRINT7_VALIDATION",
+      "hash": "7cfc1fa0b0ef",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT8_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT8_VALIDATION.md",
+      "title": "SPRINT8_VALIDATION",
+      "hash": "51c7626ba805",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SPRINT9_VALIDATION",
+      "type": "document",
+      "path": "docs/validation/SPRINT9_VALIDATION.md",
+      "title": "SPRINT9_VALIDATION",
+      "hash": "eb3d2be28a4b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SRS",
+      "type": "document",
+      "path": "docs/product/SRS.md",
+      "title": "SRS",
+      "hash": "e63b98512426",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:SWARM_PLAN",
+      "type": "document",
+      "path": "docs/architecture/SWARM_PLAN.md",
+      "title": "SWARM_PLAN",
+      "hash": "e76afa9678d3",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:UI_SITEMAP",
+      "type": "document",
+      "path": "docs/archive/UI_SITEMAP.md",
+      "title": "UI_SITEMAP",
+      "hash": "09b3f41bd4a5",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:WORKSTATION_DISTRIBUTION",
+      "type": "document",
+      "path": "docs/operations/WORKSTATION_DISTRIBUTION.md",
+      "title": "WORKSTATION_DISTRIBUTION",
+      "hash": "687fa98c52b7",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7.png",
+      "title": "codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
+      "hash": "94da957df959",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658.png",
+      "title": "codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
+      "hash": "911d1365bc55",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0.png",
+      "title": "codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
+      "hash": "3fe3b4302b9e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545.png",
+      "title": "codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
+      "hash": "a0cc8cfb9188",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07.png",
+      "title": "codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
+      "hash": "205ab92aad26",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487.png",
+      "title": "codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
+      "hash": "72fb381786ff",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188.png",
+      "title": "codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
+      "hash": "46e4bbc1ce80",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36.png",
+      "title": "codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
+      "hash": "44e783c7fd81",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d.png",
+      "title": "codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
+      "hash": "c07cd5aacb68",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64.png",
+      "title": "codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
+      "hash": "bc19e59edce9",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e.png",
+      "title": "codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
+      "hash": "86899aa8d076",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206.png",
+      "title": "codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
+      "hash": "cff46fe33a4d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef.png",
+      "title": "codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
+      "hash": "06ff8b4088b0",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2.png",
+      "title": "codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
+      "hash": "34ac810eaadb",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766.png",
+      "title": "codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
+      "hash": "859da5d9976a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6.png",
+      "title": "codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
+      "hash": "2fb184121c86",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b.png",
+      "title": "codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
+      "hash": "88750d7a32f2",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc.png",
+      "title": "codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
+      "hash": "1466f3da5eee",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f.png",
+      "title": "codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
+      "hash": "bdd7c8d5e0fd",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be.png",
+      "title": "codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
+      "hash": "253add3fd85e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3.png",
+      "title": "codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
+      "hash": "52a968d61659",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a.png",
+      "title": "codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
+      "hash": "e156b392fd4e",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
+      "type": "document",
+      "path": "docs/design/reference/gm6/codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd.png",
+      "title": "codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
+      "hash": "fc46fffc635b",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "doc:index",
+      "type": "document",
+      "path": "docs/presentation/lalin-ai-launch/index.html",
+      "title": "index",
+      "hash": "2497e6804c7d",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-01",
+      "type": "requirement",
+      "label": "FR-01",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-02",
+      "type": "requirement",
+      "label": "FR-02",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-03",
+      "type": "requirement",
+      "label": "FR-03",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-04",
+      "type": "requirement",
+      "label": "FR-04",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-04b",
+      "type": "requirement",
+      "label": "FR-04b",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-05",
+      "type": "requirement",
+      "label": "FR-05",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-06",
+      "type": "requirement",
+      "label": "FR-06",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-07",
+      "type": "requirement",
+      "label": "FR-07",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-08",
+      "type": "requirement",
+      "label": "FR-08",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-1",
+      "type": "requirement",
+      "label": "FR-1",
+      "defined_in": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-4",
+      "type": "requirement",
+      "label": "FR-4",
+      "defined_in": "docs/rca/REPORT--LOCAL-LLM-DISPATCH.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:FR-5",
+      "type": "requirement",
+      "label": "FR-5",
+      "defined_in": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-01",
+      "type": "requirement",
+      "label": "NFR-01",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-02",
+      "type": "requirement",
+      "label": "NFR-02",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-03",
+      "type": "requirement",
+      "label": "NFR-03",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-04",
+      "type": "requirement",
+      "label": "NFR-04",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-05",
+      "type": "requirement",
+      "label": "NFR-05",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "req:NFR-06",
+      "type": "requirement",
+      "label": "NFR-06",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/hooks/useBackendReadiness.test.tsx",
+      "hash": "3f5a20d6fe2a",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/timeline/grid.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/grid.test.ts",
+      "hash": "37249eee03db",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/timeline/ops.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/ops.test.ts",
+      "hash": "c208481535bb",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/useClipEngine.test.ts",
+      "hash": "bc383670c398",
+      "status": "current",
+      "last_verified": "2026-08-09T08:02:08+07:00"
+    }
+  ],
+  "edges": [
+    {
+      "from": "code:apps/api/app/routers/agent.py",
+      "to": "api:POST:/agent/act",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/brain.py",
+      "to": "api:GET:/brain/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/brain.py",
+      "to": "api:POST:/brain/chat",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/brain.py",
+      "to": "api:POST:/brain/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/brain.py",
+      "to": "api:POST:/brain/translate",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/dubbing.py",
+      "to": "api:POST:/dubbing",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/dubbing.py",
+      "to": "api:POST:/dubbing/refine",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/files.py",
+      "to": "api:GET:/files/download/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/files.py",
+      "to": "api:GET:/files/export/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/files.py",
+      "to": "api:GET:/files/input/{name}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/files.py",
+      "to": "api:POST:/files/upload",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:DELETE:/fs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:GET:/fs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:POST:/fs/folder",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:POST:/fs/move",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:POST:/fs/rename",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/fs.py",
+      "to": "api:POST:/fs/upload",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/health.py",
+      "to": "api:GET:/health",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/health.py",
+      "to": "api:GET:/runtime/status",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/jobs.py",
+      "to": "api:GET:/jobs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/jobs.py",
+      "to": "api:GET:/jobs/{job_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/jobs.py",
+      "to": "api:WS:/jobs/ws/{job_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/mastering.py",
+      "to": "api:POST:/mastering",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/music.py",
+      "to": "api:POST:/music/export",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/music.py",
+      "to": "api:POST:/music/remix",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/packs.py",
+      "to": "api:GET:/packs",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/packs.py",
+      "to": "api:GET:/packs/{pack_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/packs.py",
+      "to": "api:POST:/packs/{pack_id}/download",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/plugins.py",
+      "to": "api:GET:/plugins",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/plugins.py",
+      "to": "api:POST:/plugins/{name}/install",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:DELETE:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:GET:/projects",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:GET:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:POST:/projects",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:PUT:/projects/{pid}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/speech.py",
+      "to": "api:GET:/speech/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/speech.py",
+      "to": "api:POST:/speech/config",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/tts.py",
+      "to": "api:POST:/tts",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/voices.py",
+      "to": "api:DELETE:/voices/{voice_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/voices.py",
+      "to": "api:GET:/voices",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/voices.py",
+      "to": "api:PATCH:/voices/{voice_id}",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/voices.py",
+      "to": "api:POST:/voices",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "doc:GM6_DESIGN_SYSTEM",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:GM6_DESIGN_SYSTEM",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:GM6_NAMING_DECISION",
+      "to": "doc:LALIN_RENAME_MIGRATION_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:GM6_SITEMAP",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_ARRANGE_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_DUBBING_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_JOBS_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_LAYOUT_SOT",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_LAYOUT_SOT",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_LIBRARY_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_MASTERING_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SETTINGS_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
+      "to": "doc:LALIN_UI_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:DESIGN_SYSTEM",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_ARRANGE_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_DUBBING_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_JOBS_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_LIBRARY_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_MASTERING_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_SETTINGS_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_VOICE_STUDIO_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_UI_SOT",
+      "to": "doc:LALIN_WORKSPACE_TAB_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_VOICE_STUDIO_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_WORKSPACE_TAB_SPEC",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:RCA--LOCAL-LLM-DISPATCH",
+      "to": "doc:REPORT--LOCAL-LLM-DISPATCH",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPORT--LOCAL-LLM-DISPATCH",
+      "to": "doc:LOCAL_MODEL_LEDGER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPORT--LOCAL-LLM-DISPATCH",
+      "to": "req:FR-5",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ROADMAP_MUSIC",
+      "to": "code:apps/api/app/pipelines/music.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ROADMAP_MUSIC",
+      "to": "doc:COMPETITIVE_BRIEF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SPEC",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:UI_SITEMAP",
+      "to": "doc:GM6_SITEMAP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:UI_SITEMAP",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:UI_SITEMAP",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:UI_SITEMAP",
+      "to": "doc:LALIN_UI_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/grid.test.ts",
+      "to": "code:apps/desktop/src/timeline/grid.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/ops.test.ts",
+      "to": "code:apps/desktop/src/timeline/ops.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
+      "to": "code:apps/desktop/src/timeline/useClipEngine.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    }
+  ]
+}
