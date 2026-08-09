@@ -235,7 +235,7 @@ components:
     - {component: StemMixer.tsx,           role: "เฟดเดอร์ 4 stem (vocals|drums|bass|other) → ส่ง stem_gains ให้ run_remix"}
   meters_controls:
     - {component: Waveform.tsx,            role: "decode + วาด waveform พร้อมเล่น/seek"}
-    - {component: Knob.tsx,                role: "ปุ่มหมุนพารามิเตอร์ (ลากแนวตั้ง, double-click reset)"}
+    - {component: Knob.tsx,                role: "ปุ่มหมุนพารามิเตอร์ (ลากแนวตั้ง) — ยังไม่มี double-click reset (มีใน Splitter)"}
     - {component: Meter.tsx,               role: "มิเตอร์ LUFS (integrated)"}
     - {component: StereoMeter.tsx,         role: "VU แท่ง L/R จาก AnalyserNode ขณะเล่น"}
     - {component: ChannelMeterBalance.tsx, role: "level meter L/R + ลากปรับ balance (-1..1), double-click กลับกลาง"}
@@ -302,9 +302,20 @@ api:
     - {method: POST,   path: "/packs/{pack_id}/download"}
     - {method: GET,    path: /plugins,             returns: "สถานะ available ต่อ dep (pedalboard|psola|matchering) + license"}
     - {method: POST,   path: "/plugins/{name}/install",  returns: "คำสั่ง uv pip install (ยังไม่รัน pip จริง)"}
+  errors:                          # สัญญา error ร่วม (รายละเอียดใน docs/product/SRS.md §5.1)
+    fs: {out_of_root: 400, not_found: 404, name_conflict: 409, delete_root: 400}
+    projects: {bad_pid: 404, not_found: 404, delete: idempotent}   # pid มี / \ .. -> 404 (กัน traversal)
+    voices: {no_consent: 422, unreadable_audio: 422, not_found: 404}
+    speech: "โปรไฟล์ lite ตอบ {ok:false, error:asr_unavailable_in_lite} — HTTP ยังเป็น 200"
+  agent:                           # POST /agent/act — ดู SRS FR-14
+    contract: propose-only          # ไม่แก้ project เอง — frontend commit() แบบ undo ได้
+    read_tools: [get_project_state, analyze_project]   # ตอบ deterministic ผ่าน context (ไม่ round-trip)
+    write_tools: [move_clip, set_gain, set_pan, set_fx, set_lufs, mute_clip, slice_clip, reorder_track]
+    invalid_mutation: drop_silently # op ไม่รู้จัก/args ไม่ครบ -> ตัดทิ้ง ไม่ error
   job:
     states: [queued, running, done, error]
     fields: [id, kind, status, progress(0-1), message, result, error]
+    cancel: none                    # ยังไม่มี endpoint ยกเลิก -> batch queue pause ได้แค่ "หยุดหลังงานปัจจุบันเสร็จ"
 
 # ── Pipelines (backend) ──────────────────────────────────────
 pipelines:

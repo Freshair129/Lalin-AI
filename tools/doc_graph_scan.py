@@ -216,6 +216,17 @@ for d in code_scan_dirs:
             if "req:" + rid in nodes:
                 add_edge("code:" + rel, "req:" + rid, "implements", "code-scan")
 
+# ── 6b) verifies: test → requirement (ผ่านโค้ดที่มัน test) ────────
+# ถ้าไม่มีบล็อกนี้ coverage "requirements_with_tests" จะเป็น 0% เสมอ
+impl_by_code: dict[str, list[str]] = {}
+for e in edges:
+    if e["type"] == "implements":
+        impl_by_code.setdefault(e["from"], []).append(e["to"])
+for e in list(edges):
+    if e["type"] == "tests":
+        for rid in impl_by_code.get(e["to"], []):
+            add_edge(e["from"], rid, "verifies", "code-scan")
+
 # ── 7) drift: โค้ดจริง vs BLUEPRINT ───────────────────────────────
 bp_text = doc_texts.get("docs/architecture/BLUEPRINT.yaml", "")
 # path มี 2 แบบ: quoted ("/voices/{id}" — มี brace ข้างใน) กับ unquoted (/health)
@@ -235,8 +246,9 @@ fe_components = {p.stem for p in (FSRC / "components").glob("*.tsx")} if (FSRC /
 undocumented_components = sorted(fe_components - bp_components)
 if undocumented_components:
     # docs/archive/UI_SITEMAP.md ถูก supersede โดย docs/design/LALIN_SITEMAP_SOT.md แล้ว —
-    # ไม่ flag ไฟล์ที่ archive ไว้ ให้ flag เฉพาะ BLUEPRINT.yaml (legacy แต่ยัง maintain endpoints/components)
-    for did in ("doc:BLUEPRINT",):
+    # ไม่ flag ไฟล์ที่ archive ไว้ ให้ flag คู่ที่ยัง maintain component จริง:
+    # BLUEPRINT.yaml (machine-readable) + COMPONENT_REGISTRY.md (ฉบับอ่านคน)
+    for did in ("doc:BLUEPRINT", "doc:COMPONENT_REGISTRY"):
         if did in nodes:
             nodes[did]["status"] = "stale"
             nodes[did]["stale_reason"] = (f"{len(undocumented_components)} frontend components not in doc: "

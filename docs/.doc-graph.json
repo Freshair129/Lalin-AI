@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-09T08:02:08+07:00",
+  "generated_at": "2026-08-09T08:07:23+07:00",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 243,
-    "total_edges": 89,
+    "total_nodes": 252,
+    "total_edges": 112,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
-      "requirements_with_code_annotations": "0% (0/18)",
-      "requirements_with_tests": "0% (0/18)",
+      "requirements_with_code_annotations": "0% (0/25)",
+      "requirements_with_tests": "0% (0/25)",
       "code_files_referenced_by_docs": "1% (1/78)",
       "code_files_with_tests": "3% (3/78)",
       "structured_annotations_found": 0,
@@ -26,294 +26,294 @@
       "type": "api_endpoint",
       "label": "DELETE /fs",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:DELETE:/projects/{pid}",
       "type": "api_endpoint",
       "label": "DELETE /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:DELETE:/voices/{voice_id}",
       "type": "api_endpoint",
       "label": "DELETE /voices/{voice_id}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/brain/config",
       "type": "api_endpoint",
       "label": "GET /brain/config",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/files/download/{name}",
       "type": "api_endpoint",
       "label": "GET /files/download/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/files/export/{name}",
       "type": "api_endpoint",
       "label": "GET /files/export/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/files/input/{name}",
       "type": "api_endpoint",
       "label": "GET /files/input/{name}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/fs",
       "type": "api_endpoint",
       "label": "GET /fs",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/health",
       "type": "api_endpoint",
       "label": "GET /health",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/jobs",
       "type": "api_endpoint",
       "label": "GET /jobs",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/jobs/{job_id}",
       "type": "api_endpoint",
       "label": "GET /jobs/{job_id}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/packs",
       "type": "api_endpoint",
       "label": "GET /packs",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/packs/{pack_id}",
       "type": "api_endpoint",
       "label": "GET /packs/{pack_id}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/plugins",
       "type": "api_endpoint",
       "label": "GET /plugins",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/projects",
       "type": "api_endpoint",
       "label": "GET /projects",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/projects/{pid}",
       "type": "api_endpoint",
       "label": "GET /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/runtime/status",
       "type": "api_endpoint",
       "label": "GET /runtime/status",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/speech/config",
       "type": "api_endpoint",
       "label": "GET /speech/config",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:GET:/voices",
       "type": "api_endpoint",
       "label": "GET /voices",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:PATCH:/voices/{voice_id}",
       "type": "api_endpoint",
       "label": "PATCH /voices/{voice_id}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/agent/act",
       "type": "api_endpoint",
       "label": "POST /agent/act",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/brain/chat",
       "type": "api_endpoint",
       "label": "POST /brain/chat",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/brain/config",
       "type": "api_endpoint",
       "label": "POST /brain/config",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/brain/translate",
       "type": "api_endpoint",
       "label": "POST /brain/translate",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/dubbing",
       "type": "api_endpoint",
       "label": "POST /dubbing",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/dubbing/refine",
       "type": "api_endpoint",
       "label": "POST /dubbing/refine",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/files/upload",
       "type": "api_endpoint",
       "label": "POST /files/upload",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/fs/folder",
       "type": "api_endpoint",
       "label": "POST /fs/folder",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/fs/move",
       "type": "api_endpoint",
       "label": "POST /fs/move",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/fs/rename",
       "type": "api_endpoint",
       "label": "POST /fs/rename",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/fs/upload",
       "type": "api_endpoint",
       "label": "POST /fs/upload",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/mastering",
       "type": "api_endpoint",
       "label": "POST /mastering",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/music/export",
       "type": "api_endpoint",
       "label": "POST /music/export",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/music/remix",
       "type": "api_endpoint",
       "label": "POST /music/remix",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/packs/{pack_id}/download",
       "type": "api_endpoint",
       "label": "POST /packs/{pack_id}/download",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/plugins/{name}/install",
       "type": "api_endpoint",
       "label": "POST /plugins/{name}/install",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/projects",
       "type": "api_endpoint",
       "label": "POST /projects",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/speech/config",
       "type": "api_endpoint",
       "label": "POST /speech/config",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/tts",
       "type": "api_endpoint",
       "label": "POST /tts",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:POST:/voices",
       "type": "api_endpoint",
       "label": "POST /voices",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:PUT:/projects/{pid}",
       "type": "api_endpoint",
       "label": "PUT /projects/{pid}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "api:WS:/jobs/ws/{job_id}",
       "type": "api_endpoint",
       "label": "WS /jobs/ws/{job_id}",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/brain/base.py",
@@ -321,7 +321,7 @@
       "path": "apps/api/app/brain/base.py",
       "hash": "783f690aeade",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/brain/cloud_provider.py",
@@ -329,7 +329,7 @@
       "path": "apps/api/app/brain/cloud_provider.py",
       "hash": "b455d05aa2d4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/brain/factory.py",
@@ -337,7 +337,7 @@
       "path": "apps/api/app/brain/factory.py",
       "hash": "254af5585793",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/brain/ollama_provider.py",
@@ -345,7 +345,7 @@
       "path": "apps/api/app/brain/ollama_provider.py",
       "hash": "a789e0285c82",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/jobs/manager.py",
@@ -353,7 +353,7 @@
       "path": "apps/api/app/jobs/manager.py",
       "hash": "48062f9c538c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/main.py",
@@ -361,7 +361,7 @@
       "path": "apps/api/app/main.py",
       "hash": "71ea529cf353",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/asr.py",
@@ -369,7 +369,7 @@
       "path": "apps/api/app/pipelines/asr.py",
       "hash": "c193debf7366",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/dubbing.py",
@@ -377,7 +377,7 @@
       "path": "apps/api/app/pipelines/dubbing.py",
       "hash": "e45e4518e4cd",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/mastering.py",
@@ -385,7 +385,7 @@
       "path": "apps/api/app/pipelines/mastering.py",
       "hash": "ba885927b042",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/music.py",
@@ -393,7 +393,7 @@
       "path": "apps/api/app/pipelines/music.py",
       "hash": "7e519533c5cf",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/tts.py",
@@ -401,7 +401,7 @@
       "path": "apps/api/app/pipelines/tts.py",
       "hash": "1843ede01653",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/agent.py",
@@ -409,7 +409,7 @@
       "path": "apps/api/app/routers/agent.py",
       "hash": "c66ca77d674d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/brain.py",
@@ -417,7 +417,7 @@
       "path": "apps/api/app/routers/brain.py",
       "hash": "582ad07a5063",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/dubbing.py",
@@ -425,7 +425,7 @@
       "path": "apps/api/app/routers/dubbing.py",
       "hash": "7dce4aeb693c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/files.py",
@@ -433,7 +433,7 @@
       "path": "apps/api/app/routers/files.py",
       "hash": "c6e990d9d73a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/fs.py",
@@ -441,7 +441,7 @@
       "path": "apps/api/app/routers/fs.py",
       "hash": "544a46d08727",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/health.py",
@@ -449,7 +449,7 @@
       "path": "apps/api/app/routers/health.py",
       "hash": "a71b7c83612b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/jobs.py",
@@ -457,7 +457,7 @@
       "path": "apps/api/app/routers/jobs.py",
       "hash": "8463a665cbe5",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/mastering.py",
@@ -465,7 +465,7 @@
       "path": "apps/api/app/routers/mastering.py",
       "hash": "171cb9416702",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/music.py",
@@ -473,7 +473,7 @@
       "path": "apps/api/app/routers/music.py",
       "hash": "05bb6d622798",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/packs.py",
@@ -481,7 +481,7 @@
       "path": "apps/api/app/routers/packs.py",
       "hash": "f6ef863b2616",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/plugins.py",
@@ -489,7 +489,7 @@
       "path": "apps/api/app/routers/plugins.py",
       "hash": "552af86add5e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/projects.py",
@@ -497,7 +497,7 @@
       "path": "apps/api/app/routers/projects.py",
       "hash": "702dea2be56d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/speech.py",
@@ -505,7 +505,7 @@
       "path": "apps/api/app/routers/speech.py",
       "hash": "74a2386f2dc3",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/tts.py",
@@ -513,7 +513,7 @@
       "path": "apps/api/app/routers/tts.py",
       "hash": "7c23d3f7dd7c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/voices.py",
@@ -521,7 +521,7 @@
       "path": "apps/api/app/routers/voices.py",
       "hash": "24d12962b951",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/services/voices.py",
@@ -529,7 +529,7 @@
       "path": "apps/api/app/services/voices.py",
       "hash": "dac663e9bb60",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/utils/audio.py",
@@ -537,7 +537,7 @@
       "path": "apps/api/app/utils/audio.py",
       "hash": "1d00a5da45ac",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/utils/ffmpeg.py",
@@ -545,7 +545,7 @@
       "path": "apps/api/app/utils/ffmpeg.py",
       "hash": "e57af192f064",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/api/app/utils/ids.py",
@@ -553,7 +553,7 @@
       "path": "apps/api/app/utils/ids.py",
       "hash": "b9ab9d37666c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/App.tsx",
@@ -561,7 +561,7 @@
       "path": "apps/desktop/src/App.tsx",
       "hash": "06f0979515f5",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
@@ -569,7 +569,7 @@
       "path": "apps/desktop/src/api.ts",
       "hash": "45c838c421e3",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/BatchQueue.tsx",
@@ -577,7 +577,7 @@
       "path": "apps/desktop/src/components/BatchQueue.tsx",
       "hash": "4a79f367e53e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/BrainPanel.tsx",
@@ -585,7 +585,7 @@
       "path": "apps/desktop/src/components/BrainPanel.tsx",
       "hash": "1c6852d95817",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/ChannelMeterBalance.tsx",
@@ -593,7 +593,7 @@
       "path": "apps/desktop/src/components/ChannelMeterBalance.tsx",
       "hash": "f99a14a294ff",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/ClipTimeline.tsx",
@@ -601,7 +601,7 @@
       "path": "apps/desktop/src/components/ClipTimeline.tsx",
       "hash": "b9482a632734",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/ContextMenu.tsx",
@@ -609,7 +609,7 @@
       "path": "apps/desktop/src/components/ContextMenu.tsx",
       "hash": "8f307ca1a19a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Dialog.tsx",
@@ -617,7 +617,7 @@
       "path": "apps/desktop/src/components/Dialog.tsx",
       "hash": "2390a1a3c68b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/DubbingPanel.tsx",
@@ -625,7 +625,7 @@
       "path": "apps/desktop/src/components/DubbingPanel.tsx",
       "hash": "2d8948e77d60",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FileManager.tsx",
@@ -633,7 +633,7 @@
       "path": "apps/desktop/src/components/FileManager.tsx",
       "hash": "c54ca2b60ca3",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FxRack.tsx",
@@ -641,7 +641,7 @@
       "path": "apps/desktop/src/components/FxRack.tsx",
       "hash": "a8c8d2ecfa15",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/JobProgress.tsx",
@@ -649,7 +649,7 @@
       "path": "apps/desktop/src/components/JobProgress.tsx",
       "hash": "62cbadc426fa",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Knob.tsx",
@@ -657,7 +657,7 @@
       "path": "apps/desktop/src/components/Knob.tsx",
       "hash": "7efdad6ab874",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
@@ -665,7 +665,7 @@
       "path": "apps/desktop/src/components/LibraryPanel.tsx",
       "hash": "46c8a8694d75",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MarketplacePanel.tsx",
@@ -673,7 +673,7 @@
       "path": "apps/desktop/src/components/MarketplacePanel.tsx",
       "hash": "ee76cb1722fb",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MasteringPanel.tsx",
@@ -681,7 +681,7 @@
       "path": "apps/desktop/src/components/MasteringPanel.tsx",
       "hash": "d58c1faa28db",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Meter.tsx",
@@ -689,7 +689,7 @@
       "path": "apps/desktop/src/components/Meter.tsx",
       "hash": "dabd099c0ce7",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MicRecorder.tsx",
@@ -697,7 +697,7 @@
       "path": "apps/desktop/src/components/MicRecorder.tsx",
       "hash": "2ad0cc6f3eb0",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MixCopilot.tsx",
@@ -705,7 +705,7 @@
       "path": "apps/desktop/src/components/MixCopilot.tsx",
       "hash": "d265a4918507",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/NodeDesigner.tsx",
@@ -713,7 +713,7 @@
       "path": "apps/desktop/src/components/NodeDesigner.tsx",
       "hash": "fb5c2c767812",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/PluginsPanel.tsx",
@@ -721,7 +721,7 @@
       "path": "apps/desktop/src/components/PluginsPanel.tsx",
       "hash": "1ad8f9b8008d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/PropertiesPanel.tsx",
@@ -729,7 +729,7 @@
       "path": "apps/desktop/src/components/PropertiesPanel.tsx",
       "hash": "bde894a9ab74",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/RemixPanel.tsx",
@@ -737,7 +737,7 @@
       "path": "apps/desktop/src/components/RemixPanel.tsx",
       "hash": "8fbdb2475f19",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Splitter.tsx",
@@ -745,7 +745,7 @@
       "path": "apps/desktop/src/components/Splitter.tsx",
       "hash": "8cec32c89e37",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/StemMixer.tsx",
@@ -753,7 +753,7 @@
       "path": "apps/desktop/src/components/StemMixer.tsx",
       "hash": "daf251394933",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/StereoMeter.tsx",
@@ -761,7 +761,7 @@
       "path": "apps/desktop/src/components/StereoMeter.tsx",
       "hash": "9a9fc0dfbd4b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/StudioDock.tsx",
@@ -769,7 +769,7 @@
       "path": "apps/desktop/src/components/StudioDock.tsx",
       "hash": "bbff3e33f70c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/TTSPanel.tsx",
@@ -777,7 +777,7 @@
       "path": "apps/desktop/src/components/TTSPanel.tsx",
       "hash": "d79e0f1f8f98",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Tilt.tsx",
@@ -785,7 +785,7 @@
       "path": "apps/desktop/src/components/Tilt.tsx",
       "hash": "5dda88181ad1",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Timeline.tsx",
@@ -793,7 +793,7 @@
       "path": "apps/desktop/src/components/Timeline.tsx",
       "hash": "ab2f2756e2fa",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/UpdateChecker.tsx",
@@ -801,7 +801,7 @@
       "path": "apps/desktop/src/components/UpdateChecker.tsx",
       "hash": "85178736ab64",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/VoicesPanel.tsx",
@@ -809,7 +809,7 @@
       "path": "apps/desktop/src/components/VoicesPanel.tsx",
       "hash": "44126dc50816",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Waveform.tsx",
@@ -817,7 +817,7 @@
       "path": "apps/desktop/src/components/Waveform.tsx",
       "hash": "486253ec0a04",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/icons.tsx",
@@ -825,7 +825,7 @@
       "path": "apps/desktop/src/components/icons.tsx",
       "hash": "8eea524c2b6b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/dubbing/estimateSpeech.ts",
@@ -833,7 +833,7 @@
       "path": "apps/desktop/src/dubbing/estimateSpeech.ts",
       "hash": "a9caadab1591",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/hooks/useBackendReadiness.ts",
@@ -841,7 +841,7 @@
       "path": "apps/desktop/src/hooks/useBackendReadiness.ts",
       "hash": "6575cc3acf52",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/hooks/useProjectFile.ts",
@@ -849,7 +849,7 @@
       "path": "apps/desktop/src/hooks/useProjectFile.ts",
       "hash": "a8efd1813c14",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/hooks/useRuntimeActivity.ts",
@@ -857,7 +857,7 @@
       "path": "apps/desktop/src/hooks/useRuntimeActivity.ts",
       "hash": "3271f8b70838",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/main.tsx",
@@ -865,7 +865,7 @@
       "path": "apps/desktop/src/main.tsx",
       "hash": "47a739ddb07c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/store/engineContext.tsx",
@@ -873,7 +873,7 @@
       "path": "apps/desktop/src/store/engineContext.tsx",
       "hash": "66ab8257d6ce",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/store/useRemixStore.ts",
@@ -881,7 +881,7 @@
       "path": "apps/desktop/src/store/useRemixStore.ts",
       "hash": "441c759798f0",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/clipModel.ts",
@@ -889,7 +889,7 @@
       "path": "apps/desktop/src/timeline/clipModel.ts",
       "hash": "66eed621e68d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/grid.ts",
@@ -897,7 +897,7 @@
       "path": "apps/desktop/src/timeline/grid.ts",
       "hash": "acf3fdbadf53",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/ops.ts",
@@ -905,7 +905,7 @@
       "path": "apps/desktop/src/timeline/ops.ts",
       "hash": "b5bcf563a65a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/peaks.ts",
@@ -913,7 +913,7 @@
       "path": "apps/desktop/src/timeline/peaks.ts",
       "hash": "6634d5fafd9e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/useClipEngine.ts",
@@ -921,7 +921,7 @@
       "path": "apps/desktop/src/timeline/useClipEngine.ts",
       "hash": "6eeba5d7ebdd",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/useBatchQueue.ts",
@@ -929,7 +929,7 @@
       "path": "apps/desktop/src/useBatchQueue.ts",
       "hash": "f99c8f302863",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/useJob.ts",
@@ -937,7 +937,16 @@
       "path": "apps/desktop/src/useJob.ts",
       "hash": "664b5ab648bf",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "doc:API_SEMANTICS",
+      "type": "document",
+      "path": "docs/architecture/API_SEMANTICS.md",
+      "title": "API_SEMANTICS",
+      "hash": "29b2e2037edf",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
@@ -945,17 +954,19 @@
       "path": "docs/architecture/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md",
       "title": "ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
       "hash": "9dec1f23d986",
+      "prev_hash": "9dec1f23d986",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:BLUEPRINT",
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "a8db70ab2480",
-      "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "hash": "0d75b921b5be",
+      "prev_hash": "a8db70ab2480",
+      "status": "changed",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:COMPETITIVE_BRIEF",
@@ -963,8 +974,18 @@
       "path": "docs/product/COMPETITIVE_BRIEF.md",
       "title": "COMPETITIVE_BRIEF",
       "hash": "a748b158da71",
+      "prev_hash": "a748b158da71",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "doc:COMPONENT_REGISTRY",
+      "type": "document",
+      "path": "docs/design/COMPONENT_REGISTRY.md",
+      "title": "COMPONENT_REGISTRY",
+      "hash": "437f89caf4d7",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:CPU_GPU_DISTRIBUTION_STRATEGY",
@@ -972,8 +993,9 @@
       "path": "docs/operations/CPU_GPU_DISTRIBUTION_STRATEGY.md",
       "title": "CPU_GPU_DISTRIBUTION_STRATEGY",
       "hash": "d2bde25ba67c",
+      "prev_hash": "d2bde25ba67c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -981,17 +1003,19 @@
       "path": "docs/design/DESIGN_SYSTEM.md",
       "title": "DESIGN_SYSTEM",
       "hash": "116d5f9df52c",
+      "prev_hash": "116d5f9df52c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:DOCS_INDEX",
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "0d5a44abc37c",
-      "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "hash": "41610fbea6fd",
+      "prev_hash": "0d5a44abc37c",
+      "status": "changed",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -999,8 +1023,9 @@
       "path": "docs/architecture/DOCS_PHASE1_MOVE_MAP.md",
       "title": "DOCS_PHASE1_MOVE_MAP",
       "hash": "0c57e0e9a690",
+      "prev_hash": "0c57e0e9a690",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:DOCS_PHASE2_MOVE_MAP",
@@ -1008,8 +1033,9 @@
       "path": "docs/architecture/DOCS_PHASE2_MOVE_MAP.md",
       "title": "DOCS_PHASE2_MOVE_MAP",
       "hash": "6909fcb9004e",
+      "prev_hash": "6909fcb9004e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:GM6_BRAND_CI",
@@ -1017,8 +1043,9 @@
       "path": "docs/archive/GM6_BRAND_CI.md",
       "title": "GM6_BRAND_CI",
       "hash": "1272b234e8ab",
+      "prev_hash": "1272b234e8ab",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:GM6_DESIGN_SYSTEM",
@@ -1026,8 +1053,9 @@
       "path": "docs/archive/GM6_DESIGN_SYSTEM.md",
       "title": "GM6_DESIGN_SYSTEM",
       "hash": "4f79307489a6",
+      "prev_hash": "4f79307489a6",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:GM6_NAMING_DECISION",
@@ -1035,8 +1063,9 @@
       "path": "docs/archive/GM6_NAMING_DECISION.md",
       "title": "GM6_NAMING_DECISION",
       "hash": "03e7763b4d93",
+      "prev_hash": "03e7763b4d93",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:GM6_SITEMAP",
@@ -1044,8 +1073,9 @@
       "path": "docs/archive/GM6_SITEMAP.md",
       "title": "GM6_SITEMAP",
       "hash": "fecca117e731",
+      "prev_hash": "fecca117e731",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_ARRANGE_TAB_SPEC",
@@ -1053,8 +1083,9 @@
       "path": "docs/design/LALIN_ARRANGE_TAB_SPEC.md",
       "title": "LALIN_ARRANGE_TAB_SPEC",
       "hash": "2c99792082d5",
+      "prev_hash": "2c99792082d5",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_ARRANGE_V1_APPROVED",
@@ -1062,8 +1093,9 @@
       "path": "docs/design/reference/lalin/LALIN_ARRANGE_V1_APPROVED.png",
       "title": "LALIN_ARRANGE_V1_APPROVED",
       "hash": "f3ee2048d3af",
+      "prev_hash": "f3ee2048d3af",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_DUBBING_TAB_SPEC",
@@ -1071,8 +1103,9 @@
       "path": "docs/design/LALIN_DUBBING_TAB_SPEC.md",
       "title": "LALIN_DUBBING_TAB_SPEC",
       "hash": "8121864ec8f5",
+      "prev_hash": "8121864ec8f5",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_DUBBING_V1_APPROVED",
@@ -1080,8 +1113,9 @@
       "path": "docs/design/reference/lalin/LALIN_DUBBING_V1_APPROVED.png",
       "title": "LALIN_DUBBING_V1_APPROVED",
       "hash": "5d2b3c23955d",
+      "prev_hash": "5d2b3c23955d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_JOBS_TAB_SPEC",
@@ -1089,8 +1123,9 @@
       "path": "docs/design/LALIN_JOBS_TAB_SPEC.md",
       "title": "LALIN_JOBS_TAB_SPEC",
       "hash": "a54a686d2064",
+      "prev_hash": "a54a686d2064",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_JOBS_V1_APPROVED",
@@ -1098,8 +1133,9 @@
       "path": "docs/design/reference/lalin/LALIN_JOBS_V1_APPROVED.png",
       "title": "LALIN_JOBS_V1_APPROVED",
       "hash": "0d9b24f81bf4",
+      "prev_hash": "0d9b24f81bf4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_LAYOUT_SOT",
@@ -1107,8 +1143,9 @@
       "path": "docs/design/LALIN_LAYOUT_SOT.md",
       "title": "LALIN_LAYOUT_SOT",
       "hash": "78f4ab77ebd0",
+      "prev_hash": "78f4ab77ebd0",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_LIBRARY_TAB_SPEC",
@@ -1116,8 +1153,9 @@
       "path": "docs/design/LALIN_LIBRARY_TAB_SPEC.md",
       "title": "LALIN_LIBRARY_TAB_SPEC",
       "hash": "9bcd30e254db",
+      "prev_hash": "9bcd30e254db",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_LIBRARY_V1_APPROVED",
@@ -1125,8 +1163,9 @@
       "path": "docs/design/reference/lalin/LALIN_LIBRARY_V1_APPROVED.png",
       "title": "LALIN_LIBRARY_V1_APPROVED",
       "hash": "033eb5bd8fcb",
+      "prev_hash": "033eb5bd8fcb",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_MASTERING_TAB_SPEC",
@@ -1134,8 +1173,9 @@
       "path": "docs/design/LALIN_MASTERING_TAB_SPEC.md",
       "title": "LALIN_MASTERING_TAB_SPEC",
       "hash": "dcab1dfc6a7a",
+      "prev_hash": "dcab1dfc6a7a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_MASTERING_V1_APPROVED",
@@ -1143,8 +1183,9 @@
       "path": "docs/design/reference/lalin/LALIN_MASTERING_V1_APPROVED.png",
       "title": "LALIN_MASTERING_V1_APPROVED",
       "hash": "7aa5e5047570",
+      "prev_hash": "7aa5e5047570",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
@@ -1152,8 +1193,9 @@
       "path": "docs/design/LALIN_RENAME_MIGRATION_PLAN.md",
       "title": "LALIN_RENAME_MIGRATION_PLAN",
       "hash": "b9829c985886",
+      "prev_hash": "b9829c985886",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_SETTINGS_TAB_SPEC",
@@ -1161,8 +1203,9 @@
       "path": "docs/design/LALIN_SETTINGS_TAB_SPEC.md",
       "title": "LALIN_SETTINGS_TAB_SPEC",
       "hash": "533745b85a18",
+      "prev_hash": "533745b85a18",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_SETTINGS_V1_APPROVED",
@@ -1170,8 +1213,9 @@
       "path": "docs/design/reference/lalin/LALIN_SETTINGS_V1_APPROVED.png",
       "title": "LALIN_SETTINGS_V1_APPROVED",
       "hash": "51dceee78fd0",
+      "prev_hash": "51dceee78fd0",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_SHELL_SOT",
@@ -1179,8 +1223,9 @@
       "path": "docs/design/LALIN_SHELL_SOT.md",
       "title": "LALIN_SHELL_SOT",
       "hash": "2d0ee597c6ab",
+      "prev_hash": "2d0ee597c6ab",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_SITEMAP_SOT",
@@ -1188,8 +1233,9 @@
       "path": "docs/design/LALIN_SITEMAP_SOT.md",
       "title": "LALIN_SITEMAP_SOT",
       "hash": "f6e81be14f49",
+      "prev_hash": "f6e81be14f49",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
@@ -1197,8 +1243,9 @@
       "path": "docs/design/LALIN_UI_IMPLEMENTATION_PLAN.md",
       "title": "LALIN_UI_IMPLEMENTATION_PLAN",
       "hash": "eea52b913f4f",
+      "prev_hash": "eea52b913f4f",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_UI_SOT",
@@ -1206,8 +1253,9 @@
       "path": "docs/design/LALIN_UI_SOT.md",
       "title": "LALIN_UI_SOT",
       "hash": "2790ee34237b",
+      "prev_hash": "2790ee34237b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_VOICE_STUDIO_TAB_SPEC",
@@ -1215,8 +1263,9 @@
       "path": "docs/design/LALIN_VOICE_STUDIO_TAB_SPEC.md",
       "title": "LALIN_VOICE_STUDIO_TAB_SPEC",
       "hash": "3a2163364cd2",
+      "prev_hash": "3a2163364cd2",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_VOICE_STUDIO_V1_APPROVED",
@@ -1224,8 +1273,9 @@
       "path": "docs/design/reference/lalin/LALIN_VOICE_STUDIO_V1_APPROVED.png",
       "title": "LALIN_VOICE_STUDIO_V1_APPROVED",
       "hash": "0b0598cedfa9",
+      "prev_hash": "0b0598cedfa9",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
@@ -1233,8 +1283,9 @@
       "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_SOURCE.png",
       "title": "LALIN_W0_SHARED_SHELL_MASTER_SOURCE",
       "hash": "9d7aa07db8d1",
+      "prev_hash": "9d7aa07db8d1",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
@@ -1242,8 +1293,9 @@
       "path": "docs/design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED.png",
       "title": "LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED",
       "hash": "93d386b261e6",
+      "prev_hash": "93d386b261e6",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_WORKSPACE_TAB_SPEC",
@@ -1251,8 +1303,9 @@
       "path": "docs/design/LALIN_WORKSPACE_TAB_SPEC.md",
       "title": "LALIN_WORKSPACE_TAB_SPEC",
       "hash": "29341dbf71ab",
+      "prev_hash": "29341dbf71ab",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LALIN_WORKSPACE_V1_APPROVED",
@@ -1260,8 +1313,9 @@
       "path": "docs/design/reference/lalin/LALIN_WORKSPACE_V1_APPROVED.png",
       "title": "LALIN_WORKSPACE_V1_APPROVED",
       "hash": "248fc98bf203",
+      "prev_hash": "248fc98bf203",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:LOCAL_MODEL_LEDGER",
@@ -1269,8 +1323,9 @@
       "path": "docs/product/LOCAL_MODEL_LEDGER.md",
       "title": "LOCAL_MODEL_LEDGER",
       "hash": "55ec7af78c17",
+      "prev_hash": "55ec7af78c17",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:MASTER_PLAN",
@@ -1278,8 +1333,9 @@
       "path": "docs/archive/MASTER_PLAN.md",
       "title": "MASTER_PLAN",
       "hash": "959db27acec4",
+      "prev_hash": "959db27acec4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PACKAGING_SIDECAR",
@@ -1287,8 +1343,9 @@
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
       "hash": "451c97508baf",
+      "prev_hash": "451c97508baf",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1296,8 +1353,9 @@
       "path": "docs/architecture/PHASE3_RUNTIME_MOVE_MAP.md",
       "title": "PHASE3_RUNTIME_MOVE_MAP",
       "hash": "727c5ea57aad",
+      "prev_hash": "727c5ea57aad",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_STATE_PLAN",
@@ -1305,8 +1363,9 @@
       "path": "docs/architecture/PHASE3_RUNTIME_STATE_PLAN.md",
       "title": "PHASE3_RUNTIME_STATE_PLAN",
       "hash": "dee39f2a25de",
+      "prev_hash": "dee39f2a25de",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE4_APP_FOLDER_MIGRATION_PLAN",
@@ -1314,8 +1373,9 @@
       "path": "docs/architecture/PHASE4_APP_FOLDER_MIGRATION_PLAN.md",
       "title": "PHASE4_APP_FOLDER_MIGRATION_PLAN",
       "hash": "d0b409562409",
+      "prev_hash": "d0b409562409",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE4_APP_MOVE_MAP",
@@ -1323,8 +1383,9 @@
       "path": "docs/architecture/PHASE4_APP_MOVE_MAP.md",
       "title": "PHASE4_APP_MOVE_MAP",
       "hash": "e968b89d5c34",
+      "prev_hash": "e968b89d5c34",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE5_CONTRACTS_MCP_PLAN",
@@ -1332,8 +1393,9 @@
       "path": "docs/architecture/PHASE5_CONTRACTS_MCP_PLAN.md",
       "title": "PHASE5_CONTRACTS_MCP_PLAN",
       "hash": "e2cbf8cd683f",
+      "prev_hash": "e2cbf8cd683f",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
@@ -1341,8 +1403,9 @@
       "path": "docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md",
       "title": "PHASE6_WORKSPACE_ORCHESTRATION_PLAN",
       "hash": "eed81e12a074",
+      "prev_hash": "eed81e12a074",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE7_RELEASE_WORKFLOW_PLAN",
@@ -1350,8 +1413,9 @@
       "path": "docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md",
       "title": "PHASE7_RELEASE_WORKFLOW_PLAN",
       "hash": "c21d2faa177b",
+      "prev_hash": "c21d2faa177b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE8_REPO_RENAME_PRESENTATION_READINESS",
@@ -1359,8 +1423,9 @@
       "path": "docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md",
       "title": "PHASE8_REPO_RENAME_PRESENTATION_READINESS",
       "hash": "512ab94914d4",
+      "prev_hash": "512ab94914d4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PHASE_0_REVIEW",
@@ -1368,8 +1433,9 @@
       "path": "docs/validation/PHASE_0_REVIEW.md",
       "title": "PHASE_0_REVIEW",
       "hash": "fd0eb94e2e0b",
+      "prev_hash": "fd0eb94e2e0b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PRD",
@@ -1377,8 +1443,9 @@
       "path": "docs/product/PRD.md",
       "title": "PRD",
       "hash": "5c27c12dafb4",
+      "prev_hash": "5c27c12dafb4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO",
@@ -1386,8 +1453,9 @@
       "path": "docs/archive/PROPOSED_V03_DUBBING_PRO.md",
       "title": "PROPOSED_V03_DUBBING_PRO",
       "hash": "38f905df1f5c",
+      "prev_hash": "38f905df1f5c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO_SLICE_A",
@@ -1395,8 +1463,9 @@
       "path": "docs/archive/PROPOSED_V03_DUBBING_PRO_SLICE_A.md",
       "title": "PROPOSED_V03_DUBBING_PRO_SLICE_A",
       "hash": "31148fd261b7",
+      "prev_hash": "31148fd261b7",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
@@ -1404,8 +1473,9 @@
       "path": "docs/archive/PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md",
       "title": "PROPOSED_V03_SLICE_A_CANONICAL_DIFF",
       "hash": "5874fb331a91",
+      "prev_hash": "5874fb331a91",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:PROPOSED_VOICEBOX_CAPTURE_DICTATION",
@@ -1413,8 +1483,9 @@
       "path": "docs/archive/PROPOSED_VOICEBOX_CAPTURE_DICTATION.md",
       "title": "PROPOSED_VOICEBOX_CAPTURE_DICTATION",
       "hash": "b312fcb3226f",
+      "prev_hash": "b312fcb3226f",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:RCA--LOCAL-LLM-DISPATCH",
@@ -1422,8 +1493,9 @@
       "path": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
       "title": "RCA--LOCAL-LLM-DISPATCH",
       "hash": "e73fd3656a1a",
+      "prev_hash": "e73fd3656a1a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:READINESS",
@@ -1431,8 +1503,9 @@
       "path": "docs/presentation/lalin-ai-launch/READINESS.md",
       "title": "READINESS",
       "hash": "9bf132184a37",
+      "prev_hash": "9bf132184a37",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:REFERENCE_MANIFEST",
@@ -1440,8 +1513,9 @@
       "path": "docs/design/reference/gm6/REFERENCE_MANIFEST.md",
       "title": "REFERENCE_MANIFEST",
       "hash": "dda9c15e095b",
+      "prev_hash": "dda9c15e095b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:REPORT--LOCAL-LLM-DISPATCH",
@@ -1449,8 +1523,9 @@
       "path": "docs/rca/REPORT--LOCAL-LLM-DISPATCH.md",
       "title": "REPORT--LOCAL-LLM-DISPATCH",
       "hash": "bd646372902c",
+      "prev_hash": "bd646372902c",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:REPOSITORY_ARCHITECTURE_SOT",
@@ -1458,8 +1533,9 @@
       "path": "docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md",
       "title": "REPOSITORY_ARCHITECTURE_SOT",
       "hash": "dbc4c84c1a03",
+      "prev_hash": "dbc4c84c1a03",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:REPO_MIGRATION_PLAN",
@@ -1467,8 +1543,9 @@
       "path": "docs/architecture/REPO_MIGRATION_PLAN.md",
       "title": "REPO_MIGRATION_PLAN",
       "hash": "bf25645c7374",
+      "prev_hash": "bf25645c7374",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:ROADMAP_EXECUTION_BACKLOG",
@@ -1476,8 +1553,9 @@
       "path": "docs/product/ROADMAP_EXECUTION_BACKLOG.md",
       "title": "ROADMAP_EXECUTION_BACKLOG",
       "hash": "c05f607f1e8a",
+      "prev_hash": "c05f607f1e8a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:ROADMAP_MUSIC",
@@ -1485,8 +1563,9 @@
       "path": "docs/product/ROADMAP_MUSIC.md",
       "title": "ROADMAP_MUSIC",
       "hash": "cf6926100979",
+      "prev_hash": "cf6926100979",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPEC",
@@ -1494,8 +1573,9 @@
       "path": "docs/architecture/SPEC.md",
       "title": "SPEC",
       "hash": "dc60f8e6098f",
+      "prev_hash": "dc60f8e6098f",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT0_G_MUSIC_RC_PLAN",
@@ -1503,8 +1583,9 @@
       "path": "docs/archive/SPRINT0_G_MUSIC_RC_PLAN.md",
       "title": "SPRINT0_G_MUSIC_RC_PLAN",
       "hash": "c76d70cfa381",
+      "prev_hash": "c76d70cfa381",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT10_VALIDATION",
@@ -1512,8 +1593,9 @@
       "path": "docs/validation/SPRINT10_VALIDATION.md",
       "title": "SPRINT10_VALIDATION",
       "hash": "a1eef8c18bdc",
+      "prev_hash": "a1eef8c18bdc",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT1_VALIDATION",
@@ -1521,8 +1603,9 @@
       "path": "docs/validation/SPRINT1_VALIDATION.md",
       "title": "SPRINT1_VALIDATION",
       "hash": "693f0fb76617",
+      "prev_hash": "693f0fb76617",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT2_VALIDATION",
@@ -1530,8 +1613,9 @@
       "path": "docs/validation/SPRINT2_VALIDATION.md",
       "title": "SPRINT2_VALIDATION",
       "hash": "a758a47c9b23",
+      "prev_hash": "a758a47c9b23",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT3_VALIDATION",
@@ -1539,8 +1623,9 @@
       "path": "docs/validation/SPRINT3_VALIDATION.md",
       "title": "SPRINT3_VALIDATION",
       "hash": "11aa3237ecd4",
+      "prev_hash": "11aa3237ecd4",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT4_VALIDATION",
@@ -1548,8 +1633,9 @@
       "path": "docs/validation/SPRINT4_VALIDATION.md",
       "title": "SPRINT4_VALIDATION",
       "hash": "f759e7827027",
+      "prev_hash": "f759e7827027",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT5_VALIDATION",
@@ -1557,8 +1643,9 @@
       "path": "docs/validation/SPRINT5_VALIDATION.md",
       "title": "SPRINT5_VALIDATION",
       "hash": "9fc0a176a0dc",
+      "prev_hash": "9fc0a176a0dc",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT6_VALIDATION",
@@ -1566,8 +1653,9 @@
       "path": "docs/validation/SPRINT6_VALIDATION.md",
       "title": "SPRINT6_VALIDATION",
       "hash": "7c2281db6723",
+      "prev_hash": "7c2281db6723",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT7_VALIDATION",
@@ -1575,8 +1663,9 @@
       "path": "docs/validation/SPRINT7_VALIDATION.md",
       "title": "SPRINT7_VALIDATION",
       "hash": "7cfc1fa0b0ef",
+      "prev_hash": "7cfc1fa0b0ef",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT8_VALIDATION",
@@ -1584,8 +1673,9 @@
       "path": "docs/validation/SPRINT8_VALIDATION.md",
       "title": "SPRINT8_VALIDATION",
       "hash": "51c7626ba805",
+      "prev_hash": "51c7626ba805",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SPRINT9_VALIDATION",
@@ -1593,17 +1683,19 @@
       "path": "docs/validation/SPRINT9_VALIDATION.md",
       "title": "SPRINT9_VALIDATION",
       "hash": "eb3d2be28a4b",
+      "prev_hash": "eb3d2be28a4b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SRS",
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "e63b98512426",
-      "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "hash": "74876dc4897c",
+      "prev_hash": "e63b98512426",
+      "status": "changed",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -1611,8 +1703,9 @@
       "path": "docs/architecture/SWARM_PLAN.md",
       "title": "SWARM_PLAN",
       "hash": "e76afa9678d3",
+      "prev_hash": "e76afa9678d3",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:UI_SITEMAP",
@@ -1620,8 +1713,9 @@
       "path": "docs/archive/UI_SITEMAP.md",
       "title": "UI_SITEMAP",
       "hash": "09b3f41bd4a5",
+      "prev_hash": "09b3f41bd4a5",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -1629,8 +1723,9 @@
       "path": "docs/operations/WORKSTATION_DISTRIBUTION.md",
       "title": "WORKSTATION_DISTRIBUTION",
       "hash": "687fa98c52b7",
+      "prev_hash": "687fa98c52b7",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
@@ -1638,8 +1733,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7.png",
       "title": "codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
       "hash": "94da957df959",
+      "prev_hash": "94da957df959",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
@@ -1647,8 +1743,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658.png",
       "title": "codex-clipboard-06feced4-45ae-4f5b-b10f-d4d749267658",
       "hash": "911d1365bc55",
+      "prev_hash": "911d1365bc55",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
@@ -1656,8 +1753,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0.png",
       "title": "codex-clipboard-0a266083-2be4-46fd-92ba-4e350b772dc0",
       "hash": "3fe3b4302b9e",
+      "prev_hash": "3fe3b4302b9e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
@@ -1665,8 +1763,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545.png",
       "title": "codex-clipboard-0ed8ad99-ac4b-4dd7-bd10-5f9afa185545",
       "hash": "a0cc8cfb9188",
+      "prev_hash": "a0cc8cfb9188",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
@@ -1674,8 +1773,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07.png",
       "title": "codex-clipboard-1ae47c09-7786-4d70-9e86-5f993a221e07",
       "hash": "205ab92aad26",
+      "prev_hash": "205ab92aad26",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
@@ -1683,8 +1783,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487.png",
       "title": "codex-clipboard-28a81422-9ede-459b-bcf6-455663d84487",
       "hash": "72fb381786ff",
+      "prev_hash": "72fb381786ff",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
@@ -1692,8 +1793,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188.png",
       "title": "codex-clipboard-3cfab4cc-4fe5-4a3f-8d82-7c2af36ec188",
       "hash": "46e4bbc1ce80",
+      "prev_hash": "46e4bbc1ce80",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
@@ -1701,8 +1803,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36.png",
       "title": "codex-clipboard-4fa700b0-1568-4140-98ed-1f6ccd10df36",
       "hash": "44e783c7fd81",
+      "prev_hash": "44e783c7fd81",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
@@ -1710,8 +1813,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d.png",
       "title": "codex-clipboard-5b3f0b83-2cb1-40d0-8c7d-efac7687691d",
       "hash": "c07cd5aacb68",
+      "prev_hash": "c07cd5aacb68",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
@@ -1719,8 +1823,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64.png",
       "title": "codex-clipboard-67b94d1b-dbb4-49cd-b0a3-9edf224d2d64",
       "hash": "bc19e59edce9",
+      "prev_hash": "bc19e59edce9",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
@@ -1728,8 +1833,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e.png",
       "title": "codex-clipboard-68d34556-5040-4d94-88c0-d1090189d85e",
       "hash": "86899aa8d076",
+      "prev_hash": "86899aa8d076",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
@@ -1737,8 +1843,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206.png",
       "title": "codex-clipboard-6a17aa8f-5187-47fc-b0fe-7e1e8c489206",
       "hash": "cff46fe33a4d",
+      "prev_hash": "cff46fe33a4d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
@@ -1746,8 +1853,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef.png",
       "title": "codex-clipboard-79e08ead-453c-48cf-b44a-36e7d89159ef",
       "hash": "06ff8b4088b0",
+      "prev_hash": "06ff8b4088b0",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
@@ -1755,8 +1863,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2.png",
       "title": "codex-clipboard-7ef9c0d0-df59-4c47-91a6-9585edc927c2",
       "hash": "34ac810eaadb",
+      "prev_hash": "34ac810eaadb",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
@@ -1764,8 +1873,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766.png",
       "title": "codex-clipboard-9e22a265-b2bc-4a3d-8fdc-7d1607eed766",
       "hash": "859da5d9976a",
+      "prev_hash": "859da5d9976a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
@@ -1773,8 +1883,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6.png",
       "title": "codex-clipboard-a334be5e-7a80-40db-93f6-38ee94fd2ba6",
       "hash": "2fb184121c86",
+      "prev_hash": "2fb184121c86",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
@@ -1782,8 +1893,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b.png",
       "title": "codex-clipboard-b6c6cca2-f8d0-42a2-bf1b-b5684145314b",
       "hash": "88750d7a32f2",
+      "prev_hash": "88750d7a32f2",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
@@ -1791,8 +1903,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc.png",
       "title": "codex-clipboard-bd0a1f4a-5088-421f-ad02-3d4139752fbc",
       "hash": "1466f3da5eee",
+      "prev_hash": "1466f3da5eee",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
@@ -1800,8 +1913,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f.png",
       "title": "codex-clipboard-c42872d2-b04d-48ba-8795-6cd2ddb4fc7f",
       "hash": "bdd7c8d5e0fd",
+      "prev_hash": "bdd7c8d5e0fd",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
@@ -1809,8 +1923,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be.png",
       "title": "codex-clipboard-d01083b2-0d22-4e79-acaa-97b7e67907be",
       "hash": "253add3fd85e",
+      "prev_hash": "253add3fd85e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
@@ -1818,8 +1933,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3.png",
       "title": "codex-clipboard-d21853eb-2759-49f2-a7d1-6fcf421a2fb3",
       "hash": "52a968d61659",
+      "prev_hash": "52a968d61659",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
@@ -1827,8 +1943,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a.png",
       "title": "codex-clipboard-e5cebb1c-e53f-42a5-8465-58aed956746a",
       "hash": "e156b392fd4e",
+      "prev_hash": "e156b392fd4e",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
@@ -1836,8 +1953,9 @@
       "path": "docs/design/reference/gm6/codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd.png",
       "title": "codex-clipboard-ee9d3c6d-79c5-4dee-8aea-99fc21b0a0cd",
       "hash": "fc46fffc635b",
+      "prev_hash": "fc46fffc635b",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "doc:index",
@@ -1845,8 +1963,9 @@
       "path": "docs/presentation/lalin-ai-launch/index.html",
       "title": "index",
       "hash": "2497e6804c7d",
+      "prev_hash": "2497e6804c7d",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-01",
@@ -1854,7 +1973,7 @@
       "label": "FR-01",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-02",
@@ -1862,7 +1981,7 @@
       "label": "FR-02",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-03",
@@ -1870,7 +1989,7 @@
       "label": "FR-03",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-04",
@@ -1878,7 +1997,7 @@
       "label": "FR-04",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-04b",
@@ -1886,7 +2005,7 @@
       "label": "FR-04b",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-05",
@@ -1894,7 +2013,7 @@
       "label": "FR-05",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-06",
@@ -1902,7 +2021,7 @@
       "label": "FR-06",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-07",
@@ -1910,7 +2029,7 @@
       "label": "FR-07",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-08",
@@ -1918,7 +2037,15 @@
       "label": "FR-08",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-09",
+      "type": "requirement",
+      "label": "FR-09",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-1",
@@ -1926,7 +2053,55 @@
       "label": "FR-1",
       "defined_in": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-10",
+      "type": "requirement",
+      "label": "FR-10",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-11",
+      "type": "requirement",
+      "label": "FR-11",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-12",
+      "type": "requirement",
+      "label": "FR-12",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-13",
+      "type": "requirement",
+      "label": "FR-13",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-14",
+      "type": "requirement",
+      "label": "FR-14",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
+    },
+    {
+      "id": "req:FR-15",
+      "type": "requirement",
+      "label": "FR-15",
+      "defined_in": "docs/product/SRS.md",
+      "status": "current",
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-4",
@@ -1934,7 +2109,7 @@
       "label": "FR-4",
       "defined_in": "docs/rca/REPORT--LOCAL-LLM-DISPATCH.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:FR-5",
@@ -1942,7 +2117,7 @@
       "label": "FR-5",
       "defined_in": "docs/rca/RCA--LOCAL-LLM-DISPATCH.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-01",
@@ -1950,7 +2125,7 @@
       "label": "NFR-01",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-02",
@@ -1958,7 +2133,7 @@
       "label": "NFR-02",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-03",
@@ -1966,7 +2141,7 @@
       "label": "NFR-03",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-04",
@@ -1974,7 +2149,7 @@
       "label": "NFR-04",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-05",
@@ -1982,7 +2157,7 @@
       "label": "NFR-05",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "req:NFR-06",
@@ -1990,7 +2165,7 @@
       "label": "NFR-06",
       "defined_in": "docs/product/SRS.md",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
@@ -1998,7 +2173,7 @@
       "path": "apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "hash": "3f5a20d6fe2a",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/grid.test.ts",
@@ -2006,7 +2181,7 @@
       "path": "apps/desktop/src/timeline/grid.test.ts",
       "hash": "37249eee03db",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/ops.test.ts",
@@ -2014,7 +2189,7 @@
       "path": "apps/desktop/src/timeline/ops.test.ts",
       "hash": "c208481535bb",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
@@ -2022,7 +2197,7 @@
       "path": "apps/desktop/src/timeline/useClipEngine.test.ts",
       "hash": "bc383670c398",
       "status": "current",
-      "last_verified": "2026-08-09T08:02:08+07:00"
+      "last_verified": "2026-08-09T08:07:23+07:00"
     }
   ],
   "edges": [
@@ -2319,6 +2494,167 @@
       "type": "exposes",
       "status": "current",
       "source": "code-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:BLUEPRINT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-07",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-10",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-11",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-13",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "req:FR-15",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:BLUEPRINT",
+      "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "doc:BLUEPRINT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "req:FR-08",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "req:FR-09",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "req:FR-12",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:COMPONENT_REGISTRY",
+      "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
     },
     {
       "from": "doc:GM6_DESIGN_SYSTEM",
