@@ -194,6 +194,14 @@ export const projects = {
     }),
   remove: (id: string) =>
     req<{ deleted: string }>(`/projects/${id}`, { method: "DELETE" }),
+  bundleUrl: (id: string) => `${API_BASE}/projects/${id}/bundle`,
+  importBundle: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return req<{ id: string; name: string; renamed: Record<string, string> }>(
+      "/projects/import", { method: "POST", body: fd },
+    );
+  },
 };
 
 // ── Jobs ──────────────────────────────────────────────────

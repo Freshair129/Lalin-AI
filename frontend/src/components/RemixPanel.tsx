@@ -14,7 +14,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { API_BASE, files, music } from "../api";
+import { API_BASE, files, music, projects } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
@@ -436,6 +436,33 @@ export function RemixPanel() {
           <button className="seg-add" onClick={file.openDialog} title="เปิดโปรเจกต์ (Ctrl+O)">📂 Open</button>
           <button className="seg-add" onClick={file.save} disabled={file.saving || (!file.dirty && !!file.currentId)} title="บันทึก (Ctrl+S)">💾 Save</button>
           <button className="seg-add" onClick={file.saveAs} disabled={file.saving} title="บันทึกเป็น (Ctrl+Shift+S)">📋 Save As</button>
+          <button
+            className="seg-add"
+            disabled={!file.currentId}
+            title={file.currentId ? "ส่งออกโปรเจกต์ + ไฟล์เสียงเป็น .gmp (ย้ายข้ามเครื่องได้)" : "บันทึกโปรเจกต์ก่อนจึงส่งออกได้"}
+            onClick={() => { if (file.currentId) window.location.href = projects.bundleUrl(file.currentId); }}
+          >📦 Export .gmp</button>
+          <label className="seg-add" title="นำเข้าโปรเจกต์จากไฟล์ .gmp">
+            <input
+              type="file" accept=".gmp,application/zip" hidden
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                if (file.dirty && !(await dialog.confirm("มีการเปลี่ยนแปลงที่ยังไม่บันทึก — ทิ้งแล้วนำเข้า?"))) return;
+                const r = await projects.importBundle(f);
+                await file.openProject(r.id);
+                const n = Object.keys(r.renamed).length;
+                if (n > 0) {
+                  await dialog.confirm(
+                    `นำเข้าแล้ว — มีไฟล์ ${n} ไฟล์ที่ชื่อซ้ำกับของเดิมบนเครื่องนี้ ` +
+                    `ระบบบันทึกเป็นชื่อใหม่ให้แล้ว (ไฟล์เดิมของคุณไม่ถูกทับ)`,
+                  );
+                }
+              }}
+            />
+            📥 Import .gmp
+          </label>
           <div className="seg-toggle">
             <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Standard</button>
             <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>+ Node</button>
