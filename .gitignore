@@ -46,6 +46,10 @@ packages/
 backend/build/
 backend/dist/
 backend/sidecar-smoke.*
+backend/.venv-ci/
+
+# Sidecar binary + deps ที่ copy ไปให้ Tauri (สร้างจาก scripts/build_sidecar.ps1 — ห้าม commit)
+frontend/src-tauri/binaries/
 
 # Runtime state/data ของผู้ใช้ (workspace/projects)
 runtime/

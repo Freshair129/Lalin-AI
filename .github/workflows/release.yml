@@ -24,9 +24,36 @@ jobs:
         with:
           workspaces: frontend/src-tauri
 
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ต้อง build sidecar ก่อน tauri-action เสมอ — tauri.conf.json ประกาศ
+      # externalBin ไว้ ถ้าไม่มีไฟล์ bundle จะล้มตอน bundle step
+      - name: Build backend sidecar
+        shell: pwsh
+        run: ./scripts/build_sidecar.ps1 -VenvPath "${{ github.workspace }}/backend/.venv-ci" -CreateIfMissing
+
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
+
+      - name: Frontend tests
+        working-directory: frontend
+        run: npx vitest run
+
+      - name: Backend tests
+        shell: pwsh
+        run: |
+          if (Test-Path backend/tests) {
+            & "${{ github.workspace }}/backend/.venv-ci/Scripts/python.exe" -m pip install pytest==8.3.4
+            Set-Location backend
+            & "${{ github.workspace }}/backend/.venv-ci/Scripts/python.exe" -m pytest
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Host "backend/tests ยังไม่มี (มาใน Phase B) - ข้าม"
+          }
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
