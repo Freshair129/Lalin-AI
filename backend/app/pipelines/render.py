@@ -245,6 +245,8 @@ def render_plan(plan: RenderPlan, out_path: str, progress=None) -> dict:
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
+    from ..utils.validate import validate_audio
+
     return {
         "output": out_path,
         "duration": round(total / sr, 3),
@@ -252,4 +254,5 @@ def render_plan(plan: RenderPlan, out_path: str, progress=None) -> dict:
         "clipped": clipped,
         "tracks": len(plan.tracks),
         "clips": n_clips,
+        "validation": validate_audio(out_path),
     }

@@ -164,3 +164,6 @@ def test_empty_plan_writes_a_short_silent_file(tmp_path, data_dir):
     data, _ = _read(out)
     assert res["clips"] == 0
     assert np.allclose(data, 0.0)
+    # ไฟล์เงียบล้วนคือของจริง (arrangement ว่าง) แต่ validator ต้องจับได้ — ไม่ใช่ "render สำเร็จ" เฉย ๆ
+    assert res["validation"]["ok"] is False
+    assert any("เงียบ" in i for i in res["validation"]["issues"])
