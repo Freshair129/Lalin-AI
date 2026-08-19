@@ -49,23 +49,28 @@ WRITE_TOOLS: dict[str, dict] = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "clip_id": {"type": "string"},
+                "trackId": {"type": "string", "description": "id ของ track ที่ clip นี้อยู่"},
+                "clipId": {"type": "string"},
                 "start": {"type": "number", "description": "ตำแหน่งใหม่ (วินาที)"},
             },
-            "required": ["clip_id", "start"],
+            "required": ["trackId", "clipId", "start"],
         },
     },
     "set_gain": {
-        "description": "ปรับความดัง (gain) ของ clip หรือ track",
+        "description": (
+            "ปรับความดัง (gain) ของ clip หรือ track — ตอนนี้ apply อัตโนมัติได้เฉพาะ "
+            "targetType=clip เท่านั้น (track-level gain ยังไม่มีใน editor)"
+        ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "target_id": {"type": "string", "description": "clip_id หรือ track_id"},
-                "target_type": {"type": "string", "enum": ["clip", "track"]},
+                "trackId": {"type": "string", "description": "track ของ clip เป้าหมาย (หรือ track เป้าหมายเองถ้า targetType=track)"},
+                "targetId": {"type": "string", "description": "clip_id หรือ track_id ตามที่ระบุใน targetType"},
+                "targetType": {"type": "string", "enum": ["clip", "track"]},
                 "gain": {"type": "number", "description": "0..1 (หรือ dB ถ้า unit=db)"},
                 "unit": {"type": "string", "enum": ["linear", "db"], "default": "linear"},
             },
-            "required": ["target_id", "target_type", "gain"],
+            "required": ["trackId", "targetId", "targetType", "gain"],
         },
     },
     "set_pan": {
@@ -73,44 +78,45 @@ WRITE_TOOLS: dict[str, dict] = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "track_id": {"type": "string"},
+                "trackId": {"type": "string"},
                 "pan": {"type": "number", "description": "-1 (ซ้ายสุด) .. 1 (ขวาสุด)"},
             },
-            "required": ["track_id", "pan"],
+            "required": ["trackId", "pan"],
         },
     },
     "set_fx": {
-        "description": "ตั้งค่า/เปิดปิด FX บน track (เช่น reverb, delay, comp)",
+        "description": "ตั้งค่า/เปิดปิด FX บน track (เช่น reverb, delay, comp) — ยังไม่รองรับ apply อัตโนมัติ",
         "input_schema": {
             "type": "object",
             "properties": {
-                "track_id": {"type": "string"},
+                "trackId": {"type": "string"},
                 "fx": {"type": "string", "description": "ชื่อ FX เช่น reverb, delay, comp, eq"},
                 "params": {"type": "object", "description": "พารามิเตอร์ของ FX นั้น ๆ"},
                 "enabled": {"type": "boolean", "default": True},
             },
-            "required": ["track_id", "fx"],
+            "required": ["trackId", "fx"],
         },
     },
     "set_lufs": {
-        "description": "ตั้งเป้าหมาย loudness (LUFS) สำหรับ mastering",
+        "description": "ตั้งเป้าหมาย loudness (LUFS) สำหรับ mastering — ยังไม่รองรับ apply อัตโนมัติ",
         "input_schema": {
             "type": "object",
             "properties": {
-                "target_lufs": {"type": "number", "description": "เช่น -14 สำหรับ streaming"},
+                "targetLufs": {"type": "number", "description": "เช่น -14 สำหรับ streaming"},
             },
-            "required": ["target_lufs"],
+            "required": ["targetLufs"],
         },
     },
     "mute_clip": {
-        "description": "ปิด/เปิดเสียง clip",
+        "description": "ตั้งสถานะ mute ของ clip แบบเจาะจง (true/false) ไม่ใช่การสลับสถานะ",
         "input_schema": {
             "type": "object",
             "properties": {
-                "clip_id": {"type": "string"},
+                "trackId": {"type": "string"},
+                "clipId": {"type": "string"},
                 "muted": {"type": "boolean"},
             },
-            "required": ["clip_id", "muted"],
+            "required": ["trackId", "clipId", "muted"],
         },
     },
     "slice_clip": {
@@ -118,21 +124,22 @@ WRITE_TOOLS: dict[str, dict] = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "clip_id": {"type": "string"},
+                "trackId": {"type": "string"},
+                "clipId": {"type": "string"},
                 "at": {"type": "number", "description": "ตำแหน่งตัด (วินาที บน timeline)"},
             },
-            "required": ["clip_id", "at"],
+            "required": ["trackId", "clipId", "at"],
         },
     },
     "reorder_track": {
-        "description": "เปลี่ยนลำดับ track ใน timeline",
+        "description": "ย้ายแทร็กไปอยู่ตำแหน่งของอีกแทร็กหนึ่ง (สลับตำแหน่งกัน)",
         "input_schema": {
             "type": "object",
             "properties": {
-                "track_id": {"type": "string"},
-                "new_index": {"type": "integer", "minimum": 0},
+                "trackId": {"type": "string", "description": "track ที่จะย้าย"},
+                "targetTrackId": {"type": "string", "description": "ย้ายไปอยู่ตำแหน่งของ track นี้"},
             },
-            "required": ["track_id", "new_index"],
+            "required": ["trackId", "targetTrackId"],
         },
     },
 }

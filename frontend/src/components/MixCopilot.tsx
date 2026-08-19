@@ -4,97 +4,39 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { agent, type AgentMutation } from "../api";
 import type { ClipEngine } from "../timeline/useClipEngine";
+import { canApplyMutation, applyMutation, describeMutation } from "./mixCopilotOps";
 
 /**
  * MixCopilot — แชทสั่งงาน mix ด้วย LLM (WP 4.3)
  *  - ผู้ใช้พิมพ์คำสั่ง (เช่น "ดันเสียงร้องขึ้น ลด beat ช่วง hook")
  *  - เรียก POST /agent/act ได้ reply + รายการ mutation ที่เสนอ (ยังไม่ execute)
  *  - แต่ละ mutation กด "ใช้" เพื่อแปลงเป็น engine call จริง (ผ่าน commit() ⇒ Ctrl+Z undo ได้)
- *  - op ที่ไม่มี engine method ตรง ๆ (set_pan/set_fx/set_lufs) แสดงผลอย่างเดียว
+ *  - op ที่ engine ยังไม่รองรับ (set_fx/set_lufs/set_gain(track)) แสดงผลอย่างเดียว
+ *
+ * logic ทั้งหมด (describe/canApply/apply) อยู่ใน mixCopilotOps.ts — ไฟล์นี้มีแต่ UI
+ * เพื่อกันไม่ให้ "ปุ่มโชว์ว่า apply ได้" กับ "apply แล้วสำเร็จจริง" หลุดจากกันอีก (G-05)
  */
-
-// op ที่ apply ผ่าน engine ได้จริง
-const APPLICABLE_OPS = new Set([
-  "move_clip",
-  "set_gain",
-  "mute_clip",
-  "slice_clip",
-  "reorder_track",
-]);
-
 interface ChatEntry {
   id: number;
   role: "user" | "agent";
   text: string;
   mutations?: AgentMutation[];
-  applied?: Set<number>; // index ของ mutation ที่ apply ไปแล้ว
+  applied?: Set<number>;   // index ที่ apply สำเร็จแล้ว
+  failed?: Set<number>;    // index ที่กดใช้แล้วแต่ engine ปฏิเสธ (เช่น clip ถูกลบไปแล้ว)
 }
 
-function describeMutation(m: AgentMutation): string {
-  const a = m.args || {};
-  switch (m.op) {
-    case "move_clip":
-      return `ย้าย clip ${a.clipId ?? "?"} ไปที่ ${a.start ?? "?"}s (track ${a.trackId ?? "?"})`;
-    case "set_gain":
-      return `ตั้ง gain track/clip ${a.trackId ?? a.clipId ?? "?"} = ${a.gain ?? "?"}`;
-    case "set_pan":
-      return `ตั้ง pan ${a.trackId ?? "?"} = ${a.pan ?? "?"}`;
-    case "set_fx":
-      return `ตั้งค่า FX ${a.trackId ?? "?"}: ${JSON.stringify(a.fx ?? a)}`;
-    case "set_lufs":
-      return `ตั้ง loudness เป้าหมาย = ${a.lufs ?? "?"} LUFS`;
-    case "mute_clip":
-      return `mute/unmute clip ${a.clipId ?? "?"} (track ${a.trackId ?? "?"})`;
-    case "slice_clip":
-      return `ตัด clip ${a.clipId ?? "?"} ที่ ${a.at ?? "?"}s (track ${a.trackId ?? "?"})`;
-    case "reorder_track":
-      return `ย้ายแทร็ก ${a.fromId ?? "?"} ไปตำแหน่งของ ${a.toId ?? "?"}`;
-    default:
-      return `${m.op} ${JSON.stringify(a)}`;
-  }
-}
-
-/** แปลง {op,args} → เรียก engine method ที่ตรงกัน (ผ่าน commit ⇒ undo-able) */
-function applyMutation(engine: ClipEngine, m: AgentMutation): boolean {
-  const a = m.args || {};
-  switch (m.op) {
-    case "move_clip":
-      if (typeof a.trackId === "string" && typeof a.clipId === "string" && typeof a.start === "number") {
-        engine.move(a.trackId, a.clipId, a.start);
-        return true;
-      }
-      return false;
-    case "set_gain": {
-      const trackId = a.trackId as string | undefined;
-      const clipId = a.clipId as string | undefined;
-      const gain = a.gain as number | undefined;
-      if (typeof trackId === "string" && typeof clipId === "string" && typeof gain === "number") {
-        engine.setGain(trackId, clipId, gain);
-        return true;
-      }
-      return false;
-    }
-    case "mute_clip":
-      if (typeof a.trackId === "string" && typeof a.clipId === "string") {
-        engine.muteClip(a.trackId, a.clipId);
-        return true;
-      }
-      return false;
-    case "slice_clip":
-      if (typeof a.trackId === "string" && typeof a.clipId === "string" && typeof a.at === "number") {
-        engine.slice(a.trackId, a.clipId, a.at);
-        return true;
-      }
-      return false;
-    case "reorder_track":
-      if (typeof a.fromId === "string" && typeof a.toId === "string") {
-        engine.reorderTrack(a.fromId, a.toId);
-        return true;
-      }
-      return false;
-    default:
-      return false;
-  }
+/** แปลง {op,args} → เรียก engine method ที่ตรงกัน + อัปเดต applied/failed ตามผลจริง */
+function applyOne(engine: ClipEngine, entries: ChatEntry[], entryId: number, idx: number): ChatEntry[] {
+  return entries.map((en) => {
+    if (en.id !== entryId || !en.mutations) return en;
+    const m = en.mutations[idx];
+    if (!m || !canApplyMutation(m)) return en;
+    const ok = applyMutation(engine, m);
+    const applied = new Set(en.applied);
+    const failed = new Set(en.failed);
+    if (ok) { applied.add(idx); failed.delete(idx); } else { failed.add(idx); }
+    return { ...en, applied, failed };
+  });
 }
 
 const styles: Record<string, CSSProperties> = {
@@ -133,6 +75,15 @@ const styles: Record<string, CSSProperties> = {
     background: "transparent",
     color: "#8a8d97",
     border: "1px solid #33353d",
+    borderRadius: 4,
+    padding: "3px 8px",
+    cursor: "pointer",
+    fontSize: 11,
+  },
+  btnFailed: {
+    background: "transparent",
+    color: "#e05a5a",
+    border: "1px solid #e05a5a",
     borderRadius: 4,
     padding: "3px 8px",
     cursor: "pointer",
@@ -184,6 +135,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
         text: res.reply,
         mutations: res.mutations || [],
         applied: new Set(),
+        failed: new Set(),
       };
       setEntries((es) => [...es, agentEntry]);
     } catch (e) {
@@ -193,34 +145,22 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
     }
   };
 
-  const applyOne = (entryId: number, idx: number) => {
-    setEntries((es) =>
-      es.map((en) => {
-        if (en.id !== entryId || !en.mutations) return en;
-        const m = en.mutations[idx];
-        if (!m || !APPLICABLE_OPS.has(m.op)) return en;
-        applyMutation(engine, m);
-        const applied = new Set(en.applied);
-        applied.add(idx);
-        return { ...en, applied };
-      })
-    );
+  const onApplyOne = (entryId: number, idx: number) => {
+    setEntries((es) => applyOne(engine, es, entryId, idx));
   };
 
-  const applyAll = (entryId: number) => {
-    setEntries((es) =>
-      es.map((en) => {
-        if (en.id !== entryId || !en.mutations) return en;
-        const applied = new Set(en.applied);
-        en.mutations.forEach((m, idx) => {
-          if (APPLICABLE_OPS.has(m.op) && !applied.has(idx)) {
-            applyMutation(engine, m);
-            applied.add(idx);
-          }
-        });
-        return { ...en, applied };
-      })
-    );
+  const onApplyAll = (entryId: number) => {
+    setEntries((es) => {
+      const entry = es.find((en) => en.id === entryId);
+      if (!entry?.mutations) return es;
+      let next = es;
+      entry.mutations.forEach((m, idx) => {
+        if (canApplyMutation(m) && !entry.applied?.has(idx)) {
+          next = applyOne(engine, next, entryId, idx);
+        }
+      });
+      return next;
+    });
   };
 
   return (
@@ -240,18 +180,20 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
             {en.mutations && en.mutations.length > 0 && (
               <div style={styles.mutList}>
                 {en.mutations.map((m, idx) => {
-                  const applicable = APPLICABLE_OPS.has(m.op);
+                  const applicable = canApplyMutation(m);
                   const done = en.applied?.has(idx);
+                  const failed = en.failed?.has(idx);
                   return (
                     <div key={idx} style={styles.mutRow}>
                       <span style={styles.mutText}>{describeMutation(m)}</span>
                       {applicable ? (
                         <button
-                          style={done ? styles.btnGhost : styles.btn}
+                          style={done ? styles.btnGhost : failed ? styles.btnFailed : styles.btn}
                           disabled={done}
-                          onClick={() => applyOne(en.id, idx)}
+                          title={failed ? "ครั้งก่อนใช้ไม่สำเร็จ — กดเพื่อลองใหม่" : undefined}
+                          onClick={() => onApplyOne(en.id, idx)}
                         >
-                          {done ? "ใช้แล้ว" : "ใช้"}
+                          {done ? "ใช้แล้ว" : failed ? "ลองใหม่" : "ใช้"}
                         </button>
                       ) : (
                         <span style={styles.disabledNote}>ยังไม่รองรับการ apply อัตโนมัติ</span>
@@ -259,8 +201,8 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
                     </div>
                   );
                 })}
-                {en.mutations.some((m) => APPLICABLE_OPS.has(m.op)) && (
-                  <button style={styles.btnAll} onClick={() => applyAll(en.id)}>
+                {en.mutations.some((m) => canApplyMutation(m)) && (
+                  <button style={styles.btnAll} onClick={() => onApplyAll(en.id)}>
                     ใช้ทั้งหมด
                   </button>
                 )}
