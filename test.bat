@@ -6,7 +6,7 @@ set "PYTHONIOENCODING=utf-8"
 cd /d %~dp0
 
 echo.
-echo [1/3] TypeScript check (frontend)...
+echo [1/4] TypeScript check (frontend)...
 cd frontend
 call .\node_modules\.bin\tsc.cmd --noEmit
 if errorlevel 1 (
@@ -19,7 +19,19 @@ echo      OK - TypeScript clean
 cd ..
 
 echo.
-echo [2/3] Backend import check...
+echo [2/4] Frontend unit tests...
+cd frontend
+call .\node_modules\.bin\vitest.cmd run
+if errorlevel 1 (
+  echo.
+  echo ^>^>^> FRONTEND TESTS FAILED
+  cd ..
+  exit /b 1
+)
+cd ..
+
+echo.
+echo [3/4] Backend import check + unit tests...
 cd backend
 .venv\Scripts\python.exe -c "from app.main import app; print('     OK - backend imports,', len(app.routes), 'routes')"
 if errorlevel 1 (
@@ -28,10 +40,17 @@ if errorlevel 1 (
   cd ..
   exit /b 1
 )
+.venv\Scripts\python.exe -m pytest
+if errorlevel 1 (
+  echo.
+  echo ^>^>^> BACKEND TESTS FAILED
+  cd ..
+  exit /b 1
+)
 cd ..
 
 echo.
-echo [3/3] Backend endpoints (quick boot + curl)...
+echo [4/4] Backend endpoints (quick boot + curl)...
 set "PID_FILE=%TEMP%\g-music-test-backend.pid"
 if exist "%PID_FILE%" del "%PID_FILE%" >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8756 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
