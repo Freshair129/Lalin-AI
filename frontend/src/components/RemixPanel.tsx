@@ -14,7 +14,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { API_BASE, files, music, projects } from "../api";
+import { API_BASE, files, music, projects, render } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
@@ -387,7 +387,7 @@ export function RemixPanel() {
     ? { id: selTrackObj.id, label: selTrackObj.label, color: selTrackObj.color, muted: selTrackObj.muted, solo: selTrackObj.solo, locked: selTrackObj.locked }
     : null;
 
-  // ── export (bake master FX → ดาวน์โหลด) ───────────────────
+  // ── export: render arrangement ทั้ง timeline ลงไฟล์ (ไม่ใช่เบค FX ทับไฟล์เดียวแบบเดิม) ──
   const { job: exJob, busy: exBusy, start: exStart } = useJob();
   useEffect(() => {
     if (exJob?.status === "done" && exJob.result?.output) {
@@ -396,9 +396,15 @@ export function RemixPanel() {
       a.href = files.downloadUrl(name); a.download = name; a.click();
     }
   }, [exJob]);
+
+  const hasClips = engine.project.tracks.some((t) => t.clips.some((c) => c.assetId));
   const doExport = (fmt: "wav" | "mp3") => {
-    if (!outputName) return;
-    exStart(() => music.exportFx({ name: outputName, fmt, reverb: mReverb, echo: mEcho, comp: mComp }));
+    if (!hasClips) return;
+    exStart(() => render.run({
+      project: engine.project,
+      format: fmt,
+      master: { reverb: mReverb, echo: mEcho, comp: mComp },
+    }));
   };
 
   return (
@@ -463,6 +469,21 @@ export function RemixPanel() {
             />
             📥 Import .gmp
           </label>
+          <span className="remix-tb-sep" />
+          <button className="seg-add" disabled={exBusy || !hasClips}
+            title={hasClips ? "Render timeline ทั้งหมดเป็นไฟล์ WAV" : "ยังไม่มีคลิปใน timeline"}
+            onClick={() => doExport("wav")}>⬇ WAV</button>
+          <button className="seg-add" disabled={exBusy || !hasClips}
+            title={hasClips ? "Render timeline ทั้งหมดเป็นไฟล์ MP3" : "ยังไม่มีคลิปใน timeline"}
+            onClick={() => doExport("mp3")}>⬇ MP3</button>
+          {exJob?.status === "error" && (
+            <span className="hint mono" style={{ color: "#e05a5a" }} title={exJob.error}>⚠ export ไม่สำเร็จ</span>
+          )}
+          {exJob?.status === "done" && exJob.result?.clipped === true && (
+            <span className="hint mono" style={{ color: "var(--amber, #d9a63c)" }}>
+              ⚠ สัญญาณเกิน 0 dBFS — ลด gain หรือ pan แล้ว export ใหม่
+            </span>
+          )}
           <div className="seg-toggle">
             <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Standard</button>
             <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>+ Node</button>
@@ -507,10 +528,7 @@ export function RemixPanel() {
           ) : (
             <PropertiesPanel
               track={selectedView}
-              outputName={outputName}
               onToggle={(id, what) => engine.toggleTrack(id, what === "mute" ? "muted" : what === "solo" ? "solo" : "locked")}
-              onExport={doExport}
-              exporting={exBusy}
             />
           )}
         </div>
