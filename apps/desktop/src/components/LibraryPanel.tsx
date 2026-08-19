@@ -1,6 +1,6 @@
 // @req FR-11 — คลัง asset/pack ที่ลากลง timeline ได้ (FR-11.4)
 import { useEffect, useMemo, useState, type DragEvent } from "react";
-import { files, packs, type Pack } from "../api";
+import { packs, type Pack } from "../api";
 import { Icon } from "./icons";
 
 // payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
