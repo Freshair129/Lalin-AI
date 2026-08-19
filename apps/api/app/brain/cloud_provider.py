@@ -1,3 +1,4 @@
+# @req FR-05 — cloud LLM: Anthropic/OpenAI/OpenRouter (FR-05.2)
 """Cloud provider — รองรับ Anthropic (Claude), OpenAI และ OpenRouter
 
 - anthropic  → ใช้ SDK `anthropic`

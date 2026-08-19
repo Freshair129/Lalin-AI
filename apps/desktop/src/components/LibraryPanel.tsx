@@ -1,12 +1,12 @@
 // @req FR-11 — คลัง asset/pack ที่ลากลง timeline ได้ (FR-11.4)
 import { useEffect, useMemo, useState, type DragEvent } from "react";
-import { files, packs, type Pack } from "../api";
+import { packs, type Pack } from "../api";
 import { Icon } from "./icons";
 
 // payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
 // (drop handler อยู่ในเลนของ StudioDock/ClipTimeline — worker อื่นรับผิดชอบ)
 export const CLIP_DRAG_MIME = "text/gmusic-clip";
-export interface LibraryDragPayload { src: string; label: string; color: string; }
+export interface LibraryDragPayload { kind: "upload"; name: string; label: string; color: string; }
 
 // Library (left sector) — เลือก sound/pack แบบ GarageBand
 export function LibraryPanel() {
@@ -66,10 +66,13 @@ export function LibraryPanel() {
 }
 
 // ตั้งค่า dataTransfer ตอนเริ่มลาก sound/pack จาก Library
-// src: URL ไฟล์เสียงของ pack (สมมติชื่อไฟล์ = pack id ที่ดาวน์โหลด/ติดตั้งแล้วในโฟลเดอร์ input)
+// name: ชื่อไฟล์ของ pack ใน uploads/ (สมมติว่า pack id = ชื่อไฟล์ที่ดาวน์โหลด/ติดตั้งแล้ว)
+// TODO(G-13): packs.download() ยังเป็น mock (mark-installed เฉย ๆ ไม่มีไฟล์จริงถูกเขียนลง
+// uploads/) — asset นี้จึงยัง resolve ไม่เจอจนกว่า marketplace จะดาวน์โหลดไฟล์จริง
 function onDragStart(e: DragEvent<HTMLButtonElement>, p: Pack) {
   const payload: LibraryDragPayload = {
-    src: files.inputUrl(p.id),
+    kind: "upload",
+    name: p.id,
     label: p.name,
     color: p.color || "#9b6cf0",
   };

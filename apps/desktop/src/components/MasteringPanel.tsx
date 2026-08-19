@@ -41,7 +41,8 @@ export function MasteringPanel() {
     const track = engine.project.tracks.find((t) => t.id === "master") ?? engine.project.tracks[0];
     if (!track) return;
     const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
-    const clip = makeClip(files.downloadUrl(output), "#c7f046");
+    const id = engine.addAsset("output", basename(output));
+    const clip = makeClip(id, "#c7f046");
     clip.start = start;
     engine.addClip(track.id, clip);
     setAddedMsg(true);
@@ -101,4 +102,9 @@ export function MasteringPanel() {
       )}
     </div>
   );
+}
+
+// path เต็ม (จาก backend) → เอาแค่ชื่อไฟล์ ไว้ใช้กับ asset table
+function basename(p: string) {
+  return p.split(/[\/]/).pop() ?? p;
 }

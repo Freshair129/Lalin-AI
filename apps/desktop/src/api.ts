@@ -153,6 +153,16 @@ export const music = {
     }),
 };
 
+// ── Render (mix ทั้ง timeline arrangement ลงไฟล์เดียว) ──────
+export const render = {
+  run: (body: Record<string, unknown>) =>
+    req<{ job_id: string }>("/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+};
+
 // ── Packs ─────────────────────────────────────────────────
 export interface Pack {
   id: string; name: string; author: string; size_mb: number;
@@ -201,6 +211,14 @@ export const projects = {
     }),
   remove: (id: string) =>
     req<{ deleted: string }>(`/projects/${id}`, { method: "DELETE" }),
+  bundleUrl: (id: string) => `${API_BASE}/projects/${id}/bundle`,
+  importBundle: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return req<{ id: string; name: string; renamed: Record<string, string> }>(
+      "/projects/import", { method: "POST", body: fd },
+    );
+  },
 };
 
 // ── Jobs ──────────────────────────────────────────────────

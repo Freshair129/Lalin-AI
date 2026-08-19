@@ -4,6 +4,20 @@
 **สถานะ:** Proof-of-concept พิสูจน์แล้วบน RTX 3060 12GB — โค้ดรวมที่ [apps/api/app/pipelines/music.py](../../apps/api/app/pipelines/music.py)
 **ที่มา:** ทดลองจริงกับเพลง Suno (`D:\suno\*.mp3`) + reference beat (`D:\ref1\*.mp4`)
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | Active |
+| **Author** | Boss |
+| **Created** | 2026-06-28 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-06-28 | Boss | ฉบับแรก (PoC ผ่านบน RTX 3060) |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph — ตาราง license §4 ถูกอ้างโดย ai-system/ethics-governance.md |
+
 ---
 
 ## 1. แนวคิด (Positioning)

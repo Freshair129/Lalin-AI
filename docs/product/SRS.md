@@ -3,7 +3,22 @@
 **ระบบ:** G-Music — AI Audio Studio
 **เวอร์ชัน:** 0.1.0
 **วันที่:** 2026-06-27
-**มาตรฐานอ้างอิง:** IEEE 830-1998
+**มาตรฐานอ้างอิง:** IEEE 830-1998 · IEEE 29148-2018
+
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.1.0 |
+| **Status** | Active |
+| **Author** | Boss |
+| **Created** | 2026-06-27 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-06-27 | Boss | ฉบับแรก |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+| 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
 
 ---
 

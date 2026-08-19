@@ -10,6 +10,20 @@
 **Design language:** Cinemaro-inspired (นีออนไลม์ + space dark + การ์ดมน 16px + pill toggle)
 **Theme:** [frontend/src/styles.css](../frontend/src/styles.css) (วาง design system แล้ว)
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | Active |
+| **Author** | Boss |
+| **Created** | 2026-06-28 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-06-28 | Boss | ฉบับแรก |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+
 ---
 
 **Design-system source of truth:** [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)

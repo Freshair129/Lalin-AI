@@ -1,3 +1,4 @@
+# @req FR-04 — mastering pipeline: reference (Matchering) / auto (target LUFS)
 """Mastering — ปรับ/มาสเตอร์เสียงเพลงระดับเผยแพร่
 
 สองโหมด:

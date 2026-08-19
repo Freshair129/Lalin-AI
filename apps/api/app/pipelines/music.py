@@ -1,3 +1,5 @@
+# @req FR-04b — remix pipeline: stem split / BPM-key sync / FX / master
+# @spec AI-ETH-003 — deps GPL (psola/pedalboard) เป็น optional/BYOM เท่านั้น
 """Music remix/finishing — "Suno finishing studio"
 
 ต่อยอดจากเพลงที่ผู้ใช้สร้างเอง (เช่นจาก Suno) หรือเดโม่ของตัวเอง:

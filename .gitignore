@@ -61,9 +61,15 @@ Thumbs.db
 # backend runtime logs (transient)
 backend/backend.log
 backend/backend.err
-backend/sidecar-smoke.log
-backend/sidecar-smoke.err
+# PyInstaller sidecar build output (ตัว .spec track ไว้แล้ว — output ไม่เอา)
+backend/build/
+backend/dist/
+backend/sidecar-smoke.*
+backend/.venv-ci/
+apps/api/.venv-ci/
+apps/api/sidecar-smoke.*
 apps/api/backend.log
 apps/api/backend.err
-apps/api/sidecar-smoke.log
-apps/api/sidecar-smoke.err
+
+# Dev-swarm orchestration (เครื่องมือเฉพาะเครื่อง + bench data + ledger)
+orchestration/

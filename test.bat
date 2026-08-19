@@ -10,32 +10,51 @@ set "PYTHON_EXE=%~dp0apps\api\.venv\Scripts\python.exe"
 if not exist "%PYTHON_EXE%" set "PYTHON_EXE=%~dp0backend\.venv\Scripts\python.exe"
 
 echo.
-echo [1/3] TypeScript check (frontend)...
+echo [1/4] TypeScript check (frontend)...
 cd %DESKTOP_DIR%
 call .\node_modules\.bin\tsc.cmd --noEmit
 if errorlevel 1 (
   echo.
   echo ^>^>^> FRONTEND TSC FAILED
-  cd ..
+  cd /d %~dp0
   exit /b 1
 )
 echo      OK - TypeScript clean
-cd ..
+cd /d %~dp0
 
 echo.
-echo [2/3] Backend import check...
+echo [2/4] Frontend unit tests...
+cd %DESKTOP_DIR%
+call .\node_modules\.bin\vitest.cmd run
+if errorlevel 1 (
+  echo.
+  echo ^>^>^> FRONTEND TESTS FAILED
+  cd /d %~dp0
+  exit /b 1
+)
+cd /d %~dp0
+
+echo.
+echo [3/4] Backend import check + unit tests...
 cd %API_DIR%
 %PYTHON_EXE% -c "from app.main import app; print('     OK - backend imports,', len(app.routes), 'routes')"
 if errorlevel 1 (
   echo.
   echo ^>^>^> BACKEND IMPORT FAILED
-  cd ..
+  cd /d %~dp0
   exit /b 1
 )
-cd ..
+%PYTHON_EXE% -m pytest
+if errorlevel 1 (
+  echo.
+  echo ^>^>^> BACKEND TESTS FAILED
+  cd /d %~dp0
+  exit /b 1
+)
+cd /d %~dp0
 
 echo.
-echo [3/3] Backend endpoints (quick boot + curl)...
+echo [4/4] Backend endpoints (quick boot + curl)...
 set "PID_FILE=%TEMP%\g-music-test-backend.pid"
 if exist "%PID_FILE%" del "%PID_FILE%" >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8756 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1

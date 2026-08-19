@@ -5,6 +5,20 @@
 **ใช้เพื่อ:** จัดลำดับความสำคัญฟีเจอร์ (feature prioritization)
 **คู่แข่งที่วิเคราะห์:** Thai/local, AI Dubbing, Voice cloning/TTS, Audio Mastering
 
+| Field | Value |
+|-------|-------|
+| **Doc Version** | 1.0.1 |
+| **Status** | Active (refresh ทุกไตรมาส) |
+| **Author** | Boss |
+| **Created** | 2026-06-28 |
+| **Last Updated** | 2026-08-09 |
+| **Approved By** | — |
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-06-28 | Boss | ฉบับแรก (สแน็ปช็อต มิ.ย. 2026) |
+| 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+
 > ⚠️ **ข้อควรระวัง:** ข้อมูลคู่แข่งเปลี่ยนเร็วมาก (ราคา/ฟีเจอร์) — brief นี้สแน็ปช็อต มิ.ย. 2026 ควร refresh ทุกไตรมาส
 
 ---

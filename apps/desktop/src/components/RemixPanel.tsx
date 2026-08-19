@@ -16,7 +16,7 @@ import {
   type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { API_BASE, files, music } from "../api";
+import { API_BASE, files, music, projects, render } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
@@ -31,6 +31,7 @@ import { FxRack } from "./FxRack";
 import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
 import { StemMixer, DEFAULT_STEM_GAINS, type StemGains } from "./StemMixer";
+import { migrateSnapshot, SCHEMA_VERSION, type ProjectSnapshot } from "../timeline/migrate";
 import { StudioDock } from "./StudioDock";
 import { Icon } from "./icons";
 
@@ -157,9 +158,10 @@ export function RemixPanel() {
   const setShowDesigner = useRemixStore((s) => s.setShowDesigner);
   const loadRecipe = useRemixStore((s) => s.loadRecipe);
 
-  // stem_gains (WP 3.4 per-stem faders) — เก็บ local state ไม่เข้า store กลาง
-  // (store ยังไม่มี field นี้ + ไม่ต้อง persist ข้าม snapshot ตอนนี้)
-  const [stemGains, setStemGains] = useState<StemGains>({ ...DEFAULT_STEM_GAINS });
+  // stem_gains (WP 3.4 per-stem faders) — อยู่ใน store + snapshot แล้ว
+  // (เป็น render parameter จริงที่ backend ใช้ ไม่ใช่ค่าชั่วคราวของ UI)
+  const stemGains = useRemixStore((s) => s.stemGains);
+  const setStemGains = useRemixStore((s) => s.setStemGains);
   const [deviceDockTab, setDeviceDockTab] = useState<DeviceDockTab>("fx");
   // stem mixer มีผลจริงเมื่อค่าต่างจาก default อย่างน้อยหนึ่ง stem — ไม่งั้นส่ง undefined
   // ให้ backend ใช้เส้นทาง two-stems=vocals แบบเดิม (เร็วกว่า ไม่ต้องแยก stem เต็ม 4 ทาง)
@@ -179,21 +181,25 @@ export function RemixPanel() {
   const patchGraphRef = useRef<PatchGraphSnapshot>({ nodes: [], edges: INIT_EDGES });
 
   // ── Adobe-style project file (New/Open/Save/Save As + dirty) ──
-  const buildSnapshot = useCallback(() => ({
+  // annotate ด้วย ProjectSnapshot: ลืมใส่ field ใหม่ = compile error ไม่ใช่บั๊กเงียบ
+  const buildSnapshot = useCallback((): ProjectSnapshot => ({
+    schemaVersion: SCHEMA_VERSION,
     source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs,
+    stemGains,
     mReverb, mEcho, mComp,
     leftW, tlH, rackH, // ขนาด panel ที่ลากไว้
     project: engine.project,
     patchGraph: patchGraphRef.current,
-  }), [source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
+  }), [source, beat, autotune, autotuneStrength, keyOverride, fx, reverb, delay, phraseBars, offsetAuto, offsetMs, lufs, stemGains, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
 
-  const applySnapshot = useCallback((d: Record<string, unknown>) => {
+  const applySnapshot = useCallback((raw: Record<string, unknown>) => {
+    const d = migrateSnapshot(raw); // ยกระดับ snapshot เก่าก่อนเสมอ (ทั้ง Open และกู้ draft)
     loadingRef.current = true; // กัน setTrackSource เขียนทับ arrangement ที่โหลด
     if (d.project) engine.loadProject(d.project as Parameters<typeof engine.loadProject>[0]);
-    else engine.loadProject({ bpm: 120, key: null, duration: 0, tracks: [
-      { id: "vocal", label: "audio-01", color: "#9b6cf0", clips: [], envelopes: [], muted: false, solo: false, locked: false },
-      { id: "beat", label: "audio-02", color: "#3d9be0", clips: [], envelopes: [], muted: false, solo: false, locked: false },
-      { id: "master", label: "audio-03", color: "#c7f046", clips: [], envelopes: [], muted: false, solo: false, locked: false },
+    else engine.loadProject({ bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, assets: {}, tracks: [
+      { id: "vocal", label: "audio-01", color: "#9b6cf0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
+      { id: "beat", label: "audio-02", color: "#3d9be0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
+      { id: "master", label: "audio-03", color: "#c7f046", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
     ] });
     loadRecipe({
       source: (d.source as string | null) ?? null,
@@ -208,6 +214,7 @@ export function RemixPanel() {
       offsetAuto: d.offsetAuto == null ? true : Boolean(d.offsetAuto),
       offsetMs: Number(d.offsetMs ?? 0),
       lufs: Number(d.lufs ?? -14),
+      stemGains: (d.stemGains as StemGains | undefined) ?? { ...DEFAULT_STEM_GAINS },
       mReverb: Number(d.mReverb ?? 0),
       mEcho: Number(d.mEcho ?? 0),
       mComp: Boolean(d.mComp),
@@ -474,7 +481,7 @@ export function RemixPanel() {
     if (!loadingRef.current) {
       engine.setTrackSource(
         "vocal",
-        source ? files.inputUrl(source) : null,
+        source ? { kind: "upload", name: source } : null,
         "#9b6cf0",
         { start: vocalPreviewStart },
       );
@@ -484,13 +491,13 @@ export function RemixPanel() {
     if (!loadingRef.current) {
       engine.setTrackSource(
         "beat",
-        beat ? files.inputUrl(beat) : null,
+        beat ? { kind: "upload", name: beat } : null,
         "#3d9be0",
         { start: beatPreviewStart },
       );
     }
   }, [beat, beatPreviewStart]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? files.downloadUrl(outputName) : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? { kind: "output", name: outputName } : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เลือก clip → สลับไปแท็บ Track อัตโนมัติ
   useEffect(() => { if (engine.selClip) setLeftTab("track"); }, [engine.selClip]);
@@ -545,7 +552,7 @@ export function RemixPanel() {
     ? { id: selTrackObj.id, label: selTrackObj.label, color: selTrackObj.color, muted: selTrackObj.muted, solo: selTrackObj.solo, locked: selTrackObj.locked }
     : null;
 
-  // ── export (bake master FX → ดาวน์โหลด) ───────────────────
+  // ── export: render arrangement ทั้ง timeline ลงไฟล์ (ไม่ใช่เบค FX ทับไฟล์เดียวแบบเดิม) ──
   const { job: exJob, busy: exBusy, start: exStart } = useJob();
   useEffect(() => {
     if (exJob?.status === "done" && exJob.result?.output) {
@@ -554,9 +561,15 @@ export function RemixPanel() {
       a.href = files.downloadUrl(name); a.download = name; a.click();
     }
   }, [exJob]);
+
+  const hasClips = engine.project.tracks.some((t) => t.clips.some((c) => c.assetId));
   const doExport = (fmt: "wav" | "mp3") => {
-    if (!outputName) return;
-    exStart(() => music.exportFx({ name: outputName, fmt, reverb: mReverb, echo: mEcho, comp: mComp }));
+    if (!hasClips) return;
+    exStart(() => render.run({
+      project: engine.project,
+      format: fmt,
+      master: { reverb: mReverb, echo: mEcho, comp: mComp },
+    }));
   };
 
   return (
@@ -600,6 +613,50 @@ export function RemixPanel() {
             />
             <span className={`proj-dot ${file.dirty ? "dirty" : "clean"}`} title={file.dirty ? "มีการเปลี่ยนแปลงที่ยังไม่บันทึก" : file.saving ? "กำลังบันทึก…" : "บันทึกแล้ว"}>●</span>
           </div>
+          {/* New/Open/Save/Save As ย้ายไปแท็บ File บน command bar แล้ว (App.tsx เรียกผ่าน
+              lalin:command → useEffect ด้านบน) — เหลือเฉพาะสิ่งที่ command bar ไม่มี: bundle + render export */}
+          <button
+            className="seg-add"
+            disabled={!file.currentId}
+            title={file.currentId ? "ส่งออกโปรเจกต์ + ไฟล์เสียงเป็น .gmp (ย้ายข้ามเครื่องได้)" : "บันทึกโปรเจกต์ก่อนจึงส่งออกได้"}
+            onClick={() => { if (file.currentId) window.location.href = projects.bundleUrl(file.currentId); }}
+          >📦 Export .gmp</button>
+          <label className="seg-add" title="นำเข้าโปรเจกต์จากไฟล์ .gmp">
+            <input
+              type="file" accept=".gmp,application/zip" hidden
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                if (file.dirty && !(await dialog.confirm("มีการเปลี่ยนแปลงที่ยังไม่บันทึก — ทิ้งแล้วนำเข้า?"))) return;
+                const r = await projects.importBundle(f);
+                await file.openProject(r.id);
+                const n = Object.keys(r.renamed).length;
+                if (n > 0) {
+                  await dialog.confirm(
+                    `นำเข้าแล้ว — มีไฟล์ ${n} ไฟล์ที่ชื่อซ้ำกับของเดิมบนเครื่องนี้ ` +
+                    `ระบบบันทึกเป็นชื่อใหม่ให้แล้ว (ไฟล์เดิมของคุณไม่ถูกทับ)`,
+                  );
+                }
+              }}
+            />
+            📥 Import .gmp
+          </label>
+          <span className="remix-tb-sep" />
+          <button className="seg-add" disabled={exBusy || !hasClips}
+            title={hasClips ? "Render timeline ทั้งหมดเป็นไฟล์ WAV" : "ยังไม่มีคลิปใน timeline"}
+            onClick={() => doExport("wav")}>⬇ WAV</button>
+          <button className="seg-add" disabled={exBusy || !hasClips}
+            title={hasClips ? "Render timeline ทั้งหมดเป็นไฟล์ MP3" : "ยังไม่มีคลิปใน timeline"}
+            onClick={() => doExport("mp3")}>⬇ MP3</button>
+          {exJob?.status === "error" && (
+            <span className="hint mono" style={{ color: "#e05a5a" }} title={exJob.error}>⚠ export ไม่สำเร็จ</span>
+          )}
+          {exJob?.status === "done" && exJob.result?.clipped === true && (
+            <span className="hint mono" style={{ color: "var(--amber, #d9a63c)" }}>
+              ⚠ สัญญาณเกิน 0 dBFS — ลด gain หรือ pan แล้ว export ใหม่
+            </span>
+          )}
           <div className="seg-toggle">
             <button className={layout === "standard" ? "on" : ""} onClick={() => setLayout("standard")}>Arrange</button>
             <button className={layout === "node" ? "on" : ""} onClick={() => setLayout("node")}>Patch</button>
@@ -645,10 +702,7 @@ export function RemixPanel() {
           ) : (
             <PropertiesPanel
               track={selectedView}
-              outputName={outputName}
               onToggle={(id, what) => engine.toggleTrack(id, what === "mute" ? "muted" : what === "solo" ? "solo" : "locked")}
-              onExport={doExport}
-              exporting={exBusy}
             />
           )}
         </div>

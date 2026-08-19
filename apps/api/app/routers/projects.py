@@ -1,15 +1,20 @@
-"""บันทึก/โหลดโปรเจกต์ (workspace) — แชร์ข้ามเครื่องที่ต่อ backend เดียวกันได้"""
-# @req FR-10 — projects: บันทึก/โหลด workspace (CRUD ตาม FR-10.2)
+"""บันทึก/โหลดโปรเจกต์ (workspace) — แชร์ข้ามเครื่องที่ต่อ backend เดียวกันได้
+หรือย้ายข้ามเครื่องด้วยไฟล์ .gmp (bundle: project + media) ก็ได้
+"""
+# @req FR-10 — projects: บันทึก/โหลด workspace + .gmp bundle export/import (CRUD ตาม FR-10.2)
 # @req NFR-03 — ตรวจ pid กัน path traversal
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ..config import get_settings
+from ..services import bundle
 from ..utils.ids import short_id
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -87,3 +92,33 @@ async def delete_project(pid: str):
     if f.exists():
         f.unlink()
     return {"deleted": pid}
+
+
+@router.get("/{pid}/bundle")
+async def export_bundle(pid: str):
+    """ส่งออกโปรเจกต์เป็นไฟล์ .gmp (zip: project.json + manifest.json + media/) — ย้ายข้ามเครื่องได้."""
+    _safe_pid(pid)
+    f = _dir() / f"{pid}.json"
+    if not f.exists():
+        raise HTTPException(404, "ไม่พบโปรเจกต์")
+    project = json.loads(f.read_text(encoding="utf-8"))
+
+    tmp = Path(tempfile.mkdtemp()) / f"{pid}.gmp"
+    bundle.write_bundle(project, tmp)
+    safe_name = "".join(c for c in project.get("name", pid) if c not in '\\/:*?"<>|') or pid
+    return FileResponse(tmp, media_type="application/zip", filename=f"{safe_name}.gmp")
+
+
+@router.post("/import")
+async def import_bundle(file: UploadFile = File(...)):
+    """นำเข้าไฟล์ .gmp — สร้างโปรเจกต์ใหม่เสมอ (id ใหม่, ไม่ทับของเดิม)."""
+    try:
+        project, renamed = bundle.install_bundle(await file.read())
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+
+    pid = short_id()
+    name = project.get("name", "imported")
+    payload = {"id": pid, "name": name, "data": project.get("data") or {}}
+    (_dir() / f"{pid}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return {"id": pid, "name": name, "renamed": renamed}
