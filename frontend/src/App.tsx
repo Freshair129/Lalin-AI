@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { health } from "./api";
+import { API_BASE, health } from "./api";
 import { BrainPanel } from "./components/BrainPanel";
 import { VoicesPanel } from "./components/VoicesPanel";
 import { TTSPanel } from "./components/TTSPanel";
@@ -14,6 +14,10 @@ import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
 import { BatchQueue } from "./components/BatchQueue";
 import { PluginsPanel } from "./components/PluginsPanel";
+
+// เวอร์ชันฝังตอน build จาก package.json (ดู vite.config.ts)
+declare const __APP_VERSION__: string;
+const APP_VERSION = __APP_VERSION__;
 
 type Tab = "voices" | "tts" | "dubbing" | "mastering" | "remix" | "files" | "market" | "brain" | "queue" | "plugins";
 
@@ -120,9 +124,9 @@ export default function App() {
         <span className="status-sep">·</span>
         <span className="status-item">BRAIN: {brainName || "—"}</span>
         <span className="status-spacer" />
-        <span className="status-item dim">127.0.0.1:8756</span>
+        <span className="status-item dim">{API_BASE.replace(/^https?:\/\//, "")}</span>
         <span className="status-sep">·</span>
-        <span className="status-item dim">v0.1.0</span>
+        <span className="status-item dim">v{APP_VERSION}</span>
       </footer>
     </div>
     </EngineProvider>
