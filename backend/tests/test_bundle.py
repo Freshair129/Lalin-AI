@@ -74,3 +74,56 @@ def test_bundle_reports_missing_media_instead_of_failing(client):
 
 def test_bundle_404_for_unknown_project(client):
     assert client.get("/projects/nope/bundle").status_code == 404
+
+
+def test_import_restores_project_and_media(client, data_dir):
+    _make_upload(client, "song.wav", b"RIFFsong")
+    pid = client.post("/projects", json={"name": "p1", "data": _project_data("song.wav")}).json()["id"]
+    raw = client.get(f"/projects/{pid}/bundle").content
+
+    # ลบทั้งโปรเจกต์และไฟล์สื่อ — จำลองเครื่องใหม่ที่ไม่มีอะไรเลย
+    (data_dir / "projects" / f"{pid}.json").unlink()
+    (data_dir / "uploads" / "song.wav").unlink()
+
+    r = client.post("/projects/import", files={"file": ("p1.gmp", raw, "application/zip")})
+    assert r.status_code == 200
+    new_id = r.json()["id"]
+    assert new_id != pid                       # import สร้าง id ใหม่เสมอ
+    assert (data_dir / "uploads" / "song.wav").read_bytes() == b"RIFFsong"
+
+    data = client.get(f"/projects/{new_id}").json()["data"]
+    assert data["project"]["assets"]["a_1"]["name"] == "song.wav"
+
+
+def test_import_renames_on_content_collision(client, data_dir):
+    _make_upload(client, "song.wav", b"RIFFsong")
+    pid = client.post("/projects", json={"name": "p1", "data": _project_data("song.wav")}).json()["id"]
+    raw = client.get(f"/projects/{pid}/bundle").content
+
+    # เครื่องปลายทางมีไฟล์ชื่อเดียวกันแต่เนื้อหาต่าง — ห้ามทับ
+    (data_dir / "uploads" / "song.wav").write_bytes(b"DIFFERENT")
+
+    r = client.post("/projects/import", files={"file": ("p1.gmp", raw, "application/zip")})
+    assert r.status_code == 200
+    assert (data_dir / "uploads" / "song.wav").read_bytes() == b"DIFFERENT"
+
+    data = client.get(f"/projects/{r.json()['id']}").json()["data"]
+    new_name = data["project"]["assets"]["a_1"]["name"]
+    assert new_name != "song.wav"
+    assert (data_dir / "uploads" / new_name).read_bytes() == b"RIFFsong"
+    assert r.json()["renamed"] == {"song.wav": new_name}
+
+
+def test_import_reuses_identical_existing_media(client, data_dir):
+    _make_upload(client, "song.wav", b"RIFFsong")
+    pid = client.post("/projects", json={"name": "p1", "data": _project_data("song.wav")}).json()["id"]
+    raw = client.get(f"/projects/{pid}/bundle").content
+
+    r = client.post("/projects/import", files={"file": ("p1.gmp", raw, "application/zip")})
+    assert r.json()["renamed"] == {}
+    assert len(list((data_dir / "uploads").glob("*.wav"))) == 1
+
+
+def test_import_rejects_a_non_bundle(client):
+    r = client.post("/projects/import", files={"file": ("x.gmp", b"not a zip", "application/zip")})
+    assert r.status_code == 400

@@ -8,7 +8,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -106,3 +106,18 @@ async def export_bundle(pid: str):
     bundle.write_bundle(project, tmp)
     safe_name = "".join(c for c in project.get("name", pid) if c not in '\\/:*?"<>|') or pid
     return FileResponse(tmp, media_type="application/zip", filename=f"{safe_name}.gmp")
+
+
+@router.post("/import")
+async def import_bundle(file: UploadFile = File(...)):
+    """นำเข้าไฟล์ .gmp — สร้างโปรเจกต์ใหม่เสมอ (id ใหม่, ไม่ทับของเดิม)."""
+    try:
+        project, renamed = bundle.install_bundle(await file.read())
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+
+    pid = short_id()
+    name = project.get("name", "imported")
+    payload = {"id": pid, "name": name, "data": project.get("data") or {}}
+    (_dir() / f"{pid}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return {"id": pid, "name": name, "renamed": renamed}
