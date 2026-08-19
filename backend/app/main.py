@@ -15,7 +15,7 @@ from .utils.ffmpeg import configure as configure_ffmpeg
 settings = get_settings()
 configure_ffmpeg()
 
-from .routers import agent, brain, dubbing, files, fs, health, jobs, mastering, music, packs, plugins, projects, tts, voices
+from .routers import agent, brain, dubbing, files, fs, health, jobs, mastering, music, packs, plugins, projects, render, tts, voices
 
 app = FastAPI(
     title="G-Music API",
@@ -30,7 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (health, brain, voices, files, fs, tts, dubbing, mastering, music, packs, projects, jobs, agent, plugins):
+for r in (health, brain, voices, files, fs, tts, dubbing, mastering, music, render, packs, projects, jobs, agent, plugins):
     app.include_router(r.router)
 
 
@@ -40,6 +40,6 @@ async def root():
         "service": "G-Music",
         "version": __version__,
         "docs": "/docs",
-        "features": ["voice-clone", "dubbing", "mastering", "music-remix"],
+        "features": ["voice-clone", "dubbing", "mastering", "music-remix", "timeline-render"],
         "brain": "cloud/ollama switchable",
     }
