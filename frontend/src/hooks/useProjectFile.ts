@@ -19,13 +19,15 @@ function draftKey(id: string | null) {
   return `gmusic:draft:${id || "untitled"}`;
 }
 
-export function useProjectFile<T extends Record<string, unknown>>({
+export function useProjectFile<T extends object>({
   buildSnapshot,
   applySnapshot,
   ui,
 }: {
-  buildSnapshot: () => T;             // เก็บสถานะปัจจุบันเป็นวัตถุ
-  applySnapshot: (snap: T) => void;   // คืนสถานะจากวัตถุ (ใช้ตอน Open)
+  buildSnapshot: () => T;                                  // เก็บสถานะปัจจุบัน (typed)
+  // คืนสถานะจากวัตถุ — รับเป็น record ดิบเพราะมาจาก JSON บนดิสก์ ซึ่งอาจเป็น
+  // snapshot เวอร์ชันเก่า; ตัว applySnapshot เป็นคนเรียก migrate เอง
+  applySnapshot: (snap: Record<string, unknown>) => void;
   ui: {
     prompt: (message: string, defaultValue?: string) => Promise<string | null>;
     confirm: (message: string) => Promise<boolean>;
@@ -111,7 +113,8 @@ export function useProjectFile<T extends Record<string, unknown>>({
       if (!raw) return;
       const draft = JSON.parse(raw) as DraftPayload<T>;
       loadingRef.current = true;
-      applySnapshot(draft.data);
+      // applySnapshot เรียก migrateSnapshot ให้แล้ว — draft เก่าจึงกู้คืนได้
+      applySnapshot(draft.data as Record<string, unknown>);
       setCurrentName(draft.name);
       setDirty(true);
       setRecoverable(null);
@@ -130,7 +133,7 @@ export function useProjectFile<T extends Record<string, unknown>>({
   const newProject = useCallback(async () => {
     if (dirty && !(await ui.confirm("มีการเปลี่ยนแปลงที่ยังไม่บันทึก — ทิ้งแล้วเริ่มใหม่?"))) return false;
     loadingRef.current = true;
-    applySnapshot({} as T); // ส่ง object ว่าง → applySnapshot จัดค่า default เอง
+    applySnapshot({}); // ส่ง object ว่าง → applySnapshot จัดค่า default เอง
     setCurrentId(null);
     setCurrentName("Untitled");
     baselineRef.current = null; // ให้รอบ effect ถัดไป baseline ใหม่
@@ -145,11 +148,11 @@ export function useProjectFile<T extends Record<string, unknown>>({
     try {
       const data = buildSnapshot();
       if (currentId) {
-        await projects.update(currentId, currentName, data);
+        await projects.update(currentId, currentName, data as Record<string, unknown>);
       } else {
         const name = await ui.prompt("ตั้งชื่อโปรเจกต์", currentName === "Untitled" ? "audio-01" : currentName);
         if (!name) return false;
-        const r = await projects.save(name, data);
+        const r = await projects.save(name, data as Record<string, unknown>);
         setCurrentId(r.id); setCurrentName(r.name);
       }
       _baselineFromCurrent();
@@ -166,7 +169,7 @@ export function useProjectFile<T extends Record<string, unknown>>({
     if (!name) return false;
     setSaving(true);
     try {
-      const r = await projects.save(name, buildSnapshot());
+      const r = await projects.save(name, buildSnapshot() as Record<string, unknown>);
       setCurrentId(r.id); setCurrentName(r.name);
       _baselineFromCurrent();
       setLastSavedAt(Date.now());
@@ -188,7 +191,7 @@ export function useProjectFile<T extends Record<string, unknown>>({
     if (dirty && !(await ui.confirm("มีการเปลี่ยนแปลงที่ยังไม่บันทึก — ทิ้งแล้วเปิดไฟล์อื่น?"))) return false;
     const r = await projects.get(id);
     loadingRef.current = true;
-    applySnapshot(r.data as T);
+    applySnapshot(r.data);
     setCurrentId(r.id); setCurrentName(r.name);
     setList(null);
     // baseline หลัง applySnapshot ค่อย flush
@@ -204,7 +207,7 @@ export function useProjectFile<T extends Record<string, unknown>>({
     setCurrentName(name);
     if (currentId) {
       setSaving(true);
-      try { await projects.update(currentId, name, buildSnapshot()); _baselineFromCurrent(); setLastSavedAt(Date.now()); _clearDraft(); }
+      try { await projects.update(currentId, name, buildSnapshot() as Record<string, unknown>); _baselineFromCurrent(); setLastSavedAt(Date.now()); _clearDraft(); }
       finally { setSaving(false); }
     } else {
       // untitled → แค่ปรับชื่อในใจ ยังไม่บันทึก (จะถาม Save แล้วใช้ชื่อนี้)

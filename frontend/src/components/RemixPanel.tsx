@@ -1,5 +1,5 @@
 // @req FR-04b — UI remix แบบ node graph (xyflow)
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRemixStore } from "../store/useRemixStore";
 import {
   ReactFlow,
@@ -29,6 +29,7 @@ import { FxRack } from "./FxRack";
 import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
 import { StemMixer, DEFAULT_STEM_GAINS, type StemGains } from "./StemMixer";
+import { migrateSnapshot, SCHEMA_VERSION, type ProjectSnapshot } from "../timeline/migrate";
 
 // สี lane (DAW) — ส่งเป็น hex เพราะ SVG attribute ไม่ resolve var()
 const C = { vocal: "#9b6cf0", beat: "#3d9be0", master: "#c7f046" };
@@ -117,9 +118,10 @@ export function RemixPanel() {
   const setShowDesigner = useRemixStore((s) => s.setShowDesigner);
   const loadRecipe = useRemixStore((s) => s.loadRecipe);
 
-  // stem_gains (WP 3.4 per-stem faders) — เก็บ local state ไม่เข้า store กลาง
-  // (store ยังไม่มี field นี้ + ไม่ต้อง persist ข้าม snapshot ตอนนี้)
-  const [stemGains, setStemGains] = useState<StemGains>({ ...DEFAULT_STEM_GAINS });
+  // stem_gains (WP 3.4 per-stem faders) — อยู่ใน store + snapshot แล้ว
+  // (เป็น render parameter จริงที่ backend ใช้ ไม่ใช่ค่าชั่วคราวของ UI)
+  const stemGains = useRemixStore((s) => s.stemGains);
+  const setStemGains = useRemixStore((s) => s.setStemGains);
   // stem mixer มีผลจริงเมื่อค่าต่างจาก default อย่างน้อยหนึ่ง stem — ไม่งั้นส่ง undefined
   // ให้ backend ใช้เส้นทาง two-stems=vocals แบบเดิม (เร็วกว่า ไม่ต้องแยก stem เต็ม 4 ทาง)
   const stemGainsActive = (Object.keys(stemGains) as (keyof StemGains)[]).some(
@@ -135,14 +137,18 @@ export function RemixPanel() {
   const loadingRef = useRef(false);
 
   // ── Adobe-style project file (New/Open/Save/Save As + dirty) ──
-  const buildSnapshot = useCallback(() => ({
+  // annotate ด้วย ProjectSnapshot: ลืมใส่ field ใหม่ = compile error ไม่ใช่บั๊กเงียบ
+  const buildSnapshot = useCallback((): ProjectSnapshot => ({
+    schemaVersion: SCHEMA_VERSION,
     source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs,
+    stemGains,
     mReverb, mEcho, mComp,
     leftW, tlH, rackH, // ขนาด panel ที่ลากไว้
     project: engine.project,
-  }), [source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
+  }), [source, beat, autotune, fx, reverb, delay, offsetAuto, offsetMs, lufs, stemGains, mReverb, mEcho, mComp, leftW, tlH, rackH, engine.project]);
 
-  const applySnapshot = useCallback((d: Record<string, unknown>) => {
+  const applySnapshot = useCallback((raw: Record<string, unknown>) => {
+    const d = migrateSnapshot(raw); // ยกระดับ snapshot เก่าก่อนเสมอ (ทั้ง Open และกู้ draft)
     loadingRef.current = true; // กัน setTrackSource เขียนทับ arrangement ที่โหลด
     if (d.project) engine.loadProject(d.project as Parameters<typeof engine.loadProject>[0]);
     else engine.loadProject({ bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, tracks: [
@@ -160,6 +166,7 @@ export function RemixPanel() {
       offsetAuto: d.offsetAuto == null ? true : Boolean(d.offsetAuto),
       offsetMs: Number(d.offsetMs ?? 0),
       lufs: Number(d.lufs ?? -14),
+      stemGains: (d.stemGains as StemGains | undefined) ?? { ...DEFAULT_STEM_GAINS },
       mReverb: Number(d.mReverb ?? 0),
       mEcho: Number(d.mEcho ?? 0),
       mComp: Boolean(d.mComp),

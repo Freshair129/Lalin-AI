@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_STEM_GAINS, type StemGains } from "../components/StemMixer";
 
 // ── RemixPanel state store ──────────────────────────────────
 // รวม state ที่เคย prop-drill ผ่าน useState หลายตัวใน RemixPanel.tsx
@@ -19,6 +20,7 @@ export interface RemixRecipeState {
   offsetAuto: boolean;
   offsetMs: number;
   lufs: number;
+  stemGains: StemGains;   // per-stem fader — เป็น render parameter จริง ต้องรอด reload
 }
 
 export interface RemixMasterFxState {
@@ -53,6 +55,7 @@ export interface RemixStoreState
   setOffsetAuto: (v: boolean) => void;
   setOffsetMs: (v: number) => void;
   setLufs: (v: number) => void;
+  setStemGains: (v: StemGains) => void;
 
   setMReverb: (v: number) => void;
   setMEcho: (v: number) => void;
@@ -80,6 +83,7 @@ const DEFAULTS: RemixRecipeState & RemixMasterFxState & RemixPanelSizeState & Re
   offsetAuto: true,
   offsetMs: 0,
   lufs: -14,
+  stemGains: { ...DEFAULT_STEM_GAINS },
   mReverb: 0,
   mEcho: 0,
   mComp: false,
@@ -103,6 +107,7 @@ export const useRemixStore = create<RemixStoreState>((set) => ({
   setOffsetAuto: (v) => set({ offsetAuto: v }),
   setOffsetMs: (v) => set({ offsetMs: v }),
   setLufs: (v) => set({ lufs: v }),
+  setStemGains: (v) => set({ stemGains: v }),
 
   setMReverb: (v) => set({ mReverb: v }),
   setMEcho: (v) => set({ mEcho: v }),

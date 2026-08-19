@@ -175,10 +175,12 @@ export function ClipTimeline({
 }) {
   const { project } = engine;
   const [pps, setPps] = useState(60);
-  const [bpm, setBpm] = useState(120);
-  const [sig, setSig] = useState(4); // beats per bar
+  // bpm / sig อ่านจาก project ตรง ๆ — ไม่มี state เงาอีกต่อไป (ต้องรอด save/reload)
+  const bpm = project.bpm;
+  const sig = project.timeSig;
+  const setBpm = (v: number) => engine.setTempo(v, project.timeSig);
+  const setSig = (v: number) => engine.setTempo(project.bpm, v);
   const [snapOn, setSnapOn] = useState(true);
-  const [panByTrack, setPanByTrack] = useState<Record<string, number>>({});
   const [playing, setPlaying] = useState(false);
   const [posSec, setPosSec] = useState(0);
   const posRef = useRef(0);
@@ -218,8 +220,12 @@ export function ClipTimeline({
   const playheadDrag = useRef<boolean>(false);
 
   // WP3.2: loop region [loopStart, loopEnd] (sec) — ลากบน ruler เพื่อกำหนด
-  const [loopRegion, setLoopRegion] = useState<{ start: number; end: number } | null>(null);
-  const [loopOn, setLoopOn] = useState(false);
+  const loopRegion = project.loop;
+  const loopOn = project.loop?.enabled ?? false;
+  const setLoopRegion = (r: { start: number; end: number } | null) =>
+    engine.setLoop(r ? { ...r, enabled: true } : null);
+  const setLoopOn = (on: boolean) =>
+    engine.setLoop(project.loop ? { ...project.loop, enabled: on } : null);
   const loopRegionRef = useRef<{ start: number; end: number } | null>(null);
   loopRegionRef.current = loopRegion;
   const loopOnRef = useRef(false);
@@ -357,7 +363,7 @@ export function ClipTimeline({
       if (t.muted || (anySolo && !t.solo)) continue;
       // per-track pan → master
       const panner = ctx.createStereoPanner();
-      panner.pan.value = Math.max(-1, Math.min(1, panByTrack[t.id] ?? 0));
+      panner.pan.value = Math.max(-1, Math.min(1, t.pan ?? 0));
       panner.connect(master);
       // per-track channel meter: tap L/R จาก panner
       const tSplit = ctx.createChannelSplitter(2);
@@ -600,7 +606,7 @@ export function ClipTimeline({
           <button className={`tl-btn ${snapOn ? "play" : ""}`} onClick={() => setSnapOn((s) => !s)} title="Snap to grid">⊞</button>
           <button
             className={`tl-btn ${loopOn ? "play" : ""}`}
-            onClick={() => setLoopOn((v) => !v)}
+            onClick={() => setLoopOn(!loopOn)}
             title={loopRegion ? "เปิด/ปิดวนซ้ำช่วงที่เลือก (ลากบนไม้บรรทัดเพื่อกำหนดช่วง)" : "ลากบนไม้บรรทัดเพื่อกำหนดช่วงวนซ้ำก่อน"}
           >🔁</button>
           <button
@@ -682,7 +688,6 @@ export function ClipTimeline({
               loopDrag.current = null;
               if (moved && loopDragPreview && loopDragPreview.end - loopDragPreview.start > 0.05) {
                 setLoopRegion({ start: loopDragPreview.start, end: loopDragPreview.end });
-                setLoopOn(true);
               } else {
                 // คลิกธรรมดา (ไม่ลาก) → seek
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -725,7 +730,7 @@ export function ClipTimeline({
                   cursor: "pointer",
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => { e.stopPropagation(); setLoopRegion(null); setLoopOn(false); }}
+                onDoubleClick={(e) => { e.stopPropagation(); setLoopRegion(null); }}
               >
                 <span
                   className="cliptl-loop-clear"
@@ -734,7 +739,7 @@ export function ClipTimeline({
                     position: "absolute", top: 1, right: 1, fontSize: 10, lineHeight: 1,
                     padding: "1px 3px", borderRadius: 3, background: "rgba(0,0,0,.45)", color: "#fff", cursor: "pointer",
                   }}
-                  onClick={(e) => { e.stopPropagation(); setLoopRegion(null); setLoopOn(false); }}
+                  onClick={(e) => { e.stopPropagation(); setLoopRegion(null); }}
                 >✕</span>
               </div>
             )}
@@ -861,8 +866,8 @@ export function ClipTimeline({
                     <ChannelMeterBalance
                       analyserL={trackMeters[t.id]?.l} analyserR={trackMeters[t.id]?.r}
                       active={playing && !dim}
-                      pan={panByTrack[t.id] ?? 0}
-                      onPan={(v) => setPanByTrack((s) => ({ ...s, [t.id]: v }))}
+                      pan={t.pan ?? 0}
+                      onPan={(v) => engine.setTrackPan(t.id, v)}
                     />
                   </div>
                 </div>

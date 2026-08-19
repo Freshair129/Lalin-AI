@@ -49,3 +49,35 @@ export function migrateSnapshot(raw: unknown): Dict {
   snap.schemaVersion = SCHEMA_VERSION;
   return snap;
 }
+
+// ── รูปร่างของ snapshot ที่บันทึกลง /projects ──────────────────────────────
+// ประกาศเป็น type แล้วให้ buildSnapshot ใน RemixPanel annotate ด้วยตัวนี้
+// → ถ้าเพิ่ม parameter ใหม่แล้วลืมใส่ใน snapshot จะเป็น compile error ไม่ใช่บั๊กเงียบ
+export interface ProjectSnapshot {
+  schemaVersion: number;
+
+  // recipe ที่ส่งให้ /music/remix
+  source: string | null;
+  beat: string | null;
+  autotune: boolean;
+  fx: boolean;
+  reverb: number;
+  delay: number;
+  offsetAuto: boolean;
+  offsetMs: number;
+  lufs: number;
+  stemGains: Record<string, number>;
+
+  // master FX (preview + bake)
+  mReverb: number;
+  mEcho: number;
+  mComp: boolean;
+
+  // ขนาด panel ที่ผู้ใช้ลากไว้
+  leftW: number;
+  tlH: number;
+  rackH: number;
+
+  // arrangement ทั้งหมด
+  project: unknown;
+}
