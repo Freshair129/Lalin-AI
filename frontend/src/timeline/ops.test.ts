@@ -8,6 +8,9 @@ import {
   setClipGain,
   toggleClipMute,
   toggleTrack,
+  setTrackPan,
+  setProjectTempo,
+  setProjectLoop,
   projectDuration,
   snapshot,
 } from "./ops";
@@ -33,6 +36,7 @@ function mkTrack(overrides: Partial<Track> = {}): Track {
     id: overrides.id ?? "track-1",
     label: "Track 1",
     color: "#00ff00",
+    pan: 0,
     clips: overrides.clips ?? [mkClip()],
     envelopes: [],
     muted: false,
@@ -46,6 +50,8 @@ function mkProject(overrides: Partial<Project> = {}): Project {
   return {
     bpm: 120,
     key: null,
+    timeSig: 4,
+    loop: null,
     duration: 10,
     tracks: overrides.tracks ?? [mkTrack()],
     ...overrides,
@@ -350,5 +356,68 @@ describe("toggleTrack", () => {
     const next = toggleTrack(p, "missing-track", "muted");
     expect(next).toEqual(p);
     expect(next).not.toBe(p);
+  });
+});
+
+// ── pan / tempo / loop (ย้ายจาก useState ของ ClipTimeline เข้ามาใน model) ────
+describe("setTrackPan", () => {
+  it("sets pan on the named track only", () => {
+    const p = mkProject({ tracks: [mkTrack({ id: "a" }), mkTrack({ id: "b" })] });
+    const next = setTrackPan(p, "a", -0.5);
+    expect(next.tracks[0].pan).toBe(-0.5);
+    expect(next.tracks[1].pan).toBe(0);
+  });
+
+  it("clamps pan to -1..1", () => {
+    const p = mkProject({ tracks: [mkTrack({ id: "a" })] });
+    expect(setTrackPan(p, "a", -9).tracks[0].pan).toBe(-1);
+    expect(setTrackPan(p, "a", 9).tracks[0].pan).toBe(1);
+  });
+
+  it("does not mutate the input", () => {
+    const p = mkProject({ tracks: [mkTrack({ id: "a" })] });
+    setTrackPan(p, "a", 1);
+    expect(p.tracks[0].pan).toBe(0);
+  });
+
+  it("returns an equal copy for a missing track", () => {
+    const p = mkProject();
+    const next = setTrackPan(p, "missing-track", 1);
+    expect(next).toEqual(p);
+    expect(next).not.toBe(p);
+  });
+});
+
+describe("setProjectTempo", () => {
+  it("sets bpm and timeSig", () => {
+    const next = setProjectTempo(mkProject(), 90, 3);
+    expect(next.bpm).toBe(90);
+    expect(next.timeSig).toBe(3);
+  });
+
+  it("clamps bpm to 40..240", () => {
+    expect(setProjectTempo(mkProject(), 5, 4).bpm).toBe(40);
+    expect(setProjectTempo(mkProject(), 500, 4).bpm).toBe(240);
+  });
+
+  it("does not mutate the input", () => {
+    const p = mkProject();
+    setProjectTempo(p, 90, 3);
+    expect(p.bpm).toBe(120);
+    expect(p.timeSig).toBe(4);
+  });
+});
+
+describe("setProjectLoop", () => {
+  it("stores and clears the loop region", () => {
+    const withLoop = setProjectLoop(mkProject(), { start: 1, end: 4, enabled: true });
+    expect(withLoop.loop).toEqual({ start: 1, end: 4, enabled: true });
+    expect(setProjectLoop(withLoop, null).loop).toBeNull();
+  });
+
+  it("does not mutate the input", () => {
+    const p = mkProject();
+    setProjectLoop(p, { start: 0, end: 2, enabled: true });
+    expect(p.loop).toBeNull();
   });
 });

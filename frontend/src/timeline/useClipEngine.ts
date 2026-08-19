@@ -8,10 +8,10 @@ import * as ops from "./ops";
 
 function emptyProject(): Project {
   const mk = (id: string, label: string, color: string) => ({
-    id, label, color, clips: [] as Clip[], envelopes: [], muted: false, solo: false, locked: false,
+    id, label, color, pan: 0, clips: [] as Clip[], envelopes: [], muted: false, solo: false, locked: false,
   });
   return {
-    bpm: 120, key: null, duration: 0,
+    bpm: 120, key: null, timeSig: 4, loop: null, duration: 0,
     tracks: [
       mk("vocal", "audio-01", "#9b6cf0"),
       mk("beat", "audio-02", "#3d9be0"),
@@ -107,6 +107,20 @@ export function useClipEngine() {
     }));
   }, [silent]);
 
+  // pan / tempo / loop — mix+transport state: ใช้ silent() เหมือน rename/color
+  // (ไม่ลง undo history เพื่อไม่ให้การลาก balance ท่วม stack)
+  const setTrackPan = useCallback((tid: string, pan: number) => {
+    silent((p) => ops.setTrackPan(p, tid, pan));
+  }, [silent]);
+
+  const setTempo = useCallback((bpm: number, timeSig: number) => {
+    silent((p) => ops.setProjectTempo(p, bpm, timeSig));
+  }, [silent]);
+
+  const setLoop = useCallback((loop: Project["loop"]) => {
+    silent((p) => ops.setProjectLoop(p, loop));
+  }, [silent]);
+
   // ลากสลับลำดับแทร็ก (channel strip ขึ้น/ลง) — ย้าย fromId ไปอยู่ตำแหน่งของ toId
   const reorderTrack = useCallback((fromId: string, toId: string) => {
     silent((p) => {
@@ -132,6 +146,7 @@ export function useClipEngine() {
     canUndo: past.current.length > 0, canRedo: future.current.length > 0, histTick,
     setTrackSource, hydrateDuration,
     move, slice, clone, remove, muteClip, addClip, setGain, setFade, toggleTrack, renameTrack, setTrackColor, reorderTrack,
+    setTrackPan, setTempo, setLoop,
     undo, redo, select, loadProject,
   };
 }

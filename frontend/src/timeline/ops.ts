@@ -188,3 +188,38 @@ export function toggleTrack(
   track[what] = !track[what];
   return result;
 }
+
+// ── setTrackPan: pan ต่อ track, clamp -1..1 ──────────────────────────────────
+export function setTrackPan(
+  p: Project,
+  trackId: string,
+  pan: number,
+): Project {
+  const clamped = Math.min(1, Math.max(-1, pan));
+  const result = snapshot(p);
+  const track = result.tracks.find(t => t.id === trackId);
+  if (track) track.pan = clamped;
+  return result;
+}
+
+// ── setProjectTempo: bpm (40..240) + จังหวะต่อห้อง ────────────────────────────
+export function setProjectTempo(
+  p: Project,
+  bpm: number,
+  timeSig: number,
+): Project {
+  const result = snapshot(p);
+  result.bpm = Math.min(240, Math.max(40, bpm));
+  result.timeSig = timeSig;
+  return result;
+}
+
+// ── setProjectLoop: ช่วงวนซ้ำ (null = ไม่มี) ─────────────────────────────────
+export function setProjectLoop(
+  p: Project,
+  loop: Project["loop"],
+): Project {
+  const result = snapshot(p);
+  result.loop = loop;
+  return result;
+}

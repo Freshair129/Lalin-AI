@@ -145,10 +145,10 @@ export function RemixPanel() {
   const applySnapshot = useCallback((d: Record<string, unknown>) => {
     loadingRef.current = true; // กัน setTrackSource เขียนทับ arrangement ที่โหลด
     if (d.project) engine.loadProject(d.project as Parameters<typeof engine.loadProject>[0]);
-    else engine.loadProject({ bpm: 120, key: null, duration: 0, tracks: [
-      { id: "vocal", label: "audio-01", color: "#9b6cf0", clips: [], envelopes: [], muted: false, solo: false, locked: false },
-      { id: "beat", label: "audio-02", color: "#3d9be0", clips: [], envelopes: [], muted: false, solo: false, locked: false },
-      { id: "master", label: "audio-03", color: "#c7f046", clips: [], envelopes: [], muted: false, solo: false, locked: false },
+    else engine.loadProject({ bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, tracks: [
+      { id: "vocal", label: "audio-01", color: "#9b6cf0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
+      { id: "beat", label: "audio-02", color: "#3d9be0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
+      { id: "master", label: "audio-03", color: "#c7f046", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
     ] });
     loadRecipe({
       source: (d.source as string | null) ?? null,

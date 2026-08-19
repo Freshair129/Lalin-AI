@@ -43,6 +43,7 @@ export interface Track {
   id: string;
   label: string;
   color: string;
+  pan: number;         // -1 (ซ้ายสุด) .. 1 (ขวาสุด) — อยู่ใน model เพื่อให้ save/reload/render ตรงกัน
   clips: Clip[];
   envelopes: Envelope[];
   muted: boolean;
@@ -50,10 +51,19 @@ export interface Track {
   locked: boolean;
 }
 
+// ── Loop region: ช่วงวนซ้ำบน ruler ───────────────────────────
+export interface LoopRegion {
+  start: Sec;
+  end: Sec;
+  enabled: boolean;
+}
+
 // ── Project: ทั้ง timeline ───────────────────────────────────
 export interface Project {
   bpm: number;
   key: string | null;
+  timeSig: number;             // จังหวะต่อห้อง (beats per bar) — คุม grid + metronome
+  loop: LoopRegion | null;
   duration: Sec;
   tracks: Track[];
 }
@@ -65,7 +75,7 @@ export function makeClip(src: string | null, color: string, duration: Sec = 0): 
 
 export function makeTrack(label: string, color: string, src: string | null = null): Track {
   return {
-    id: uid("trk"), label, color,
+    id: uid("trk"), label, color, pan: 0,
     clips: src !== null || true ? [makeClip(src, color)] : [],
     envelopes: [], muted: false, solo: false, locked: false,
   };
