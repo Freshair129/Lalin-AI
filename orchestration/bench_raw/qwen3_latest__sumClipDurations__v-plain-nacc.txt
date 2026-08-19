@@ -1,0 +1,117 @@
+<think>
+Okay, I need to write a TypeScript function called sumClipDurations that takes an array of clips and returns the sum of their durations. Let me think about the requirements.
+
+First, the function signature is given: it's an exported function that takes an array of objects with start and end numbers and returns a number. So I'll start by writing that.
+
+The rules say to sum (end - start) for each clip where end > start. Also, ignore invalid clips where end <= start or if start/end aren't finite. And round the final sum to three decimals. If the array is empty, return 0.
+
+So, steps:
+
+1. Iterate over each clip in the clips array.
+2. For each clip, check if both start and end are finite numbers. Also check if end > start.
+3. If valid, add (end - start) to the sum.
+4. After processing all clips, round the sum to three decimal places.
+
+How to check if a number is finite? Using Number.isFinite() function. But need to check both start and end.
+
+So for each clip in clips:
+
+if (Number.isFinite(clip.start) && Number.isFinite(clip.end)) {
+   if (clip.end > clip.start) {
+      sum += clip.end - clip.start;
+   }
+}
+
+Then, after summing all valid clips, return Math.round(sum * 1000) / 1000. Wait, but rounding to three decimals can be done with toFixed(3), but that returns a string. Alternatively, multiply by 1000, round, then divide by 1000.
+
+But there's a gotcha with floating point precision. For example, if sum is 1.2345, multiplying by 1000 gives 1234.5, rounding to 1235, then divided by 1000 is 1.235. But using Math.round(sum * 1000) / 1000 would do that.
+
+Alternatively, using Number((sum).toFixed(3)) but that might have issues with numbers like 0.0005, but the problem says to round to three decimals. So either approach works.
+
+But for accuracy, perhaps Math.round(sum * 1000) / 1000 is better.
+
+So putting it all together:
+
+Initialize sum as 0.
+
+Loop through each clip in clips array.
+
+Check if start and end are finite. If yes, check if end > start. If both conditions met, add (end - start) to sum.
+
+After processing all clips, round sum to three decimals.
+
+Edge cases: empty array returns 0. Also, if all clips are invalid, sum is 0.
+
+Now code:
+
+function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let total = 0;
+  for (const clip of clips) {
+    const { start, end } = clip;
+    if (Number.isFinite(start) && Number.isFinite(end)) {
+      if (end > start) {
+        total += end - start;
+      }
+    }
+  }
+  return Math.round(total * 1000) / 1000;
+}
+
+Wait, but what about when the sum is something like 1.2345? Rounding to three decimals would be 1.235. But if it's 1.2344, it rounds to 1.234.
+
+But Math.round(1.2345 * 1000) is Math.round(1234.5) which is 1235, so 1235 / 1000 = 1.235. So that works.
+
+Yes, this should handle the rounding correctly.
+
+Testing empty array: returns 0. Correct.
+
+What about a clip with start and end not finite? Like NaN or Infinity? Those are ignored.
+
+So this code should meet all the requirements.
+
+Now, write the code in TypeScript, exported as specified.
+
+The function is exported, so add 'export' keyword.
+
+So the final code would be:
+
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let total = 0;
+  for (const clip of clips) {
+    const { start, end } = clip;
+    if (Number.isFinite(start) && Number.isFinite(end)) {
+      if (end > start) {
+        total += end - start;
+      }
+    }
+  }
+  return Math.round(total * 1000) / 1000;
+}
+
+Yes, that should do it. Let me check again:
+
+- sum end - start for valid clips: yes.
+
+- ignore invalid ones: checked Number.isFinite on both start and end. Also, end > start.
+
+- empty array returns 0: yes.
+
+- rounding to three decimals: Math.round(total * 1000) / 1000. For example, if total is 2.3456, this becomes 2345.6 rounded to 2346, then divided by 1000 gives 2.346. Correct.
+
+Yes, that's correct.
+</think>
+
+```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let total = 0;
+  for (const clip of clips) {
+    const { start, end } = clip;
+    if (Number.isFinite(start) && Number.isFinite(end)) {
+      if (end > start) {
+        total += end - start;
+      }
+    }
+  }
+  return Math.round(total * 1000) / 1000;
+}
+```

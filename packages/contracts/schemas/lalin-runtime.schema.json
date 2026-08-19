@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lalin.ai/schemas/lalin-runtime.schema.json",
+  "title": "Lalin Runtime Activity Status",
+  "type": "object",
+  "required": ["telemetry", "runtime", "activity"],
+  "properties": {
+    "telemetry": {
+      "type": "object",
+      "required": ["cpu_percent", "ram_used_bytes", "ram_total_bytes", "gpu_name", "gpu_percent", "vram_used_bytes", "vram_total_bytes"],
+      "properties": {
+        "cpu_percent": { "type": ["number", "null"] },
+        "ram_used_bytes": { "type": ["number", "null"] },
+        "ram_total_bytes": { "type": ["number", "null"] },
+        "gpu_name": { "type": ["string", "null"] },
+        "gpu_percent": { "type": ["number", "null"] },
+        "vram_used_bytes": { "type": ["number", "null"] },
+        "vram_total_bytes": { "type": ["number", "null"] }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["profile", "model", "agent"],
+      "properties": {
+        "profile": { "type": ["string", "null"], "enum": ["full", "lite", null] },
+        "model": { "type": ["string", "null"] },
+        "agent": { "type": ["string", "null"] }
+      }
+    },
+    "activity": {
+      "type": "object",
+      "required": ["job_id", "label", "state", "progress"],
+      "properties": {
+        "job_id": { "type": ["string", "null"] },
+        "label": { "type": ["string", "null"] },
+        "state": { "type": ["string", "null"] },
+        "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

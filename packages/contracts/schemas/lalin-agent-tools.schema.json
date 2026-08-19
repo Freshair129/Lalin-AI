@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lalin.ai/schemas/lalin-agent-tools.schema.json",
+  "title": "Lalin Agent Tool Contracts",
+  "type": "object",
+  "definitions": {
+    "AgentMutation": {
+      "type": "object",
+      "required": ["op", "args"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["move_clip", "set_gain", "set_pan", "set_fx", "set_lufs", "mute_clip", "slice_clip", "reorder_track"]
+        },
+        "args": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "AgentActRequest": {
+      "type": "object",
+      "required": ["message", "project"],
+      "properties": {
+        "message": { "type": "string", "minLength": 1 },
+        "project": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "AgentActResponse": {
+      "type": "object",
+      "required": ["reply", "mutations"],
+      "properties": {
+        "reply": { "type": "string" },
+        "mutations": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentMutation" }
+        }
+      }
+    }
+  }
+}

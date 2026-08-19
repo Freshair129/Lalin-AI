@@ -1,0 +1,22 @@
+<think>
+</think>
+
+```ts
+export function formatTimecode(sec: number): string {
+    if (!isFinite(sec) || sec < 0) {
+        return "00:00.000";
+    }
+
+    const totalMs = Math.round(sec * 1000);
+    let minutes = Math.floor(totalMs / (60 * 1000));
+    let remainingMs = totalMs % (60 * 1000);
+    let seconds = Math.floor(remainingMs / 1000);
+    remainingMs %= 1000;
+
+    const pad = (num: number, length: number): string => {
+        return num.toString().padStart(length, "0");
+    };
+
+    return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(remainingMs, 3)}`;
+}
+```

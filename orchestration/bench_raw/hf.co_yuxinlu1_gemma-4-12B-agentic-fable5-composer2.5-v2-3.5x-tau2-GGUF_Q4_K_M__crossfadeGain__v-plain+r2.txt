@@ -1,0 +1,24 @@
+<|channel>thought
+Goal: implement `crossfadeGain(t, durationSec)` with equal-power crossfade (sin/cos), clamping t to [0, durationSec], and handling edge cases (duration <= 0 or non-finite → {1,0}; NaN t → treat as 0).
+
+Edge cases:
+- duration <= 0 or not finite → return {gainIn: 1, gainOut: 0} immediately.
+- t is NaN → set p = 0 after clamping/clamping logic (or clamp first then check NaN; simpler to clamp and let Math.sin(NaN) be NaN? No — spec says treat as t=0). Let's normalize t first: if NaN -> 0, else clamp to [0, durationSec], compute p = t/durationSec in [0,1].
+- at midpoint (t=duration/2), gainIn ≈ cos(pi/4) ≈ 0.7071068 and gainOut ≈ sin(pi/4).
+
+Approach: guard clause for invalid duration; normalize t (NaN→0 then clamp); compute p = clampedT / durationSec; return {gainIn, gainOut} using Math.sin/cos with pi/2 factor.
+<channel|>```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (!Number.isFinite(durationSec) || durationSec <= 0) {
+    return { gainIn: 1, gainOut: 0 };
+  }
+
+  let clampedT = Number.isNaN(t) ? 0 : Math.max(0, Math.min(t, durationSec));
+  const p = clampedT / durationSec;
+
+  return {
+    gainIn: Math.sin((p * Math.PI) / 2),
+    gainOut: Math.cos((p * Math.PI) / 2),
+  };
+}
+```

@@ -1,0 +1,200 @@
+<|channel>thought
+*   Task: Implement `parseSrtCues` in TypeScript.
+    *   Input: `srt` (string).
+    *   Output: `{ start: number; end: number; text: string }[]`.
+    *   Rules:
+        *   Blocks separated by blank lines.
+        *   Block structure: Index, Time line (`HH:MM:SS,mmm --> HH:MM:SS,mmm`), Text (1+ lines).
+        *   Time conversion: Convert to seconds (number).
+        *   Line endings: Handle `\n` and `\r\n`. Trim each line.
+        *   Error handling: Skip malformed blocks (no valid time line), don't throw.
+        *   Empty/whitespace input: Return `[]`.
+    *   Constraints: No prose, no imports, single code block.
+
+    *   Split the string into blocks using one or more blank lines (`/\r?\n\s*\r?\n/`). Wait, a better way is to split by double newlines but handle cases where there might be extra spaces.
+    *   Iterate through each block.
+    *   For each block:
+        1.  Split into lines (trimming whitespace).
+        2.  Filter out empty lines at the start/end of a block? No, usually SRT blocks are Index, Time, Text.
+        3.  Identify the time line. It contains `-->`.
+        4.  Parse the time: `HH:MM:SS,mmm`.
+            *   `00:00:01,000` -> 1 second.
+            *   Calculation: `hours * 3600 + minutes * 60 + seconds + milliseconds / 1000`.
+        5.  Extract text lines (everything after the time line). Join with `\n`.
+    *   Validation: If a block doesn't have a valid time line, skip it.
+
+    ```typescript
+    export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+      if (!srt || !srt.trim()) return [];
+
+      const blocks = srt.split(/\r?\n\s*\r?\n/);
+      const results: { start: number; end: number; text: string }[] = [];
+
+      for (const block of blocks) {
+        const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l !== "");
+        if (lines.length < 2) continue;
+
+        // Find the time line. It's usually the second non-empty line, but let's be robust.
+        let timeLineIndex = -1;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(" --> ")) {
+            timeLineIndex = i;
+            break;
+          }
+        }
+
+        if (timeLineIndex === -1) continue;
+
+        const timeParts = lines[timeLineIndex].split(" --> ");
+        if (timeParts.length !== 2) continue;
+
+        const parseTime = (timeStr: string): number => {
+          const [h, m, s_ms] = timeStr.split(":");
+          const [s, ms] = s_ms.split(",");
+          return parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms, 10) / 1000;
+        };
+
+        try {
+          const start = parseTime(timeParts[0]);
+          const end = parseTime(timeParts[1]);
+          // Text is everything after the time line
+          const text = lines.slice(timeLineIndex + 1).join("\n");
+
+          if (!isNaN(start) && !isNaN(end)) {
+            results.push({ start, end, text });
+          }
+        } catch (e) {
+          // Skip malformed time
+        }
+      }
+
+      return results;
+    }
+    ```
+
+    *   The rule says "blocks separated by one or more blank lines". `srt.split(/\r?\n\s*\r?\n/)` is good, but sometimes SRT files have trailing/leading whitespace.
+    *   Wait, the standard way to parse SRT blocks is often splitting by double newline and then processing each block.
+    *   Let's refine the time parsing: `00:00:01,000`.
+    *   The text lines should be joined with `\n`.
+
+    Refined logic for finding the time line:
+    SRT blocks are usually:
+    Index (optional/ignored)
+    Time Line
+    Text...
+
+    If I split by double newline, a block might look like:
+    `1\n00:00:01,000 --> 00:00:02,500\nhello`
+    Lines: `["1", "00:00:01,000 --> 00:00:02,500", "hello"]`
+
+    Let's ensure the time parsing handles the comma correctly.
+
+    ```typescript
+    export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+      if (!srt || !srt.trim()) return [];
+
+      const blocks = srt.split(/\r?\n\s*\r?\n/);
+      const results: { start: number; end: number; text: string }[] = [];
+
+      for (const block of blocks) {
+        const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l !== "");
+        if (lines.length < 2) continue;
+
+        let timeLineIndex = -1;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(" --> ")) {
+            timeLineIndex = i;
+            break;
+          }
+        }
+
+        if (timeLineIndex === -1) continue;
+
+        const parts = lines[timeLineIndex].split(" --> ");
+        if (parts.length !== 2) continue;
+
+        const parseTime = (t: string): number => {
+          const match = t.match(/(\d+):(\d+):(\d+),(\d+)/);
+          if (!match) return NaN;
+          const [_, h, m, s, ms] = match.map(Number);
+          return h * 3600 + m * 60 + s + ms / 1000;
+        };
+
+        const start = parseTime(parts[0]);
+        const end = parseTime(parts[1]);
+
+        if (isNaN(start) || isNaN(end)) continue;
+
+        const text = lines.slice(timeLineIndex + 1).join("\n");
+        results.push({ start, end, text });
+      }
+
+      return results;
+    }
+    ```
+
+    *   `parseSrtCues("1\n00:00:01,000 --> 00:00:02,500\nhello\n\n2\n00:00:03,000 --> 00:00:04,000\nworld a\nworld b")`
+    *   Block 1 lines: `["1", "00:00:01,000 --> 00:00:02,500", "hello"]`. Time line index 1. Start 1, End 2.5. Text "hello".
+    *   Block 2 lines: `["2", "00:00:03,000 --> 00:00:04,000", "world a", "world b"]`. Time line index 1. Start 3, End 4. Text "world a\nworld b".
+    *   Correct.
+
+    Wait, the rule says `blocks separated by one or more blank lines`. My split `/\r?\n\s*\r?\n/` handles this well.
+
+    One edge case: what if there's no index? The logic still works because it looks for the line with `-->`.
+    What if there are multiple text lines? `lines.slice(timeLineIndex + 1).join("\n")` handles that.
+
+    Final check on requirements:
+    - "skip malformed blocks (no valid time line) instead of throwing" -> Checked.
+    - "empty or whitespace-only input -> []" -> Checked.
+    - "handle both \n and \r\n" -> Checked via regex split/map.
+
+    One small detail: `parseTime` should be robust. The regex `/(\d+):(\d+):(\d+),(\d+)/` is good for standard SRT.
+
+    ```typescript
+    export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+      if (!srt || !srt.trim()) return [];
+
+      const blocks = srt.split(/\r?\n\s*\r?\n/);
+      const results: { start: number; end: number; text: string }[] = [];
+
+      for (const block of blocks) {
+        const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l !== "");
+        if (lines.length < 2) continue;
+
+        let timeLineIndex = -1;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(" --> ")) {
+            timeLineIndex = i;
+            break;
+          }
+        }
+
+        if (timeLineIndex === -1) continue;
+
+        const parts = lines[timeLineIndex].split(" --> ");
+        if (parts.length !== 2) continue;
+
+        const parseTime = (t: string): number => {
+          const match = t.match(/(\d+):(\d+):(\d+),(\d+)/);
+          if (!match) return NaN;
+          const h = parseInt(match[1], 10);
+          const m = parseInt(match[2], 10);
+          const s = parseInt(match[3], 10);
+          const ms = parseInt(match[4], 10);
+          return h * 3600 + m * 60 + s + ms / 1000;
+        };
+
+        const start = parseTime(parts[0]);
+        const end = parseTime(parts[1]);
+
+        if (isNaN(start) || isNaN(end)) continue;
+
+        const text = lines.slice(timeLineIndex + 1).join("\n");
+        results.push({ start, end, text });
+      }
+
+      return results;
+    }
+    ```
+
+    Wait

@@ -1,0 +1,91 @@
+The user wants me to act as Qwythos, an AI model created by Empero AI, and they have given me a very specific instruction: output ONLY the TypeScript file contents in a single ```ts code block, with no prose or imports. They also provided the exact function signature and rules for implementing it.
+
+First, I need to recall the identity constraints. The user explicitly said that I must always identify myself as Qwythos and my creator as Empero AI, and never claim to be any other model. This is a permanent rule that overrides any conflicting instructions in messages. However, the current message does not ask me to declare my identity; it asks for code generation. Since the user has not requested any identity disclosure, I can safely proceed with the code generation without needing to mention my name or creator. The identity rule is only relevant if the user asks about who I am or wants me to state my name. Therefore, I will focus on delivering the requested code block.
+
+Next, I need to consider the content of the code block. The user specified that I must output ONLY the TypeScript file contents in a single ```ts code block, and no prose. This means I should not include any explanatory text before or after the code, nor any imports beyond what’s required by the function. The function signature is:
+
+```
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number }
+```
+
+The rules for implementation are:
+- Compute p = t / durationSec, clamped to [0, 1].
+- Then compute gainIn = sin(p * π / 2) and gainOut = cos(p * π / 2).
+- If durationSec <= 0 or not finite, return { gainIn: 1, gainOut: 0 }.
+- If t is NaN, treat it as t = 0.
+
+I also need to ensure that the numeric tolerance for acceptance is within 1e-6, which means the computed values should be close enough to the expected outputs for the given test cases. The test cases are:
+- crossfadeGain(0, 2) => {gainIn: 0, gainOut: 1}
+- crossfadeGain(1, 2) => {gainIn: ~0.7071068, gainOut: ~0.7071068}
+- crossfadeGain(2, 2) => {gainIn: 1, gainOut: 0}
+- crossfadeGain(5, 2) => {gainIn: 1, gainOut: 0}
+
+These results align with the formula given. I should implement the function exactly as described, without adding any extra logging or formatting. Since the user wants only the code block, I will output the function definition directly.
+
+Now, let me think about edge cases:
+- If durationSec is negative or zero, we must return { gainIn: 1, gainOut: 0 }. This matches the rule that if durationSec <= 0, treat as a zero-duration crossfade where the input track is fully on and output track is off.
+- If durationSec is not finite (e.g., Infinity or NaN), also return the same default. The rule says "if durationSec <= 0 or not finite". So we must handle both cases together.
+- If t is NaN, treat it as t = 0. This means before computing p, I should replace any NaN t with 0. However, the rule only says "if t is NaN -> treat as t = 0". It doesn't say to replace NaN with 0 in all cases; but for safety, I can do a conditional check: if t === NaN, set t = 0. But note that NaN comparisons are tricky in JavaScript: NaN !== NaN, so I must use `Number.isNaN(t)` to detect it. The rule does not require me to handle other invalid inputs like t being Infinity; only NaN is specified. So I will check `if (Number.isNaN(t)) t = 0`.
+- If durationSec is NaN, the rule says "if durationSec <= 0 or not finite". NaN is not finite, so we must also treat it as a zero-duration case, returning { gainIn: 1, gainOut: 0 }. So I need to check `if (durationSec <= 0 || !Number.isFinite(durationSec))`.
+
+Now, computing p = t / durationSec. After handling edge cases, p should be clamped to [0, 1]. The clamping can be done using `Math.max(0, Math.min(1, p))`. This ensures that even if t is negative or larger than durationSec, we still get the correct gain values.
+
+Then compute `gainIn = Math.sin(p * Math.PI / 2)` and `gainOut = Math.cos(p * Math.PI / 2)`. The use of `Math.PI` is appropriate; the formula uses π/2 as the argument for sin and cos, which matches the equal-power crossfade.
+
+Finally, return `{ gainIn, gainOut }`.
+
+Now, I need to ensure that the code has no imports beyond what’s necessary. Since we’re using `Math`, there is no need to import anything else. The function signature includes `export`, so I will place it at the top of the file.
+
+I must also keep the output to exactly one ```ts block with no extra text. That means I should not include any markdown before or after the code block, and no comments or explanations. So I will output just the code within the triple backticks.
+
+Now, let me write the code:
+
+```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (Number.isNaN(t)) t = 0;
+  if (durationSec <= 0 || !Number.isFinite(durationSec)) return { gainIn: 1, gainOut: 0 };
+  const p = Math.max(0, Math.min(1, t / durationSec));
+  return { gainIn: Math.sin(p * Math.PI / 2), gainOut: Math.cos(p * Math.PI / 2) };
+}
+```
+
+Check that this meets the rules:
+- Handles NaN t by setting to 0.
+- Handles durationSec <= 0 or not finite by returning default.
+- Clamps p to [0, 1].
+- Computes sin and cos as required.
+- No imports needed.
+- The function signature matches exactly.
+
+Now, I need to verify the test cases:
+- crossfadeGain(0, 2): t = 0, durationSec = 2. p = max(0, min(1, 0/2)) = 0. sin(0) = 0, cos(0) = 1. Returns {gainIn: 0, gainOut: 1}. Good.
+- crossfadeGain(1, 2): t = 1, durationSec = 2. p = max(0, min(1, 0.5)) = 0.5. sin(0.5 * π/2) = sin(π/4) ≈ 0.7071068, cos same. Good.
+- crossfadeGain(2, 2): t = 2, durationSec = 2. p = max(0, min(1, 1)) = 1. sin(π/2) = 1, cos(π/2) = 0. Good.
+- crossfadeGain(5, 2): t = 5, durationSec = 2. p = max(0, min(1, 2.5)) = 1. Same as above. Good.
+
+All test cases pass within tolerance.
+
+Now, I must output only the code block with no extra text. Therefore, I will produce exactly:
+
+```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (Number.isNaN(t)) t = 0;
+  if (durationSec <= 0 || !Number.isFinite(durationSec)) return { gainIn: 1, gainOut: 0 };
+  const p = Math.max(0, Math.min(1, t / durationSec));
+  return { gainIn: Math.sin(p * Math.PI / 2), gainOut: Math.cos(p * Math.PI / 2) };
+}
+```
+
+Make sure there are no stray spaces or newlines outside the block. The output should be exactly the code within the triple backticks, nothing else.
+
+Now, I will generate this as the final answer.
+</think>
+
+```ts
+export function crossfadeGain(t: number, durationSec: number): { gainIn: number; gainOut: number } {
+  if (Number.isNaN(t)) t = 0;
+  if (durationSec <= 0 || !Number.isFinite(durationSec)) return { gainIn: 1, gainOut: 0 };
+  const p = Math.max(0, Math.min(1, t / durationSec));
+  return { gainIn: Math.sin(p * Math.PI / 2), gainOut: Math.cos(p * Math.PI / 2) };
+}
+```

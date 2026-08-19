@@ -1,0 +1,111 @@
+<|channel>thought
+*   Role: Focused code generator.
+    *   Task: Implement `sumClipDurations`.
+    *   Output format: Only a single TypeScript file's content inside one ```ts code block. No prose, no explanation.
+    *   Constraints: Pure function, no imports, no external deps, surgical and minimal.
+
+    *   File path: `frontend/src/timeline/sumClipDurations.ts`
+    *   Signature: `export function sumClipDurations(clips: { start: number; end: number }[]): number`
+    *   Logic:
+        1.  Sum `end - start` for each clip.
+        2.  Condition 1: Only include if `end > start`.
+        3.  Condition 2: Ignore invalid clips (where `start` or `end` are not finite numbers).
+        4.  Rounding: Round the final sum to 3 decimals.
+        5.  Edge case: Empty array returns 0.
+
+    *   Input: `[{start:0, end:1.5}, {start:2, end:2}]` -> (1.5 - 0) = 1.5. Sum = 1.5. Round(1.5) = 1.5.
+    *   Input: `[]` -> 0.
+    *   Input: `[{start:1, end:0.5}, {start:0, end:0.25}]` -> (0.5 - 1 is <= 0, ignore), (0.25 - 0 = 0.25). Sum = 0.25. Round(0.25) = 0.25.
+
+    ```typescript
+    export function sumClipDurations(clips: { start: number; end: number }[]): number {
+      let total = 0;
+      for (const clip of clips) {
+        const { start, end } = clip;
+        if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+          total += end - start;
+        }
+      }
+      return Math.round(total * 1000) / 1000;
+    }
+    ```
+
+    *   One code block? Yes.
+    *   No prose? Yes.
+    *   Pure function? Yes.
+    *   No imports/deps? Yes.
+    *   Correct signature? Yes.
+    *   Rounding to 3 decimals? Yes (`Math.round(total * 1000) / 1000`).
+
+    Wait, let's double check the "ignore invalid clips" part. `Number.isFinite` handles non-numbers/Infinity.
+
+    Refined logic:
+    ```typescript
+    export function sumClipDurations(clips: { start: number; end: number }[]): number {
+      let total = 0;
+      for (const clip of clips) {
+        if (typeof clip.start === 'number' && typeof clip.end === 'number' && Number.isFinite(clip.start) && Number.isFinite(clip.end)) {
+          if (clip.end > clip.start) {
+            total += clip.end - clip.start;
+          }
+        }
+      }
+      return Math.round(total * 1000) / 1000;
+    }
+    ```
+    Actually, the prompt says "ignore invalid clips: end <= start, or start/end not finite numbers".
+
+    Simplified loop:
+    ```typescript
+    export function sumClipDurations(clips: { start: number; end: number }[]): number {
+      let total = 0;
+      for (const clip of clips) {
+        if (Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start) {
+          total += clip.end - clip.start;
+        }
+      }
+      return Math.round(total * 1000) / 1000;
+    }
+    ```
+
+    Wait, `Number.isFinite` returns false for non-numbers (like strings), so it covers the "not finite numbers" part well enough if we assume input types are somewhat respected or just check finiteness.
+
+    Let's re-read: "ignore invalid clips: end <= start, or start/end not finite numbers."
+    If `clip.start` is a string, `Number.isFinite("1")` is false. So it works.
+
+    Final code structure:
+    ```ts
+    export function sumClipDurations(clips: { start: number; end: number }[]): number {
+      let total = 0;
+      for (const clip of clips) {
+        if (Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start) {
+          total += clip.end - clip.start;
+        }
+      }
+      return Math.round(total * 1000) / 1000;
+    }
+    ```
+
+    Wait, `Math.round(total * 1000) / 1000` is the standard way to round to 3 decimals in JS/TS for this context.
+
+    One more check on "Pure function". Yes, it doesn't mutate inputs or use global state.
+
+    Final verification of requirements:
+    - sum (end - start) over clips where end > start. [Check]
+    - ignore invalid clips: end <= start, or start/end not finite numbers. [Check]
+    - round the final sum to 3 decimals. [Check]
+    - empty array -> 0. [Check]
+
+    One edge case: `Number.isFinite` returns false for `NaN`. Correct.<channel|>```ts
+export function sumClipDurations(clips: { start: number; end: number }[]): number {
+  let total = 0;
+
+  for (const clip of clips) {
+    if (Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start) {
+      total += clip.end - clip.start;
+    }
+  }
+
+  return Math.round(total * 1000) / 1000;
+}
+```

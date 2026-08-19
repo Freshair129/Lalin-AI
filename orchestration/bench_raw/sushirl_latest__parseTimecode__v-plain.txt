@@ -1,0 +1,47 @@
+Let me think about how to approach this coding problem.
+
+Problem: You are a focused code generator. ONE task. Output ONLY the TypeScript file contents
+in a single ```ts code block. No prose. Pure function, no imports.
+
+Implement EXACTLY this signature in frontend/src/utils/parseTimecode.ts:
+export function parseTimecode(s: string): number
+
+Rules:
+- input format is exactly "MM:SS.mmm" (2-digit minutes, 2-digit seconds, 3-digit milliseconds).
+- seconds part must be 00-59; minutes 00-99.
+- return total seconds as a number.
+- any string not matching the format exactly -> return -1.
+
+Acceptance: parseTimecode("01:02.500") -> 62.5. parseTimecode("00:00.000") -> 0. parseTimecode("abc") -> -1. parseTimecode("1:02.500") -> -1 (minutes must be 2 digits).
+Output ONLY the ```ts block.
+
+Approach: Regular Expressions and Validation
+
+I'll use a regular expression to validate the exact format, then parse the components and return the total seconds.
+
+Key considerations:
+- The regex must enforce exactly 2-digit minutes, 2-digit seconds, and 3-digit milliseconds
+- Edge cases like "1:02.500" (single digit minute) should return -1
+- Invalid seconds values (>59) should return -1
+
+Let me implement this solution.
+</think>
+
+```ts
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  
+  if (!match) return -1;
+  
+  const [, minutes, seconds, milliseconds] = match;
+  
+  const m = parseInt(minutes, 10);
+  const sec = parseInt(seconds, 10);
+  const ms = parseInt(milliseconds, 10);
+  
+  if (m > 99 || sec > 59) return -1;
+  
+  return m * 60 + sec + ms / 1000;
+}
+```

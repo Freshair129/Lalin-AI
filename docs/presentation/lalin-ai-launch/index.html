@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lalin AI - Local AI Audio Workstation</title>
+  <style>
+    :root {
+      --bg: #07100f;
+      --bg2: #0b1715;
+      --panel: rgba(17, 27, 25, .78);
+      --panel2: rgba(255, 255, 255, .055);
+      --line: rgba(255, 255, 255, .13);
+      --text: #fffaf1;
+      --muted: #a8b4af;
+      --dim: #65736d;
+      --orange: #ff6b2c;
+      --gold: #ffdc4d;
+      --lime: #c8ff38;
+      --green: #4ee77b;
+      --red: #ff6d6d;
+      --shadow: 0 30px 120px rgba(0, 0, 0, .42);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255, 122, 36, .45), transparent 31rem),
+        radial-gradient(circle at 72% 14%, rgba(255, 221, 64, .18), transparent 26rem),
+        radial-gradient(circle at 70% 78%, rgba(200, 255, 56, .12), transparent 30rem),
+        linear-gradient(180deg, #060807 0%, var(--bg) 48%, #040706 100%);
+    }
+    a { color: inherit; }
+    .page { min-height: 100vh; overflow: hidden; }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 42px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(4, 7, 6, .7);
+      backdrop-filter: blur(20px);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; font-weight: 760; letter-spacing: -.02em; }
+    .mark {
+      width: 34px; height: 34px; border-radius: 12px;
+      display: grid; place-items: center;
+      color: #10130c; font-weight: 900;
+      background: linear-gradient(135deg, var(--orange), #fff3c2 48%, var(--gold));
+      box-shadow: 0 0 36px rgba(255, 137, 41, .45);
+    }
+    .navlinks { display: flex; gap: 22px; color: var(--muted); font-size: 13px; align-items: center; }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255,255,255,.05);
+    }
+    .cta {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      color: #16130a;
+      background: linear-gradient(100deg, var(--orange), #fff3cc 52%, var(--gold));
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 14px 36px rgba(255, 108, 44, .3);
+    }
+    .hero {
+      min-height: calc(100vh - 68px);
+      display: grid;
+      grid-template-columns: minmax(360px, .86fr) minmax(420px, 1.14fr);
+      gap: 46px;
+      padding: 76px 56px 44px;
+      align-items: center;
+    }
+    .hero h1 {
+      font-size: clamp(54px, 7vw, 112px);
+      letter-spacing: -.085em;
+      line-height: .88;
+      margin: 0 0 24px;
+      max-width: 900px;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.7;
+      max-width: 690px;
+      margin: 0 0 30px;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .ghost {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 18px;
+      color: var(--text);
+      background: rgba(255,255,255,.05);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .fine { color: var(--dim); font-size: 12px; margin-top: 14px; }
+    .hero-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+      box-shadow: var(--shadow);
+      padding: 14px;
+      transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
+    }
+    .hero-card img {
+      display: block;
+      width: 100%;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .status-strip {
+      position: absolute;
+      left: 40px; right: 40px; bottom: -24px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      background: rgba(5, 9, 8, .82);
+      backdrop-filter: blur(18px);
+      border-radius: 18px;
+      padding: 14px 16px;
+    }
+    .stat strong { display: block; font-size: 18px; }
+    .stat span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+    section { padding: 82px 56px; }
+    .section-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 28px; }
+    .section-head h2 { margin: 0; font-size: clamp(34px, 4vw, 58px); line-height: 1; letter-spacing: -.055em; }
+    .section-head p { margin: 0; max-width: 560px; color: var(--muted); line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .feature, .readiness, .demo-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 26px;
+      padding: 22px;
+      min-height: 190px;
+    }
+    .feature h3, .readiness h3, .demo-card h3 { margin: 0 0 12px; font-size: 20px; }
+    .feature p, .readiness p, .demo-card p { color: var(--muted); line-height: 1.6; margin: 0; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--gold); font-size: 12px; letter-spacing: .09em; text-transform: uppercase; }
+    .tag::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: currentColor; box-shadow: 0 0 18px currentColor; }
+    .showcase { display: grid; grid-template-columns: 1.05fr .95fr; gap: 18px; }
+    .showcase img { width: 100%; border-radius: 26px; border: 1px solid var(--line); background: var(--panel); }
+    .readiness-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .status { display: inline-flex; border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 800; margin-bottom: 14px; }
+    .status.real { color: #0d2413; background: var(--green); }
+    .status.mock { color: #291500; background: var(--gold); }
+    .status.pending { color: #290d0d; background: var(--red); }
+    .demo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    code {
+      display: block;
+      white-space: pre-wrap;
+      color: #dfffc6;
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 14px;
+      border-radius: 14px;
+      font: 12px/1.55 "Cascadia Code", ui-monospace, monospace;
+      margin-top: 14px;
+    }
+    .repo-line { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--muted); }
+    footer {
+      padding: 46px 56px 64px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+    }
+    @media (max-width: 980px) {
+      .nav { padding: 0 20px; }
+      .navlinks { display: none; }
+      .hero, .showcase, .demo { grid-template-columns: 1fr; }
+      .hero { padding: 46px 20px; }
+      section, footer { padding-left: 20px; padding-right: 20px; }
+      .grid, .readiness-grid { grid-template-columns: 1fr; }
+      .hero-card { transform: none; }
+      .status-strip { position: static; grid-template-columns: 1fr; margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav">
+      <div class="brand"><span class="mark">L</span><span>Lalin AI</span></div>
+      <div class="navlinks">
+        <a href="#product">Product</a>
+        <a href="#readiness">Readiness</a>
+        <a href="#demo">Demo</a>
+        <a class="pill" href="https://github.com/Freshair129/Lalin-AI">GitHub</a>
+      </div>
+    </nav>
+
+    <section class="hero" id="top">
+      <div>
+        <h1>Local AI audio, without the credit meter.</h1>
+        <p>
+          Lalin Studio is a Windows desktop workstation for voice profiles, Thai-first TTS,
+          dubbing, mastering, and timeline Arrange workflows. It is built for creators who want
+          local GPU control, privacy, and repeatable project work instead of another cloud-only tab.
+        </p>
+        <div class="hero-actions">
+          <a class="cta" href="#demo">Open presentation demo</a>
+          <a class="ghost" href="https://github.com/Freshair129/Lalin-AI">View repo</a>
+        </div>
+        <div class="fine">Repository renamed today: Freshair129/G-Music -> Freshair129/Lalin-AI. Desktop binary identity remains G-Music until a tested packaging migration.</div>
+      </div>
+      <div class="hero-card">
+        <img src="../../design/reference/lalin/LALIN_ARRANGE_V1_APPROVED.png" alt="Approved Lalin Arrange UI mockup" />
+        <div class="status-strip">
+          <div class="stat"><strong>8 tabs</strong><span>Workspace, Voice, Dubbing, Arrange, Master, Library, Jobs, Settings</span></div>
+          <div class="stat"><strong>Local first</strong><span>Ollama + FastAPI + optional cloud providers</span></div>
+          <div class="stat"><strong>Agent ready</strong><span>MCP read/propose tools implemented</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="product">
+      <div class="section-head">
+        <h2>What Lalin does.</h2>
+        <p>One desktop workspace for audio generation and finishing, with explicit boundaries between shipped runtime, validated prototype, and mockup.</p>
+      </div>
+      <div class="grid">
+        <article class="feature"><span class="tag">Voice</span><h3>Voice profiles + TTS</h3><p>Create consented local voice profiles, generate Thai/English speech, and route Agent Voice through selected profiles.</p></article>
+        <article class="feature"><span class="tag">Dub</span><h3>AI dubbing</h3><p>ASR, translation, voice assignment, timing review, and export through background jobs.</p></article>
+        <article class="feature"><span class="tag">Arrange</span><h3>Timeline finishing</h3><p>Suno/demo-song finishing lane: source, beat, timeline edit, device dock, render, export.</p></article>
+        <article class="feature"><span class="tag">Master</span><h3>Mastering</h3><p>Reference or automatic LUFS mastering with output through the same job and file system.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Visual direction.</h2>
+        <p>These are approved design mockups/reference screens for the Lalin Studio shell and major tabs. They are presentation mockups, not all shipped UI states.</p>
+      </div>
+      <div class="showcase">
+        <img src="../../design/reference/lalin/LALIN_W0_SHARED_SHELL_MASTER_V2_APPROVED.png" alt="Approved Lalin shared shell mockup" />
+        <img src="../../design/reference/lalin/LALIN_VOICE_STUDIO_V1_APPROVED.png" alt="Approved Lalin Voice Studio mockup" />
+      </div>
+    </section>
+
+    <section id="readiness">
+      <div class="section-head">
+        <h2>Readiness for today.</h2>
+        <p>Use this table when presenting. It separates what is real now from what should be shown as planned/mockup.</p>
+      </div>
+      <div class="readiness-grid">
+        <article class="readiness"><span class="status real">REAL</span><h3>Repo + architecture</h3><p>GitHub repo renamed to Lalin-AI. Root workspace, contracts package, MCP server, release workflow path repair, and docs SOT are implemented.</p></article>
+        <article class="readiness"><span class="status real">REAL</span><h3>Desktop/API codebase</h3><p>React/Tauri desktop, FastAPI backend routes, runtime telemetry, jobs, TTS, dubbing, mastering, Arrange, and MCP contracts exist in code.</p></article>
+        <article class="readiness"><span class="status mock">MOCKUP</span><h3>Final Lalin visual shell</h3><p>Approved W0 and tab mockups exist. Treat visual polish and full tab parity as design-approved implementation work, not fully shipped UI.</p></article>
+        <article class="readiness"><span class="status pending">PENDING</span><h3>One-click installer</h3><p>Sidecar and signing key exist, but current NSIS installer build did not complete in the presentation window. Demo via dev runtime today.</p></article>
+        <article class="readiness"><span class="status real">REAL</span><h3>Local model story</h3><p>Ollama/provider abstraction and local-first runtime design are documented. Heavy ML deps remain lazy/optional for practical startup.</p></article>
+        <article class="readiness"><span class="status mock">MOCKUP</span><h3>Public download page</h3><p>This page is a local presentation landing page. Publish/download automation can be the next release gate after installer build is stable.</p></article>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="section-head">
+        <h2>Demo path.</h2>
+        <p>Recommended order for an internal presentation: show this page, open the repo, then run the local app if the machine is ready.</p>
+      </div>
+      <div class="demo">
+        <article class="demo-card">
+          <span class="status real">LIVE DEMO</span>
+          <h3>Run local web UI</h3>
+          <p>Use this if installer is not ready. It exercises the real desktop frontend build path and FastAPI backend.</p>
+          <code>cd D:\G-Music
+npm run check:all
+
+cd D:\G-Music\apps\api
+..\..\backend\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --port 8756
+
+cd D:\G-Music\apps\desktop
+npm run dev</code>
+        </article>
+        <article class="demo-card">
+          <span class="status pending">INSTALLER PENDING</span>
+          <h3>One-click install</h3>
+          <p>Expected local artifact path after a successful package build:</p>
+          <code>D:\G-Music\apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe</code>
+          <p style="margin-top:14px">Keep this as pending today unless the artifact is created and smoke-tested before presentation.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <div class="repo-line">
+        <strong>Lalin AI</strong>
+        <span>Local AI audio workstation</span>
+        <span>Repo: Freshair129/Lalin-AI</span>
+        <span>Presentation date: 2026-07-24</span>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

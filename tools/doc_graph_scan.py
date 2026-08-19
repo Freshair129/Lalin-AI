@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """tools/doc_graph_scan.py — RWANG doc-graph scanner (rerunnable)
 
-สแกน docs/ + backend/app + frontend/src แล้วอัปเดต docs/.doc-graph.json:
+สแกน docs/ + apps/api/app + apps/desktop/src แล้วอัปเดต docs/.doc-graph.json:
 - doc nodes + content hash (ตรวจ drift รอบถัดไป)
 - requirement nodes (FR/NFR/AI-AGT/AI-ETH/BR/DR) + defined_in
 - code nodes + api_endpoint nodes (parse APIRouter prefix จริง)
 - test nodes + edges (tests → code คู่ชื่อ)
 - edges จาก markdown links ระหว่างเอกสาร + doc → code
-- ตรวจ drift: endpoints/components ในโค้ด vs BLUEPRINT.yaml
+- ตรวจ drift: endpoints/components ในโค้ด vs docs/architecture/BLUEPRINT.yaml
 - preserve edges เดิมที่ไม่ได้มาจากการสแกน (source: manual/architect-seed)
 
-รัน:  backend/.venv/Scripts/python.exe tools/doc_graph_scan.py
+Idempotent: ประทับเวลา (last_verified/generated_at) เฉพาะ node ที่เนื้อหาเปลี่ยนจริง
+และถ้าผลลัพธ์เหมือนไฟล์เดิมทุกไบต์จะไม่เขียนทับเลย — สแกนซ้ำจึงไม่ทำ git status รก
+หมายเหตุ: หลังแก้เอกสาร ต้องสแกน 2 รอบถึงนิ่ง (รอบแรก mark status=changed +
+ตั้ง prev_hash, รอบสองเห็น hash ตรงแล้วจึงกลับเป็น current)
+
+รัน:  apps/api/.venv/Scripts/python.exe tools/doc_graph_scan.py
 (stdlib เท่านั้น — ไม่พึ่ง dependency)
 """
 import datetime
@@ -26,7 +31,14 @@ CODE_EXT = (".py", ".ts", ".tsx", ".rs", ".css")
 
 
 def sha(p: Path) -> str:
-    return hashlib.sha1(p.read_bytes()).hexdigest()[:12]
+    """content hash ที่ normalize newline ก่อน — CRLF/LF ต้องได้ hash เดียวกัน
+
+    repo นี้ตั้ง core.autocrlf=true: Windows เช็คเอาต์เป็น CRLF ส่วน Linux/CI เป็น LF
+    ถ้า hash จาก raw bytes ตรง ๆ ไฟล์เดียวกันจะได้คนละ hash คนละเครื่อง แล้ว scanner
+    จะ flag ว่าทุกไฟล์ "changed" ทั้งที่เนื้อหาเหมือนกันเป๊ะ
+    """
+    data = p.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha1(data).hexdigest()[:12]
 
 
 def read(p: Path) -> str:
@@ -84,14 +96,18 @@ for p in sorted(DOCS.rglob("*")):
 
 # ── 2) requirement nodes (+ edges doc → req) ──────────────────────
 REQ_DEF = {
-    "FR": "docs/SRS.md",
-    "NFR": "docs/SRS.md",
-    "AI-AGT": "docs/ai-system/agent-architecture.md",
-    "AI-ETH": "docs/ai-system/ethics-governance.md",
-    "BR": "docs/ai-system/ethics-governance.md",
-    "DR": "docs/ai-system/data-pipeline.md",
+    "FR": "docs/product/SRS.md",
+    "NFR": "docs/product/SRS.md",
+    # AI-AGT/AI-ETH/BR/DR: ยังไม่มีไฟล์นิยามในโครงสร้างปัจจุบัน (ไม่พบการใช้จริงใน docs/) —
+    # ทิ้ง prefix ไว้เฉยๆ ให้ fallback ไปหาไฟล์แรกที่กล่าวถึง (sorted(where)[0]) ถ้ามีการใช้ในอนาคต
+    "AI-AGT": "",
+    "AI-ETH": "",
+    "BR": "",
+    "DR": "",
 }
-req_rx = re.compile(r"\b((?:FR|NFR|AI-AGT|AI-ETH|BR|DR)-[0-9]+[a-z]?)\b")
+# เลข >= 2 หลักตามธรรมเนียม ID ของโปรเจกต์ (FR-01..FR-15, FR-04b, NFR-01..06)
+# กัน false positive จากเอกสารที่ใช้เลขชุดของตัวเอง เช่น "FR-1"/"FR-4"/"FR-5" ใน docs/rca/
+req_rx = re.compile(r"\b((?:FR|NFR|AI-AGT|AI-ETH|BR|DR)-[0-9]{2,}[a-z]?)\b")
 req_mentions: dict[str, set] = {}
 doc_texts: dict[str, str] = {}
 for rel in doc_by_path:
@@ -133,7 +149,7 @@ for rel, nid in doc_by_path.items():
             add_edge(nid, cid, "references", "doc-scan")
 
 # ── 4) backend: code nodes + api endpoints ────────────────────────
-BAPP = ROOT / "backend" / "app"
+BAPP = ROOT / "apps" / "api" / "app"
 route_rx = re.compile(r"@router\.(get|post|put|delete|patch|websocket)\(\s*\"([^\"]*)\"")
 prefix_rx = re.compile(r"APIRouter\(([^)]*)\)")
 pref_kw = re.compile(r"prefix=\"([^\"]*)\"")
@@ -162,7 +178,8 @@ for p in sorted((BAPP / "routers").glob("*.py")):
 
 main_py = BAPP / "main.py"
 if main_py.exists():
-    add_node("code:backend/app/main.py", type="code_file", path="backend/app/main.py",
+    main_rel = main_py.relative_to(ROOT).as_posix()
+    add_node("code:" + main_rel, type="code_file", path=main_rel,
              hash=sha(main_py), status="current", last_verified=now)
 
 for sub in ("pipelines", "brain", "services", "jobs", "utils"):
@@ -177,7 +194,7 @@ for sub in ("pipelines", "brain", "services", "jobs", "utils"):
                  status="current", last_verified=now)
 
 # ── 5) frontend: code nodes + tests ───────────────────────────────
-FSRC = ROOT / "frontend" / "src"
+FSRC = ROOT / "apps" / "desktop" / "src"
 fe_files: list[Path] = []
 if FSRC.is_dir():
     for p in sorted(FSRC.rglob("*")):
@@ -190,9 +207,18 @@ for p in fe_files:
     add_node(nid, type="test" if is_test else "code_file", path=rel, hash=sha(p),
              status="current", last_verified=now)
     if is_test:
-        sibling = rel.replace(".test.", ".")
-        if (ROOT / sibling).exists():
-            add_edge(nid, "code:" + sibling, "tests", "code-scan")
+        # .test.tsx อาจคู่กับ .ts (เช่น useBackendReadiness.test.tsx -> useBackendReadiness.ts)
+        # จึงลองทั้งสองนามสกุล ไม่งั้น tests edge หาย -> requirements_with_tests ต่ำเกินจริง
+        base_rel = rel.replace(".test.", ".")
+        cands = [base_rel]
+        if base_rel.endswith(".tsx"):
+            cands.append(base_rel[:-4] + ".ts")
+        elif base_rel.endswith(".ts"):
+            cands.append(base_rel[:-3] + ".tsx")
+        for sibling in cands:
+            if (ROOT / sibling).exists():
+                add_edge(nid, "code:" + sibling, "tests", "code-scan")
+                break
 
 # ── 6) annotation scan (@req/@spec/@designs/@tested + FR-xxx เปล่า) ─
 ann_rx = re.compile(r"@(req|spec|designs|tested)[ :]")
@@ -214,6 +240,7 @@ for d in code_scan_dirs:
                 add_edge("code:" + rel, "req:" + rid, "implements", "code-scan")
 
 # ── 6b) verifies: test → requirement (ผ่านโค้ดที่มัน test) ────────
+# ถ้าไม่มีบล็อกนี้ coverage "requirements_with_tests" จะเป็น 0% เสมอ
 impl_by_code: dict[str, list[str]] = {}
 for e in edges:
     if e["type"] == "implements":
@@ -224,7 +251,7 @@ for e in list(edges):
             add_edge(e["from"], rid, "verifies", "code-scan")
 
 # ── 7) drift: โค้ดจริง vs BLUEPRINT ───────────────────────────────
-bp_text = doc_texts.get("docs/BLUEPRINT.yaml", "")
+bp_text = doc_texts.get("docs/architecture/BLUEPRINT.yaml", "")
 # path มี 2 แบบ: quoted ("/voices/{id}" — มี brace ข้างใน) กับ unquoted (/health)
 bp_ep_rx = re.compile(r"\{method:\s*(\w+),\s*path:\s*(?:\"([^\"]+)\"|([^,}\s]+))")
 norm = lambda s: re.sub(r"\{[^}]+\}", "{}", s)
@@ -241,7 +268,10 @@ bp_components = set(re.findall(r"component:\s*(\w+)\.tsx", bp_text))
 fe_components = {p.stem for p in (FSRC / "components").glob("*.tsx")} if (FSRC / "components").is_dir() else set()
 undocumented_components = sorted(fe_components - bp_components)
 if undocumented_components:
-    for did in ("doc:UI_SITEMAP", "doc:BLUEPRINT"):
+    # docs/archive/UI_SITEMAP.md ถูก supersede โดย docs/design/LALIN_SITEMAP_SOT.md แล้ว —
+    # ไม่ flag ไฟล์ที่ archive ไว้ ให้ flag คู่ที่ยัง maintain component จริง:
+    # BLUEPRINT.yaml (machine-readable) + COMPONENT_REGISTRY.md (ฉบับอ่านคน)
+    for did in ("doc:BLUEPRINT", "doc:COMPONENT_REGISTRY"):
         if did in nodes:
             nodes[did]["status"] = "stale"
             nodes[did]["stale_reason"] = (f"{len(undocumented_components)} frontend components not in doc: "
@@ -287,10 +317,25 @@ stats = {
     },
 }
 
+# ── 10) timestamp policy: ประทับเวลาเฉพาะ node ที่เนื้อหาเปลี่ยน ──
+# ถ้าเขียนเวลาใหม่ทุกครั้งที่สแกน ไฟล์จะ dirty ทุกรอบแม้ไม่มี drift เลย
+# ทำให้ git status รก และแยกไม่ออกว่า diff ไหนคือ drift จริง
+for nid, n in nodes.items():
+    prev = old_nodes.get(nid)
+    if prev is None or not prev.get("last_verified"):
+        continue                        # node ใหม่ — ใช้เวลาปัจจุบัน
+    drop_ts = lambda d: {k: v for k, v in d.items() if k != "last_verified"}
+    if drop_ts(n) == drop_ts(prev):
+        n["last_verified"] = prev["last_verified"]
+
 out = {
     "version": "1.0.0",
     "generated_by": "rwang:doc-graph",
     "generated_at": now,
+    "timestamp_policy": (
+        "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน "
+        "— สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย"
+    ),
     "template": old.get("template"),
     "id_scheme": old.get("id_scheme"),
     "standards": old.get("standards"),
@@ -298,10 +343,21 @@ out = {
     "nodes": sorted(nodes.values(), key=lambda n: n["id"]),
     "edges": sorted(edges, key=lambda e: (e["from"], e["to"], e["type"])),
 }
-GRAPH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+# generated_at ก็เช่นกัน — คงเวลาเดิมถ้าทุกอย่างนอกจากมันเหมือนเดิม
+drop_gen = lambda d: {k: v for k, v in d.items() if k != "generated_at"}
+if old and drop_gen(out) == drop_gen(old):
+    out["generated_at"] = old.get("generated_at", now)
+
+payload = json.dumps(out, ensure_ascii=False, indent=2) + "\n"
+if GRAPH.exists() and GRAPH.read_text(encoding="utf-8") == payload:
+    wrote = False                       # ไม่แตะไฟล์เลย — mtime เดิม git ไม่เห็นเป็น dirty
+else:
+    GRAPH.write_text(payload, encoding="utf-8")
+    wrote = True
 
 # ── รายงาน (ASCII เท่านั้น — คอนโซล cp1252) ───────────────────────
-print("doc-graph updated:", GRAPH.relative_to(ROOT).as_posix())
+print("doc-graph", "updated:" if wrote else "unchanged:", GRAPH.relative_to(ROOT).as_posix())
 print("nodes:", stats["total_nodes"], "edges:", stats["total_edges"],
       "stale_edges:", stats["stale_edges"], "stale_nodes:", stats["stale_nodes"])
 for k, v in stats["coverage"].items():

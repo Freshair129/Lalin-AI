@@ -3,18 +3,27 @@ __pycache__/
 *.py[cod]
 .venv/
 backend/.venv/
+apps/api/.venv/
 
 # Config / secrets
 .env
 backend/.env
+apps/api/.env
 keys/
 
 # Data (เสียง/งาน/โมเดล)
+runtime/
+data/
+output/
+queue/
+state/
 backend/data/
+apps/api/data/
 *.wav
 *.mp3
 *.mp4
 !backend/app/**/sample*.wav
+!apps/api/app/**/sample*.wav
 
 # Models cache
 .cache/
@@ -24,6 +33,24 @@ models/
 frontend/node_modules/
 frontend/dist/
 frontend/src-tauri/target/
+frontend/src-tauri/binaries/
+apps/desktop/node_modules/
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/target-stale*/
+apps/desktop/src-tauri/binaries/
+apps/mcp/node_modules/
+apps/mcp/dist/
+packages/contracts/node_modules/
+packages/contracts/dist/
+
+# Packaging build artifacts
+backend/build/
+backend/dist/
+backend/*.spec
+apps/api/build/
+apps/api/dist/
+apps/api/*.spec
 
 # OS / IDE
 .DS_Store
@@ -34,25 +61,15 @@ Thumbs.db
 # backend runtime logs (transient)
 backend/backend.log
 backend/backend.err
-
-# ── Monorepo scaffolds / build artifacts (ไม่มี source จริง — ดู E-risk R-009) ──
-# apps/* ตรวจแล้ว (2026-08-09) เป็น ghosts ทั้งหมด: api=.pyc, mcp=dist+node_modules,
-# desktop=sidecar bundle ~55k ไฟล์ — source of truth จริงคือ backend/ + frontend/
-# ⚠️ ถ้าจะย้าย source เข้า monorepo จริง ให้ลบ apps/ กับ packages/ ออกจากไฟล์นี้ก่อน
-apps/
-packages/
-
 # PyInstaller sidecar build output (ตัว .spec track ไว้แล้ว — output ไม่เอา)
 backend/build/
 backend/dist/
 backend/sidecar-smoke.*
 backend/.venv-ci/
-
-# Sidecar binary + deps ที่ copy ไปให้ Tauri (สร้างจาก scripts/build_sidecar.ps1 — ห้าม commit)
-frontend/src-tauri/binaries/
-
-# Runtime state/data ของผู้ใช้ (workspace/projects)
-runtime/
+apps/api/.venv-ci/
+apps/api/sidecar-smoke.*
+apps/api/backend.log
+apps/api/backend.err
 
 # Dev-swarm orchestration (เครื่องมือเฉพาะเครื่อง + bench data + ledger)
 orchestration/

@@ -1,0 +1,33 @@
+The user wants me to generate a TypeScript file with exactly one function signature, no imports, no prose, just the code in a ts block.
+
+Let me implement `pickKeys` that:
+1. Takes an object of type T and an array of keys K
+2. Returns a new object with only those keys (using Pick<T, K>)
+3. Doesn't mutate input
+4. Handles duplicate keys without duplication or errors
+5. Works under strict TypeScript mode
+
+The implementation is straightforward - iterate over the keys and pick from the source object. I need to make sure:
+- Don't use spread operator on the whole object (that would include non-matching keys)
+- Handle duplicates by checking if key already exists in result
+- Use Object.keys or direct property access
+
+Let me write this cleanly.
+</think>
+
+```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of [...new Set(keys)]) {
+    if (key in obj) {
+      Object.defineProperty(result, key, {
+        value: obj[key],
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    }
+  }
+  return result;
+}
+```

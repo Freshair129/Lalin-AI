@@ -1,0 +1,276 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]: G-MUSIC
+    - generic [ref=f1e8]: Remix
+    - generic [ref=f1e14]:
+      - generic [ref=f1e15]: READY
+      - generic [ref=f1e17]: ollama
+    - button "🔄" [ref=f1e19] [cursor=pointer]
+  - generic [ref=f1e20]:
+    - navigation [ref=f1e21]:
+      - button "คลังเสียง" [ref=f1e22] [cursor=pointer]
+      - button "อ่านข้อความ" [ref=f1e26] [cursor=pointer]
+      - button "พากย์เสียง" [ref=f1e28] [cursor=pointer]
+      - button "Mastering" [ref=f1e32] [cursor=pointer]
+      - button "Remix" [active] [ref=f1e37] [cursor=pointer]
+      - button "Files" [ref=f1e39] [cursor=pointer]
+      - button "Marketplace" [ref=f1e42] [cursor=pointer]
+      - button "คิวงาน" [ref=f1e46] [cursor=pointer]
+      - button "ปลั๊กอิน" [ref=f1e50] [cursor=pointer]
+      - button "สมอง" [ref=f1e55] [cursor=pointer]
+    - main [ref=f1e59]:
+      - generic [ref=f1e88]:
+        - generic [ref=f1e89]:
+          - generic [ref=f1e90]:
+            - generic [ref=f1e91]: ARRANGE WORKSPACE
+            - heading "Finishing Studio" [level=2] [ref=f1e92]
+            - generic [ref=f1e93]: Arrange · align · mix · export
+            - generic [ref=f1e94]:
+              - generic [ref=f1e95]: DAW layout
+              - generic [ref=f1e96]: Arrange active
+              - generic [ref=f1e97]: Load source + beat
+          - generic [ref=f1e98]:
+            - generic "โหลดไฟล์เสียงต้นฉบับ (vocal)" [ref=f1e99] [cursor=pointer]: Source
+            - generic "โหลดไฟล์บีต (instrumental)" [ref=f1e104] [cursor=pointer]: Beat
+            - generic "ยังไม่ได้บันทึก" [ref=f1e108]:
+              - textbox [ref=f1e109]: Untitled
+              - generic "มีการเปลี่ยนแปลงที่ยังไม่บันทึก" [ref=f1e110]: ●
+            - button "New" [ref=f1e111] [cursor=pointer]
+            - button "Open" [ref=f1e116] [cursor=pointer]
+            - button "Save" [ref=f1e120] [cursor=pointer]
+            - button "Save As" [ref=f1e125] [cursor=pointer]
+            - generic [ref=f1e131]:
+              - button "Arrange" [ref=f1e132] [cursor=pointer]
+              - button "Patch" [ref=f1e133] [cursor=pointer]
+            - button "Run" [disabled] [ref=f1e134]
+        - generic [ref=f1e138]:
+          - generic [ref=f1e139]:
+            - generic [ref=f1e140]:
+              - button "Library" [ref=f1e141] [cursor=pointer]
+              - button "Track" [ref=f1e142] [cursor=pointer]
+            - complementary [ref=f1e143]:
+              - generic [ref=f1e144]: Library
+              - generic [ref=f1e145]: Packs · loops · reference audio
+              - generic [ref=f1e149]: Beats 69
+              - textbox "Search Library" [ref=f1e157]
+              - generic [ref=f1e158]:
+                - button "Beats 69" [ref=f1e159]
+                - button "Town Town" [ref=f1e162]
+                - button "Bitchy Bos" [ref=f1e165]
+                - button "BlackBro" [ref=f1e168]
+                - button "NightCall" [ref=f1e171]
+                - button "Resistance" [ref=f1e174]
+          - generic "ลากเพื่อปรับขนาด · ดับเบิลคลิกเพื่อรีเซ็ต" [ref=f1e177]
+          - generic [ref=f1e179]:
+            - generic [ref=f1e180]:
+              - generic [ref=f1e181]:
+                - generic [ref=f1e182]: ARRANGE
+                - strong [ref=f1e183]: Timeline
+                - generic [ref=f1e184]: Edit clips here. Open the device dock only when you need to process or mix.
+              - generic [ref=f1e185]:
+                - generic [ref=f1e186]: Load source
+                - generic [ref=f1e187]: Load beat
+                - generic [ref=f1e188]: Auto-sync
+            - generic [ref=f1e190]:
+              - button "🤖" [ref=f1e191] [cursor=pointer]
+              - generic [ref=f1e193]:
+                - generic [ref=f1e194]:
+                  - button "Play" [ref=f1e195] [cursor=pointer]
+                  - button "Stop" [ref=f1e198] [cursor=pointer]
+                  - button "บันทึกเสียงจากไมค์เข้าแทร็กที่เลือก (ที่ตำแหน่ง playhead)" [ref=f1e201] [cursor=pointer]
+                  - generic "เมื่อบันทึกเสร็จ จะเพิ่มเสียงนี้เข้าคลังเสียงเป็นเสียงอ้างอิงสำหรับโคลนด้วย" [ref=f1e204] [cursor=pointer]:
+                    - checkbox "ตั้งเป็น reference voice" [ref=f1e205]
+                    - text: ตั้งเป็น reference voice
+                  - generic [ref=f1e206]: 0:00 / 0:20
+                  - generic [ref=f1e207]:
+                    - spinbutton [ref=f1e208]: "120"
+                    - generic [ref=f1e209]: BPM
+                    - combobox [ref=f1e210]:
+                      - option "3/4"
+                      - option "4/4" [selected]
+                      - option "6/8"
+                      - option "5/4"
+                  - generic [ref=f1e211]:
+                    - generic [ref=f1e212]:
+                      - generic [ref=f1e213]: REV
+                      - slider [ref=f1e214]: "0"
+                    - generic [ref=f1e215]:
+                      - generic [ref=f1e216]: ECHO
+                      - slider [ref=f1e217]: "0"
+                    - button "CMP" [ref=f1e218] [cursor=pointer]
+                    - button "Snap to grid" [ref=f1e219] [cursor=pointer]
+                    - button "ลากบนไม้บรรทัดเพื่อกำหนดช่วงวนซ้ำก่อน" [ref=f1e223] [cursor=pointer]
+                    - button "Metronome click-track" [ref=f1e229] [cursor=pointer]
+                  - generic [ref=f1e232]:
+                    - generic [ref=f1e233]: L
+                    - generic [ref=f1e237]: R
+                  - button "Undo (Ctrl+Z)" [disabled] [ref=f1e241]
+                  - button "Redo (Ctrl+Shift+Z)" [disabled] [ref=f1e245]
+                  - generic [ref=f1e249]:
+                    - button "−" [ref=f1e250] [cursor=pointer]
+                    - button "+" [ref=f1e251] [cursor=pointer]
+                  - button "K" [ref=f1e252] [cursor=pointer]
+                - generic [ref=f1e254]:
+                  - generic [ref=f1e255] [cursor=pointer]:
+                    - generic [ref=f1e256]: 0:00
+                    - generic [ref=f1e258]: 0:02
+                    - generic [ref=f1e260]: 0:04
+                    - generic [ref=f1e262]: 0:06
+                    - generic [ref=f1e264]: 0:08
+                    - generic [ref=f1e266]: 0:10
+                    - generic [ref=f1e268]: 0:12
+                    - generic [ref=f1e270]: 0:14
+                    - generic [ref=f1e272]: 0:16
+                    - generic [ref=f1e274]: 0:18
+                    - generic [ref=f1e276]: 0:20
+                  - generic "ลากเพื่อเลื่อน playhead" [ref=f1e277]
+                  - generic [ref=f1e278]:
+                    - generic [ref=f1e279]:
+                      - generic [ref=f1e280]:
+                        - generic "ลากเพื่อสลับลำดับแทร็ก" [ref=f1e281]: ⋮⋮
+                        - generic "คลิกเพื่อเปลี่ยนสีแทร็ก" [ref=f1e282] [cursor=pointer]:
+                          - text: ♪
+                          - textbox "♪" [ref=f1e283]: "#9b6cf0"
+                        - generic "ดับเบิลคลิกเพื่อเปลี่ยนชื่อ" [ref=f1e284]: audio-01
+                        - generic [ref=f1e285]:
+                          - button "M" [ref=f1e286] [cursor=pointer]
+                          - button "S" [ref=f1e287] [cursor=pointer]
+                      - generic [ref=f1e288]:
+                        - generic "Volume" [ref=f1e289]: 🔊
+                        - slider "Volume" [disabled] [ref=f1e290]: "1"
+                      - 'generic "Balance: C — ลากปรับซ้าย-ขวา · ดับเบิลคลิก = กลาง" [ref=f1e292]':
+                        - generic [ref=f1e293]:
+                          - generic [ref=f1e294]: L
+                          - generic [ref=f1e295]: R
+                        - generic [ref=f1e296]: C
+                    - generic [ref=f1e297]: — โหลดไฟล์จาก Source / Beat ด้านบน หรือ drag จาก Library มาวางได้เลย —
+                  - generic [ref=f1e298]:
+                    - generic [ref=f1e299]:
+                      - generic [ref=f1e300]:
+                        - generic "ลากเพื่อสลับลำดับแทร็ก" [ref=f1e301]: ⋮⋮
+                        - generic "คลิกเพื่อเปลี่ยนสีแทร็ก" [ref=f1e302] [cursor=pointer]:
+                          - text: ♪
+                          - textbox "♪" [ref=f1e303]: "#3d9be0"
+                        - generic "ดับเบิลคลิกเพื่อเปลี่ยนชื่อ" [ref=f1e304]: audio-02
+                        - generic [ref=f1e305]:
+                          - button "M" [ref=f1e306] [cursor=pointer]
+                          - button "S" [ref=f1e307] [cursor=pointer]
+                      - generic [ref=f1e308]:
+                        - generic "Volume" [ref=f1e309]: 🔊
+                        - slider "Volume" [disabled] [ref=f1e310]: "1"
+                      - 'generic "Balance: C — ลากปรับซ้าย-ขวา · ดับเบิลคลิก = กลาง" [ref=f1e312]':
+                        - generic [ref=f1e313]:
+                          - generic [ref=f1e314]: L
+                          - generic [ref=f1e315]: R
+                        - generic [ref=f1e316]: C
+                    - generic [ref=f1e317]: — โหลดไฟล์จาก Source / Beat ด้านบน หรือ drag จาก Library มาวางได้เลย —
+                  - generic [ref=f1e318]:
+                    - generic [ref=f1e319]:
+                      - generic [ref=f1e320]:
+                        - generic "ลากเพื่อสลับลำดับแทร็ก" [ref=f1e321]: ⋮⋮
+                        - generic "คลิกเพื่อเปลี่ยนสีแทร็ก" [ref=f1e322] [cursor=pointer]:
+                          - text: ♪
+                          - textbox "♪" [ref=f1e323]: "#c7f046"
+                        - generic "ดับเบิลคลิกเพื่อเปลี่ยนชื่อ" [ref=f1e324]: audio-03
+                        - generic [ref=f1e325]:
+                          - button "M" [ref=f1e326] [cursor=pointer]
+                          - button "S" [ref=f1e327] [cursor=pointer]
+                      - generic [ref=f1e328]:
+                        - generic "Volume" [ref=f1e329]: 🔊
+                        - slider "Volume" [disabled] [ref=f1e330]: "1"
+                      - 'generic "Balance: C — ลากปรับซ้าย-ขวา · ดับเบิลคลิก = กลาง" [ref=f1e332]':
+                        - generic [ref=f1e333]:
+                          - generic [ref=f1e334]: L
+                          - generic [ref=f1e335]: R
+                        - generic [ref=f1e336]: C
+                    - generic [ref=f1e337]: — โหลดไฟล์จาก Source / Beat ด้านบน หรือ drag จาก Library มาวางได้เลย —
+            - region "Device dock" [ref=f1e338]:
+              - tablist "Remix processors" [ref=f1e339]:
+                - generic [ref=f1e340]: DEVICE DOCK
+                - tab "Process" [selected] [ref=f1e341] [cursor=pointer]
+                - tab "Mix & Master" [ref=f1e342] [cursor=pointer]
+                - generic [ref=f1e343]: Click the active tab to maximize timeline
+              - generic [ref=f1e344]:
+                - generic [ref=f1e345]:
+                  - generic [ref=f1e346]:
+                    - generic [ref=f1e348]: Vocal FX
+                    - generic [ref=f1e349]: TUNE · REVERB · DELAY
+                  - generic [ref=f1e350]:
+                    - generic [ref=f1e351]:
+                      - generic [ref=f1e352]: Tune
+                      - generic [ref=f1e358]: "100"
+                    - generic [ref=f1e359]:
+                      - generic [ref=f1e360]: Reverb
+                      - generic [ref=f1e366]: "16"
+                    - generic [ref=f1e367]:
+                      - generic [ref=f1e368]: Delay
+                      - generic [ref=f1e374]: "12"
+                    - generic [ref=f1e375]:
+                      - generic [ref=f1e376] [cursor=pointer]:
+                        - checkbox "FX" [checked] [ref=f1e377]
+                        - text: FX
+                      - generic [ref=f1e378] [cursor=pointer]:
+                        - checkbox "Auto-tune" [checked] [ref=f1e379]
+                        - text: Auto-tune
+                      - combobox [ref=f1e380]:
+                        - option "Auto key" [selected]
+                        - option "C maj"
+                        - option "C min"
+                        - option "D maj"
+                        - option "D min"
+                        - option "E maj"
+                        - option "E min"
+                        - option "F maj"
+                        - option "F min"
+                        - option "G maj"
+                        - option "G min"
+                        - option "A maj"
+                        - option "A min"
+                        - option "B maj"
+                        - option "B min"
+                - generic [ref=f1e381]:
+                  - generic [ref=f1e382]:
+                    - generic [ref=f1e384]: Sync
+                    - generic [ref=f1e385]: OFFSET · ALIGN
+                  - generic [ref=f1e386]:
+                    - generic [ref=f1e387]:
+                      - generic [ref=f1e388]: Offset ms
+                      - generic [ref=f1e393]: "0"
+                    - generic [ref=f1e394]:
+                      - generic [ref=f1e395] [cursor=pointer]:
+                        - checkbox "Auto-sync" [checked] [ref=f1e396]
+                        - text: Auto-sync
+                      - combobox [ref=f1e397]:
+                        - option "Phrase 1" [selected]
+                        - option "Phrase 2"
+                        - option "Phrase 3"
+                        - option "Phrase 4"
+                - generic [ref=f1e398]:
+                  - generic [ref=f1e399]:
+                    - generic [ref=f1e401]: Master Bus
+                    - generic [ref=f1e402]: REVERB · ECHO · COMP
+                  - generic [ref=f1e403]:
+                    - generic [ref=f1e404]:
+                      - generic [ref=f1e405]: Reverb
+                      - generic [ref=f1e410]: "0"
+                    - generic [ref=f1e411]:
+                      - generic [ref=f1e412]: Echo
+                      - generic [ref=f1e417]: "0"
+                    - generic [ref=f1e419] [cursor=pointer]:
+                      - checkbox "Compressor" [ref=f1e420]
+                      - text: Compressor
+                - generic [ref=f1e421]:
+                  - generic [ref=f1e422]:
+                    - generic [ref=f1e424]: Loudness
+                    - generic [ref=f1e425]: MASTER
+                  - combobox [ref=f1e426]:
+                    - option "-14 LUFS · Spotify" [selected]
+                    - option "-16 LUFS · Apple"
+                    - option "-9 LUFS · Club"
+  - contentinfo [ref=f1e80]:
+    - generic [ref=f1e81]: ONLINE
+    - generic [ref=f1e83]: ·
+    - generic [ref=f1e84]: "BRAIN: ollama"
+    - generic [ref=f1e85]: 127.0.0.1:8756
+    - generic [ref=f1e86]: ·
+    - generic [ref=f1e87]: v0.1.0

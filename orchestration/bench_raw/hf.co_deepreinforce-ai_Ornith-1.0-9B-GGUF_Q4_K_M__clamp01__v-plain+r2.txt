@@ -1,0 +1,57 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Role: Focused code generator.
+    *   Task: Output ONLY TypeScript file contents in a single ```ts code block. No prose, no imports (except standard library if needed, but the prompt says "no imports" and it's a pure function). Actually, looking closely at "Pure function, no imports", I should avoid `import` statements to keep it minimal and self-contained as requested.
+    *   File path: `frontend/src/audio/clamp01.ts` (implied context, but output is just the code).
+    *   Function signature: `export function clamp01(x: number): number`
+    *   Rules:
+        *   Clamp `x` to `[0, 1]`.
+        *   If `x` is NaN, return 0.
+    *   Acceptance tests:
+        *   `clamp01(-1)` -> 0
+        *   `clamp01(0.5)` -> 0.5
+        *   `clamp01(2)` -> 1
+        *   `clamp01(NaN)` -> 0
+
+2.  **Draft the Code:**
+    ```typescript
+    export function clamp01(x: number): number {
+      if (Number.isNaN(x)) return 0;
+      return Math.max(0, Math.min(1, x));
+    }
+    ```
+
+3.  **Verify Constraints:**
+    *   Single ```ts block? Yes.
+    *   No prose outside the block? Yes.
+    *   Pure function? Yes.
+    *   No imports? Yes (using built-in `Math` directly).
+    *   Matches signature? Yes.
+    *   Matches rules? Yes (`Number.isNaN` check, clamping logic).
+
+4.  **Final Output Generation:** Assemble the block.
+
+5.  **Refinement:** The prompt says "No imports". I will ensure there are no import statements. `Math` is a global in TypeScript/JS without explicit import usually (or via ambient types), but to be safe and strictly follow "no imports", I'll just use it directly or implement the clamp manually if needed. However, standard practice for TS files allows `Math`. The prompt likely means "don't add unnecessary dependencies". I will stick to using `Math` as it's built-in.
+
+    Wait, re-reading: "Pure function, no imports."
+    I'll just write the function.
+
+    ```typescript
+    export function clamp01(x: number): number {
+      if (Number.isNaN(x)) return 0;
+      return Math.max(0, Math.min(1, x));
+    }
+    ```
+
+    This looks correct and minimal.
+
+6.  **Final Check:** Output ONLY the code block. No explanation before or after.cw
+</think>
+
+```ts
+export function clamp01(x: number): number {
+  if (Number.isNaN(x)) return 0;
+  return Math.max(0, Math.min(1, x));
+}
+```

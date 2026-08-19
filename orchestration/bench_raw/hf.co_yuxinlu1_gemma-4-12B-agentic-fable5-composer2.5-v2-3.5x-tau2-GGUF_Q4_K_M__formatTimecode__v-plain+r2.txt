@@ -1,0 +1,25 @@
+<|channel>thought
+Goal: implement `formatTimecode(sec)` returning `"MM:SS.mmm"` with specific rounding and fallback rules.
+
+Edge cases to handle:
+- Negative, NaN, or Infinity → "00:00.000" (clamp/fallback)
+- Rounding at the millisecond level before splitting so 59.9996 becomes 1 min instead of 59s + leftover ms
+- Zero padding for all fields
+
+Approach: round `sec` to nearest integer millisecond (`Math.round(sec * 1000)`), then guard invalid values, extract totalMs and compute minutes/seconds/ms from it, format with padStart.
+<channel|>```ts
+export function formatTimecode(sec: number): string {
+  const ms = Math.round(sec * 1000);
+  if (!Number.isFinite(ms) || ms < 0) return "00:00.000";
+
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = ms % 1000;
+
+  return `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(3, "0")}.${milliseconds
+    .toString()
+    .padStart(3, "0")}`;
+}
+```

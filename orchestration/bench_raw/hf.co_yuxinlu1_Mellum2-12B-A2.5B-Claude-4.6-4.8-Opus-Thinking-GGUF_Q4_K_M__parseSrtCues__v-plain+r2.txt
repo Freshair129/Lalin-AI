@@ -1,0 +1,33 @@
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  if (!srt || !srt.trim()) return [];
+
+  const blocks = srt.split(/\r?\n\r?\n/);
+  const cues: { start: number; end: number; text: string }[] = [];
+
+  for (const block of blocks) {
+    const lines = block.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+    if (lines.length < 2) continue;
+
+    const timeLine = lines[1];
+    const timeParts = timeLine.split(' --> ');
+    if (timeParts.length !== 2) continue;
+
+    const toSeconds = (t: string) => {
+      const [h, m, s_ms] = t.split(':');
+      const [s, ms] = s_ms.split(',');
+      return Number(h) * 3600 + Number(m) * 60 + Number(s) + Number(ms) / 1000;
+    };
+
+    const start = toSeconds(timeParts[0]);
+    const end = toSeconds(timeParts[1]);
+
+    const textLines = lines.slice(2);
+    if (textLines.length === 0) continue;
+
+    cues.push({ start, end, text: textLines.join('\n') });
+  }
+
+  return cues;
+}
+```

@@ -1,0 +1,162 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Role: Focused code generator.
+    *   Task: Output ONLY TypeScript file contents in a single ````ts` code block. No prose, no imports (implied by "Pure function, no imports", though `parseTimecode` is exported, it doesn't need external imports).
+    *   File path: `frontend/src/utils/parseTimecode.ts`
+    *   Signature: `export function parseTimecode(s: string): number`
+    *   Rules:
+        *   Input format: "MM:SS.mmm" (2-digit min, 2-digit sec, 3-digit ms).
+        *   Seconds range: 00-59.
+        *   Minutes range: 00-99.
+        *   Return total seconds as number.
+        *   Invalid input -> return -1.
+    *   Examples: "01:02.500" -> 62.5, "00:00.000" -> 0, "abc" -> -1, "1:02.500" -> -1.
+
+2.  **Determine Implementation:**
+    *   I need a regex to match the exact format `MM:SS.mmm`.
+    *   Regex: `/^\d{2}:\d{2}\.\d{3}$/`
+    *   Validate seconds range (0-59).
+    *   Validate minutes range (0-99) - since it's 2 digits, max is 99 naturally.
+    *   Parse the parts and calculate total seconds: `minutes * 60 + seconds + milliseconds / 1000`.
+
+3.  **Drafting Code:**
+
+```typescript
+export function parseTimecode(s: string): number {
+  const match = s.match(/^\d{2}:\d{2}\.\d{3}$/);
+  if (!match) return -1;
+  const minutes = parseInt(match[0].slice(0, 2), 10); // Actually easier to use indices from regex groups or just slice.
+  // Let's use regex groups for clarity.
+  // /(?<min>\d{2}):(?<sec>\d{2})\.(?<ms>\d{3})/
+}
+```
+
+Refining the approach:
+    *   Use named capture groups.
+    *   Check range of seconds (0-59).
+    *   Calculate result.
+
+```typescript
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  if (!match) return -1;
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59) return -1;
+  // Minutes 00-99 is guaranteed by regex \d{2}, so no extra check needed really, but good to keep in mind.
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```
+
+Wait, floating point precision? `milliseconds / 1000` might introduce float errors (e.g., `500 / 1000` is `0.5`, usually fine). The spec says "return total seconds as a number". JavaScript numbers are IEEE 754 doubles. Standard practice for timecode parsing in JS is to return the float.
+
+Let's double check constraints:
+- "MM" -> `\d{2}` (00-99)
+- "SS" -> `\d{2}` + check `<= 59`
+- ".mmm" -> `\d{3}`
+- Exact match required (`^...$`)
+
+Looks good.
+
+4.  **Final Polish:** Ensure strictly no prose outside the code block. Just the ```ts wrapper.
+
+```typescript
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  if (!match) return -1;
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59) return -1;
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```
+
+One specific check: `parseTimecode("00:00.000")` -> `0 + 0 + 0 = 0`. Correct.
+`parseTimecode("01:02.500")` -> `60 + 2 + 0.5 = 62.5`. Correct.
+`parseTimecode("abc")` -> regex fail -> -1. Correct.
+`parseTimecode("1:02.500")` -> `\d{2}` fails for minute part "1" (needs 2 digits) -> -1. Correct.
+
+The prompt asks for "no imports". I won't add any unnecessary imports. The file path is provided in the prompt context but usually, code generation tasks just output the content. I will output exactly what goes into that file.
+
+One detail: `milliseconds / 1000`. If milliseconds is integer (e.g. 500), dividing by 1000 gives a float.
+If the user expects strict number behavior regarding floating point, usually standard JS arithmetic is accepted for this kind of utility unless specified otherwise (like "return fixed decimal"). The prompt says "return total seconds as a number". I will stick with standard division.
+
+Final check on output format: "Output ONLY the ```ts block." -> No markdown explanation before or after. Just the code block.
+
+Wait, looking at the system instructions again: "Output ONLY the TypeScript file contents in a single ```ts code block. No prose. Pure function, no imports."
+The prompt also says "Implement EXACTLY this signature in frontend/src/utils/parseTimecode.ts". I just need to output the content of that file.
+
+Let's write it out.
+
+```typescript
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  if (!match) return -1;
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59) return -1;
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```
+This looks solid. Use this.
+
+One minor thought: Should I use `Number` constructor or just division? Division is standard.
+Should I check minutes > 99? Regex `\d{2}` allows max "99", so `parseInt("99")` is 99. No overflow needed for number type (max safe integer is huge).
+
+Ready.
+
+One constraint check: "Pure function, no imports." -> The generated code has no imports.
+"Output ONLY the ```ts block." -> I will ensure nothing else appears in the response.
+
+Wait, looking at the system prompt instructions again: "You are a focused code generator. ONE task. Output ONLY the TypeScript file contents in a single ```ts code block. No prose. Pure function, no imports."
+This is the overriding instruction set for my persona/response style. I must follow this strictly.
+
+Let's finalize the content.
+
+```typescript
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  if (!match) return -1;
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59) return -1;
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```
+</think>
+
+```ts
+export function parseTimecode(s: string): number {
+  const regex = /^(\d{2}):(\d{2})\.(\d{3})$/;
+  const match = s.match(regex);
+  if (!match) return -1;
+
+  const minutes = parseInt(match[1], 10);
+  const seconds = parseInt(match[2], 10);
+  const milliseconds = parseInt(match[3], 10);
+
+  if (seconds > 59) return -1;
+
+  return minutes * 60 + seconds + milliseconds / 1000;
+}
+```

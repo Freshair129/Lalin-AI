@@ -1,0 +1,55 @@
+<think>
+Okay, I need to write a TypeScript function called clamp01 that takes a number and returns it clamped between 0 and 1. Also, if the input is NaN, return 0. Let me think about how to do this.
+
+First, clamping a value means ensuring it's within a certain range. So for any x less than 0, return 0. For x greater than 1, return 1. Otherwise, return x. But wait, what about NaN? The problem says if x is NaN, return 0. So I need to check for that first.
+
+In JavaScript/TypeScript, checking if a value is NaN can be done with Number.isNaN(x). Because using the global isNaN function might not work as expected if x is not a number, but since the parameter is typed as number, maybe it's safe. But better to use Number.isNaN to be precise.
+
+So the steps are:
+
+1. Check if x is NaN. If yes, return 0.
+2. Else, clamp x between 0 and 1. So Math.max(0, Math.min(1, x)) would work here.
+
+Wait, but what about when x is exactly 0 or 1? Then it returns those values, which is correct.
+
+Putting it all together:
+
+function clamp01(x: number): number {
+  if (Number.isNaN(x)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, x));
+}
+
+But wait, what about when x is not a finite number? Like Infinity or -Infinity. The problem says to clamp to [0,1], so if x is Infinity, it should return 1. If x is -Infinity, return 0. But the Math.max and Math.min would handle that because Math.min(1, Infinity) is 1, Math.max(0, -Infinity) is 0.
+
+So this code should handle all cases. Let me test some examples:
+
+Test case 1: x = 2 → Math.min(1, 2) is 1 → Math.max(0, 1) is 1 → correct.
+
+Test case 2: x = -0.5 → Math.min(1, -0.5) is -0.5 → Math.max(0, -0.5) is 0 → correct.
+
+Test case 3: x = NaN → returns 0 → correct.
+
+What about x = 0.5? Then it returns 0.5 → correct.
+
+Edge cases like x = 0, returns 0; x=1 returns 1.
+
+Yes, this should work. So the code should be written as:
+
+export function clamp01(x: number): number {
+  if (Number.isNaN(x)) return 0;
+  return Math.max(0, Math.min(1, x));
+}
+
+But wait, in TypeScript, Number is a global object, so Number.isNaN is available. So that's correct.
+
+So the final code should be this function exported as specified.
+</think>
+
+```ts
+export function clamp01(x: number): number {
+  if (Number.isNaN(x)) return 0;
+  return Math.max(0, Math.min(1, x));
+}
+```

@@ -1,0 +1,53 @@
+<think>
+
+</think>
+
+```ts
+export function parseSrtCues(srt: string): { start: number; end: number; text: string }[] {
+  if (!srt || !srt.trim()) return [];
+  
+  const blocks = srt.split(/\r?\n\r?\n+/);
+  const result: { start: number; end: number; text: string }[] = [];
+  
+  for (const block of blocks) {
+    const lines = block.trim().split(/\r?\n/);
+    if (lines.length < 3) continue;
+    
+    let timeLineFound = false;
+    let startTime = 0;
+    let endTime = 0;
+    let text = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      if (/^\d+$/.test(line)) continue;
+      
+      if (/^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$/.test(line)) {
+        timeLineFound = true;
+        const [startStr, endStr] = line.split(' --> ');
+        startTime = parseTime(startStr);
+        endTime = parseTime(endStr);
+      } else if (timeLineFound && text === '') {
+        text = line;
+      } else if (timeLineFound) {
+        text += '\n' + line;
+      }
+    }
+    
+    if (timeLineFound && startTime !== 0 && endTime !== 0 && text.trim() !== '') {
+      result.push({ start: startTime, end: endTime, text });
+    }
+  }
+  
+  return result;
+}
+
+function parseTime(timeStr: string): number {
+  const [hhmmss, mmm] = timeStr.split(',');
+  if (!hhmmss || !mmm) return 0;
+  
+  const [hh, mm, ss] = hhmmss.split(':').map(Number);
+  return (hh * 3600 + mm * 60 + ss) + Number(mmm) / 1000;
+}
+```

@@ -1,0 +1,127 @@
+<think>
+Okay, I need to write a TypeScript function called formatTimecode that takes a number of seconds and returns a string in the format MM:SS.mmm. Let me think about the requirements.
+
+First, the output needs to be zero-padded for minutes, so at least two digits. For example, if there's 1 minute, it should be "01". Then seconds and milliseconds. The milliseconds part is three digits. 
+
+The key points are rounding to the nearest millisecond first. So the input seconds need to be converted into total milliseconds, rounded, then split back into minutes, seconds, and milliseconds. Also, handle negative or non finite inputs by returning "00:00.000".
+
+Let me outline the steps:
+
+1. Check if the input is valid. If sec is negative or not finite (like NaN or infinity), return "00:00.000".
+2. Convert the seconds to milliseconds, then round to the nearest millisecond. For example, 62.5 seconds is 62500 ms, which rounds to 62500 ms. Then split into minutes, seconds, and ms.
+3. Calculate minutes: total milliseconds divided by 60000 (since 1 minute = 60 seconds * 1000 ms). The remainder gives the remaining milliseconds for seconds and ms.
+4. For the remaining milliseconds after minutes are calculated, divide by 1000 to get seconds part, then the remainder is the milliseconds part.
+5. Format each part with leading zeros where necessary. Minutes should be two digits, seconds two digits, milliseconds three digits.
+
+Let me test some examples:
+
+For 62.5 seconds:
+Total ms: 62.5 * 1000 = 62500 ms. Rounded is same. Minutes: 62500 / 60000 = 1 minute (60000 ms), remainder 2500 ms. Seconds: 2500 / 1000 = 2 seconds, remainder 500 ms. So "01:02.500".
+
+Another example: 59.9996 seconds. Multiply by 1000 gives 59999.6 ms. Rounded to nearest millisecond is 60000 ms. Then minutes: 60000 / 60000 = 1 minute, remainder 0 ms. So "01:00.000".
+
+Edge case: 0 seconds. All parts zero. "00:00.000".
+
+Negative input or non finite: return the same default.
+
+Now, how to implement this in code.
+
+First, handle invalid inputs. Check if sec is less than 0 or not finite. Use Number.isFinite(sec) perhaps? Wait, but if sec is a number, but NaN or infinity, then Number.isFinite returns false. So:
+
+if (sec < 0 || !Number.isFinite(sec)) {
+  return "00:00.000";
+}
+
+Then, convert to milliseconds and round. Let's do:
+
+const ms = Math.round(sec * 1000);
+
+But wait, sec could be a float. For example, 62.5 is 62500 ms.
+
+Once we have ms, compute minutes, seconds, and remaining ms.
+
+minutes = Math.floor(ms / 60000);
+remainingMs = ms % 60000;
+
+seconds = Math.floor(remainingMs / 1000);
+milliseconds = remainingMs % 1000;
+
+Then format each part with leading zeros. For minutes, pad to two digits. Same for seconds. Milliseconds pad to three digits.
+
+So:
+
+padZeroPad (value: number, length: number): string {
+  return value.toString().padStart(length, '0');
+}
+
+But since we can't use helper functions (as per the rules), need to handle it inline.
+
+Wait, but the function must be pure and minimal. So perhaps use padStart directly on the numbers converted to strings.
+
+So for minutes: String(minutes).padStart(2, '0');
+
+Same for seconds: String(seconds).padStart(2, '0');
+
+Milliseconds: String(milliseconds).padStart(3, '0');
+
+Putting it all together:
+
+export function formatTimecode(sec: number): string {
+  if (sec < 0 || !Number.isFinite(sec)) {
+    return "00:00.000";
+  }
+  const ms = Math.round(sec * 1000);
+  let minutes = Math.floor(ms / 60000);
+  let remainingMs = ms % 60000;
+  let seconds = Math.floor(remainingMs / 1000);
+  let milliseconds = remainingMs % 1000;
+  
+  return (
+    String(minutes).padStart(2, '0') + ":" +
+    String(seconds).padStart(2, '0') + "." +
+    String(milliseconds).padStart(3, '0')
+  );
+}
+
+Wait, but what about cases where the remainingMs is exactly 60000 ms? For example, if ms is 60000, then minutes would be 1, remainingMs is 0. So seconds is 0, milliseconds 0. Which is correct.
+
+Testing the case where sec is 659.999 seconds:
+
+659.999 * 1000 = 659999 ms. Rounded is same. Then minutes: 659999 / 60000 = 10 (since 10*60000=600000, remainder 59999 ms). So seconds: 59999 / 1000 = 59.999 → floor is 59. milliseconds is 999. So the result is "10:59.999" which matches the example.
+
+Another test case: formatTimecode(62.5) → 62.5 * 1000 = 62500 ms. minutes=1, remainingMs=2500. seconds=2, milliseconds=500 → "01:02.500".
+
+What about when the milliseconds after rounding is exactly 1000 ms? For example, if ms is 1000 ms (1 second). Then minutes would be 0, remainingMs 1000. seconds = 1, milliseconds 0 → "00:01.000".
+
+Another edge case: sec is 60.0 → 60 * 1000 = 60000 ms → minutes=1, remainingMs=0 → "01:00.000".
+
+What about when the input is a non finite number like Infinity? The check for Number.isFinite would catch that and return "00:00.000".
+
+Now, code-wise, need to make sure that all variables are properly handled. Also, padStart is available in modern browsers, but since it's TypeScript, assuming it's okay.
+
+So the code should be as written above. Let me check for possible errors.
+
+What if sec is a very large number? For example, 1e6 seconds. But the code handles it by calculating minutes and remaining ms correctly.
+
+Now, implement this in the function.
+</think>
+
+```ts
+export function formatTimecode(sec: number): string {
+  if (sec < 0 || !Number.isFinite(sec)) {
+    return "00:00.000";
+  }
+  const ms = Math.round(sec * 1000);
+  const minutes = Math.floor(ms / 60000);
+  const remainingMs = ms % 60000;
+  const seconds = Math.floor(remainingMs / 1000);
+  const milliseconds = remainingMs % 1000;
+  return (
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(seconds).padStart(2, "0") +
+    "." +
+    String(milliseconds).padStart(3, "0")
+  );
+}
+```

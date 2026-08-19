@@ -1,0 +1,50 @@
+<|channel>thought
+*   Role: Focused code generator.
+    *   Task: Implement a specific TypeScript function `clamp01`.
+    *   Output format: Only a single TypeScript file's contents inside one ```ts code block. No prose, no explanation.
+    *   Constraints: Pure function, no imports, no external deps, surgical and minimal.
+    *   File path: `frontend/src/audio/clamp01.ts`.
+    *   Signature: `export function clamp01(x: number): number`.
+    *   Logic: Clamp $x$ to $[0, 1]$. If $x$ is `NaN`, return 0.
+
+    *   Input: `-1` -> Output: `0`
+    *   Input: `0.5` -> Output: `0.5`
+    *   Input: `2` -> Output: `1`
+    *   Input: `NaN` -> Output: `0`
+
+    ```typescript
+    export function clamp01(x: number): number {
+      if (isNaN(x)) return 0;
+      return Math.max(0, Math.min(1, x));
+    }
+    ```
+    Alternative approach for NaN handling and clamping:
+    `Math.min(Math.max(x, 0), 1)` returns `NaN` if $x$ is `NaN`. So the explicit check or a fallback is needed.
+
+    Refined logic:
+    ```typescript
+    export function clamp01(x: number): number {
+      if (isNaN(x)) return 0;
+      return Math.min(Math.max(x, 0), 1);
+    }
+    ```
+
+    *   Single file? Yes.
+    *   One ```ts block? Yes.
+    *   No prose/explanation? Yes.
+    *   Pure function? Yes.
+    *   No imports? Yes.
+    *   Correct signature? Yes.
+    *   Handles NaN -> 0? Yes.
+
+    ```ts
+    export function clamp01(x: number): number {
+      if (isNaN(x)) return 0;
+      return Math.min(Math.max(x, 0), 1);
+    }
+    ```<channel|>```ts
+export function clamp01(x: number): number {
+  if (isNaN(x)) return 0;
+  return Math.min(Math.max(x, 0), 1);
+}
+```

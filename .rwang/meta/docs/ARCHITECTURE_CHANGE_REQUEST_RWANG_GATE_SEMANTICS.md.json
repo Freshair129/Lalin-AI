@@ -1,0 +1,17 @@
+{
+  "id": "DOC-0006",
+  "points_to": "docs/ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS.md",
+  "type": "doc",
+  "version": "0.1.1",
+  "status": "beta",
+  "superseded_by": null,
+  "sha256": "c3fe0202483c2f1cfb017fe2104eb005981810c9507e3311365b90f99ba89948",
+  "relations": { "depends_on": ["DOC-0003", "DOC-0004", "DOC-0005"], "referenced_by": [] },
+  "attributes": { "doc_type": "architecture-change-request", "domain": "rwang-governance" },
+  "created_at": "2026-07-19T12:22:00+07:00",
+  "updated_at": "2026-07-19T12:33:30+07:00",
+  "changelog": [
+    { "version": "0.1.1", "date": "2026-07-19T12:33:30+07:00", "kind": "patch", "change": "recorded RWANG source remediation and final gate evidence", "ref": "ACR-RWANG-2026-07-19-GATE-SEMANTICS", "agent": "ATHER", "commit": "b2c2d0d" },
+    { "version": "0.1.0", "date": "2026-07-19T12:22:00+07:00", "kind": "register", "change": "initial owner-authorized RWANG change request", "ref": "ACR-RWANG-2026-07-19-GATE-SEMANTICS", "agent": "ATHER", "commit": "b2c2d0d" }
+  ]
+}

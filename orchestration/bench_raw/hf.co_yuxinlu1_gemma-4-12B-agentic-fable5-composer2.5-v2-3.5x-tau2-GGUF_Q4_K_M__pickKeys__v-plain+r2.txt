@@ -1,0 +1,12 @@
+<|channel>thought
+Goal: implement `pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>` in one function with no imports/prose.
+
+Edge cases: empty keys → {}; duplicate keys should not break anything; must return a new object (no mutation); must be valid under strict mode.
+
+Approach: reduce over `keys` into an accumulator object, setting each key to `obj[key]`. Using Set(keys) handles duplicates implicitly and keeps the result clean. Typed correctly with T/K generics.
+<channel|>```ts
+export function pickKeys<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const uniqueKeys = Array.from(new Set(keys));
+  return uniqueKeys.reduce((acc, key) => ({ ...acc, [key]: obj[key] }), {} as Pick<T, K>);
+}
+```

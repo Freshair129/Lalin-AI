@@ -22,37 +22,40 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: frontend/src-tauri
+          workspaces: apps/desktop/src-tauri
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # ต้อง build sidecar ก่อน tauri-action เสมอ — tauri.conf.json ประกาศ
-      # externalBin ไว้ ถ้าไม่มีไฟล์ bundle จะล้มตอน bundle step
-      - name: Build backend sidecar
-        shell: pwsh
-        run: ./scripts/build_sidecar.ps1 -VenvPath "${{ github.workspace }}/backend/.venv-ci" -CreateIfMissing
-
-      - name: Install frontend deps
-        working-directory: frontend
+      - name: Install workspace deps
         run: npm ci
 
+      - name: Verify workspace
+        run: npm run check:all
+
+      # ต้อง build sidecar ก่อน tauri-action เสมอ — tauri.conf.json ประกาศ
+      # externalBin ไว้ ถ้าไม่มีไฟล์ bundle จะล้มตอน bundle step. -Profile full เพราะ
+      # นี่คือ build ที่จะแจกจริง (lib.rs ตั้ง GMUSIC_BACKEND_PROFILE=full ตอน spawn)
+      - name: Build backend sidecar
+        shell: pwsh
+        run: ./tools/build/build_sidecar.ps1 -Profile full -VenvPath "${{ github.workspace }}/apps/api/.venv-ci" -CreateIfMissing
+
       - name: Frontend tests
-        working-directory: frontend
+        working-directory: apps/desktop
         run: npx vitest run
 
       - name: Backend tests
         shell: pwsh
         run: |
-          if (Test-Path backend/tests) {
-            & "${{ github.workspace }}/backend/.venv-ci/Scripts/python.exe" -m pip install pytest==8.3.4
-            Set-Location backend
-            & "${{ github.workspace }}/backend/.venv-ci/Scripts/python.exe" -m pytest
+          if (Test-Path apps/api/tests) {
+            & "${{ github.workspace }}/apps/api/.venv-ci/Scripts/python.exe" -m pip install pytest==8.3.4
+            Set-Location apps/api
+            & "${{ github.workspace }}/apps/api/.venv-ci/Scripts/python.exe" -m pytest
             if ($LASTEXITCODE -ne 0) { exit 1 }
           } else {
-            Write-Host "backend/tests ยังไม่มี (มาใน Phase B) - ข้าม"
+            Write-Host "apps/api/tests ยังไม่มี - ข้าม"
           }
 
       - name: Build Tauri
@@ -62,7 +65,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          projectPath: frontend
+          projectPath: apps/desktop
           tagName: v__VERSION__
           releaseName: "G-Music v__VERSION__"
           releaseBody: "ดูรายละเอียดการเปลี่ยนแปลงด้านล่าง"
