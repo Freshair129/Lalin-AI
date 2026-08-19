@@ -1,16 +1,57 @@
 # -*- mode: python ; coding: utf-8 -*-
+# spec ของ sidecar — ไฟล์นี้ track ไว้ใน git และ build_sidecar.ps1 ต้องใช้ตัวนี้
+# (ห้ามลบทิ้งแล้วให้ PyInstaller สร้างใหม่ ไม่งั้น hiddenimports ด้านล่างหายหมด)
+#
+# uvicorn/fastapi โหลด protocol implementation แบบ dynamic → PyInstaller มองไม่เห็น
+# ต้องประกาศเอง; app/* ก็ถูก import ผ่านสตริงใน uvicorn.run("app.main:app")
+#
+# excludes = ML stack ทั้งหมด — sidecar ที่ ship คือ **lite runtime**
+# ผู้ใช้ติดตั้ง torch/whisper/f5-tts/demucs เองผ่านแท็บปลั๊กอิน (BYOM, ดู risk R-001)
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
+hiddenimports = (
+    collect_submodules("app")
+    + collect_submodules("uvicorn")
+    + [
+        "anyio._backends._asyncio",
+        "websockets.legacy",
+        "websockets.legacy.server",
+    ]
+)
+
+datas = collect_data_files("imageio_ffmpeg")  # ffmpeg.exe ที่ฝังมากับ wheel
 
 a = Analysis(
     ['sidecar_entry.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    # หมายเหตุ: **ห้ามใส่ scipy** ใน excludes — pyloudnorm (auto-mastering, FR-04.2)
+    # ต้องใช้ scipy และ auto-mastering คือฟีเจอร์ของ lite runtime
+    #
+    # PyInstaller ตาม import ที่อยู่ "ในฟังก์ชัน" ด้วย — `cached_path` ที่ tts.py
+    # import แบบ lazy จึงลาก boto3/botocore/huggingface_hub เข้ามาทั้งชุด (~100MB
+    # ของ JSON service model ที่ lite runtime ไม่มีวันได้ใช้) ต้องตัดทิ้งที่นี่
+    # ผลลัพธ์: เรียก TTS/ASR บน lite build → RuntimeError ภาษาไทยบอกวิธีติดตั้ง
+    # ตามที่ pipeline ออกแบบไว้อยู่แล้ว (NFR-02.1)
+    excludes=[
+        # ML stack — ผู้ใช้ติดตั้งเองผ่านแท็บปลั๊กอิน (BYOM)
+        'torch', 'torchaudio', 'demucs', 'f5_tts', 'TTS',
+        'matchering', 'pedalboard', 'psola', 'librosa',
+        'faster_whisper', 'ctranslate2',
+        # ตัวโหลดโมเดล + deps ของมัน (มาทาง cached_path ใน tts.py)
+        'cached_path', 'huggingface_hub', 'boto3', 'botocore',
+        's3transfer', 'transformers', 'datasets',
+        # ตัวใหญ่ที่ตามเข้ามาทาง numba/pandas แต่ lite runtime ไม่แตะเลย
+        # (วัดจาก build จริง 2026-08-19: llvmlite 102MB, pyarrow 79MB, pandas 13MB, PIL 13MB)
+        'numba', 'llvmlite', 'pyarrow', 'pandas', 'PIL', 'Pillow',
+        # อื่น ๆ ที่ไม่เกี่ยว
+        'matplotlib', 'IPython', 'notebook', 'pytest',
+    ],
     noarchive=False,
     optimize=0,
 )

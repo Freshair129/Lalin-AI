@@ -16,6 +16,8 @@ openai==1.59.6          # ใช้กับ OpenAI + OpenRouter (OpenAI-compati
 soundfile==0.13.0
 numpy==2.2.1
 pydub==0.25.1
+imageio-ffmpeg==0.6.0   # ffmpeg ฝังในตัว — utils/ffmpeg.py ต้องใช้ (NFR-05.1)
+pyloudnorm==0.2.0       # วัด/ปรับ LUFS — mastering โหมด auto (FR-04.2)
 
 # ──────────────────────────────────────────────────────────────────────
 # ML หนัก: ติดตั้งแยกผ่าน scripts/setup_windows.ps1 (ตาม GPU/CUDA)
