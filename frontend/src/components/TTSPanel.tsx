@@ -1,6 +1,6 @@
 // @req FR-02 — UI อ่านข้อความ + โคลนเสียง
 import { useEffect, useState } from "react";
-import { files, tts, voices as voicesApi, type Voice } from "../api";
+import { tts, voices as voicesApi, type Voice } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
 import { useEngine } from "../store/engineContext";
@@ -36,7 +36,8 @@ export function TTSPanel() {
     const track = engine.project.tracks.find((t) => t.id === "vocal") ?? engine.project.tracks[0];
     if (!track) return;
     const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
-    const clip = makeClip(files.downloadUrl(output), "#9b6cf0");
+    const id = engine.addAsset("output", basename(output));
+    const clip = makeClip(id, "#9b6cf0");
     clip.start = start;
     engine.addClip(track.id, clip);
     setAddedMsg(true);
@@ -91,4 +92,9 @@ export function TTSPanel() {
       )}
     </div>
   );
+}
+
+// path เต็ม (จาก backend) → เอาแค่ชื่อไฟล์ ไว้ใช้กับ asset table
+function basename(p: string) {
+  return p.split(/[\/]/).pop() ?? p;
 }

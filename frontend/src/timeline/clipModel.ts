@@ -7,6 +7,8 @@
  * ยังไม่มี engine จริงสำหรับลาก/ตัด — โครงนี้รองรับให้ต่อยอดได้
  */
 
+import type { AssetRef } from "./assets";
+
 export type Sec = number;
 
 let _seq = 0;
@@ -18,7 +20,7 @@ export function uid(prefix = "id"): string {
 // ── Clip: ก้อนเสียงบน timeline ───────────────────────────────
 export interface Clip {
   id: string;
-  src: string | null; // URL ไฟล์เสียง
+  assetId: string | null; // อ้าง Project.assets — แทนที่ src เดิมที่เป็น URL เต็ม (ผูกกับเครื่อง)
   start: Sec;          // ตำแหน่งบน timeline (วินาที)
   duration: Sec;       // ความยาวที่แสดง
   offset: Sec;         // จุดเริ่มในไฟล์ต้นฉบับ (สำหรับ slice)
@@ -65,18 +67,19 @@ export interface Project {
   timeSig: number;             // จังหวะต่อห้อง (beats per bar) — คุม grid + metronome
   loop: LoopRegion | null;
   duration: Sec;
+  assets: Record<string, AssetRef>;  // ตารางไฟล์ที่ project นี้อ้างถึง (พกพาได้)
   tracks: Track[];
 }
 
 // ── factory helpers ─────────────────────────────────────────
-export function makeClip(src: string | null, color: string, duration: Sec = 0): Clip {
-  return { id: uid("clip"), src, start: 0, duration, offset: 0, gain: 1, muted: false, color };
+export function makeClip(assetId: string | null, color: string, duration: Sec = 0): Clip {
+  return { id: uid("clip"), assetId, start: 0, duration, offset: 0, gain: 1, muted: false, color };
 }
 
-export function makeTrack(label: string, color: string, src: string | null = null): Track {
+export function makeTrack(label: string, color: string, assetId: string | null = null): Track {
   return {
     id: uid("trk"), label, color, pan: 0,
-    clips: src !== null || true ? [makeClip(src, color)] : [],
+    clips: [makeClip(assetId, color)],
     envelopes: [], muted: false, solo: false, locked: false,
   };
 }

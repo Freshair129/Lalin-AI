@@ -20,7 +20,7 @@ import type { Project, Track, Clip } from "./clipModel";
 function mkClip(overrides: Partial<Clip> = {}): Clip {
   return {
     id: overrides.id ?? "clip-1",
-    src: "file:///a.wav",
+    assetId: "a_1",
     start: 0,
     duration: 10,
     offset: 0,
@@ -52,6 +52,7 @@ function mkProject(overrides: Partial<Project> = {}): Project {
     key: null,
     timeSig: 4,
     loop: null,
+    assets: {},
     duration: 10,
     tracks: overrides.tracks ?? [mkTrack()],
     ...overrides,

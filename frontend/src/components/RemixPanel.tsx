@@ -151,7 +151,7 @@ export function RemixPanel() {
     const d = migrateSnapshot(raw); // ยกระดับ snapshot เก่าก่อนเสมอ (ทั้ง Open และกู้ draft)
     loadingRef.current = true; // กัน setTrackSource เขียนทับ arrangement ที่โหลด
     if (d.project) engine.loadProject(d.project as Parameters<typeof engine.loadProject>[0]);
-    else engine.loadProject({ bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, tracks: [
+    else engine.loadProject({ bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, assets: {}, tracks: [
       { id: "vocal", label: "audio-01", color: "#9b6cf0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
       { id: "beat", label: "audio-02", color: "#3d9be0", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
       { id: "master", label: "audio-03", color: "#c7f046", pan: 0, clips: [], envelopes: [], muted: false, solo: false, locked: false },
@@ -359,9 +359,9 @@ export function RemixPanel() {
   };
 
   // ── sync source/beat/master เข้า clip engine (ข้ามตอนกำลังโหลด workspace) ──
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("vocal", source ? files.inputUrl(source) : null, "#9b6cf0"); }, [source]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("beat", beat ? files.inputUrl(beat) : null, "#3d9be0"); }, [beat]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? files.downloadUrl(outputName) : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("vocal", source ? { kind: "upload", name: source } : null, "#9b6cf0"); }, [source]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("beat", beat ? { kind: "upload", name: beat } : null, "#3d9be0"); }, [beat]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? { kind: "output", name: outputName } : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เลือก clip → สลับไปแท็บ Track อัตโนมัติ
   useEffect(() => { if (engine.selClip) setLeftTab("track"); }, [engine.selClip]);

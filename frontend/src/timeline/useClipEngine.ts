@@ -1,6 +1,7 @@
 // @req FR-09 — timeline engine: Project state + undo/redo + selection
 import { useCallback, useRef, useState } from "react";
 import { type Project, type Clip, uid } from "./clipModel";
+import { type AssetKind, assetId as computeAssetId, addAsset as addAssetToTable } from "./assets";
 import * as ops from "./ops";
 
 // ── engine: Project state + undo/redo + selection ────────────
@@ -11,7 +12,7 @@ function emptyProject(): Project {
     id, label, color, pan: 0, clips: [] as Clip[], envelopes: [], muted: false, solo: false, locked: false,
   });
   return {
-    bpm: 120, key: null, timeSig: 4, loop: null, duration: 0,
+    bpm: 120, key: null, timeSig: 4, loop: null, duration: 0, assets: {},
     tracks: [
       mk("vocal", "audio-01", "#9b6cf0"),
       mk("beat", "audio-02", "#3d9be0"),
@@ -47,14 +48,32 @@ export function useClipEngine() {
   }, []);
 
   // ── source sync (จาก RemixPanel) ──────────────────────────
-  const setTrackSource = useCallback((trackId: string, url: string | null, color: string) => {
-    silent((p) => ({
-      ...p,
-      tracks: p.tracks.map((t) =>
-        t.id !== trackId ? t :
-          { ...t, clips: url ? [{ id: uid("clip"), src: url, start: 0, duration: 0, offset: 0, gain: 1, muted: false, color }] : [] }
-      ),
-    }));
+  // ref = {kind, name} ของไฟล์ใน uploads/outputs — ไม่ใช่ URL อีกต่อไป (พกพาข้ามเครื่องได้)
+  const setTrackSource = useCallback((
+    trackId: string,
+    ref: { kind: AssetKind; name: string } | null,
+    color: string,
+  ) => {
+    silent((p) => {
+      if (!ref) {
+        return { ...p, tracks: p.tracks.map((t) => (t.id !== trackId ? t : { ...t, clips: [] })) };
+      }
+      const { assets, id } = addAssetToTable(p.assets, ref.kind, ref.name);
+      return {
+        ...p, assets,
+        tracks: p.tracks.map((t) =>
+          t.id !== trackId ? t :
+            { ...t, clips: [{ id: uid("clip"), assetId: id, start: 0, duration: 0, offset: 0, gain: 1, muted: false, color }] }
+        ),
+      };
+    });
+  }, [silent]);
+
+  // ลงทะเบียนไฟล์เป็น asset ของ project แล้วคืน id (idempotent — ไฟล์เดิมได้ id เดิม)
+  const addAsset = useCallback((kind: AssetKind, name: string): string => {
+    const id = computeAssetId(kind, name);
+    silent((p) => (p.assets[id] ? p : { ...p, assets: addAssetToTable(p.assets, kind, name).assets }));
+    return id;
   }, [silent]);
 
   const hydrateDuration = useCallback((trackId: string, clipId: string, dur: number) => {
@@ -144,7 +163,7 @@ export function useClipEngine() {
   return {
     project, selTrack, selClip,
     canUndo: past.current.length > 0, canRedo: future.current.length > 0, histTick,
-    setTrackSource, hydrateDuration,
+    setTrackSource, hydrateDuration, addAsset,
     move, slice, clone, remove, muteClip, addClip, setGain, setFade, toggleTrack, renameTrack, setTrackColor, reorderTrack,
     setTrackPan, setTempo, setLoop,
     undo, redo, select, loadProject,

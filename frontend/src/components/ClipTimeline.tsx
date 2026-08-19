@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ClipEngine } from "../timeline/useClipEngine";
 import { uid, makeClip, type Clip } from "../timeline/clipModel";
+import { resolveAssetUrl } from "../timeline/assets";
 import { getDecoded, regionPeaks, sharedAudioContext, type Decoded } from "../timeline/peaks";
 import { metronomeTicks } from "../timeline/grid";
 import { StereoMeter } from "./StereoMeter";
@@ -14,9 +15,9 @@ export type ClipCtx = { trackId: string; clipId: string; atSec: number; x: numbe
 
 // ── clip block (SVG waveform จาก peaks, ลากได้) ───────────────
 function ClipBlock({
-  clip, trackId, pps, selected, snap, onSelect, onContext, onMove, onHydrate, onFade,
+  clip, src, trackId, pps, selected, snap, onSelect, onContext, onMove, onHydrate, onFade,
 }: {
-  clip: Clip; trackId: string; pps: number; selected: boolean; snap: number;
+  clip: Clip; src: string | null; trackId: string; pps: number; selected: boolean; snap: number;
   onSelect: (tid: string, cid: string) => void;
   onContext: (c: ClipCtx) => void;
   onMove: (tid: string, cid: string, start: number) => void;
@@ -31,13 +32,13 @@ function ClipBlock({
 
   useEffect(() => {
     let alive = true;
-    if (clip.src) getDecoded(clip.src).then((d) => {
+    if (src) getDecoded(src).then((d) => {
       if (!alive) return;
       setDec(d);
       if (clip.duration === 0) onHydrate(trackId, clip.id, d.duration);
     }).catch(() => {});
     return () => { alive = false; };
-  }, [clip.src, clip.id, clip.duration, trackId, onHydrate]);
+  }, [src, clip.id, clip.duration, trackId, onHydrate]);
 
   const dur = clip.duration || dec?.duration || 0;
   const width = Math.max(8, dur * pps);
@@ -247,7 +248,8 @@ export function ClipTimeline({
       const result = await mic.stop();
       if (result && armedTrackId) {
         const track = project.tracks.find((t) => t.id === armedTrackId);
-        const clip = { ...makeClip(result.url, track?.color ?? "#c7f046"), start: posRef.current };
+        const id = engine.addAsset("upload", result.filename);
+        const clip = { ...makeClip(id, track?.color ?? "#c7f046"), start: posRef.current };
         engine.addClip(armedTrackId, clip);
         if (asRefVoice) {
           // TODO: เพิ่มเข้าคลังเสียง (voices API ต้องการ name/ref_text) —
@@ -350,8 +352,10 @@ export function ClipTimeline({
     fxRef.current = { rev: revGain, echo: echoGain };
     setAnalysers({ l: aL, r: aR });
 
-    // เตรียม buffer ของทุก src
-    const srcs = [...new Set(project.tracks.flatMap((t) => t.clips.map((c) => c.src).filter(Boolean)))] as string[];
+    // เตรียม buffer ของทุก src (resolve asset → URL ตอนนี้ทีเดียว)
+    const srcs = [...new Set(
+      project.tracks.flatMap((t) => t.clips.map((c) => resolveAssetUrl(project, c.assetId)).filter((u): u is string => Boolean(u)))
+    )];
     const decs = new Map<string, Decoded>();
     await Promise.all(srcs.map((s) => getDecoded(s).then((d) => decs.set(s, d)).catch(() => {})));
 
@@ -372,8 +376,10 @@ export function ClipTimeline({
       panner.connect(tSplit); tSplit.connect(tL, 0); tSplit.connect(tR, 1);
       meters[t.id] = { l: tL, r: tR };
       for (const c of t.clips) {
-        if (!c.src || c.muted) continue;
-        const d = decs.get(c.src);
+        if (c.muted) continue;
+        const url = resolveAssetUrl(project, c.assetId);
+        if (!url) continue;
+        const d = decs.get(url);
         if (!d) continue;
         const cdur = c.duration || d.duration;
         if (c.start + cdur <= seek) continue;
@@ -889,19 +895,20 @@ export function ClipTimeline({
                     setDropOverTrack(null);
                     if (!raw) return;
                     e.preventDefault();
-                    let payload: { src: string; label?: string; color?: string } | null = null;
+                    let payload: { kind?: "upload" | "output"; name?: string; label?: string; color?: string } | null = null;
                     try { payload = JSON.parse(raw); } catch { payload = null; }
-                    if (!payload?.src) return;
+                    if (!payload?.name) return;
                     const rect = e.currentTarget.getBoundingClientRect();
                     let startSec = Math.max(0, (e.clientX - rect.left) / pps);
                     if (snapOn) { const snap = 60 / bpm; startSec = Math.round(startSec / snap) * snap; }
-                    const clip = { ...makeClip(payload.src, payload.color ?? t.color), start: startSec };
+                    const id = engine.addAsset(payload.kind ?? "upload", payload.name);
+                    const clip = { ...makeClip(id, payload.color ?? t.color), start: startSec };
                     engine.addClip(t.id, clip);
                   }}
                 >
                   {t.clips.map((c) => (
                     <ClipBlock
-                      key={c.id} clip={c} trackId={t.id} pps={pps}
+                      key={c.id} clip={c} src={resolveAssetUrl(project, c.assetId)} trackId={t.id} pps={pps}
                       selected={engine.selClip === c.id}
                       snap={snapOn ? 60 / bpm : 0}
                       onSelect={engine.select}

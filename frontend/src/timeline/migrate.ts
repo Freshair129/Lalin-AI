@@ -7,10 +7,12 @@
  *
  * v1 (ไม่มี schemaVersion) = ก่อนย้าย pan/tempo/loop/stemGains เข้า model
  * v2                       = pan อยู่ที่ Track, timeSig/loop อยู่ที่ Project, stemGains อยู่ใน snapshot
+ * v3                       = clip.src (URL เต็ม ผูกกับเครื่อง) → clip.assetId + Project.assets
  */
+import { addAsset } from "./assets";
 
 /** เวอร์ชันปัจจุบันของ snapshot */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const DEFAULT_STEM_GAINS = { vocals: 1, drums: 1, bass: 1, other: 1 };
 
@@ -27,12 +29,46 @@ function v1ToV2(raw: Dict): Dict {
       ...project,
       timeSig: typeof project.timeSig === "number" ? project.timeSig : 4,
       loop: project.loop ?? null,
+      assets: project.assets ?? {},
       tracks: tracks.map((t) => ({ ...t, pan: typeof t.pan === "number" ? t.pan : 0 })),
     };
     out.stemGains = (raw.stemGains as Dict | undefined) ?? { ...DEFAULT_STEM_GAINS };
   }
 
   out.schemaVersion = 2;
+  return out;
+}
+
+/** "http://host/files/input/NAME" → {kind:"upload", name:"NAME"}; คืน null ถ้าไม่รู้จักรูปแบบ */
+function parseLegacySrc(src: unknown): { kind: "upload" | "output"; name: string } | null {
+  if (typeof src !== "string") return null;
+  const m = src.match(/\/files\/(input|download)\/([^/?#]+)$/);
+  if (!m) return null;
+  return { kind: m[1] === "input" ? "upload" : "output", name: decodeURIComponent(m[2]) };
+}
+
+/** v2 → v3: แปลง clip.src (URL เต็ม ผูกกับ host/พอร์ตของเครื่องที่บันทึก) เป็น clip.assetId + Project.assets */
+function v2ToV3(raw: Dict): Dict {
+  const out: Dict = { ...raw };
+  const project = raw.project as Dict | undefined;
+
+  if (project) {
+    let assets = (project.assets as Record<string, { id: string; kind: "upload" | "output"; name: string }>) ?? {};
+    const tracks = ((project.tracks as Dict[] | undefined) ?? []).map((t) => ({
+      ...t,
+      clips: ((t.clips as Dict[] | undefined) ?? []).map((c) => {
+        const { src, ...rest } = c;
+        const parsed = parseLegacySrc(src);
+        if (!parsed) return { ...rest, assetId: (c.assetId as string | null) ?? null };
+        const added = addAsset(assets, parsed.kind, parsed.name);
+        assets = added.assets;
+        return { ...rest, assetId: added.id };
+      }),
+    }));
+    out.project = { ...project, assets, tracks };
+  }
+
+  out.schemaVersion = 3;
   return out;
 }
 
@@ -45,6 +81,7 @@ export function migrateSnapshot(raw: unknown): Dict {
   const version = typeof snap.schemaVersion === "number" ? snap.schemaVersion : 1;
 
   if (version < 2) snap = v1ToV2(snap);
+  if (version < 3) snap = v2ToV3(snap);
 
   snap.schemaVersion = SCHEMA_VERSION;
   return snap;

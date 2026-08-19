@@ -65,3 +65,60 @@ describe("migrateSnapshot", () => {
     expect(migrateSnapshot("nonsense").schemaVersion).toBe(SCHEMA_VERSION);
   });
 });
+
+describe("v2 -> v3 asset migration", () => {
+  it("converts an absolute input URL into an asset reference", () => {
+    const out = migrateSnapshot({
+      schemaVersion: 2,
+      project: {
+        bpm: 120, timeSig: 4, loop: null, tracks: [
+          { id: "vocal", pan: 0, envelopes: [], clips: [
+            { id: "c1", src: "http://127.0.0.1:8756/files/input/song.mp3", start: 0, duration: 3, offset: 0, gain: 1, muted: false, color: "#fff" },
+          ] },
+        ],
+      },
+    }) as any;
+    const clip = out.project.tracks[0].clips[0];
+    expect(clip.src).toBeUndefined();
+    expect(out.project.assets[clip.assetId]).toEqual({
+      id: clip.assetId, kind: "upload", name: "song.mp3",
+    });
+  });
+
+  it("converts an absolute download URL into an output asset", () => {
+    const out = migrateSnapshot({
+      schemaVersion: 2,
+      project: { tracks: [{ id: "m", pan: 0, envelopes: [], clips: [
+        { id: "c1", src: "http://127.0.0.1:8756/files/download/remix_ab12.wav" },
+      ] }] },
+    }) as any;
+    const clip = out.project.tracks[0].clips[0];
+    expect(out.project.assets[clip.assetId].kind).toBe("output");
+    expect(out.project.assets[clip.assetId].name).toBe("remix_ab12.wav");
+  });
+
+  it("decodes percent-encoded names back to the real filename", () => {
+    const encoded = encodeURIComponent("ปล่อย (let them).mp3");
+    const out = migrateSnapshot({
+      schemaVersion: 2,
+      project: { tracks: [{ id: "v", pan: 0, envelopes: [], clips: [
+        { id: "c1", src: `http://127.0.0.1:8756/files/input/${encoded}` },
+      ] }] },
+    }) as any;
+    const clip = out.project.tracks[0].clips[0];
+    expect(out.project.assets[clip.assetId].name).toBe("ปล่อย (let them).mp3");
+  });
+
+  it("nulls a clip whose src is unrecognisable rather than dropping the clip", () => {
+    const out = migrateSnapshot({
+      schemaVersion: 2,
+      project: { tracks: [{ id: "v", pan: 0, envelopes: [], clips: [{ id: "c1", src: "blob:whatever" }] }] },
+    }) as any;
+    expect(out.project.tracks[0].clips[0].assetId).toBeNull();
+  });
+
+  it("gives a v1 project an empty assets table", () => {
+    const out = migrateSnapshot({ project: { tracks: [] } }) as any;
+    expect(out.project.assets).toEqual({});
+  });
+});

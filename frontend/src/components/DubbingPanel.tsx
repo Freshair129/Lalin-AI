@@ -94,7 +94,8 @@ export function DubbingPanel() {
     const track = engine.project.tracks.find((t) => t.id === "vocal") ?? engine.project.tracks[0];
     if (!track) return;
     const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
-    const clip = makeClip(files.downloadUrl(basename(output)), "#9b6cf0");
+    const id = engine.addAsset("output", basename(output));
+    const clip = makeClip(id, "#9b6cf0");
     clip.start = start;
     engine.addClip(track.id, clip);
     setAddedMsg(true);
