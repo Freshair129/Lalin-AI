@@ -8,6 +8,13 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      # Windows runners default to a non-UTF-8 codepage (cp1252-family) for
+      # anything that doesn't carry its own BOM/encoding cookie -- pip's own
+      # requirements.txt parser hit this for real (apps/api/requirements.txt
+      # has Thai comments). Forces UTF-8 mode for every Python process in
+      # this job rather than fixing files one at a time as they're found.
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
 
