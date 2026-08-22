@@ -49,6 +49,20 @@ jobs:
         shell: pwsh
         run: ./tools/build/build_sidecar.ps1 -Profile full -VenvPath "${{ github.workspace }}/apps/api/.venv-ci" -CreateIfMissing
 
+      # The smoke-test step inside build_sidecar.ps1 can warn without failing
+      # the build (see the comment there) -- upload its raw output so a
+      # warning is actually debuggable instead of vanishing with the runner.
+      - name: Upload sidecar smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sidecar-smoke-logs
+          path: |
+            apps/api/sidecar-smoke.log
+            apps/api/sidecar-smoke.err
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Verify workspace
         run: npm run check:all
 
