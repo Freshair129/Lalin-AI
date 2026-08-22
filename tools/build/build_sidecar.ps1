@@ -258,3 +258,12 @@ Write-Host "Notes:" -ForegroundColor Cyan
 Write-Host " - PyInstaller --onedir dependencies are copied next to the executable."
 Write-Host " - Model weights are not embedded; first run may download/cache models."
 Write-Host " - Run cargo check or tauri build next to validate Tauri sidecar integration."
+
+# Explicit exit 0 matters here: curl.exe's failed attempts inside the smoke-test
+# loop above leave $LASTEXITCODE non-zero, and only *external* commands touch
+# $LASTEXITCODE (pure cmdlets like Write-Host/Copy-Item don't reset it) -- a
+# script invoked via `pwsh -File` with no explicit exit uses that stale value as
+# its own exit code. Without this, CI reported step failure even on the
+# genuinely-successful warning path above. Confirmed real: this is exactly what
+# happened on the v0.1.0-rc1 CI run before this fix.
+exit 0

@@ -274,3 +274,10 @@ if (Test-Path $bundleDir) {
     Write-Host "[!] Expected NSIS output folder was not found: $bundleDir" -ForegroundColor Red
     exit 1
 }
+
+# Explicit exit 0: this script shells out to tauri.cmd/curl-like native tools
+# throughout, and $LASTEXITCODE from any of those can outlive a later
+# genuinely-successful check (pure cmdlets don't reset it) -- a script with no
+# explicit exit uses that stale value as its own exit code under `pwsh -File`.
+# See tools/build/build_sidecar.ps1 for where this bit for real in CI.
+exit 0
