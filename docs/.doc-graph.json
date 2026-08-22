@@ -1,24 +1,24 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-09T08:31:25+07:00",
+  "generated_at": "2026-08-23T04:11:47+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 249,
-    "total_edges": 204,
-    "stale_edges": 0,
+    "total_nodes": 297,
+    "total_edges": 315,
+    "stale_edges": 2,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
-      "requirements_with_code_annotations": "100% (22/22)",
-      "requirements_with_tests": "9% (2/22)",
-      "code_files_referenced_by_docs": "1% (1/78)",
-      "code_files_with_tests": "5% (4/78)",
-      "structured_annotations_found": 86,
-      "unstructured_req_refs_found": 88
+      "requirements_with_code_annotations": "69% (25/36)",
+      "requirements_with_tests": "13% (5/36)",
+      "code_files_referenced_by_docs": "1% (1/85)",
+      "code_files_with_tests": "8% (7/85)",
+      "structured_annotations_found": 104,
+      "unstructured_req_refs_found": 103
     }
   },
   "nodes": [
@@ -133,6 +133,13 @@
       "label": "GET /projects/{pid}",
       "status": "current",
       "last_verified": "2026-08-09T08:23:36+07:00"
+    },
+    {
+      "id": "api:GET:/projects/{pid}/bundle",
+      "type": "api_endpoint",
+      "label": "GET /projects/{pid}/bundle",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "api:GET:/runtime/status",
@@ -282,6 +289,20 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "api:POST:/projects/import",
+      "type": "api_endpoint",
+      "label": "POST /projects/import",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "api:POST:/render",
+      "type": "api_endpoint",
+      "label": "POST /render",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "api:POST:/speech/config",
       "type": "api_endpoint",
       "label": "POST /speech/config",
@@ -328,9 +349,9 @@
       "id": "code:apps/api/app/brain/cloud_provider.py",
       "type": "code_file",
       "path": "apps/api/app/brain/cloud_provider.py",
-      "hash": "a75b9e802658",
+      "hash": "a8c127c79cf2",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/brain/factory.py",
@@ -360,9 +381,9 @@
       "id": "code:apps/api/app/main.py",
       "type": "code_file",
       "path": "apps/api/app/main.py",
-      "hash": "07165f47ecaa",
+      "hash": "8a46fc3df2dd",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/asr.py",
@@ -376,25 +397,33 @@
       "id": "code:apps/api/app/pipelines/dubbing.py",
       "type": "code_file",
       "path": "apps/api/app/pipelines/dubbing.py",
-      "hash": "5dbd0d62ef86",
+      "hash": "73990e19a4d4",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/mastering.py",
       "type": "code_file",
       "path": "apps/api/app/pipelines/mastering.py",
-      "hash": "7bc192763b4b",
+      "hash": "1c7e66d29cf7",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/music.py",
       "type": "code_file",
       "path": "apps/api/app/pipelines/music.py",
-      "hash": "c5cfe2795c9f",
+      "hash": "0e9144aed47c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "code:apps/api/app/pipelines/render.py",
+      "type": "code_file",
+      "path": "apps/api/app/pipelines/render.py",
+      "hash": "786f1c2780e2",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/tts.py",
@@ -408,9 +437,9 @@
       "id": "code:apps/api/app/routers/agent.py",
       "type": "code_file",
       "path": "apps/api/app/routers/agent.py",
-      "hash": "d2ea1cf4c025",
+      "hash": "df9b88d43e14",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/brain.py",
@@ -432,9 +461,9 @@
       "id": "code:apps/api/app/routers/files.py",
       "type": "code_file",
       "path": "apps/api/app/routers/files.py",
-      "hash": "ecbdbb44ce95",
+      "hash": "15587993334c",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/fs.py",
@@ -488,17 +517,25 @@
       "id": "code:apps/api/app/routers/plugins.py",
       "type": "code_file",
       "path": "apps/api/app/routers/plugins.py",
-      "hash": "42cd8a4f2c6f",
+      "hash": "31200177280a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/projects.py",
       "type": "code_file",
       "path": "apps/api/app/routers/projects.py",
-      "hash": "0bce9e325c79",
+      "hash": "5f9aa87900af",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "code:apps/api/app/routers/render.py",
+      "type": "code_file",
+      "path": "apps/api/app/routers/render.py",
+      "hash": "e2f9e732bd50",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/routers/speech.py",
@@ -523,6 +560,14 @@
       "hash": "9580f2b6544f",
       "status": "current",
       "last_verified": "2026-08-09T08:23:36+07:00"
+    },
+    {
+      "id": "code:apps/api/app/services/bundle.py",
+      "type": "code_file",
+      "path": "apps/api/app/services/bundle.py",
+      "hash": "10564e4ee249",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/api/app/services/voices.py",
@@ -557,20 +602,28 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "code:apps/api/app/utils/validate.py",
+      "type": "code_file",
+      "path": "apps/api/app/utils/validate.py",
+      "hash": "0d1dc54e9cb0",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/App.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/App.tsx",
-      "hash": "23f6a52cfc6f",
+      "hash": "57dc5c3bdef0",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
       "type": "code_file",
       "path": "apps/desktop/src/api.ts",
-      "hash": "4dcb59ccc596",
+      "hash": "ddc0c4c1c916",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/BatchQueue.tsx",
@@ -600,9 +653,9 @@
       "id": "code:apps/desktop/src/components/ClipTimeline.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/ClipTimeline.tsx",
-      "hash": "ad178b952383",
+      "hash": "ef692f9549ce",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/ContextMenu.tsx",
@@ -624,9 +677,9 @@
       "id": "code:apps/desktop/src/components/DubbingPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/DubbingPanel.tsx",
-      "hash": "21e8e7b44994",
+      "hash": "4e6e832292f5",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FileManager.tsx",
@@ -664,9 +717,9 @@
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LibraryPanel.tsx",
-      "hash": "aa623d3bd35d",
+      "hash": "59009b552260",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MarketplacePanel.tsx",
@@ -680,9 +733,9 @@
       "id": "code:apps/desktop/src/components/MasteringPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/MasteringPanel.tsx",
-      "hash": "4d7f264d5f67",
+      "hash": "70797f204ad1",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Meter.tsx",
@@ -704,9 +757,9 @@
       "id": "code:apps/desktop/src/components/MixCopilot.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/MixCopilot.tsx",
-      "hash": "35f82ea1a4b5",
+      "hash": "5b8798113c7f",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/NodeDesigner.tsx",
@@ -728,17 +781,17 @@
       "id": "code:apps/desktop/src/components/PropertiesPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/PropertiesPanel.tsx",
-      "hash": "162158f40370",
+      "hash": "cadd0e6d6a82",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/RemixPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/RemixPanel.tsx",
-      "hash": "5e390a224d65",
+      "hash": "54dcf2dfdb44",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Splitter.tsx",
@@ -776,9 +829,9 @@
       "id": "code:apps/desktop/src/components/TTSPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/TTSPanel.tsx",
-      "hash": "d064bcf3222b",
+      "hash": "93a5dbf98302",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Tilt.tsx",
@@ -829,6 +882,14 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "code:apps/desktop/src/components/mixCopilotOps.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/mixCopilotOps.ts",
+      "hash": "27419972539c",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/dubbing/estimateSpeech.ts",
       "type": "code_file",
       "path": "apps/desktop/src/dubbing/estimateSpeech.ts",
@@ -848,9 +909,9 @@
       "id": "code:apps/desktop/src/hooks/useProjectFile.ts",
       "type": "code_file",
       "path": "apps/desktop/src/hooks/useProjectFile.ts",
-      "hash": "27f8f2cd6b47",
+      "hash": "d5adbb702d13",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/hooks/useRuntimeActivity.ts",
@@ -880,17 +941,25 @@
       "id": "code:apps/desktop/src/store/useRemixStore.ts",
       "type": "code_file",
       "path": "apps/desktop/src/store/useRemixStore.ts",
-      "hash": "d53939a41c7f",
+      "hash": "3400270f1b10",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/timeline/assets.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/assets.ts",
+      "hash": "11e4ef8a13fb",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/clipModel.ts",
       "type": "code_file",
       "path": "apps/desktop/src/timeline/clipModel.ts",
-      "hash": "36bba06bfc81",
+      "hash": "eec55ff68d07",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/grid.ts",
@@ -901,28 +970,36 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "code:apps/desktop/src/timeline/migrate.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/timeline/migrate.ts",
+      "hash": "811ec7f7ef9e",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/timeline/ops.ts",
       "type": "code_file",
       "path": "apps/desktop/src/timeline/ops.ts",
-      "hash": "44ce9e1427fc",
+      "hash": "934b4e378834",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/peaks.ts",
       "type": "code_file",
       "path": "apps/desktop/src/timeline/peaks.ts",
-      "hash": "50efe9ec6645",
+      "hash": "1e440f678170",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/timeline/useClipEngine.ts",
       "type": "code_file",
       "path": "apps/desktop/src/timeline/useClipEngine.ts",
-      "hash": "456a865fe8ed",
+      "hash": "a05f80de238d",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "code:apps/desktop/src/useBatchQueue.ts",
@@ -939,6 +1016,36 @@
       "hash": "1d4133d7f9d8",
       "status": "current",
       "last_verified": "2026-08-09T08:23:36+07:00"
+    },
+    {
+      "id": "doc:2026-08-19-render-portability-sidecar",
+      "type": "document",
+      "path": "docs/superpowers/plans/2026-08-19-render-portability-sidecar.md",
+      "title": "2026-08-19-render-portability-sidecar",
+      "hash": "5d0181787175",
+      "prev_hash": "5d0181787175",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:2026-08-20-master-plan",
+      "type": "document",
+      "path": "docs/superpowers/plans/2026-08-20-master-plan.md",
+      "title": "2026-08-20-master-plan",
+      "hash": "9011697b7fec",
+      "prev_hash": "9011697b7fec",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:A-api-spec",
+      "type": "document",
+      "path": "docs/appendices/A-api-spec.md",
+      "title": "A-api-spec",
+      "hash": "6e31a8cfb2d1",
+      "prev_hash": "6e31a8cfb2d1",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:API_SEMANTICS",
@@ -961,6 +1068,16 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:B-storage-schema",
+      "type": "document",
+      "path": "docs/appendices/B-storage-schema.md",
+      "title": "B-storage-schema",
+      "hash": "268238990c10",
+      "prev_hash": "268238990c10",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
       "id": "doc:BLUEPRINT",
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
@@ -971,14 +1088,34 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:C-model-cards",
+      "type": "document",
+      "path": "docs/appendices/C-model-cards.md",
+      "title": "C-model-cards",
+      "hash": "12121011964d",
+      "prev_hash": "12121011964d",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:CLEAN_VM_CHECKLIST",
+      "type": "document",
+      "path": "docs/operations/CLEAN_VM_CHECKLIST.md",
+      "title": "CLEAN_VM_CHECKLIST",
+      "hash": "24c09526c936",
+      "prev_hash": "24c09526c936",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
       "id": "doc:COMPETITIVE_BRIEF",
       "type": "document",
       "path": "docs/product/COMPETITIVE_BRIEF.md",
       "title": "COMPETITIVE_BRIEF",
-      "hash": "ff6cec5f80bb",
-      "prev_hash": "ff6cec5f80bb",
+      "hash": "7f2ef3cc10a2",
+      "prev_hash": "7f2ef3cc10a2",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:COMPONENT_REGISTRY",
@@ -999,6 +1136,16 @@
       "prev_hash": "103afc9c0b8a",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:D-traceability",
+      "type": "document",
+      "path": "docs/appendices/D-traceability.md",
+      "title": "D-traceability",
+      "hash": "5b2a13a71c70",
+      "prev_hash": "5b2a13a71c70",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -1039,6 +1186,26 @@
       "prev_hash": "ae198f894b1a",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:E-risk-matrix",
+      "type": "document",
+      "path": "docs/appendices/E-risk-matrix.md",
+      "title": "E-risk-matrix",
+      "hash": "84caf1cd3e85",
+      "prev_hash": "84caf1cd3e85",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:F-glossary",
+      "type": "document",
+      "path": "docs/appendices/F-glossary.md",
+      "title": "F-glossary",
+      "hash": "93b3dac62ad3",
+      "prev_hash": "93b3dac62ad3",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:GM6_BRAND_CI",
@@ -1445,10 +1612,10 @@
       "type": "document",
       "path": "docs/product/PRD.md",
       "title": "PRD",
-      "hash": "1d2f6de03c8a",
-      "prev_hash": "1d2f6de03c8a",
+      "hash": "17636dbdf194",
+      "prev_hash": "17636dbdf194",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO",
@@ -1565,20 +1732,20 @@
       "type": "document",
       "path": "docs/product/ROADMAP_MUSIC.md",
       "title": "ROADMAP_MUSIC",
-      "hash": "f7ba0618285c",
-      "prev_hash": "f7ba0618285c",
+      "hash": "9ec3ce000b35",
+      "prev_hash": "9ec3ce000b35",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:SPEC",
       "type": "document",
       "path": "docs/architecture/SPEC.md",
       "title": "SPEC",
-      "hash": "85c72257b54e",
-      "prev_hash": "85c72257b54e",
+      "hash": "1cd2af2b0c89",
+      "prev_hash": "1cd2af2b0c89",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:SPRINT0_G_MUSIC_RC_PLAN",
@@ -1695,30 +1862,40 @@
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "7321c2991f0b",
-      "prev_hash": "7321c2991f0b",
+      "hash": "e125ae6f5f8b",
+      "prev_hash": "e125ae6f5f8b",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
       "type": "document",
       "path": "docs/architecture/SWARM_PLAN.md",
       "title": "SWARM_PLAN",
-      "hash": "658e06135179",
-      "prev_hash": "658e06135179",
+      "hash": "d77f77adb2c3",
+      "prev_hash": "d77f77adb2c3",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:TEMPLATE",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/TEMPLATE.md",
+      "title": "TEMPLATE",
+      "hash": "65a9fd2845ff",
+      "prev_hash": "65a9fd2845ff",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:UI_SITEMAP",
       "type": "document",
       "path": "docs/archive/UI_SITEMAP.md",
       "title": "UI_SITEMAP",
-      "hash": "652ec1a6bff3",
-      "prev_hash": "652ec1a6bff3",
+      "hash": "08d8a6e6a65d",
+      "prev_hash": "08d8a6e6a65d",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -1729,6 +1906,26 @@
       "prev_hash": "ea77ec777b3a",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:agent-architecture",
+      "type": "document",
+      "path": "docs/ai-system/agent-architecture.md",
+      "title": "agent-architecture",
+      "hash": "42db1e456563",
+      "prev_hash": "42db1e456563",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:chinda-qwen3-4b",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/chinda-qwen3-4b.md",
+      "title": "chinda-qwen3-4b",
+      "hash": "15ee683eac42",
+      "prev_hash": "15ee683eac42",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
       "id": "doc:codex-clipboard-023131bd-ed29-4820-81e8-68b3e3000cd7",
@@ -1961,6 +2158,56 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:data-pipeline",
+      "type": "document",
+      "path": "docs/ai-system/data-pipeline.md",
+      "title": "data-pipeline",
+      "hash": "721dc32d5957",
+      "prev_hash": "721dc32d5957",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:ethics-governance",
+      "type": "document",
+      "path": "docs/ai-system/ethics-governance.md",
+      "title": "ethics-governance",
+      "hash": "f8649b01ef41",
+      "prev_hash": "f8649b01ef41",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:f5-tts-thai",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/f5-tts-thai.md",
+      "title": "f5-tts-thai",
+      "hash": "4f44893f993b",
+      "prev_hash": "4f44893f993b",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:faster-whisper-large-v3",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/faster-whisper-large-v3.md",
+      "title": "faster-whisper-large-v3",
+      "hash": "d51176e7d7be",
+      "prev_hash": "d51176e7d7be",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:htdemucs",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/htdemucs.md",
+      "title": "htdemucs",
+      "hash": "08d36cbc9497",
+      "prev_hash": "08d36cbc9497",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
       "id": "doc:index",
       "type": "document",
       "path": "docs/presentation/lalin-ai-launch/index.html",
@@ -1969,6 +2216,148 @@
       "prev_hash": "454798f2448d",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:model-lifecycle",
+      "type": "document",
+      "path": "docs/ai-system/model-lifecycle.md",
+      "title": "model-lifecycle",
+      "hash": "f3b5bf83942e",
+      "prev_hash": "f3b5bf83942e",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:prompt-engineering",
+      "type": "document",
+      "path": "docs/ai-system/prompt-engineering.md",
+      "title": "prompt-engineering",
+      "hash": "1a5fd1bd311b",
+      "prev_hash": "1a5fd1bd311b",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:xtts-v2",
+      "type": "document",
+      "path": "docs/ai-system/model-cards/xtts-v2.md",
+      "title": "xtts-v2",
+      "hash": "f13f041462ee",
+      "prev_hash": "f13f041462ee",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "req:AI-AGT-001",
+      "type": "requirement",
+      "label": "AI-AGT-001",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-AGT-002",
+      "type": "requirement",
+      "label": "AI-AGT-002",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-AGT-003",
+      "type": "requirement",
+      "label": "AI-AGT-003",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-AGT-004",
+      "type": "requirement",
+      "label": "AI-AGT-004",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-AGT-005",
+      "type": "requirement",
+      "label": "AI-AGT-005",
+      "defined_in": "docs/ai-system/agent-architecture.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-ETH-001",
+      "type": "requirement",
+      "label": "AI-ETH-001",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-ETH-002",
+      "type": "requirement",
+      "label": "AI-ETH-002",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-ETH-003",
+      "type": "requirement",
+      "label": "AI-ETH-003",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:AI-ETH-004",
+      "type": "requirement",
+      "label": "AI-ETH-004",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:BR-001",
+      "type": "requirement",
+      "label": "BR-001",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:BR-002",
+      "type": "requirement",
+      "label": "BR-002",
+      "defined_in": "docs/ai-system/ethics-governance.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:DR-001",
+      "type": "requirement",
+      "label": "DR-001",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:DR-002",
+      "type": "requirement",
+      "label": "DR-002",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "req:DR-003",
+      "type": "requirement",
+      "label": "DR-003",
+      "defined_in": "docs/ai-system/data-pipeline.md",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "req:FR-01",
@@ -2147,12 +2536,28 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/components/mixCopilotOps.test.ts",
+      "hash": "9370d2754715",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "type": "test",
       "path": "apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "hash": "b20f74818afc",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/timeline/assets.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/assets.test.ts",
+      "hash": "96e4c79c7e6f",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/grid.test.ts",
@@ -2163,12 +2568,28 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "test:apps/desktop/src/timeline/migrate.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/migrate.test.ts",
+      "hash": "1a8639ecc6f5",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/timeline/ops.test.ts",
       "type": "test",
       "path": "apps/desktop/src/timeline/ops.test.ts",
-      "hash": "515023c8bd36",
+      "hash": "f16cbaaa3acb",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:11:23+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/timeline/roundtrip.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/timeline/roundtrip.test.ts",
+      "hash": "5bf73dd3e1c5",
+      "status": "current",
+      "last_verified": "2026-08-23T04:11:23+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
@@ -2259,7 +2680,21 @@
     },
     {
       "from": "code:apps/api/app/pipelines/music.py",
+      "to": "req:AI-ETH-003",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/pipelines/music.py",
       "to": "req:FR-04b",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/pipelines/render.py",
+      "to": "req:FR-09",
       "type": "implements",
       "status": "current",
       "source": "code-scan"
@@ -2282,6 +2717,13 @@
       "from": "code:apps/api/app/routers/agent.py",
       "to": "api:POST:/agent/act",
       "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/agent.py",
+      "to": "req:AI-AGT-001",
+      "type": "implements",
       "status": "current",
       "source": "code-scan"
     },
@@ -2574,6 +3016,20 @@
     },
     {
       "from": "code:apps/api/app/routers/plugins.py",
+      "to": "req:AI-ETH-003",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/plugins.py",
+      "to": "req:BR-002",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/plugins.py",
       "to": "req:FR-11",
       "type": "implements",
       "status": "current",
@@ -2602,7 +3058,21 @@
     },
     {
       "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:GET:/projects/{pid}/bundle",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
       "to": "api:POST:/projects",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
+      "to": "api:POST:/projects/import",
       "type": "exposes",
       "status": "current",
       "source": "code-scan"
@@ -2616,6 +3086,14 @@
     },
     {
       "from": "code:apps/api/app/routers/projects.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "2 endpoint(s) in code not in BLUEPRINT api: GET /projects/{pid}/bundle, POST /projects/import"
+    },
+    {
+      "from": "code:apps/api/app/routers/projects.py",
       "to": "req:FR-10",
       "type": "implements",
       "status": "current",
@@ -2624,6 +3102,28 @@
     {
       "from": "code:apps/api/app/routers/projects.py",
       "to": "req:NFR-03",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/render.py",
+      "to": "api:POST:/render",
+      "type": "exposes",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/routers/render.py",
+      "to": "doc:BLUEPRINT",
+      "type": "stale",
+      "status": "stale",
+      "source": "dag-propagation",
+      "reason": "1 endpoint(s) in code not in BLUEPRINT api: POST /render"
+    },
+    {
+      "from": "code:apps/api/app/routers/render.py",
+      "to": "req:FR-09",
       "type": "implements",
       "status": "current",
       "source": "code-scan"
@@ -2699,6 +3199,13 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/api/app/services/bundle.py",
+      "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/api/app/services/voices.py",
       "to": "req:FR-01",
       "type": "implements",
@@ -2729,6 +3236,13 @@
     {
       "from": "code:apps/api/app/utils/ids.py",
       "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/utils/validate.py",
+      "to": "req:FR-04",
       "type": "implements",
       "status": "current",
       "source": "code-scan"
@@ -2882,6 +3396,13 @@
     },
     {
       "from": "code:apps/desktop/src/components/MixCopilot.tsx",
+      "to": "req:AI-AGT-001",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/components/MixCopilot.tsx",
       "to": "req:FR-14",
       "type": "implements",
       "status": "current",
@@ -2993,6 +3514,27 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/desktop/src/components/mixCopilotOps.test.ts",
+      "to": "req:FR-14",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/components/mixCopilotOps.ts",
+      "to": "req:AI-AGT-001",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/components/mixCopilotOps.ts",
+      "to": "req:FR-14",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/dubbing/estimateSpeech.ts",
       "to": "req:FR-03",
       "type": "implements",
@@ -3042,6 +3584,13 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/desktop/src/timeline/assets.ts",
+      "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/timeline/clipModel.ts",
       "to": "req:FR-09",
       "type": "implements",
@@ -3056,6 +3605,13 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/desktop/src/timeline/migrate.ts",
+      "to": "req:FR-10",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/timeline/ops.ts",
       "to": "req:FR-09",
       "type": "implements",
@@ -3065,6 +3621,13 @@
     {
       "from": "code:apps/desktop/src/timeline/peaks.ts",
       "to": "req:FR-09",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/timeline/roundtrip.test.ts",
+      "to": "req:FR-10",
       "type": "implements",
       "status": "current",
       "source": "code-scan"
@@ -3089,6 +3652,69 @@
       "type": "implements",
       "status": "current",
       "source": "code-scan"
+    },
+    {
+      "from": "doc:2026-08-19-render-portability-sidecar",
+      "to": "req:FR-04",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-08-19-render-portability-sidecar",
+      "to": "req:FR-09",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-08-19-render-portability-sidecar",
+      "to": "req:FR-10",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-08-20-master-plan",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:A-api-spec",
+      "to": "doc:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:A-api-spec",
+      "to": "req:AI-AGT-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:A-api-spec",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:A-api-spec",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:A-api-spec",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
     },
     {
       "from": "doc:API_SEMANTICS",
@@ -3182,8 +3808,99 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:B-storage-schema",
+      "to": "req:DR-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:B-storage-schema",
+      "to": "req:DR-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:B-storage-schema",
+      "to": "req:DR-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:B-storage-schema",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:BLUEPRINT",
       "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:TEMPLATE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:chinda-qwen3-4b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:f5-tts-thai",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:faster-whisper-large-v3",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:htdemucs",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "doc:xtts-v2",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:C-model-cards",
+      "to": "req:AI-ETH-003",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -3247,6 +3964,244 @@
     {
       "from": "doc:COMPONENT_REGISTRY",
       "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:AI-AGT-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:AI-AGT-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:BR-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-04",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-07",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-08",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-09",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-10",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-11",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-12",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-13",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-15",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-04",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:NFR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "doc:CLEAN_VM_CHECKLIST",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "doc:model-lifecycle",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "req:BR-002",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "req:FR-02",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -3525,6 +4480,20 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:SWARM_PLAN",
+      "to": "req:AI-AGT-004",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:TEMPLATE",
+      "to": "doc:C-model-cards",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:UI_SITEMAP",
       "to": "doc:GM6_SITEMAP",
       "type": "references",
@@ -3553,6 +4522,209 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:agent-architecture",
+      "to": "doc:chinda-qwen3-4b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:agent-architecture",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:chinda-qwen3-4b",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:data-pipeline",
+      "to": "doc:B-storage-schema",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:data-pipeline",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:data-pipeline",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:data-pipeline",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ethics-governance",
+      "to": "req:AI-ETH-004",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
+      "to": "doc:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
+      "to": "req:AI-ETH-001",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:faster-whisper-large-v3",
+      "to": "doc:model-lifecycle",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:faster-whisper-large-v3",
+      "to": "req:FR-03",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:htdemucs",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:model-lifecycle",
+      "to": "doc:C-model-cards",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:model-lifecycle",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:model-lifecycle",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:model-lifecycle",
+      "to": "req:FR-04b",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:model-lifecycle",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:prompt-engineering",
+      "to": "req:FR-05",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:xtts-v2",
+      "to": "doc:E-risk-matrix",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:xtts-v2",
+      "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:xtts-v2",
+      "to": "req:AI-ETH-003",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:xtts-v2",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
+      "to": "code:apps/desktop/src/components/mixCopilotOps.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
+      "to": "req:AI-AGT-001",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
+      "to": "req:FR-14",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "to": "code:apps/desktop/src/hooks/useBackendReadiness.ts",
       "type": "tests",
@@ -3567,6 +4739,20 @@
       "source": "code-scan"
     },
     {
+      "from": "test:apps/desktop/src/timeline/assets.test.ts",
+      "to": "code:apps/desktop/src/timeline/assets.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/assets.test.ts",
+      "to": "req:FR-10",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "test:apps/desktop/src/timeline/grid.test.ts",
       "to": "code:apps/desktop/src/timeline/grid.ts",
       "type": "tests",
@@ -3576,6 +4762,20 @@
     {
       "from": "test:apps/desktop/src/timeline/grid.test.ts",
       "to": "req:FR-09",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/migrate.test.ts",
+      "to": "code:apps/desktop/src/timeline/migrate.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/timeline/migrate.test.ts",
+      "to": "req:FR-10",
       "type": "verifies",
       "status": "current",
       "source": "code-scan"

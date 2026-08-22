@@ -2,14 +2,14 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.2.0 |
+| **Version** | 1.3.0 |
 | **Status** | Draft |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-09 |
+| **Last Updated** | 2026-08-19 |
 | **Approved By** | — |
 
-โยง requirement ([SRS.md](../SRS.md)) ↔ design ↔ โค้ด ↔ เทสต์ — แถวไหน Test ว่าง = ช่องโหว่ coverage ที่รู้ตัว
+โยง requirement ([SRS.md](../product/SRS.md)) ↔ design ↔ โค้ด ↔ เทสต์ — แถวไหน Test ว่าง = ช่องโหว่ coverage ที่รู้ตัว
 
 ## Functional Requirements
 
@@ -24,7 +24,7 @@
 | FR-06 | Job System | SPEC | `app/jobs/*` + `routers/jobs.py` | ✏️ TODO | ✅ done |
 | FR-07 | File Management | SPEC | `routers/files.py`, `fs.py` | ✏️ TODO | ✅ done |
 | FR-08 | Auto-Update | SPEC · PACKAGING_SIDECAR | Tauri updater + `.github/workflows/release.yml` | ✏️ TODO — ทดสอบ update จริง | ⚠️ รอ validate |
-| FR-09 | Workspace/Timeline | UI_SITEMAP§2-3 · SWARM_PLAN W2.1-2.2/3.2-3.4 | `frontend/src/timeline/*` + ClipTimeline, StudioDock, StemMixer, FxRack | `grid.test.ts` · `ops.test.ts` · `useClipEngine.test.ts` | ✅ done |
+| FR-09 | Workspace/Timeline | UI_SITEMAP§2-3 · SWARM_PLAN W2.1-2.2/3.2-3.4 | `apps/desktop/src/timeline/*` + ClipTimeline, StudioDock, StemMixer, FxRack | `grid.test.ts` · `ops.test.ts` · `useClipEngine.test.ts` | ✅ done |
 | FR-10 | Projects | SWARM_PLAN W0.2/0.6 · A-api-spec (✏️) | `routers/projects.py` + `hooks/useProjectFile.ts` | ✏️ TODO | ✅ done |
 | FR-11 | Plugin Manager + Marketplace | SWARM_PLAN W3.6/5.1 · ROADMAP_MUSIC (BYOM) | `routers/plugins.py` + `packs.py`, PluginsPanel, MarketplacePanel | ✏️ TODO | ✅ / packs ยัง mock in-memory |
 | FR-12 | Mic Recording | SWARM_PLAN W3.1 | `MicRecorder.tsx` + ปุ่มอัดใน ClipTimeline | ✏️ TODO | ✅ / FR-12.6 (ref voice) ยังไม่ทำ |
@@ -45,30 +45,31 @@
 
 ## ช่องโหว่ที่เห็นจาก matrix
 
-1. **เทสต์อัตโนมัติฝั่ง backend แทบไม่มี** — frontend มี vitest แล้ว แต่ pipeline หลักยังพึ่ง manual/PoC
+1. **เทสต์อัตโนมัติฝั่ง backend มีแล้ว 63 ตัว** (PR #9) แต่ยังกระจุกที่ `render/bundle/agent/files` — pipeline หลัก (tts/dubbing/mastering/music) ยังพึ่ง manual/PoC smoke script ไม่ใช่ pytest จริง
 2. Dubbing e2e (FR-03) + Auto-update (FR-08) ยังไม่เคย validate จริง — ตรงกับสถานะใน README/PACKAGING_SIDECAR
-3. FR ใหม่ (FR-09..15) มีเทสต์เฉพาะ timeline — routers ใหม่ (`projects/plugins/packs/agent/fs`) ยังไม่มีเทสต์เลย
+3. FR-09 (timeline) + FR-07 (files) + FR-10 (projects) + FR-14 (agent) มีเทสต์แล้ว — `plugins`/`packs`/`fs` routers ยังไม่มีเทสต์เลย
 
 ## ผลสแกน doc-graph (อัตโนมัติ)
 
-> สแกนล่าสุด 2026-08-09 โดย `tools/doc_graph_scan.py` — รันซ้ำ: `backend/.venv/Scripts/python.exe tools/doc_graph_scan.py`
+> สแกนล่าสุด 2026-08-19 (หลัง PR #9 ย้ายเข้า `apps/`) โดย `tools/doc_graph_scan.py` — รันซ้ำ: `apps/api/.venv/Scripts/python.exe tools/doc_graph_scan.py` (fallback `backend/.venv` ถ้ายังไม่ย้าย)
 
 | Metric | ค่า | เป้า |
 |---|---|---|
-| Requirements ↔ code (annotation `@req` จริงในโค้ด) | **61% (22/36)** | 50%+ ✅ |
-| Requirements ↔ tests (verifies) | 2% (1/36) — FR-09 ผ่าน timeline tests | 90% |
-| Code files ที่เอกสารอ้างถึง | 2% (2/76) | 80% |
-| Code files ที่มีเทสต์ | 3% (3/76) — เฉพาะ timeline | — |
+| Requirements ↔ code (annotation `@req` จริงในโค้ด) | **69% (25/36)** | 50%+ ✅ |
+| Requirements ↔ tests (verifies) | **13% (5/36)** — PR #9 เพิ่ม FR-07 (upload), FR-10 (projects/bundle), FR-14 (agent) เข้ามา | 90% |
+| Code files ที่เอกสารอ้างถึง | 1% (1/85) | 80% |
+| Code files ที่มีเทสต์ | **8% (7/85)** — apps/api/tests/ 8 ไฟล์ (63 เทสต์) + apps/desktop 8 ไฟล์ (111 เทสต์) นับตาม pairing ชื่อไฟล์ ไม่ใช่ % ของ pipeline โค้ดจริง — pipelines (tts/dubbing/mastering/music) ยังมีแต่ smoke script | — |
+| endpoints ที่สแกนพบ vs BLUEPRINT.yaml | 45 พบ, 42 มีใน blueprint, **3 ขาด** | 0 ขาด |
 
-**หมายเหตุ:** annotation migration **เสร็จแล้ว** (2026-08-09) — `@req/@spec` ครบ 44 ไฟล์ (backend 26 + frontend 18, รวม 55 จุด) ครอบคลุม FR-01..15 ทุกตัว → matrix นี้ตรวจ drift อัตโนมัติได้ตั้งแต่รอบนี้ · verifies ไม่ต้องใช้ `@tested`: scanner โยง test → code (คู่ชื่อไฟล์) → requirement ให้อัตโนมัติ (ตอนนี้ได้ FR-09 ตัวเดียว เพราะเทสต์มีแค่ฝั่ง timeline) · 14 requirements ที่ไม่มี implements เป็นเชิงนโยบาย/เอกสาร (NFR-01/03/04, AI-AGT-002..005, AI-ETH-001/002/004, BR-001, DR-xxx) — ปกติสำหรับ requirement ประเภทนี้
+**หมายเหตุ:** annotation migration **เสร็จแล้ว** (2026-08-09) — `@req/@spec` ครบ 44 ไฟล์ (backend 26 + frontend 18, รวม 55 จุด) ครอบคลุม FR-01..15 ทุกตัว → matrix นี้ตรวจ drift อัตโนมัติได้ตั้งแต่รอบนี้ · verifies ไม่ต้องใช้ `@tested`: scanner โยง test → code (คู่ชื่อไฟล์) → requirement ให้อัตโนมัติ (ตอนนี้ได้ 5/36 (FR-07, FR-09, FR-10, FR-14 และอีก 1 ตัว — ดูตาราง Requirements ↔ tests ด้านบน) — mermaid ด้านล่างวาดไว้ตอน FR-09 ตัวเดียว ยังไม่ได้อัปเดตตามรอบสแกนนี้) · 14 requirements ที่ไม่มี implements เป็นเชิงนโยบาย/เอกสาร (NFR-01/03/04, AI-AGT-002..005, AI-ETH-001/002/004, BR-001, DR-xxx) — ปกติสำหรับ requirement ประเภทนี้
 
 ### Reverse gap — โค้ดมีแล้วแต่ "ไม่มี requirement" (✅ ปิดแล้ว 2026-08-09)
 
-สแกนพบ **26 components + 21 endpoints** จาก Wave 2-5 ที่ SRS ยังไม่มี FR รองรับ — **เขียนเป็น FR-09..FR-15 ใน [SRS v1.1.0](../SRS.md) แล้ว** (แถว traceability อยู่ในตารางหลักข้างบน):
+สแกนพบ **26 components + 21 endpoints** จาก Wave 2-5 ที่ SRS ยังไม่มี FR รองรับ — **เขียนเป็น FR-09..FR-15 ใน [SRS v1.1.0](../product/SRS.md) แล้ว** (แถว traceability อยู่ในตารางหลักข้างบน):
 
 | FR | ฟีเจอร์ | โค้ดที่มีแล้ว |
 |---|---|---|
-| FR-09 | Workspace/Timeline (DAW floor + clips) | `frontend/src/timeline/*` (**มีเทสต์แล้ว 3 ไฟล์**), Timeline, ClipTimeline, StudioDock, StemMixer, FxRack |
+| FR-09 | Workspace/Timeline (DAW floor + clips) | `apps/desktop/src/timeline/*` (**มีเทสต์แล้ว 3 ไฟล์**), Timeline, ClipTimeline, StudioDock, StemMixer, FxRack |
 | FR-10 | Projects | `routers/projects.py` (5 endpoints), useProjectFile.ts |
 | FR-11 | Plugin Manager + Marketplace + Packs | `routers/plugins.py` + `packs.py` (5 endpoints), PluginsPanel, MarketplacePanel |
 | FR-12 | Mic Recording | MicRecorder.tsx |
@@ -113,3 +114,4 @@ graph LR
 | 1.0.0 | 2026-08-09 | Boss | สร้างผ่าน rwang:doc-architect |
 | 1.1.0 | 2026-08-09 | Boss | เพิ่มผลสแกน doc-graph + reverse gap (FR-09..15 เสนอ) + mermaid |
 | 1.2.0 | 2026-08-09 | Boss | ปิด reverse gap (FR-09..15 เข้า SRS v1.1.0 + แถวในตาราง FR) · annotation `@req` ลงโค้ด 44 ไฟล์ → coverage 61%, verifies FR-09 |
+| 1.3.0 | 2026-08-19 | Boss | สแกนใหม่หลัง PR #9 (monorepo migration เข้า apps/) — path ref backend/frontend -> apps/api/apps/desktop, coverage 61%->69% @req / 2%->13% verifies / 3%->8% files-with-tests, endpoint scan 45 (3 ขาดจาก BLUEPRINT.yaml) |

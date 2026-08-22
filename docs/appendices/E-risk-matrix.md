@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.0.0 |
+| **Version** | 1.1.0 |
 | **Status** | Active |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-09 |
+| **Last Updated** | 2026-08-19 |
 | **Approved By** | — |
 
 ความน่าจะเป็น/ผลกระทบ: L(ต่ำ) M(กลาง) H(สูง) — ทบทวนทุกครั้งที่จะ release
@@ -18,10 +18,10 @@
 | R-003 | **Voice clone misuse** (ปลอมเสียงหลอกลวง) กระทบชื่อเสียง/กฎหมาย | M | H | AI-ETH-001/002: consent checkbox + terms + พิจารณา watermark | Boss |
 | R-004 | **VRAM 12GB ไม่พอ** เมื่อ pipeline ซ้อนกัน (dubbing+brain / remix) | M | M | โหลดทีละขั้น + `empty_cache()` · ✏️ TODO VRAM budget ([model-lifecycle](../ai-system/model-lifecycle.md) §2) | Boss |
 | R-005 | **Model repo บน HF หาย/เปลี่ยน** (F5-TTS-THAI ckpt) | L | H | pin ckpt · ✏️ TODO mirror ckpt สำรอง (S3/local) + checksum | Boss |
-| R-006 | **Sidecar packaging ยังไม่เคย build จริง** — เอกสารระบุ SCAFFOLDING เท่านั้น | H | M — block การ ship | ต้อง build + validate 1 รอบเต็มตาม [PACKAGING_SIDECAR.md](../PACKAGING_SIDECAR.md) ก่อนถือว่าใช้ได้ | Boss |
+| R-006 | **Sidecar packaging ยังไม่เคย build จริง** — เอกสารระบุ SCAFFOLDING เท่านั้น | M (เดิม H) | M — block การ ship | 🟡 **PARTIAL 2026-08-19** (PR #9): sidecar build จริงแล้ว (PyInstaller ผ่าน tracked `.spec`, bundle 458MB→237MB), boot headless + ตอบ `/health` verified ในสคริปต์เอง — ยังขาด: รัน [CLEAN_VM_CHECKLIST.md](../operations/CLEAN_VM_CHECKLIST.md) ครบ 9 แถวบนเครื่องที่ไม่มี dev toolchain จริง ๆ ก่อนจะปิดเป็น MITIGATED | Boss |
 | R-007 | **GGUF/chat-template เสีย** ใน local model (เคยเจอ: gemma-4-12B คืน token รั่ว) | M | L | Verify Gate + ban list ใน [LOCAL_MODEL_LEDGER.md](../LOCAL_MODEL_LEDGER.md) | Boss |
-| R-008 | **Backend ไม่มีเทสต์อัตโนมัติ** — regression เงียบใน pipeline | H | M | ช่องโหว่จาก [D-traceability](D-traceability.md) · ✏️ TODO เริ่มจาก unit ของ pure functions | Boss |
-| R-009 | **ซาก build artifacts ปลอมตัวเป็น monorepo** — สแกน 2026-08-09 พบ `apps/api` มีแต่ `.pyc` 75 ไฟล์ (ไม่มี `.py` เลย), `apps/mcp` มีแต่ dist/node_modules, `apps/desktop` มีแต่ src-tauri bundle ~55k ไฟล์ — เสี่ยงคน/agent เข้าใจผิดว่าเป็น source จริงแล้วไปแก้ผิดที่ | L (เดิม H) | M | ✅ **MITIGATED 2026-08-09** (commit `389e346`): เพิ่ม `apps/` `packages/` `backend/build+dist` `runtime/` `orchestration/` ลง .gitignore พร้อมคำเตือนในไฟล์ — commit เผลอ ๆ เป็นไปไม่ได้แล้ว · **source of truth จริง = `backend/` + `frontend/`** · เศษที่เหลือ: ตัวไฟล์ยังอยู่บนดิสก์ (ลบทิ้งได้ถ้าอยากเคลียร์) · ถ้าจะทำ monorepo จริง ต้องถอด `apps/` ออกจาก .gitignore ก่อน | Boss |
+| R-008 | **Backend ไม่มีเทสต์อัตโนมัติ** — regression เงียบใน pipeline | L (เดิม H) | M | ✅ **MITIGATED 2026-08-19** (PR #9, merge `d836536`): `apps/api/tests/` มี 63 เทสต์ (bundle, render plan/mix, validate, agent contract, files upload traversal, smoke API) + frontend 111 เทสต์ (vitest) — `test.bat` รันทั้งสองชุดใน CI แล้ว ([release.yml](../../.github/workflows/release.yml)) · ยังไม่ครอบ: dubbing/mastering/music pipeline เอง (มีแต่ smoke script ไม่ใช่ pytest) | Boss |
+| R-009 | **ซาก build artifacts ปลอมตัวเป็น monorepo** — สแกน 2026-08-09 พบ `apps/api` มีแต่ `.pyc` 75 ไฟล์ (ไม่มี `.py` เลย), `apps/mcp` มีแต่ dist/node_modules, `apps/desktop` มีแต่ src-tauri bundle ~55k ไฟล์ — เสี่ยงคน/agent เข้าใจผิดว่าเป็น source จริงแล้วไปแก้ผิดที่ | L | — | ✅ **RESOLVED 2026-08-19** (PR #9): monorepo ย้ายเป็นของจริงแล้ว — `backend/`+`frontend/` (flat) ย้ายเข้า `apps/api/`+`apps/desktop/` จริง พร้อม `apps/mcp/`+`packages/contracts/` ใหม่, ถอดบล็อก `apps/`+`packages/` ออกจาก .gitignore ตามที่คอมเมนต์เดิมเตือนไว้ · **source of truth ปัจจุบัน = `apps/` + `packages/`** (ไม่ใช่ `backend/`/`frontend/` อีกต่อไป) · เศษที่เหลือบนดิสก์เครื่องนี้: `backend/.venv` (ล็อกไฟล์อยู่ ย้ายไป `apps/api/.venv` ไม่สำเร็จ — ยังใช้งานได้ผ่าน fallback ในสคริปต์), git ไม่ track ไฟล์ `.py`/source ใต้ `backend/`/`frontend/` แล้ว (`git ls-files` ยืนยัน) | Boss |
 
 ## Version History
 
