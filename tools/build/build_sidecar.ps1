@@ -22,10 +22,11 @@ $venvPyInstaller = Join-Path $venvDir "Scripts\pyinstaller.exe"
 $distDir = Join-Path $backendDir "dist"
 $buildDir = Join-Path $backendDir "build"
 $specName = "g-music-backend"
-# .spec ตัวนี้ track ไว้ใน git โดยตั้งใจ (excludes/hiddenimports ที่ปรับด้วยมือหลัง
-# วน build จริงหลายรอบ — ดู g-music-backend.spec เอง) ห้ามลบ/regenerate ใหม่เด็ดขาด
-# มิฉะนั้น PyInstaller จะไล่ lazy import ตาม torch/demucs/boto3/numba/pyarrow ที่ทำให้
-# bundle บวมกลับไปที่ ~458MB (จากที่ลดลงมาเหลือ ~237MB)
+# This .spec file is intentionally tracked in git (excludes/hiddenimports were
+# hand-tuned after several real builds -- see g-music-backend.spec itself).
+# NEVER delete or regenerate it: PyInstaller will chase lazy imports through
+# torch/demucs/boto3/numba/pyarrow and the bundle balloons back to ~458MB
+# (down from the ~237MB it is with the tuned excludes).
 $specFile = Join-Path $backendDir "$specName.spec"
 $sidecarDir = Join-Path $root "apps\desktop\src-tauri\binaries"
 $entryScript = Join-Path $backendDir "sidecar_entry.py"
@@ -71,7 +72,7 @@ Write-Host "[*] Backend profile: $profile" -ForegroundColor Green
 
 if (-not (Test-Path $specFile)) {
     Write-Host "[!] Missing tracked spec file: $specFile" -ForegroundColor Red
-    Write-Host "    This file is checked into git on purpose (see comment above) — it must" -ForegroundColor Yellow
+    Write-Host "    This file is checked into git on purpose (see comment above) -- it must" -ForegroundColor Yellow
     Write-Host "    already exist. Do not auto-generate a new one; that drops the excludes" -ForegroundColor Yellow
     Write-Host "    tuning and reinflates the bundle." -ForegroundColor Yellow
     exit 1
@@ -136,12 +137,12 @@ if (-not (Test-Path $builtExe)) {
 }
 Write-Host "[*] Built executable: $builtExe" -ForegroundColor Green
 
-# ── Smoke test: boot the exe headless และรอ /health ก่อนเชื่อว่า build ใช้ได้จริง ──
-# (เจอบั๊กจริงจากขั้นนี้มาแล้ว: DATA_DIR ผิดที่, sidecar boot ไม่ขึ้นเงียบ ๆ)
+# -- Smoke test: boot the exe headless and wait for /health before trusting the build --
+# (hit a real bug from this step before: wrong DATA_DIR, sidecar failing to boot silently)
 $smokePort = 8756
 $smokeLog = Join-Path $backendDir "sidecar-smoke.log"
 $smokeErr = Join-Path $backendDir "sidecar-smoke.err"
-Write-Host "[*] Smoke-testing built exe against /health…" -ForegroundColor Cyan
+Write-Host "[*] Smoke-testing built exe against /health..." -ForegroundColor Cyan
 $proc = Start-Process -FilePath $builtExe -WorkingDirectory (Split-Path $builtExe) `
     -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErr -PassThru -WindowStyle Hidden
 $healthy = $false
@@ -160,13 +161,13 @@ try {
     }
 }
 if (-not $healthy) {
-    Write-Host "[!] Sidecar did not answer /health within 30s — see sidecar-smoke.log/.err" -ForegroundColor Red
+    Write-Host "[!] Sidecar did not answer /health within 30s -- see sidecar-smoke.log/.err" -ForegroundColor Red
     exit 1
 }
-Write-Host "[*] Sidecar answered /health — smoke test passed" -ForegroundColor Green
+Write-Host "[*] Sidecar answered /health -- smoke test passed" -ForegroundColor Green
 
-# smoke test สร้าง data/ ไว้ข้าง exe (sidecar_entry.py ตั้ง DATA_DIR ที่นั่น) — ต้องไม่ให้
-# หลุดติดไปกับ binaries/ ที่ copy ให้ Tauri (เคยเป็นบั๊กมาแล้ว)
+# The smoke test creates a data/ dir next to the exe (sidecar_entry.py points DATA_DIR
+# there) -- must not leak into binaries/ that gets copied for Tauri (was a real bug).
 $leakedData = Join-Path $distDir "$specName\data"
 if (Test-Path $leakedData) { Remove-Item -Recurse -Force $leakedData }
 Remove-Item -ErrorAction SilentlyContinue -Force $smokeLog, $smokeErr

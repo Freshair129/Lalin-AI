@@ -59,7 +59,7 @@
 | Requirements ↔ tests (verifies) | **13% (5/36)** — PR #9 เพิ่ม FR-07 (upload), FR-10 (projects/bundle), FR-14 (agent) เข้ามา | 90% |
 | Code files ที่เอกสารอ้างถึง | 1% (1/85) | 80% |
 | Code files ที่มีเทสต์ | **8% (7/85)** — apps/api/tests/ 8 ไฟล์ (63 เทสต์) + apps/desktop 8 ไฟล์ (111 เทสต์) นับตาม pairing ชื่อไฟล์ ไม่ใช่ % ของ pipeline โค้ดจริง — pipelines (tts/dubbing/mastering/music) ยังมีแต่ smoke script | — |
-| endpoints ที่สแกนพบ vs BLUEPRINT.yaml | 45 พบ, 42 มีใน blueprint, **3 ขาด** | 0 ขาด |
+| endpoints ที่สแกนพบ vs BLUEPRINT.yaml | 45 พบ, 45 มีใน blueprint, **0 ขาด** (ปิดแล้ว 2026-08-19 — เพิ่ม /render, /projects/{pid}/bundle, /projects/import) | 0 ขาด |
 
 **หมายเหตุ:** annotation migration **เสร็จแล้ว** (2026-08-09) — `@req/@spec` ครบ 44 ไฟล์ (backend 26 + frontend 18, รวม 55 จุด) ครอบคลุม FR-01..15 ทุกตัว → matrix นี้ตรวจ drift อัตโนมัติได้ตั้งแต่รอบนี้ · verifies ไม่ต้องใช้ `@tested`: scanner โยง test → code (คู่ชื่อไฟล์) → requirement ให้อัตโนมัติ (ตอนนี้ได้ 5/36 (FR-07, FR-09, FR-10, FR-14 และอีก 1 ตัว — ดูตาราง Requirements ↔ tests ด้านบน) — mermaid ด้านล่างวาดไว้ตอน FR-09 ตัวเดียว ยังไม่ได้อัปเดตตามรอบสแกนนี้) · 14 requirements ที่ไม่มี implements เป็นเชิงนโยบาย/เอกสาร (NFR-01/03/04, AI-AGT-002..005, AI-ETH-001/002/004, BR-001, DR-xxx) — ปกติสำหรับ requirement ประเภทนี้
 

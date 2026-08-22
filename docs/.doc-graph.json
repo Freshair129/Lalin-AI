@@ -1,15 +1,15 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-23T04:11:47+07:00",
+  "generated_at": "2026-08-23T04:38:35+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 297,
-    "total_edges": 315,
-    "stale_edges": 2,
+    "total_edges": 313,
+    "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
@@ -1082,10 +1082,10 @@
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "f88d28f87377",
-      "prev_hash": "f88d28f87377",
+      "hash": "fc79f6e4e30f",
+      "prev_hash": "fc79f6e4e30f",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T04:38:24+07:00"
     },
     {
       "id": "doc:C-model-cards",
@@ -1142,10 +1142,10 @@
       "type": "document",
       "path": "docs/appendices/D-traceability.md",
       "title": "D-traceability",
-      "hash": "5b2a13a71c70",
-      "prev_hash": "5b2a13a71c70",
+      "hash": "cea5cba0c2e6",
+      "prev_hash": "cea5cba0c2e6",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T04:38:35+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -3086,14 +3086,6 @@
     },
     {
       "from": "code:apps/api/app/routers/projects.py",
-      "to": "doc:BLUEPRINT",
-      "type": "stale",
-      "status": "stale",
-      "source": "dag-propagation",
-      "reason": "2 endpoint(s) in code not in BLUEPRINT api: GET /projects/{pid}/bundle, POST /projects/import"
-    },
-    {
-      "from": "code:apps/api/app/routers/projects.py",
       "to": "req:FR-10",
       "type": "implements",
       "status": "current",
@@ -3112,14 +3104,6 @@
       "type": "exposes",
       "status": "current",
       "source": "code-scan"
-    },
-    {
-      "from": "code:apps/api/app/routers/render.py",
-      "to": "doc:BLUEPRINT",
-      "type": "stale",
-      "status": "stale",
-      "source": "dag-propagation",
-      "reason": "1 endpoint(s) in code not in BLUEPRINT api: POST /render"
     },
     {
       "from": "code:apps/api/app/routers/render.py",

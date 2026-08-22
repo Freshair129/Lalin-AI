@@ -1,7 +1,7 @@
 # BLUEPRINT.yaml — G-Music (legacy machine-readable blueprint — ดู docs/DOCS_INDEX.md)
 # Machine-readable spec ของ endpoints/components (ไม่ใช่ IA ปัจจุบัน — ดู docs/design/LALIN_SITEMAP_SOT.md สำหรับ product IA)
 # sync กับ: PRD.md · SRS.md · SPEC.md · ROADMAP_MUSIC.md (UI_SITEMAP.md ย้ายไป docs/archive/ แล้ว)
-# วันที่: 2026-08-09 (resync กับ apps/api + apps/desktop หลัง repo migration — Lalin Studio shell 8 แท็บ + speech/runtime-status/voices-patch)
+# วันที่: 2026-08-19 (เพิ่ม endpoint ที่ doc-graph scan เจอว่าขาด: /render, /projects/{pid}/bundle, /projects/import — จาก PR #9)
 
 meta:
   name: G-Music
@@ -76,7 +76,7 @@ sitemap:
     backend_gate: BackendGate — บล็อกทุกแท็บจนกว่า useBackendReadiness().state === "ready" (poll GET /health)
     overlay: [update_dialog, activity_overlay, context_menu(คลิกขวา clip), dialog(prompt/confirm), node_designer]
   backend_profile:             # main.py — router ที่ mount ขึ้นกับ profile (apps/api)
-    lite: [health, brain, voices, files, fs, packs, projects, jobs, agent, plugins, speech]   # ไม่โหลด ML หนัก — ใช้ตรวจ installer/packaging
+    lite: [health, brain, voices, files, fs, packs, projects, render, jobs, agent, plugins, speech]   # ไม่โหลด ML หนัก — ใช้ตรวจ installer/packaging (render ใช้แค่ scipy/soundfile)
     full: lite + [tts, dubbing, mastering, music]                                              # dev/source ปกติ
   global_state:
     app: [tab, activityOpen, menu]                              # App.tsx
@@ -291,11 +291,16 @@ api:
     - {method: GET,    path: "/jobs/{id}"}
     - {method: WS,     path: "/jobs/ws/{id}",      streams: Job}
     # projects — บันทึก/โหลด workspace (แชร์ข้ามเครื่องที่ต่อ backend เดียวกัน)
+    # หรือย้ายข้ามเครื่องด้วยไฟล์ .gmp (zip: project.json + manifest.json + media/) ก็ได้
     - {method: GET,    path: /projects,            returns: "projects[id,name]"}
     - {method: POST,   path: /projects,            body: [name, data],                returns: id}
     - {method: GET,    path: "/projects/{pid}"}
     - {method: PUT,    path: "/projects/{pid}",    body: [name, data]}
     - {method: DELETE, path: "/projects/{pid}"}
+    - {method: GET,    path: "/projects/{pid}/bundle", returns: ".gmp file (zip)"}
+    - {method: POST,   path: /projects/import,     body: [".gmp file (multipart)"],   returns: "id, name, renamed{}"}
+    # render — mix ทั้ง arrangement (tracks/clips/assets/pan/gain/fade) ลงไฟล์เดียว เป็น job
+    - {method: POST,   path: /render,              body: [project, format(wav|mp3), sample_rate, master], returns: job_id}
     # marketplace + plugins (BYOM)
     - {method: GET,    path: /packs,               returns: "packs[] + installed (mock in-memory)"}
     - {method: GET,    path: "/packs/{pack_id}"}
