@@ -18,9 +18,15 @@ if ($VenvPath) {
     }
 }
 $venvPy = Join-Path $venvDir "Scripts\python.exe"
-$venvPyInstaller = Join-Path $venvDir "Scripts\pyinstaller.exe"
-$distDir = Join-Path $backendDir "dist"
-$buildDir = Join-Path $backendDir "build"
+# Build into a fresh, uniquely-named dist/build dir every run instead of
+# deleting a previous run's in place. On this dev machine a prior run's
+# output directory has been observed staying locked (empty of files, but the
+# directory handle itself held open by something -- never conclusively
+# identified, and 60s+ of retries did not clear it) well past any plausible
+# antivirus-scan window. Building fresh sidesteps needing to know why.
+$runId = [guid]::NewGuid().ToString("N").Substring(0, 8)
+$distDir = Join-Path $backendDir "dist-$runId"
+$buildDir = Join-Path $backendDir "build-$runId"
 $specName = "g-music-backend"
 # This .spec file is intentionally tracked in git (excludes/hiddenimports were
 # hand-tuned after several real builds -- see g-music-backend.spec itself).
@@ -79,9 +85,15 @@ if (-not (Test-Path $specFile)) {
 }
 Write-Host "[*] Found tracked spec: $specFile" -ForegroundColor Green
 
-if (-not (Test-Path $venvPyInstaller)) {
-    Write-Host "[!] PyInstaller is not installed in backend venv; installing it now." -ForegroundColor Yellow
-    Write-Host "[i] Ensuring pip is available in backend venv." -ForegroundColor DarkYellow
+# Invoked via "python -m PyInstaller" below rather than the Scripts\pyinstaller.exe
+# console-script wrapper: that wrapper embeds an absolute path to its own venv's
+# python.exe at install time, so it silently breaks (fails instantly, no output)
+# if the venv directory is ever moved/renamed after pip installed it -- "python -m"
+# has no such problem since it just resolves through the interpreter that ran it.
+& $venvPy -m PyInstaller --version *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[!] PyInstaller is not installed in venv; installing it now." -ForegroundColor Yellow
+    Write-Host "[i] Ensuring pip is available in venv." -ForegroundColor DarkYellow
     & $venvPy -m ensurepip --upgrade
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[!] Failed to bootstrap pip with ensurepip." -ForegroundColor Red
@@ -92,12 +104,13 @@ if (-not (Test-Path $venvPyInstaller)) {
         Write-Host "[!] Failed to install PyInstaller." -ForegroundColor Red
         exit 1
     }
-    if (-not (Test-Path $venvPyInstaller)) {
-        Write-Host "[!] PyInstaller install completed but executable was not found: $venvPyInstaller" -ForegroundColor Red
+    & $venvPy -m PyInstaller --version *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[!] PyInstaller install completed but 'python -m PyInstaller' still fails." -ForegroundColor Red
         exit 1
     }
 }
-Write-Host "[*] Found PyInstaller: $venvPyInstaller" -ForegroundColor Green
+Write-Host "[*] Found PyInstaller (python -m PyInstaller) in: $venvPy" -ForegroundColor Green
 
 $targetTriple = "x86_64-pc-windows-msvc"
 try {
@@ -113,14 +126,20 @@ try {
 }
 Write-Host "[*] Target triple: $targetTriple" -ForegroundColor Green
 
-if (Test-Path $distDir) { Remove-Item -Recurse -Force $distDir }
-if (Test-Path $buildDir) { Remove-Item -Recurse -Force $buildDir }
+# Best-effort cleanup of any leftover dist-*/build-* dirs from earlier runs.
+# Non-fatal: this run has its own fresh $distDir/$buildDir regardless, so a
+# stale directory that won't delete (locked by something -- see note above)
+# is left behind for a human to clean up later rather than blocking the build.
+Get-ChildItem -Path $backendDir -Directory -Filter "dist-*" -ErrorAction SilentlyContinue |
+    ForEach-Object { try { Remove-Item -Recurse -Force $_.FullName -ErrorAction Stop } catch { } }
+Get-ChildItem -Path $backendDir -Directory -Filter "build-*" -ErrorAction SilentlyContinue |
+    ForEach-Object { try { Remove-Item -Recurse -Force $_.FullName -ErrorAction Stop } catch { } }
 
 Push-Location $backendDir
 try {
     Write-Host "[*] Running PyInstaller from tracked spec (--onedir). This may take several minutes with ML dependencies." -ForegroundColor Cyan
     $env:GMUSIC_BACKEND_PROFILE = $profile
-    & $venvPyInstaller --noconfirm --clean $specFile
+    & $venvPy -m PyInstaller --noconfirm --clean --distpath $distDir --workpath $buildDir $specFile
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[!] PyInstaller failed; inspect the log above." -ForegroundColor Red
@@ -147,12 +166,21 @@ $proc = Start-Process -FilePath $builtExe -WorkingDirectory (Split-Path $builtEx
     -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErr -PassThru -WindowStyle Hidden
 $healthy = $false
 try {
-    for ($i = 0; $i -lt 30; $i++) {
+    # First launch of a freshly-extracted --onedir bundle can be slow (antivirus
+    # real-time scanning 1000s of new files/DLLs for the first time, disk/CPU
+    # contention on a busy machine) -- shorter budgets here have produced
+    # false-negative failures even though the exe had genuinely started and was
+    # serving requests by the time it was killed. 180s gives real headroom.
+    #
+    # Uses curl.exe (built into Windows 10 1803+) rather than Invoke-WebRequest:
+    # Invoke-WebRequest was observed hanging well past its own -TimeoutSec here,
+    # and separately returning a false failure despite the exe already answering
+    # requests -- curl.exe's own --max-time has been more predictable.
+    for ($i = 0; $i -lt 180; $i++) {
         Start-Sleep -Seconds 1
-        try {
-            $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$smokePort/health" -UseBasicParsing -TimeoutSec 2
-            if ($resp.StatusCode -eq 200) { $healthy = $true; break }
-        } catch { }
+        & curl.exe -s -f -o NUL --max-time 2 "http://127.0.0.1:$smokePort/health" 2>$null
+        if ($LASTEXITCODE -eq 0) { $healthy = $true; break }
+        $proc.Refresh()
         if ($proc.HasExited) { break }
     }
 } finally {
@@ -161,7 +189,7 @@ try {
     }
 }
 if (-not $healthy) {
-    Write-Host "[!] Sidecar did not answer /health within 30s -- see sidecar-smoke.log/.err" -ForegroundColor Red
+    Write-Host "[!] Sidecar did not answer /health within 180s -- see sidecar-smoke.log/.err" -ForegroundColor Red
     exit 1
 }
 Write-Host "[*] Sidecar answered /health -- smoke test passed" -ForegroundColor Green

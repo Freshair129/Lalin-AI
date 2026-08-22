@@ -49,7 +49,9 @@ backend/build/
 backend/dist/
 backend/*.spec
 apps/api/build/
+apps/api/build-*/
 apps/api/dist/
+apps/api/dist-*/
 apps/api/*.spec
 
 # OS / IDE

@@ -7,7 +7,23 @@
 #
 # excludes = ML stack ทั้งหมด — sidecar ที่ ship คือ **lite runtime**
 # ผู้ใช้ติดตั้ง torch/whisper/f5-tts/demucs เองผ่านแท็บปลั๊กอิน (BYOM, ดู risk R-001)
+import os
+import sys
+
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+# collect_submodules("app") runs here, before Analysis(pathex=['.']) is even
+# constructed below -- pathex only affects PyInstaller's own module graph once
+# Analysis() actually builds it, it does NOT retroactively put apps/api on
+# sys.path for code that already ran earlier in this file. Without this
+# explicit insert, pyinstaller.exe's own interpreter never has "app" importable
+# at this point (its sys.path is just venv/Scripts + site-packages), so
+# collect_submodules("app") silently returns [] and nothing under app/ -- not
+# even FastAPI/pydantic, since they're only reachable by following app's own
+# imports -- ever gets analyzed or bundled. The resulting exe still "builds"
+# successfully; it just crashes at runtime with ModuleNotFoundError: No module
+# named 'app'. Found this the hard way after PR #9 moved backend/ -> apps/api/.
+sys.path.insert(0, os.path.abspath(SPECPATH))
 
 hiddenimports = (
     collect_submodules("app")
