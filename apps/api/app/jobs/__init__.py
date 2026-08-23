@@ -1,3 +1,3 @@
-from .manager import Job, JobManager, jobs
+from .manager import Job, JobManager, is_terminal_status, jobs
 
-__all__ = ["Job", "JobManager", "jobs"]
+__all__ = ["Job", "JobManager", "is_terminal_status", "jobs"]

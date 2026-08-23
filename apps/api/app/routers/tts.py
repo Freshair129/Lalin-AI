@@ -8,7 +8,9 @@ from fastapi import APIRouter
 
 from ..config import get_settings
 from ..jobs import jobs
+from ..jobs.resources import resource_for_requested_device
 from ..pipelines import tts
+from ..runtime_devices import resolve_tts_runtime
 from ..schemas import TTSRequest
 from ..services import voices
 from ..utils.ids import short_id
@@ -33,5 +35,10 @@ async def synthesize(req: TTSRequest):
         )
         return {"output": out_path}
 
-    job = jobs.spawn("tts", task)
+    settings = get_settings()
+    resource = resource_for_requested_device(
+        settings.tts_device,
+        resolve_auto=lambda: resolve_tts_runtime(settings.tts_device),
+    )
+    job = jobs.spawn("tts", task, resource=resource)
     return {"job_id": job.id}

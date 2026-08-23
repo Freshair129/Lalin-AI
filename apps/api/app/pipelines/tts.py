@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ..config import get_settings
+from ..runtime_devices import resolve_tts_runtime
 
 _f5 = None
 _xtts = None
@@ -37,6 +38,7 @@ def _get_f5():
                 "ยังไม่ได้ติดตั้ง f5-tts — ดู scripts/setup_windows.ps1"
             ) from e
         s = get_settings()
+        device = resolve_tts_runtime(s.tts_device).effective
         repo = s.f5_model_repo  # VIZINTZOR/F5-TTS-THAI
         ckpt = str(cached_path(f"hf://{repo}/model_1000000.pt"))
         vocab = str(cached_path(f"hf://{repo}/vocab.txt"))
@@ -44,7 +46,7 @@ def _get_f5():
             model="F5TTS_Base",
             ckpt_file=ckpt,
             vocab_file=vocab,
-            device=s.tts_device,
+            device=device,
         )
     return _f5
 
@@ -75,7 +77,8 @@ def _get_xtts():
         except ImportError as e:  # noqa: BLE001
             raise RuntimeError("ยังไม่ได้ติดตั้ง TTS (Coqui) — ดู setup script") from e
         s = get_settings()
-        _xtts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(s.tts_device)
+        device = resolve_tts_runtime(s.tts_device).effective
+        _xtts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
     return _xtts
 
 

@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.1.0 |
-| **Status** | Active |
+| **Version** | 1.1.1b |
+| **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-19 |
-| **Approved By** | — |
+| **Last Updated** | 2026-08-23 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 ความน่าจะเป็น/ผลกระทบ: L(ต่ำ) M(กลาง) H(สูง) — ทบทวนทุกครั้งที่จะ release
 
@@ -16,7 +16,7 @@
 | R-001 | **GPL contamination** — matchering/pedalboard/parselmouth ติด GPL ถ้า bundle ขาย | H (ถ้าไม่จัดการ) | H — โมเดลธุรกิจพัง | BR-002: แยกเป็น optional plugin/BYOM ไม่ bundle ใน core ([AI-ETH-003](../ai-system/ethics-governance.md)) | Boss |
 | R-002 | **XTTS v2 = CPML non-commercial** หลุดเข้า installer ขาย | M | H | ไม่ bundle · fallback ไทยเป็น F5 อยู่แล้ว (FR-02.5) · ตรวจ manifest ก่อน build | Boss |
 | R-003 | **Voice clone misuse** (ปลอมเสียงหลอกลวง) กระทบชื่อเสียง/กฎหมาย | M | H | AI-ETH-001/002: consent checkbox + terms + พิจารณา watermark | Boss |
-| R-004 | **VRAM 12GB ไม่พอ** เมื่อ pipeline ซ้อนกัน (dubbing+brain / remix) | M | M | โหลดทีละขั้น + `empty_cache()` · ✏️ TODO VRAM budget ([model-lifecycle](../ai-system/model-lifecycle.md) §2) | Boss |
+| R-004 | **VRAM 12GB ไม่พอ** เมื่อ pipeline ซ้อนกัน (dubbing+brain / remix) | M | M | 🟡 **PARTIAL 2026-08-23 (G-07)**: CUDA jobs เข้า FIFO concurrency 1, CPU jobs bypass, cleanup กลางหลัง terminal และมี configurable `gpu_min_free_mb` probe พร้อม automated concurrency/wait/cleanup tests; แต่ threshold ยัง `0` เพราะยังไม่มี peak measurement และยังไม่ได้รัน Dubbing+Remix concurrent-submit บน RTX 3060 จริง จึงยังไม่ MITIGATED ([model-lifecycle](../ai-system/model-lifecycle.md) §2) | Boss |
 | R-005 | **Model repo บน HF หาย/เปลี่ยน** (F5-TTS-THAI ckpt) | L | H | pin ckpt · ✏️ TODO mirror ckpt สำรอง (S3/local) + checksum | Boss |
 | R-006 | **Sidecar packaging ยังไม่เคย build จริง** — เอกสารระบุ SCAFFOLDING เท่านั้น | M (เดิม H) | M — block การ ship | 🟡 **PARTIAL 2026-08-19/23**: build จาก `frontend`/`backend` เดิม (ก่อน PR #9) verified จริงตอน Phase D — แต่หลัง PR #9 ย้ายเข้า `apps/` **sidecar พังจริง ๆ** โดยไม่มีใครรู้: `collect_submodules("app")` ใน `.spec` รันก่อน PyInstaller ใส่ `pathex` ทำให้ `apps/api` ไม่อยู่บน sys.path ตอนนั้น → ทั้ง package `app` (รวม FastAPI/pydantic) ไม่ถูก bundle เลย — build "สำเร็จ" แต่ exe crash ทันทีตอนเปิดด้วย `ModuleNotFoundError` (จะพังที่แถว 2 ของ checklist แน่นอนถ้าไม่เจอ) แก้แล้ว 2026-08-23 (ดู commit `c885c04`) — build จริง+bundle 237MB+`/health` ตอบ 200 จริง verified ด้วยมือหลายรอบ (ไม่ใช่ผ่านสคริปต์อัตโนมัติ — smoke-test gate ในสคริปต์เองไม่เสถียรเฉพาะใน session debug นี้ ดู commit message) — ยังขาด: รัน [CLEAN_VM_CHECKLIST.md](../operations/CLEAN_VM_CHECKLIST.md) ครบ 9 แถวบนเครื่องที่ไม่มี dev toolchain จริง ๆ ก่อนจะปิดเป็น MITIGATED | Boss |
 | R-007 | **GGUF/chat-template เสีย** ใน local model (เคยเจอ: gemma-4-12B คืน token รั่ว) | M | L | Verify Gate + ban list ใน [LOCAL_MODEL_LEDGER.md](../LOCAL_MODEL_LEDGER.md) | Boss |
@@ -29,3 +29,4 @@
 |---------|------|--------|---------|
 | 1.0.0 | 2026-08-09 | Boss | สร้างผ่าน rwang:doc-architect |
 | 1.1.0 | 2026-08-09 | Boss | R-009: reframe เป็น artifact ghosts (จากผลสแกน) → **MITIGATED** ด้วย .gitignore (commit 389e346), โอกาส H→L |
+| 1.1.1b | 2026-08-23 | LALIN | บันทึก G-07 automated admission evidence ใน R-004 โดยคง risk เปิดจนกว่าจะมี measured VRAM/manual RTX gate |

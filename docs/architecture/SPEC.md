@@ -6,17 +6,18 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.0.1 |
-| **Status** | Active |
+| **Doc Version** | 1.1.0b |
+| **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-08-09 |
-| **Approved By** | — |
+| **Last Updated** | 2026-08-23 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-06-27 | Boss | ฉบับแรก |
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
+| 1.1.0b | 2026-08-23 | LALIN | เพิ่ม Phase 1 device resolution, durable job lifecycle และ GPU admission architecture |
 
 ---
 
@@ -46,7 +47,7 @@
 ### 2.1 Module Structure
 
 ```
-backend/app/
+apps/api/app/
 ├── main.py              # FastAPI app + CORS + router mount
 ├── config.py            # pydantic-settings (env-based config)
 ├── schemas.py           # Pydantic request/response models
@@ -472,23 +473,41 @@ run_remix(*, source_audio, beat_audio, offset_ms=None, do_autotune=True,
 class Job:
     id: str           # short_id() → 12-char hex
     kind: str         # "tts" | "dubbing" | "mastering"
-    status: str       # "queued" | "running" | "done" | "error"
+    status: str       # "queued" | "running" | "done" | "error" | "interrupted"
     progress: float   # 0.0–1.0 (rounded to 3 decimals)
     message: str      # human-readable status text
     result: dict | None
     error: str | None
+    resource: str     # "cpu" | "gpu" — explicit จาก router call site
+    created_at: str   # ISO-8601 UTC
+    updated_at: str   # ISO-8601 UTC
 
 class JobManager:
     _jobs: dict[str, Job]
     _subs: dict[str, set[asyncio.Queue]]
+    _gpu_lock: asyncio.Lock             # FIFO, concurrency 1
     
-    def create(kind) -> Job
-    def spawn(kind, task_fn) -> Job     # create + asyncio.create_task
+    def create(kind, resource="cpu") -> Job
+    def spawn(kind, task_fn, resource="cpu") -> Job
     async def _run(job, task_fn)        # set running, call task, set done/error
     def subscribe(job_id) -> Queue      # for WebSocket
     def unsubscribe(job_id, queue)
     def _broadcast(job)                 # push to all subscribers
 ```
+
+Snapshot store = `data_dir/jobs.json` (`schema_version=1`) เขียน temp file แล้ว
+`os.replace()` เพื่อไม่ทิ้งไฟล์ครึ่งก้อน หากไฟล์อ่านไม่ได้ให้ย้ายเป็น
+`jobs.corrupt-<timestamp>.json` แล้ว boot ด้วย registry ว่าง งาน queued/running ที่โหลดจาก
+process ก่อนหน้ากลายเป็น interrupted และไม่ resume อัตโนมัติ
+
+Device resolution ทำตอน pipeline เริ่มใช้ ML ไม่ใช่ตอน boot/status poll:
+
+- requested `auto` -> CUDA ถ้า engine runtime ยืนยันได้ ไม่เช่นนั้น CPU
+- ASR effective CPU -> `int8`; CUDA -> `float16`
+- `/runtime/status.runtime.devices` อ่าน process registry โดยไม่ cold-import torch
+- TTS/Dubbing/Remix ที่ effective CUDA เข้า GPU FIFO; Render/Mastering/Export FX เป็น CPU
+- VRAM threshold อ่านจาก `gpu_min_free_mb` ต่อ kind; ค่า `0` หมายถึงยังไม่มี measured
+  budget จึง enforce เฉพาะ single-GPU FIFO และยังปิด R-004 ไม่ได้
 
 ### 4.2 WebSocket Flow
 
@@ -712,15 +731,15 @@ Update Endpoint:
 ### 6.1 NSIS Installer
 
 ```
-Output:     G-Music_<version>_x64-setup.exe (~3.5 MB)
+Output:     G-Music_<version>_x64-setup.exe (lite artifact ล่าสุด 74,190,264 bytes)
 Languages:  Thai, English
 Signing:    minisign signature (.exe.sig)
 
-Build command:
-  TAURI_SIGNING_PRIVATE_KEY=<key> npx tauri build
+Build command (repository root):
+  powershell -ExecutionPolicy Bypass -File tools/build/build_installer.ps1
 
 Artifacts:
-  frontend/src-tauri/target/release/bundle/nsis/
+  apps/desktop/src-tauri/target/release/bundle/nsis/
   ├── G-Music_0.1.0_x64-setup.exe       # installer
   └── G-Music_0.1.0_x64-setup.exe.sig   # signature
 ```

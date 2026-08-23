@@ -7,7 +7,9 @@ import sys
 from fastapi import APIRouter, Request
 
 from ..brain import current_summary, get_brain
+from ..config import get_settings
 from ..jobs import jobs
+from ..runtime_devices import device_registry
 
 router = APIRouter(tags=["health"])
 
@@ -68,12 +70,17 @@ async def runtime_status(request: Request):
         None,
     )
     config = current_summary()
+    settings = get_settings()
     return {
         "telemetry": _system_telemetry(),
         "runtime": {
             "profile": getattr(request.app.state, "backend_profile", None),
             "model": config.get("model"),
             "agent": "Lalin",
+            "devices": device_registry.snapshot(
+                tts_requested=settings.tts_device,
+                asr_requested=settings.asr_device,
+            ),
         },
         "activity": {
             "job_id": active.id if active else None,

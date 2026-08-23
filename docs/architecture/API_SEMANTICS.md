@@ -50,10 +50,14 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 ## jobs.py — สถานะงาน + progress ([FR-06](../product/SRS.md))
 
 - WS ส่ง **snapshot ปัจจุบันเป็นข้อความแรกเสมอ** แล้วจึงตามด้วย update
-- ถ้า job จบไปแล้วตอนต่อ (`done`/`error`) จะส่ง snapshot แล้ว**ปิดทันที**
+- ถ้า job จบไปแล้วตอนต่อ (`done`/`error`/`interrupted`) จะส่ง snapshot แล้ว**ปิดทันที**
 - job ไม่มีจริง → ส่ง `{"error": "ไม่พบงาน"}` **ใน payload แล้วปิด — ไม่ใช่ HTTP 404** (ต่างจาก `GET /jobs/{id}` ที่ตอบ 404 จริง)
 - unsubscribe ทำใน `finally` เสมอ
 - **ไม่มี endpoint ยกเลิก job** — Batch Queue (FR-13) จึง pause ได้แค่แบบ "หยุดหลังงานปัจจุบันเสร็จ"
+- snapshot ถูกเขียนแบบ atomic ที่ `data_dir/jobs.json`; เปิด backend ใหม่แล้ว `GET /jobs` ยังเห็น history เดิม
+- งาน `queued`/`running` จาก process ก่อนหน้าเปลี่ยนเป็น terminal `interrupted` เพราะ callback เดิมกู้คืนไม่ได้และ pipeline ยังไม่ idempotent
+- `resource` เป็น contract จาก call site (`cpu`/`gpu`) — GPU FIFO concurrency 1; CPU job ไม่รอ GPU lock
+- GPU job ที่ free VRAM ต่ำกว่า configured measured threshold คงสถานะ `queued` พร้อมข้อความ `รอ GPU: VRAM ว่างยังไม่พอ`
 
 ## voices.py — คลังเสียง ([FR-01](../product/SRS.md))
 
@@ -78,6 +82,7 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 - telemetry probe ที่ไม่มีในรันไทม์นั้นคืนค่า **`null`** (ไม่ error, ไม่ทิ้ง field)
 - CPU/RAM มาจาก `psutil` ถ้าติดตั้ง; ไม่มีก็ `null`
 - GPU/VRAM อ่านจาก `sys.modules.get("torch")` — **ไม่ cold-import torch** จาก poll ทุกไม่กี่วินาที · ก่อน audio pipeline โหลด torch ค่าเหล่านี้จึงเป็น `null` โดยตั้งใจ
+- `runtime.devices.tts/asr` แยก `requested` จาก `effective`; ก่อน pipeline resolve ค่า effective เป็น `null` และ fallback CPU รายงาน `reason=cuda_unavailable` (ASR CPU ใช้ `int8`)
 - `activity` = job **ล่าสุด**ที่ยัง `queued`/`running` (สแกนย้อนจากท้ายรายการ) — ไม่มีงานค้างก็เป็น `null` ทุก field
 
 ## endpoint ที่เพิ่มในของเดิม

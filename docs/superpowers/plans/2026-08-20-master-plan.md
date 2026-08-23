@@ -44,6 +44,11 @@ commit message บอก root cause + สิ่งที่เจอระหว
 
 ลำดับนี้ตรง dependency จาก audit: G-07 ต้องมีคิวของ G-06 ก่อน; G-09 อิสระแต่ทำก่อนเพราะ lite installer ไร้ค่าบนเครื่องไม่มี GPU
 
+> **Execution status 2026-08-23:** implementation + automated tests ลงแล้ว (backend 82,
+> frontend 118 ณ verification รอบนี้) แต่ Phase 1 ยังไม่ผ่าน exit gate: CPU-only TTS smoke,
+> restart ระหว่างงานจริง, peak VRAM/Dubbing+Remix บน RTX 3060 และ clean-VM 9 แถวยังเป็น
+> manual/external gates; R-004/R-006 จึงยังเปิด
+
 ### 1.1 G-09 CPU fallback
 - `config.py`: `tts_device`/`asr_device` = `"auto"` → resolve เป็น cuda ถ้า `torch.cuda.is_available()` ไม่งั้น cpu; ASR compute_type ตามอุปกรณ์ (`int8` บน CPU)
 - `/runtime/status` รายงาน `device` ที่ใช้จริง; UI (RuntimeFooter) แสดง

@@ -1,52 +1,89 @@
-# Clean-Machine Acceptance Checklist (Task 18, Phase D)
+---
+version: "0.1.0b"
+created_at: "2026-08-23T16:51:15+07:00,LALIN (ลลิน),uncommitted"
+last_update: "2026-08-23T17:45:00+07:00,LALIN (ลลิน)"
+status: "beta"
+attributes:
+  domain: "release-validation"
+  scope: "Clean Windows VM acceptance for the lite NSIS installer"
+---
 
-> Run this on a **real, isolated Windows 10/11 x64 machine** — a fresh VM, or a
-> spare box you don't mind wiping. Do **not** run it on this dev machine; it
-> already has Python/CUDA/Rust/Node installed and would prove nothing.
-> Install **nothing** on the target before step 1 — no Python, no Visual C++
-> redistributables, no .NET beyond what Windows ships. The whole point is to
-> prove the installer needs no developer environment.
+# Clean-VM Acceptance Checklist (Task 18 / R-006)
 
-## Getting the installer onto the VM
+รันบน Windows 10/11 x64 ที่ isolated จริงเท่านั้น: fresh VM หรือเครื่องสำรองที่ไม่มี
+Python, Node, Rust, CUDA, Visual C++ Redistributable หรือ .NET ที่ติดตั้งเพิ่มเอง
+ห้ามใช้ dev workstation นี้เป็นหลักฐาน เพราะผลที่ผ่านจะพิสูจน์ dependency isolation ไม่ได้
 
-The build produced (or will produce) a single file:
+> Gate boundary: checklist นี้พิสูจน์ **lite installer / sidecar / R-006** เท่านั้น
+> ไม่พิสูจน์ G-09/G-06/G-07 ของ full ML runtime และห้ามนำผลไปอ้างข้าม profile
 
+## 1. Artifact provenance
+
+ใช้ installer จาก:
+
+```text
+apps/desktop/src-tauri/target/release/bundle/nsis/G-Music_0.1.0_x64-setup.exe
 ```
-frontend/src-tauri/target/release/bundle/nsis/G-Music_0.1.0_x64-setup.exe
-```
 
-Copy that one file to the clean VM (USB drive, shared folder, or upload
-somewhere you can download from inside the VM). It's self-contained — the
-sidecar binary and the frontend are already bundled inside it.
+กรอกก่อน copy เข้า VM:
 
-## The checklist
+| Field | Actual |
+|---|---|
+| Commit/tag | `672aa186479a03ac702566358de38751f388f87a` / `v0.1.0-rc1-dirty` (Phase 1 changes uncommitted) |
+| Filename | `G-Music_0.1.0_x64-setup.exe` |
+| Byte size | `74,190,264` |
+| SHA-256 | `C41D59B041480C778334BEE80EBBA2533C335A1CFFE63CF5A68FADF894C1192F` |
+| Build profile | `lite` |
+| Windows edition/build | `________________` |
+| VM snapshot/image ID | `________________` |
+| Tester/date/time (ICT) | artifact built by LALIN, `2026-08-23T17:44:46+07:00`; clean-VM tester pending |
+| Test audio provenance | `________________` (ผู้ทดสอบมีสิทธิ์ใช้) |
 
-Run every row. Record the actual result next to each — don't just check a
-box.
+Copy เฉพาะ installer และไฟล์ WAV/MP3 ทดสอบสั้น ๆ เข้า VM ผ่าน USB/shared folder หรือ
+download URL ที่บันทึกไว้ ห้ามติดตั้ง dev dependency เพิ่มเพื่อทำให้แถวใดผ่าน
 
-| # | Action | Expected |
-|---|---|---|
-| 1 | Run the `.exe` | Installs without prompting for any dependency (no "Python not found," no ".NET missing," nothing) |
-| 2 | Launch from the Start menu | Window opens; footer shows `CONNECTING` then `ONLINE` within 60 seconds |
-| 3 | Open the Plugins tab | All three optional plugins (pedalboard, psola, matchering) show as **not installed**, each with its install command and licence |
-| 4 | Open the Files tab | Empty workspace, no error |
-| 5 | Import an MP3 in Remix, drag it onto a track | Waveform draws; Space plays it |
-| 6 | Set a fade and a pan, press **⬇ WAV** | A file downloads and audibly contains the fade and the pan |
-| 7 | Open Voice Studio and try TTS | Fails with a Thai message naming the missing package — **not** a stack trace — and the app stays usable afterward |
-| 8 | Close the app, open Task Manager | No `g-music-backend.exe` process remains |
-| 9 | Relaunch the app | Backend starts again; the project you saved in step 6 reopens with the same clip, fade and pan |
+## 2. Checklist
 
-**What each row actually proves:**
-- Rows 5–6 prove the render pipeline (Phases A–C) — this is the core of what shipped in PR #9.
-- Row 7 proves the lite runtime degrades honestly instead of crashing when an optional ML dependency is absent.
-- Rows 2 and 8 prove the sidecar (Phase D) — the app starts and fully stops its own backend with no manual step.
+บันทึก actual result ทุกแถว ไม่ใช่แค่ทำเครื่องหมาย
 
-If **any** row fails, stop and report exactly which one and what happened
-instead — don't average it out. A single failing row means R-006 stays open.
+| # | Action | Expected | PASS/FAIL | Actual result / evidence |
+|---|---|---|---|---|
+| 1 | รัน installer ด้วย Windows user ปกติ | ติดตั้งได้โดยไม่ขอ Python/Node/Rust/.NET/VC++ เพิ่ม | `____` | `________________` |
+| 2 | เปิดจาก Start menu | หน้าต่างเปิด; badge `CONNECTING` → `READY` ภายใน 60 วินาที | `____` | `________________` |
+| 3 | เปิด Library → Plugins | pedalboard/psola/matchering เป็น `ยังไม่ติดตั้ง`, แสดง license และคำสั่งติดตั้ง | `____` | `________________` |
+| 4 | เปิด Library → Files | workspace ว่างและไม่มี error | `____` | `________________` |
+| 5 | เปิด Arrange แล้วโหลดไฟล์ผ่าน Source | waveform/clip แสดง; Space เล่น/หยุดได้ | `____` | `________________` |
+| 6 | ตั้ง fade และ pan แล้วกด `⬇ WAV` | ได้ไฟล์ที่เล่นได้และได้ยิน fade/pan ตามที่ตั้ง | `____` | `________________` |
+| 7 | เปิด Voice Studio → Text to speech | แสดงข้อความไทยว่า Lite runtime ยังไม่รวมโมเดลสร้างเสียง, ปุ่มถูก disable, ไม่มี stack trace และแอปยังใช้ต่อได้ | `____` | `________________` |
+| 8 | Save project, ปิดแอป แล้วดู Task Manager | ไม่มี `g-music-backend*.exe` ค้าง | `____` | `________________` |
+| 9 | เปิดแอปใหม่และ Open project ที่บันทึก | backend กลับเป็น `READY`; project/clip/fade/pan เหมือนเดิม | `____` | `________________` |
 
-## After you run it
+## 3. Failure rule
 
-Tell me the result per row (pass/fail + what you saw for any failure). If
-every row passes, I'll update `docs/appendices/E-risk-matrix.md` (mark R-006
-mitigated, same pattern as R-009) and the "SCAFFOLDING" banner in
-`docs/PACKAGING_SIDECAR.md`, and commit that.
+ถ้าแถวใด fail ให้หยุด gate และบันทึก:
+
+- เลขแถว + exact action
+- สิ่งที่คาดกับสิ่งที่เห็นจริง
+- screenshot/video และเวลาที่เกิด
+- Windows Event Viewer/App log/sidecar process state ถ้ามี
+- SHA-256 ของ installer ที่ใช้
+
+ห้ามเฉลี่ยผล ห้ามแก้ VM ด้วยการลง dependency แล้วนับใหม่ว่า pass และห้ามใช้ local dev smoke
+แทน clean-VM evidence; fail เพียงหนึ่งแถวหมายถึง R-006 ยังเปิด
+
+## 4. Promotion after all nine rows pass
+
+เมื่อมี actual evidence ครบจึง:
+
+1. เปลี่ยน R-006 ใน `docs/appendices/E-risk-matrix.md` เป็น MITIGATED พร้อม commit/tag,
+   SHA-256, Windows build และ checklist result
+2. อัปเดต `docs/operations/PACKAGING_SIDECAR.md` จาก local-only เป็น clean-VM validated
+3. เปลี่ยน status เอกสารนี้จาก beta เป็น stable หรือ active ตาม release decision
+
+ห้ามกรอก PASS หรือลด risk ล่วงหน้า
+
+## CHANGELOG
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 0.1.0b | 2026-08-23 | beta | Approved current-path checklist; separated lite-installer evidence from full-runtime Phase 1 evidence and recorded the fresh local NSIS artifact provenance. | uncommitted | LALIN (ลลิน) |

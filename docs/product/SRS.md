@@ -7,18 +7,19 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.1.0 |
-| **Status** | Active |
+| **Doc Version** | 1.2.0b |
+| **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-08-09 |
-| **Approved By** | — |
+| **Last Updated** | 2026-08-23 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-06-27 | Boss | ฉบับแรก |
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
 | 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
+| 1.2.0b | 2026-08-23 | LALIN | เพิ่ม CPU fallback, durable/interrupted job lifecycle และ single-GPU admission contract ตาม Phase 1 G-09/G-06/G-07 |
 
 ---
 
@@ -172,10 +173,14 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | ID | ข้อกำหนด | Priority |
 |----|----------|----------|
 | FR-06.1 | งาน ML ทุกชนิดต้องรันเป็น background job | Must |
-| FR-06.2 | แต่ละ job ต้องมี state: queued → running → done / error | Must |
+| FR-06.2 | แต่ละ job ต้องมี state: queued → running → done / error; เมื่อ process เดิมหายให้ queued/running เดิมเปลี่ยนเป็น interrupted | Must |
 | FR-06.3 | แต่ละ job ต้องรายงาน progress (0.0–1.0) + message ผ่าน WebSocket | Must |
 | FR-06.4 | client ต้อง subscribe ผ่าน WebSocket `/jobs/ws/{id}` เพื่อรับ real-time updates | Must |
 | FR-06.5 | ระบบต้องรองรับการดึงรายการ jobs ทั้งหมด (`GET /jobs`) | Should |
+| FR-06.6 | ระบบต้อง persist snapshot ของ job ลง `data_dir/jobs.json` แบบ atomic และโหลด history กลับหลัง restart | Must |
+| FR-06.7 | client ต้อง re-attach job เดิมหลัง UI reload และแสดง `interrupted` เป็น terminal state | Must |
+| FR-06.8 | งานที่ใช้ CUDA ต้องเข้า FIFO admission queue concurrency 1; งาน CPU ต้องไม่ถูก GPU queue block | Must |
+| FR-06.9 | ก่อนเริ่ม CUDA job ระบบต้องรอเมื่อ free VRAM ต่ำกว่า measured threshold ของ job kind; threshold ที่ยังไม่วัดใช้ `0` และยังห้ามอ้างว่าปิด R-004 แล้ว | Must |
 
 ### FR-07: File Management
 
@@ -249,7 +254,7 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 |----|----------|----------|
 | FR-13.1 | ระบบต้องรองรับคิวงานหลายรายการชนิด TTS / Dubbing / Mastering พร้อมชื่อรายการและพารามิเตอร์ต่อรายการ | Must |
 | FR-13.2 | คิวต้องรันทีละงานตามลำดับ — ส่งงานถัดไปเมื่องานก่อนหน้าจบ (backend รันเบื้องหลังตาม FR-06, frontend ควบคุมจังหวะการส่ง) | Must |
-| FR-13.3 | ระบบต้องติดตาม progress ของงานปัจจุบันผ่าน WebSocket จนจบ (done/error) | Must |
+| FR-13.3 | ระบบต้องติดตาม progress ของงานปัจจุบันผ่าน WebSocket จนเป็น terminal (done/error/interrupted) | Must |
 | FR-13.4 | งานที่ error ต้องไม่หยุดคิว — บันทึก error ที่รายการนั้นแล้วรันงานถัดไป | Must |
 | FR-13.5 | ระบบต้อง pause ได้แบบ "หยุดหลังงานปัจจุบันเสร็จ" (ไม่ยกเลิกงานที่กำลังรัน) และกันการรันคิวซ้อนหลาย instance | Must |
 | FR-13.6 | ระบบต้องจัดการคิวได้: ลบรายการ / ล้างคิว / เลื่อนลำดับขึ้น-ลง | Must |
@@ -299,6 +304,7 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | NFR-02.1 | ML models ต้องเป็น lazy import — แอปเปิดได้แม้ยังไม่ลงโมเดล |
 | NFR-02.2 | Job ที่ล้มเหลวต้องรายงาน error message ชัดเจน, ไม่ crash แอป |
 | NFR-02.3 | Backend ต้อง gracefully handle GPU out-of-memory |
+| NFR-02.4 | ASR/TTS device default เป็น `auto`; ไม่พบ CUDA ให้ fallback CPU (ASR=`int8`) พร้อมข้อความไทย โดย health poll ห้าม cold-import torch |
 
 ### NFR-03: ความปลอดภัย
 
@@ -407,14 +413,18 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
   "progress": 0.45,
   "message": "กำลังสังเคราะห์เสียง…",
   "result": null,
-  "error": null
+  "error": null,
+  "resource": "gpu",
+  "created_at": "2026-08-23T10:00:00+00:00",
+  "updated_at": "2026-08-23T10:00:05+00:00"
 }
 ```
 
 **Lifecycle:**
 1. Client connects → server sends current state
 2. Server sends update on every progress change
-3. Connection closes when `status` = `done` or `error`
+3. Connection closes when `status` = `done`, `error` or `interrupted`
+4. Snapshot ถูก persist ที่ `data_dir/jobs.json`; restart เปลี่ยน queued/running เดิมเป็น interrupted (ไม่ resume pipeline อัตโนมัติ)
 
 ### 5.3 Internal Interfaces
 

@@ -29,9 +29,9 @@ def main() -> int:
         },
         "strategy": {
             "lite_installer": "CPU-safe shell sidecar; does not bundle ML-heavy routers or model weights",
-            "workstation_default": "Prefer CUDA when the local speech runtime is known-good",
-            "speech_fallback": "Use ASR_DEVICE=cpu ASR_COMPUTE_TYPE=int8 TTS_DEVICE=cpu for deterministic smoke/fallback",
-            "user_choice_required": True,
+            "workstation_default": "ASR_DEVICE=auto and TTS_DEVICE=auto resolve lazily per engine",
+            "speech_fallback": "CUDA unavailable -> CPU automatically; ASR compute_type resolves to int8",
+            "user_choice_required": False,
         },
     }
 

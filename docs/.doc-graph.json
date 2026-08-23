@@ -1,22 +1,22 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-08-23T04:38:35+07:00",
+  "generated_at": "2026-08-23T19:30:58+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 297,
-    "total_edges": 313,
+    "total_nodes": 305,
+    "total_edges": 325,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (25/36)",
-      "requirements_with_tests": "13% (5/36)",
-      "code_files_referenced_by_docs": "1% (1/85)",
-      "code_files_with_tests": "8% (7/85)",
+      "requirements_with_tests": "22% (8/36)",
+      "code_files_referenced_by_docs": "1% (1/87)",
+      "code_files_with_tests": "13% (12/87)",
       "structured_annotations_found": 104,
       "unstructured_req_refs_found": 103
     }
@@ -373,9 +373,17 @@
       "id": "code:apps/api/app/jobs/manager.py",
       "type": "code_file",
       "path": "apps/api/app/jobs/manager.py",
-      "hash": "ab6e23724a22",
+      "hash": "10da722c71f7",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
+    },
+    {
+      "id": "code:apps/api/app/jobs/resources.py",
+      "type": "code_file",
+      "path": "apps/api/app/jobs/resources.py",
+      "hash": "eb7bc9c4b965",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/main.py",
@@ -389,9 +397,9 @@
       "id": "code:apps/api/app/pipelines/asr.py",
       "type": "code_file",
       "path": "apps/api/app/pipelines/asr.py",
-      "hash": "3747cc87f266",
+      "hash": "fea27b06769b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/dubbing.py",
@@ -429,9 +437,9 @@
       "id": "code:apps/api/app/pipelines/tts.py",
       "type": "code_file",
       "path": "apps/api/app/pipelines/tts.py",
-      "hash": "ece021d59542",
+      "hash": "21b112e2318b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/agent.py",
@@ -453,9 +461,9 @@
       "id": "code:apps/api/app/routers/dubbing.py",
       "type": "code_file",
       "path": "apps/api/app/routers/dubbing.py",
-      "hash": "fe2733c4fb22",
+      "hash": "cab69219bf26",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/files.py",
@@ -477,33 +485,33 @@
       "id": "code:apps/api/app/routers/health.py",
       "type": "code_file",
       "path": "apps/api/app/routers/health.py",
-      "hash": "d1cdce8f71c3",
+      "hash": "d22c374eac87",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/jobs.py",
       "type": "code_file",
       "path": "apps/api/app/routers/jobs.py",
-      "hash": "1acdff73b805",
+      "hash": "800ef0676dc6",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/mastering.py",
       "type": "code_file",
       "path": "apps/api/app/routers/mastering.py",
-      "hash": "b7e4f42d8ed0",
+      "hash": "ef66ee29a661",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/music.py",
       "type": "code_file",
       "path": "apps/api/app/routers/music.py",
-      "hash": "0c925b1b676a",
+      "hash": "97142b03d559",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/packs.py",
@@ -533,9 +541,9 @@
       "id": "code:apps/api/app/routers/render.py",
       "type": "code_file",
       "path": "apps/api/app/routers/render.py",
-      "hash": "e2f9e732bd50",
+      "hash": "c8f95c01edb0",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/speech.py",
@@ -549,9 +557,9 @@
       "id": "code:apps/api/app/routers/tts.py",
       "type": "code_file",
       "path": "apps/api/app/routers/tts.py",
-      "hash": "0d65729b85c0",
+      "hash": "68303aeb82c9",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/api/app/routers/voices.py",
@@ -613,25 +621,25 @@
       "id": "code:apps/desktop/src/App.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/App.tsx",
-      "hash": "57dc5c3bdef0",
+      "hash": "e5fe40145a96",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
       "type": "code_file",
       "path": "apps/desktop/src/api.ts",
-      "hash": "ddc0c4c1c916",
+      "hash": "d4f19ab9f9df",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/BatchQueue.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/BatchQueue.tsx",
-      "hash": "5b7593e659d9",
+      "hash": "8aa06241500a",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/BrainPanel.tsx",
@@ -677,9 +685,9 @@
       "id": "code:apps/desktop/src/components/DubbingPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/DubbingPanel.tsx",
-      "hash": "4e6e832292f5",
+      "hash": "0482ec65347e",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FileManager.tsx",
@@ -701,9 +709,9 @@
       "id": "code:apps/desktop/src/components/JobProgress.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/JobProgress.tsx",
-      "hash": "49c7ede82501",
+      "hash": "4230db0116a3",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Knob.tsx",
@@ -733,9 +741,9 @@
       "id": "code:apps/desktop/src/components/MasteringPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/MasteringPanel.tsx",
-      "hash": "70797f204ad1",
+      "hash": "a2ae04b555d2",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Meter.tsx",
@@ -757,9 +765,9 @@
       "id": "code:apps/desktop/src/components/MixCopilot.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/MixCopilot.tsx",
-      "hash": "5b8798113c7f",
+      "hash": "44cb4cb85abb",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/NodeDesigner.tsx",
@@ -773,9 +781,9 @@
       "id": "code:apps/desktop/src/components/PluginsPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/PluginsPanel.tsx",
-      "hash": "e55a56d58eda",
+      "hash": "f7a26a8449dc",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/PropertiesPanel.tsx",
@@ -789,9 +797,9 @@
       "id": "code:apps/desktop/src/components/RemixPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/RemixPanel.tsx",
-      "hash": "54dcf2dfdb44",
+      "hash": "360983fbfed5",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Splitter.tsx",
@@ -829,9 +837,9 @@
       "id": "code:apps/desktop/src/components/TTSPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/TTSPanel.tsx",
-      "hash": "93a5dbf98302",
+      "hash": "0478461d760f",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/Tilt.tsx",
@@ -930,6 +938,14 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "code:apps/desktop/src/runtimeDevices.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/runtimeDevices.ts",
+      "hash": "1c6023d1adb4",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/store/engineContext.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/store/engineContext.tsx",
@@ -1005,17 +1021,17 @@
       "id": "code:apps/desktop/src/useBatchQueue.ts",
       "type": "code_file",
       "path": "apps/desktop/src/useBatchQueue.ts",
-      "hash": "0274adcdb769",
+      "hash": "f0eabbf5c144",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "code:apps/desktop/src/useJob.ts",
       "type": "code_file",
       "path": "apps/desktop/src/useJob.ts",
-      "hash": "1d4133d7f9d8",
+      "hash": "4447efa3775b",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "doc:2026-08-19-render-portability-sidecar",
@@ -1032,10 +1048,20 @@
       "type": "document",
       "path": "docs/superpowers/plans/2026-08-20-master-plan.md",
       "title": "2026-08-20-master-plan",
-      "hash": "9011697b7fec",
-      "prev_hash": "9011697b7fec",
+      "hash": "3d16c9c83eda",
+      "prev_hash": "3d16c9c83eda",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T18:07:28+07:00"
+    },
+    {
+      "id": "doc:2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate",
+      "type": "document",
+      "path": "docs/superpowers/plans/2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate.md",
+      "title": "2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate",
+      "hash": "e7fcee5cf12d",
+      "prev_hash": "e7fcee5cf12d",
+      "status": "current",
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1052,10 +1078,10 @@
       "type": "document",
       "path": "docs/architecture/API_SEMANTICS.md",
       "title": "API_SEMANTICS",
-      "hash": "29b2e2037edf",
-      "prev_hash": "29b2e2037edf",
+      "hash": "60e8436813d7",
+      "prev_hash": "60e8436813d7",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
@@ -1082,10 +1108,10 @@
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "fc79f6e4e30f",
-      "prev_hash": "fc79f6e4e30f",
+      "hash": "1e7db292f851",
+      "prev_hash": "1e7db292f851",
       "status": "current",
-      "last_verified": "2026-08-23T04:38:24+07:00"
+      "last_verified": "2026-08-23T17:47:09+07:00"
     },
     {
       "id": "doc:C-model-cards",
@@ -1102,10 +1128,10 @@
       "type": "document",
       "path": "docs/operations/CLEAN_VM_CHECKLIST.md",
       "title": "CLEAN_VM_CHECKLIST",
-      "hash": "24c09526c936",
-      "prev_hash": "24c09526c936",
+      "hash": "e29b24c4bb4b",
+      "prev_hash": "e29b24c4bb4b",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:COMPETITIVE_BRIEF",
@@ -1125,7 +1151,7 @@
       "hash": "d8250e1ee71b",
       "prev_hash": "d8250e1ee71b",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-08-23T17:47:09+07:00"
     },
     {
       "id": "doc:CPU_GPU_DISTRIBUTION_STRATEGY",
@@ -1142,10 +1168,10 @@
       "type": "document",
       "path": "docs/appendices/D-traceability.md",
       "title": "D-traceability",
-      "hash": "cea5cba0c2e6",
-      "prev_hash": "cea5cba0c2e6",
+      "hash": "7823a545650b",
+      "prev_hash": "7823a545650b",
       "status": "current",
-      "last_verified": "2026-08-23T04:38:35+07:00"
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -1192,10 +1218,10 @@
       "type": "document",
       "path": "docs/appendices/E-risk-matrix.md",
       "title": "E-risk-matrix",
-      "hash": "84caf1cd3e85",
-      "prev_hash": "84caf1cd3e85",
+      "hash": "ff8a63d423ab",
+      "prev_hash": "ff8a63d423ab",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:F-glossary",
@@ -1512,10 +1538,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "8198a28c525e",
-      "prev_hash": "8198a28c525e",
-      "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "hash": "7941eae92a93",
+      "prev_hash": "8bd0dce66003",
+      "status": "changed",
+      "last_verified": "2026-08-23T19:30:58+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1742,10 +1768,10 @@
       "type": "document",
       "path": "docs/architecture/SPEC.md",
       "title": "SPEC",
-      "hash": "1cd2af2b0c89",
-      "prev_hash": "1cd2af2b0c89",
+      "hash": "2e22eaf99c39",
+      "prev_hash": "2e22eaf99c39",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T17:47:09+07:00"
     },
     {
       "id": "doc:SPRINT0_G_MUSIC_RC_PLAN",
@@ -1862,10 +1888,10 @@
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "e125ae6f5f8b",
-      "prev_hash": "e125ae6f5f8b",
+      "hash": "24be001bdb3e",
+      "prev_hash": "24be001bdb3e",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T17:47:09+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -2222,10 +2248,10 @@
       "type": "document",
       "path": "docs/ai-system/model-lifecycle.md",
       "title": "model-lifecycle",
-      "hash": "f3b5bf83942e",
-      "prev_hash": "f3b5bf83942e",
+      "hash": "0fb0bcbfbac2",
+      "prev_hash": "0fb0bcbfbac2",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
       "id": "doc:prompt-engineering",
@@ -2536,6 +2562,22 @@
       "last_verified": "2026-08-09T08:23:36+07:00"
     },
     {
+      "id": "test:apps/desktop/src/components/JobProgress.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/components/JobProgress.test.tsx",
+      "hash": "b8e710309fa9",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/components/TTSPanel.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/components/TTSPanel.test.tsx",
+      "hash": "b7d83f2606d7",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
       "type": "test",
       "path": "apps/desktop/src/components/mixCopilotOps.test.ts",
@@ -2550,6 +2592,14 @@
       "hash": "b20f74818afc",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/runtimeDevices.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/runtimeDevices.test.ts",
+      "hash": "1e9ebda9454a",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
       "id": "test:apps/desktop/src/timeline/assets.test.ts",
@@ -2598,6 +2648,22 @@
       "hash": "36bc91a9355c",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/useBatchQueue.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/useBatchQueue.test.tsx",
+      "hash": "8be4b8db2c01",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/useJob.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/useJob.test.tsx",
+      "hash": "55c2bd81f924",
+      "status": "current",
+      "last_verified": "2026-08-23T17:45:40+07:00"
     }
   ],
   "edges": [
@@ -3666,6 +3732,20 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate",
+      "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:A-api-spec",
       "to": "doc:E-risk-matrix",
       "type": "references",
@@ -4688,6 +4768,41 @@
       "source": "doc-scan"
     },
     {
+      "from": "test:apps/desktop/src/components/JobProgress.test.tsx",
+      "to": "code:apps/desktop/src/components/JobProgress.tsx",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/JobProgress.test.tsx",
+      "to": "req:FR-02",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/JobProgress.test.tsx",
+      "to": "req:FR-06",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/TTSPanel.test.tsx",
+      "to": "code:apps/desktop/src/components/TTSPanel.tsx",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/components/TTSPanel.test.tsx",
+      "to": "req:FR-02",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "test:apps/desktop/src/components/mixCopilotOps.test.ts",
       "to": "code:apps/desktop/src/components/mixCopilotOps.ts",
       "type": "tests",
@@ -4719,6 +4834,13 @@
       "from": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "to": "req:NFR-02",
       "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/runtimeDevices.test.ts",
+      "to": "code:apps/desktop/src/runtimeDevices.ts",
+      "type": "tests",
       "status": "current",
       "source": "code-scan"
     },
@@ -4788,6 +4910,34 @@
     {
       "from": "test:apps/desktop/src/timeline/useClipEngine.test.ts",
       "to": "req:FR-09",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/useBatchQueue.test.tsx",
+      "to": "code:apps/desktop/src/useBatchQueue.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/useBatchQueue.test.tsx",
+      "to": "req:FR-13",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/useJob.test.tsx",
+      "to": "code:apps/desktop/src/useJob.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/useJob.test.tsx",
+      "to": "req:FR-06",
       "type": "verifies",
       "status": "current",
       "source": "code-scan"

@@ -146,6 +146,49 @@ Current artifact evidence:
 G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-03 15:56:24
 ```
 
+## GitHub Release Signing Gate
+
+The tag workflow requires the repository Actions secret
+`TAURI_SIGNING_PRIVATE_KEY`. Its value must be the base64-encoded content of the
+gitignored canonical key in `keys/g-music.key`; never print, commit, or upload
+that key as an artifact. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` is required only
+when the private key is password-protected.
+
+Before creating a release tag, verify only the secret name and update time:
+
+```powershell
+gh secret list --repo Freshair129/Lalin-AI --json name,updatedAt
+```
+
+`.github/workflows/release.yml` runs the following non-secret preflight
+immediately after checkout and before dependency installation:
+
+```powershell
+tools\verify\check_tauri_signing_key.ps1
+```
+
+The preflight rejects an empty, malformed, or structurally invalid updater key
+without echoing key material. A successful tagged build must still produce a
+draft release containing a fresh NSIS `.exe`, its `.sig`, and `latest.json`;
+preflight success alone is not release completion.
+
+The `build-windows` job grants its generated `GITHUB_TOKEN` only
+`contents: write`, which `tauri-action` requires to create the draft release and
+upload assets. Keep the repository-wide default workflow permission at `read`;
+do not replace the job-scoped grant with a permanent repository-wide write
+default.
+
+Current GitHub release evidence from run `32606363191`, attempt 3:
+
+```text
+build-windows: success (job 97189999691, 35m29s)
+draft release: G-Music v0.1.0, target 672aa186479a03ac702566358de38751f388f87a
+G-Music_0.1.0_x64-setup.exe: 68,636,358 bytes
+G-Music_0.1.0_x64-setup.exe.sig: 416 bytes
+latest.json: 1,365 bytes
+repository default workflow permission after recovery: read
+```
+
 ## Known Limits
 
 - Full-backend PyInstaller builds are slow and too large because static import of the full app pulls in ML-heavy dependencies such as torch, transformers, librosa, scipy, and related native libraries.

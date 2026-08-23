@@ -1,6 +1,6 @@
 // @req FR-02 — UI อ่านข้อความ + โคลนเสียง
 import { useEffect, useState } from "react";
-import { tts, voices as voicesApi, type Voice } from "../api";
+import { speech, tts, voices as voicesApi, type Voice } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
 import { useEngine } from "../store/engineContext";
@@ -13,18 +13,21 @@ export function TTSPanel() {
   const [text, setText] = useState("");
   const [language, setLanguage] = useState("th");
   const [speed, setSpeed] = useState(1.0);
-  const { job, busy, start } = useJob();
+  const { job, busy, start } = useJob("tts");
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
+  const [ttsAvailable, setTtsAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
     voicesApi.list().then((r) => {
       setVoices(r.voices);
       if (r.voices[0]) setVoiceId(r.voices[0].id);
     }).catch(() => {});
+    speech.getConfig().then((config) => setTtsAvailable(config.tts_available)).catch(() => {});
   }, []);
 
   const run = () => {
+    if (ttsAvailable === false) return;
     setAddedMsg(false);
     start(() => tts.synth({ text, voice_id: voiceId, language, speed }));
   };
@@ -47,6 +50,11 @@ export function TTSPanel() {
     <div className="panel card">
       <h2>🗣️ อ่านข้อความด้วยเสียงโคลน (Voice Cloning)</h2>
       <p className="hint">พิมพ์ข้อความ เลือกเสียงจากคลัง แล้วให้ AI อ่านด้วยเสียงนั้น</p>
+      {ttsAvailable === false && (
+        <p className="status bad">
+          Lite runtime ยังไม่รวมโมเดลสร้างเสียง — ติดตั้ง Full runtime เพื่อใช้ Text to speech
+        </p>
+      )}
 
       <label className="field"><span>ข้อความ</span>
         <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)}
@@ -72,8 +80,8 @@ export function TTSPanel() {
         </label>
       </div>
 
-      <button className="primary" onClick={run} disabled={busy || !text || !voiceId}>
-        {busy ? "กำลังสังเคราะห์…" : "▶ สร้างเสียง"}
+      <button className="primary" onClick={run} disabled={ttsAvailable === false || busy || !text || !voiceId}>
+        {ttsAvailable === false ? "Text to speech ยังไม่พร้อมใน Lite runtime" : busy ? "กำลังสังเคราะห์…" : "▶ สร้างเสียง"}
       </button>
 
       <JobProgress job={job} />

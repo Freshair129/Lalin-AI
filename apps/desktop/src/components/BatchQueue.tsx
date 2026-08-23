@@ -181,7 +181,7 @@ export function BatchQueue() {
 }
 
 function statusLabel(s: BatchItem["status"]) {
-  return { pending: "⏳ รอคิว", running: "⚙️ กำลังทำงาน", done: "✅ เสร็จ", error: "❌ ผิดพลาด" }[s];
+  return { pending: "⏳ ยังไม่ส่ง", queued: "⏳ รอทรัพยากร", running: "⚙️ กำลังทำงาน", done: "✅ เสร็จ", error: "❌ ผิดพลาด", interrupted: "⚠️ งานถูกขัดจังหวะ" }[s];
 }
 
 function kindLabel(k: BatchKind) {
@@ -242,7 +242,7 @@ function QueueRow({
         </div>
       </div>
 
-      {(item.status === "running" || item.status === "pending") && (
+      {(item.status === "running" || item.status === "queued" || item.status === "pending") && (
         <div className="bar">
           <div className="bar-fill" style={{ width: `${pct}%` }} />
           <span className="bar-pct">{pct}%</span>
@@ -251,6 +251,11 @@ function QueueRow({
 
       {item.status === "error" && item.error && (
         <p className="hint" style={{ color: "var(--danger, #e05555)" }}>{item.error}</p>
+      )}
+      {item.status === "interrupted" && (
+        <p className="hint" style={{ color: "var(--amber, #d9a63c)" }}>
+          {item.message || "งานหยุดลงเพราะแอปถูกปิดหรือ backend เริ่มใหม่"}
+        </p>
       )}
     </div>
   );

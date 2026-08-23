@@ -265,7 +265,10 @@ for rel, miss in sorted(missing_by_router.items()):
              reason=f"{len(miss)} endpoint(s) in code not in BLUEPRINT api: " + ", ".join(miss[:4]) + ("..." if len(miss) > 4 else ""))
 
 bp_components = set(re.findall(r"component:\s*(\w+)\.tsx", bp_text))
-fe_components = {p.stem for p in (FSRC / "components").glob("*.tsx")} if (FSRC / "components").is_dir() else set()
+fe_components = {
+    p.stem for p in (FSRC / "components").glob("*.tsx")
+    if not p.name.endswith((".test.tsx", ".spec.tsx"))
+} if (FSRC / "components").is_dir() else set()
 undocumented_components = sorted(fe_components - bp_components)
 if undocumented_components:
     # docs/archive/UI_SITEMAP.md ถูก supersede โดย docs/design/LALIN_SITEMAP_SOT.md แล้ว —

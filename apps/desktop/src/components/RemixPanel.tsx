@@ -169,7 +169,7 @@ export function RemixPanel() {
     (k) => Math.abs(stemGains[k] - 1) > 1e-6
   );
 
-  const { job, busy, start } = useJob();
+  const { job, busy, start } = useJob("remix");
 
   // ── clip engine (shared ทั้ง workspace ผ่าน EngineProvider) ──
   const engine = useEngine();
@@ -553,7 +553,7 @@ export function RemixPanel() {
     : null;
 
   // ── export: render arrangement ทั้ง timeline ลงไฟล์ (ไม่ใช่เบค FX ทับไฟล์เดียวแบบเดิม) ──
-  const { job: exJob, busy: exBusy, start: exStart } = useJob();
+  const { job: exJob, busy: exBusy, start: exStart } = useJob("render-export");
   useEffect(() => {
     if (exJob?.status === "done" && exJob.result?.output) {
       const name = String(exJob.result.output);

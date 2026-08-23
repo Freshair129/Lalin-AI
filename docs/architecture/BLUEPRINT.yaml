@@ -1,7 +1,7 @@
 # BLUEPRINT.yaml — G-Music (legacy machine-readable blueprint — ดู docs/DOCS_INDEX.md)
 # Machine-readable spec ของ endpoints/components (ไม่ใช่ IA ปัจจุบัน — ดู docs/design/LALIN_SITEMAP_SOT.md สำหรับ product IA)
 # sync กับ: PRD.md · SRS.md · SPEC.md · ROADMAP_MUSIC.md (UI_SITEMAP.md ย้ายไป docs/archive/ แล้ว)
-# วันที่: 2026-08-19 (เพิ่ม endpoint ที่ doc-graph scan เจอว่าขาด: /render, /projects/{pid}/bundle, /projects/import — จาก PR #9)
+# วันที่: 2026-08-23 (Phase 1 G-09/G-06/G-07: CPU fallback, durable jobs, GPU admission)
 
 meta:
   name: G-Music
@@ -18,7 +18,7 @@ stack:
     python: "3.11"             # บังคับ — torch/f5-tts ไม่มี wheel 3.12+
     server: uvicorn
     port: 8756
-    venv: backend/.venv         # สร้างด้วย uv
+    venv: apps/api/.venv        # สร้างด้วย uv
   frontend:
     shell: Tauri v2
     ui: React 18 + TypeScript + Vite
@@ -72,7 +72,7 @@ sitemap:
     rail: icon nav 8 แท็บ (label ใต้ icon) — ดู views ด้านล่าง
     stage: dynamic              # arrange/library เต็มจอ (ไม่มี .stage-pad), ที่เหลือ .stage-pad
     studio_dock: StudioDock — mount บนแท็บ dubbing|mastering (ล่างจอ); arrange embed StudioDock เองใน RemixPanel
-    runtime_footer: RuntimeFooter — telemetry(cpu/ram/gpu/vram) + activity ปุ่มเปิด ActivityOverlay + runtime.profile/model/agent
+    runtime_footer: RuntimeFooter — telemetry(cpu/ram/gpu/vram) + activity + runtime.profile/model/agent/devices (requested/effective/fallback)
     backend_gate: BackendGate — บล็อกทุกแท็บจนกว่า useBackendReadiness().state === "ready" (poll GET /health)
     overlay: [update_dialog, activity_overlay, context_menu(คลิกขวา clip), dialog(prompt/confirm), node_designer]
   backend_profile:             # main.py — router ที่ mount ขึ้นกับ profile (apps/api)
@@ -255,7 +255,7 @@ api:
   endpoints:
     # core + brain + runtime (lite profile — mount เสมอ)
     - {method: GET,    path: /health,               returns: "status, service, brain{...}, brain_config"}
-    - {method: GET,    path: /runtime/status,       returns: "telemetry(cpu/ram/gpu/vram, null ถ้าไม่มี probe) + runtime(profile/model/agent) + activity(job ล่าสุดที่ queued|running)"}
+    - {method: GET,    path: /runtime/status,       returns: "telemetry(cpu/ram/gpu/vram, null ถ้าไม่มี probe) + runtime(profile/model/agent/devices{tts,asr}) + activity(job ล่าสุดที่ queued|running)"}
     - {method: GET,    path: /brain/config}
     - {method: POST,   path: /brain/config,        body: [provider, ollama_base_url, ollama_model, cloud_provider, cloud_model, cloud_api_key]}
     - {method: POST,   path: /brain/chat,          body: [messages, temperature, max_tokens, stream]}
@@ -318,8 +318,11 @@ api:
     write_tools: [move_clip, set_gain, set_pan, set_fx, set_lufs, mute_clip, slice_clip, reorder_track]
     invalid_mutation: drop_silently # op ไม่รู้จัก/args ไม่ครบ -> ตัดทิ้ง ไม่ error
   job:
-    states: [queued, running, done, error]
-    fields: [id, kind, status, progress(0-1), message, result, error]
+    states: [queued, running, done, error, interrupted]
+    terminal: [done, error, interrupted]
+    fields: [id, kind, status, progress(0-1), message, result, error, resource(cpu|gpu), created_at, updated_at]
+    persistence: "atomic data_dir/jobs.json; corrupt file -> jobs.corrupt-<timestamp>.json; restart queued|running -> interrupted"
+    admission: "explicit resource; GPU FIFO concurrency=1; CPU bypass; configured measured VRAM threshold ต่อ kind"
     cancel: none                    # ยังไม่มี endpoint ยกเลิก -> batch queue pause ได้แค่ "หยุดหลังงานปัจจุบันเสร็จ"
 
 # ── Pipelines (backend) ──────────────────────────────────────

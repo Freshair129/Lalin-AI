@@ -6,7 +6,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from ..jobs import jobs
+from ..jobs.resources import resource_for_requested_device
 from ..pipelines.dubbing import refine_line_for_duration, run_dubbing
+from ..runtime_devices import resolve_asr_runtime, resolve_tts_runtime
 from ..schemas import DubbingRequest
 from ..services import voices
 from .files import resolve_upload
@@ -44,7 +46,22 @@ async def dub(req: DubbingRequest):
             report=lambda p, m: report(job, p, m),
         )
 
-    job = jobs.spawn("dubbing", task)
+    from ..config import get_settings
+
+    settings = get_settings()
+    asr_resource = resource_for_requested_device(
+        settings.asr_device,
+        resolve_auto=lambda: resolve_asr_runtime(settings.asr_device)[0],
+    )
+    tts_resource = resource_for_requested_device(
+        settings.tts_device,
+        resolve_auto=lambda: resolve_tts_runtime(settings.tts_device),
+    )
+    job = jobs.spawn(
+        "dubbing",
+        task,
+        resource="gpu" if "gpu" in {asr_resource, tts_resource} else "cpu",
+    )
     return {"job_id": job.id}
 
 

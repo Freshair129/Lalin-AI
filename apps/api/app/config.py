@@ -16,6 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BrainProvider = Literal["ollama", "cloud"]
 CloudProvider = Literal["anthropic", "openai", "openrouter"]
 TtsEngine = Literal["f5", "xtts"]
+RuntimeDevice = Literal["auto", "cpu", "cuda"]
 
 
 def _repo_root() -> Path:
@@ -54,12 +55,17 @@ class Settings(BaseSettings):
 
     # ── Speech ──────────────────────────────────────────────
     asr_model: str = "large-v3"
-    asr_device: str = "cuda"
-    asr_compute_type: str = "float16"
+    asr_device: RuntimeDevice = "auto"
+    asr_compute_type: str = "auto"
 
     tts_engine: TtsEngine = "f5"
-    tts_device: str = "cuda"
+    tts_device: RuntimeDevice = "auto"
     f5_model_repo: str = "VIZINTZOR/F5-TTS-THAI"
+
+    # 0 = ยังไม่มี measured budget จึงบังคับเฉพาะ single-GPU FIFO ก่อน
+    gpu_min_free_mb: dict[str, int] = Field(
+        default_factory=lambda: {"tts": 0, "dubbing": 0, "remix": 0}
+    )
 
     # ── derived paths ───────────────────────────────────────
     @property

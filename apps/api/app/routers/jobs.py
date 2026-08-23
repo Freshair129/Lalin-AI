@@ -6,7 +6,7 @@ import asyncio
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from ..jobs import jobs
+from ..jobs import is_terminal_status, jobs
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -35,7 +35,7 @@ async def job_ws(ws: WebSocket, job_id: str):
         return
 
     await ws.send_json(job.as_dict())
-    if job.status in ("done", "error"):
+    if is_terminal_status(job.status):
         await ws.close()
         return
 
@@ -44,7 +44,7 @@ async def job_ws(ws: WebSocket, job_id: str):
         while True:
             update = await q.get()
             await ws.send_json(update)
-            if update["status"] in ("done", "error"):
+            if is_terminal_status(update["status"]):
                 break
     except WebSocketDisconnect:
         pass

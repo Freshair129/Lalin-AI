@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ..jobs import jobs
+from ..jobs.resources import automatic_torch_resource
 from ..pipelines.music import run_remix
 from ..schemas import RemixRequest
 from .files import resolve_upload
@@ -50,7 +51,7 @@ async def remix(req: RemixRequest):
             ),
         )
 
-    job = jobs.spawn("remix", task)
+    job = jobs.spawn("remix", task, resource=automatic_torch_resource())
     return {"job_id": job.id}
 
 
@@ -89,5 +90,5 @@ async def export_fx(req: ExportFxBody):
         import os
         return {"output": os.path.basename(final)}
 
-    job = jobs.spawn("export", task)
+    job = jobs.spawn("export", task, resource="cpu")
     return {"job_id": job.id}

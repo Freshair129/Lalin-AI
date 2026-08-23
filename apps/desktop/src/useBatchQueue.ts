@@ -1,11 +1,11 @@
 // @req FR-13 — engine คิวประมวลผลชุด (tts/dubbing/mastering ทีละงาน)
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { tts, dubbing, mastering, jobs, type Job } from "./api";
 
 // ประเภทงานที่คิวรองรับ — ต้องตรงกับ endpoint ที่มีอยู่ใน api.ts
 export type BatchKind = "tts" | "dubbing" | "mastering";
 
-export type BatchStatus = "pending" | "running" | "done" | "error";
+export type BatchStatus = "pending" | "queued" | "running" | "done" | "error" | "interrupted";
 
 export interface BatchItem {
   id: string;
@@ -20,9 +20,27 @@ export interface BatchItem {
 }
 
 let seq = 0;
+const STORAGE_KEY = "lalin:batch-queue";
+
+function loadItems(): BatchItem[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) as BatchItem[] : [];
+  } catch {
+    return [];
+  }
+}
+
 function nextId() {
   seq += 1;
   return `batch-${Date.now()}-${seq}`;
+}
+
+function statusFromJob(status: Job["status"]): BatchStatus {
+  if (status === "done" || status === "error" || status === "interrupted" || status === "queued") {
+    return status;
+  }
+  return "running";
 }
 
 // เรียก endpoint ที่ตรงกับชนิดงาน — คืน job_id เพื่อไป watch ต่อ
@@ -35,7 +53,7 @@ function spawnByKind(kind: BatchKind, params: Record<string, unknown>) {
 // hook: คิวประมวลผลงานแบบเรียงลำดับ (ทีละงาน) ฝั่ง frontend
 // backend รันงานเบื้องหลังอยู่แล้ว แต่คิวนี้ควบคุมว่า "ส่งงานถัดไปเมื่อไหร่"
 export function useBatchQueue() {
-  const [items, setItems] = useState<BatchItem[]>([]);
+  const [items, setItems] = useState<BatchItem[]>(loadItems);
   const [running, setRunning] = useState(false);
   // pauseRequested: true = ให้หยุดหลังงานปัจจุบันเสร็จ (ไม่ยกเลิกงานที่กำลังรัน)
   const pauseRequested = useRef(false);
@@ -43,9 +61,51 @@ export function useBatchQueue() {
   const runningRef = useRef(false);
   const closeWatchRef = useRef<(() => void) | null>(null);
 
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+
   const patchItem = useCallback((id: string, patch: Partial<BatchItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   }, []);
+
+  useEffect(() => {
+    const active = items.find(
+      (item) => (item.status === "running" || item.status === "queued") && item.jobId,
+    );
+    if (!active?.jobId) return;
+    let cancelled = false;
+    jobs.get(active.jobId).then((restored) => {
+      if (cancelled) return;
+      const patch: Partial<BatchItem> = {
+        progress: restored.progress,
+        message: restored.message,
+        error: restored.error,
+        status: statusFromJob(restored.status),
+      };
+      patchItem(active.id, patch);
+      if (restored.status === "queued" || restored.status === "running") {
+        closeWatchRef.current = jobs.watch(active.jobId!, (update) => {
+          patchItem(active.id, {
+            progress: update.progress,
+            message: update.message,
+            error: update.error,
+            status: statusFromJob(update.status),
+          });
+        });
+      }
+    }).catch(() => patchItem(active.id, {
+      status: "interrupted",
+      error: "ไม่พบงานเดิมใน backend",
+    }));
+    return () => {
+      cancelled = true;
+      closeWatchRef.current?.();
+      closeWatchRef.current = null;
+    };
+  // re-attach เฉพาะ snapshot ตอน mount; updates หลังจากนั้นมาจาก WebSocket
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patchItem]);
 
   const enqueue = useCallback((item: Omit<BatchItem, "id" | "status">) => {
     setItems((prev) => [...prev, { ...item, id: nextId(), status: "pending" }]);
@@ -88,10 +148,10 @@ export function useBatchQueue() {
           patchItem(id, {
             progress: j.progress,
             message: j.message,
-            status: j.status === "done" ? "done" : j.status === "error" ? "error" : "running",
+            status: statusFromJob(j.status),
             error: j.error,
           });
-          if (j.status === "done" || j.status === "error") {
+          if (j.status === "done" || j.status === "error" || j.status === "interrupted") {
             closeWatchRef.current?.();
             closeWatchRef.current = null;
             resolve();

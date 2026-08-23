@@ -114,7 +114,7 @@ export function PluginsPanel() {
           {installInfo[name] && !info.available && (
             <div style={{ marginTop: 14, borderTop: "1px solid var(--border-soft, #333)", paddingTop: 12 }}>
               <div className="hint" style={{ margin: "0 0 6px" }}>
-                รันคำสั่งนี้เองใน terminal ที่เปิด venv ของ backend ไว้ (เช่น <code className="mono">backend\.venv\Scripts\Activate.ps1</code>)
+                รันคำสั่งนี้เองใน terminal ที่เปิด venv ของ backend ไว้ (เช่น <code className="mono">apps\api\.venv\Scripts\Activate.ps1</code>)
                 แล้วรีสตาร์ต backend — ระบบยังไม่ได้ต่อการติดตั้งอัตโนมัติ
               </div>
               <div

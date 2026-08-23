@@ -7,6 +7,8 @@ on:
 
 jobs:
   build-windows:
+    permissions:
+      contents: write
     runs-on: windows-latest
     env:
       # Windows runners default to a non-UTF-8 codepage (cp1252-family) for
@@ -17,6 +19,12 @@ jobs:
       PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify updater signing secret
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: ./tools/verify/check_tauri_signing_key.ps1
 
       - name: Setup Node
         uses: actions/setup-node@v4

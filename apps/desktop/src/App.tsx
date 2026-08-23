@@ -18,6 +18,7 @@ import { BatchQueue } from "./components/BatchQueue";
 import { useBackendReadiness, type BackendReadiness } from "./hooks/useBackendReadiness";
 import { useRuntimeActivity } from "./hooks/useRuntimeActivity";
 import { API_BASE, type RuntimeActivityStatus } from "./api";
+import { runtimeDeviceWarning } from "./runtimeDevices";
 
 // เวอร์ชันฝังตอน build จาก package.json (ดู vite.config.ts)
 declare const __APP_VERSION__: string;
@@ -121,7 +122,9 @@ function LibraryHub() {
 function RuntimeFooter({ status, onOpenActivity }: { status: RuntimeActivityStatus | null; onOpenActivity: () => void }) {
   const telemetry = status?.telemetry;
   const activity = status?.activity;
-  return <footer className="runtime-footer mono"><div className="runtime-telemetry"><span>CPU {formatPercent(telemetry?.cpu_percent)}</span><span>RAM {formatMemory(telemetry?.ram_used_bytes)} / {formatMemory(telemetry?.ram_total_bytes)}</span><span>GPU {formatPercent(telemetry?.gpu_percent)}</span><span>VRAM {formatMemory(telemetry?.vram_used_bytes)} / {formatMemory(telemetry?.vram_total_bytes)}</span></div><button className="runtime-activity" onClick={onOpenActivity}>{activity?.label ? <><span>{activity.label}</span><strong>{formatPercent(activity.progress == null ? null : activity.progress * 100)}</strong><i><b style={{ width: `${Math.round((activity.progress ?? 0) * 100)}%` }} /></i></> : "No active jobs"}</button><div className="runtime-identity"><span>{status?.runtime.profile ?? "runtime N/A"}</span><span>{status?.runtime.model ?? "model N/A"}</span><span>Agent {status?.runtime.agent ?? "N/A"}</span><span>{API_BASE.replace(/^https?:\/\//, "")}</span></div></footer>;
+  const warning = runtimeDeviceWarning(status?.runtime.devices.tts)
+    ?? runtimeDeviceWarning(status?.runtime.devices.asr);
+  return <footer className="runtime-footer mono"><div className="runtime-telemetry"><span>CPU {formatPercent(telemetry?.cpu_percent)}</span><span>RAM {formatMemory(telemetry?.ram_used_bytes)} / {formatMemory(telemetry?.ram_total_bytes)}</span><span>GPU {formatPercent(telemetry?.gpu_percent)}</span><span>VRAM {formatMemory(telemetry?.vram_used_bytes)} / {formatMemory(telemetry?.vram_total_bytes)}</span>{warning && <span title={warning}>CPU FALLBACK</span>}</div><button className="runtime-activity" onClick={onOpenActivity}>{activity?.label ? <><span>{activity.label}</span><strong>{formatPercent(activity.progress == null ? null : activity.progress * 100)}</strong><i><b style={{ width: `${Math.round((activity.progress ?? 0) * 100)}%` }} /></i></> : "No active jobs"}</button><div className="runtime-identity"><span>{status?.runtime.profile ?? "runtime N/A"}</span><span>{status?.runtime.devices.tts.effective ?? status?.runtime.devices.asr.effective ?? "device N/A"}</span><span>{status?.runtime.model ?? "model N/A"}</span><span>Agent {status?.runtime.agent ?? "N/A"}</span><span>{API_BASE.replace(/^https?:\/\//, "")}</span></div></footer>;
 }
 
 function ActivityOverlay({ status, onClose, onOpenJobs }: { status: RuntimeActivityStatus | null; onClose: () => void; onOpenJobs: () => void }) {

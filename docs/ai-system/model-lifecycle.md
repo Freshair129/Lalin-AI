@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.0.0 |
-| **Status** | Draft |
+| **Version** | 1.1.0b |
+| **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-09 |
-| **Approved By** | — |
+| **Last Updated** | 2026-08-23 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 วงจรชีวิตโมเดลในเครื่องผู้ใช้: เลือก → ได้มา → โหลด → ใช้ → ประเมิน → อัปเดต/ถอน (G-Music ไม่ฝึกโมเดลเอง — ใช้ pretrained + BYOM)
 
@@ -25,9 +25,17 @@
 ## 2. การโหลด + งบ VRAM (RTX 3060 12GB)
 
 - Heavy deps ทั้งหมดเป็น **lazy import** — error ตอนเรียกใช้พร้อมข้อความแนะนำติดตั้ง ไม่ใช่ตอน boot
+- ASR/TTS requested device default = `auto`; resolve ตอน pipeline เริ่มใช้จริง ไม่ cold-import จาก `/runtime/status`. CPU fallback ใช้ ASR `int8` และแสดง warning ไทยใน UI
 - โหลด**ทีละขั้น**: remix chain เรียก `torch.cuda.empty_cache()` หลังจบ stem split (`music.py`)
+- JobManager บังคับ CUDA job แบบ FIFO concurrency 1 และ cleanup กลางหลัง done/error; CPU job ไม่รอ GPU lock
 - Ollama แชร์ VRAM กับ pipeline — cold-load โมเดลใหญ่ >4 นาที (timeout 600s รองรับแล้ว, FR-05.7)
-- ✏️ TODO — ตาราง VRAM budget ต่อ pipeline (TTS / dubbing / remix) วัดจริง เพื่อรู้ว่าอะไรรันพร้อมกันได้
+- `gpu_min_free_mb` รองรับ threshold ต่อ `tts`/`dubbing`/`remix`; ค่า default ยังเป็น `0` จนกว่าจะได้ peak measurement จริง จึง enforce เฉพาะ FIFO และ **ยังห้ามปิด R-004**
+
+| Job kind | Peak VRAM RTX 3060 | Headroom 10% | Config threshold | Evidence |
+|---|---:|---:|---:|---|
+| TTS | pending manual measurement | pending | `0` | CPU-TTS/GPU smoke ยังไม่รันรอบนี้ |
+| Dubbing | pending manual measurement | pending | `0` | concurrent-submit manual gate ยังเปิด |
+| Remix | pending manual measurement | pending | `0` | concurrent-submit manual gate ยังเปิด |
 
 ## 3. การประเมิน (Eval Gate)
 
@@ -51,3 +59,4 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-08-09 | Boss | สร้างผ่าน rwang:doc-architect |
+| 1.1.0b | 2026-08-23 | LALIN | เพิ่ม auto CPU fallback, single-GPU FIFO และ measured-threshold gate; ยังไม่ใส่ตัวเลขที่ไม่ได้วัด |

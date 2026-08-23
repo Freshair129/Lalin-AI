@@ -38,5 +38,5 @@ export function JobProgress({ job }: { job: Job | null }) {
 }
 
 function statusLabel(s: string) {
-  return { queued: "⏳ รอคิว", running: "⚙️ กำลังทำงาน", done: "✅ เสร็จ", error: "❌ ผิดพลาด" }[s] ?? s;
+  return { queued: "⏳ รอคิว", running: "⚙️ กำลังทำงาน", done: "✅ เสร็จ", error: "❌ ผิดพลาด", interrupted: "⚠️ งานถูกขัดจังหวะ" }[s] ?? s;
 }

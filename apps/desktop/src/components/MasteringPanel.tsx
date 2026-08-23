@@ -12,7 +12,7 @@ export function MasteringPanel() {
   const [reference, setReference] = useState<string | null>(null);
   const [targetLufs, setTargetLufs] = useState(-14);
   const [format, setFormat] = useState("wav");
-  const { job, busy, start } = useJob();
+  const { job, busy, start } = useJob("mastering");
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
 

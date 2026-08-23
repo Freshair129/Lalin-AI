@@ -225,9 +225,12 @@ export const projects = {
 export interface Job {
   id: string;
   kind: string;
-  status: "queued" | "running" | "done" | "error";
+  status: "queued" | "running" | "done" | "error" | "interrupted";
   progress: number;
   message: string;
+  resource: "cpu" | "gpu";
+  created_at: string;
+  updated_at: string;
   result?: {
     output?: string;
     // dubbing: ไฟล์ซับไตเติล + วิดีโอที่รวมเสียงพากย์กลับเข้าไปแล้ว (ถ้าต้นฉบับเป็นวิดีโอ)
@@ -253,6 +256,10 @@ export interface RuntimeActivityStatus {
     profile: "full" | "lite" | null;
     model: string | null;
     agent: string | null;
+    devices: {
+      tts: import("./runtimeDevices").RuntimeDeviceState;
+      asr: import("./runtimeDevices").RuntimeDeviceState;
+    };
   };
   activity: {
     job_id: string | null;

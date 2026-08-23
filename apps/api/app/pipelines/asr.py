@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..config import get_settings
+from ..runtime_devices import resolve_asr_runtime
 
 _model = None  # cached WhisperModel
 _model_name: str | None = None
@@ -45,8 +46,9 @@ def _get_model():
             raise RuntimeError(
                 "ยังไม่ได้ติดตั้ง faster-whisper — รัน scripts/setup_windows.ps1 ก่อน"
             ) from e
+        resolution, compute_type = resolve_asr_runtime(s.asr_device)
         _model = WhisperModel(
-            s.asr_model, device=s.asr_device, compute_type=s.asr_compute_type
+            s.asr_model, device=resolution.effective, compute_type=compute_type
         )
         _model_name = s.asr_model
     return _model

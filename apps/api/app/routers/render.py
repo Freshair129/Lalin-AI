@@ -95,5 +95,5 @@ async def render(req: RenderRequest):
         result["output"] = os.path.basename(final)
         return result
 
-    job = jobs.spawn("render", task)
+    job = jobs.spawn("render", task, resource="cpu")
     return {"job_id": job.id}

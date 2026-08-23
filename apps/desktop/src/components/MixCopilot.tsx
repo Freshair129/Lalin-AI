@@ -125,7 +125,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
   const [voiceId, setVoiceId] = useState("");
   const [speakReplies, setSpeakReplies] = useState(false);
   const [speechConfig, setSpeechConfig] = useState<SpeechConfig | null>(null);
-  const { job: voiceJob, busy: voiceBusy, start: startVoice } = useJob();
+  const { job: voiceJob, busy: voiceBusy, start: startVoice } = useJob("agent-voice");
 
   useEffect(() => {
     voices.list().then((result) => {

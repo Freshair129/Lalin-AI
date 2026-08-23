@@ -14,7 +14,7 @@ export function DubbingPanel() {
   const [translate, setTranslate] = useState(true);
   const [source, setSource] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const { job, busy, start } = useJob();
+  const { job, busy, start } = useJob("dubbing");
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
 

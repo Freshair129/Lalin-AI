@@ -33,5 +33,5 @@ async def master(req: MasteringRequest):
         )
         return result
 
-    job = jobs.spawn("mastering", task)
+    job = jobs.spawn("mastering", task, resource="cpu")
     return {"job_id": job.id}
