@@ -1,75 +1,238 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  isTauri,
-  dispatchPlaybackBridgeMessage,
-  listenPlaybackBridgeMessages,
-  openOrFocusPlayWindow,
-  minimizeCurrentWindow,
-  toggleMaximizeCurrentWindow,
+  bindPlayWindowClose,
   hideOrCloseCurrentWindow,
+  isTauri,
+  minimizeCurrentWindow,
+  openOrFocusPlayWindow,
+  toggleMaximizeCurrentWindow,
 } from "./windowManager";
-import type { MediaItem } from "@lalin/contracts";
+import {
+  getCurrentWebviewWindow,
+  WebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 
-describe("windowManager & Playback Bridge", () => {
+vi.mock("@tauri-apps/api/webviewWindow", () => ({
+  WebviewWindow: { getByLabel: vi.fn() },
+  getCurrentWebviewWindow: vi.fn(),
+}));
+
+const getByLabelMock = vi.mocked(WebviewWindow.getByLabel);
+const getCurrentWindowMock = vi.mocked(getCurrentWebviewWindow);
+
+let lastPopup: Window | null = null;
+
+function markTauri(): void {
+  (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {};
+}
+
+function makePlayWindow(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    label: "play",
+    show: vi.fn().mockResolvedValue(undefined),
+    unminimize: vi.fn().mockResolvedValue(undefined),
+    setFocus: vi.fn().mockResolvedValue(undefined),
+    minimize: vi.fn().mockResolvedValue(undefined),
+    isMaximized: vi.fn().mockResolvedValue(false),
+    maximize: vi.fn().mockResolvedValue(undefined),
+    unmaximize: vi.fn().mockResolvedValue(undefined),
+    hide: vi.fn().mockResolvedValue(undefined),
+    onCloseRequested: vi.fn().mockResolvedValue(vi.fn()),
+    ...overrides,
+  };
+}
+
+describe("windowManager native and browser lifecycle", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    delete (window as Window & { __TAURI_INTERNALS__?: unknown })
+      .__TAURI_INTERNALS__;
+    lastPopup = null;
   });
 
   afterEach(() => {
-    delete (window as any).__TAURI_INTERNALS__;
+    if (lastPopup) {
+      Object.defineProperty(lastPopup, "closed", {
+        configurable: true,
+        value: true,
+      });
+    }
+    delete (window as Window & { __TAURI_INTERNALS__?: unknown })
+      .__TAURI_INTERNALS__;
   });
 
-  it("identifies non-Tauri environment safely", () => {
+  it("identifies native and browser environments safely", () => {
     expect(isTauri()).toBe(false);
-  });
-
-  it("identifies Tauri environment when __TAURI_INTERNALS__ is defined", () => {
-    (window as any).__TAURI_INTERNALS__ = {};
+    markTauri();
     expect(isTauri()).toBe(true);
   });
 
-  it("handles window actions safely in browser fallback without throwing", async () => {
-    // In node/jsdom without window.open, returns false or opens popup
-    const res = await openOrFocusPlayWindow();
-    expect(typeof res).toBe("boolean");
-    await expect(minimizeCurrentWindow()).resolves.toBeUndefined();
-    await expect(toggleMaximizeCurrentWindow()).resolves.toBeUndefined();
-    await expect(hideOrCloseCurrentWindow()).resolves.toBeUndefined();
+  it("opens the browser popup in the user call stack and reuses it without navigation", async () => {
+    const popup = {
+      closed: false,
+      focus: vi.fn(),
+    } as unknown as Window;
+    lastPopup = popup;
+    const open = vi
+      .spyOn(window, "open")
+      .mockImplementation((url, name, features) => {
+        expect(url).toContain("?surface=play");
+        expect(name).toBe("LalinPlay");
+        expect(features).toContain("width=960");
+        return popup;
+      });
+
+    let stillInGesture = true;
+    open.mockImplementationOnce(() => {
+      expect(stillInGesture).toBe(true);
+      return popup;
+    });
+    const first = openOrFocusPlayWindow();
+    stillInGesture = false;
+
+    await expect(first).resolves.toBe(true);
+    await expect(openOrFocusPlayWindow()).resolves.toBe(true);
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(popup.focus).toHaveBeenCalledTimes(2);
   });
 
-  it("dispatches and receives messages across playback bridge via BroadcastChannel", async () => {
-    const testItem: MediaItem = {
-      id: "track-123",
-      title: "Test Song",
-      artist: "Test Artist",
-      url: "http://localhost:8756/test.mp3",
-      sourceKind: "workspace",
-      sourcePath: "test.mp3",
-      ext: "mp3",
-    };
+  it("returns false when the browser blocks the popup", async () => {
+    vi.spyOn(window, "open").mockReturnValue(null);
 
-    const received: any[] = [];
-    const unsubscribe = listenPlaybackBridgeMessages((msg) => {
-      received.push(msg);
+    await expect(openOrFocusPlayWindow()).resolves.toBe(false);
+  });
+
+  it("supports closing the current browser window", async () => {
+    const close = vi.spyOn(window, "close").mockImplementation(() => {});
+
+    await expect(hideOrCloseCurrentWindow()).resolves.toBeUndefined();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("uses only the predeclared native play window and its lifecycle operations", async () => {
+    markTauri();
+    const playWindow = makePlayWindow();
+    getByLabelMock.mockResolvedValue(playWindow as never);
+
+    await expect(openOrFocusPlayWindow()).resolves.toBe(true);
+    expect(getByLabelMock).toHaveBeenCalledWith("play");
+    expect(playWindow.show).toHaveBeenCalledOnce();
+    expect(playWindow.unminimize).toHaveBeenCalledOnce();
+    expect(playWindow.setFocus).toHaveBeenCalledOnce();
+  });
+
+  it("throws an actionable Thai error when the native play window is missing", async () => {
+    markTauri();
+    getByLabelMock.mockResolvedValue(null);
+    const open = vi.spyOn(window, "open");
+
+    await expect(openOrFocusPlayWindow()).rejects.toThrow(
+      "ไม่พบหน้าต่าง native Lalin Play"
+    );
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it("throws instead of silently falling back when native operations fail", async () => {
+    markTauri();
+    getByLabelMock.mockRejectedValue(new Error("permission denied"));
+    const open = vi.spyOn(window, "open");
+
+    await expect(openOrFocusPlayWindow()).rejects.toThrow(
+      "ไม่สามารถเปิดหน้าต่าง Lalin Play ได้"
+    );
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["minimize", minimizeCurrentWindow],
+    ["toggle maximize", toggleMaximizeCurrentWindow],
+    ["hide", hideOrCloseCurrentWindow],
+  ])("throws when native %s fails", async (_name, operation) => {
+    markTauri();
+    const playWindow = makePlayWindow({
+      minimize: vi.fn().mockRejectedValue(new Error("native failure")),
+      isMaximized: vi.fn().mockRejectedValue(new Error("native failure")),
+      hide: vi.fn().mockRejectedValue(new Error("native failure")),
     });
+    getCurrentWindowMock.mockReturnValue(playWindow as never);
 
-    dispatchPlaybackBridgeMessage({ type: "PLAY", item: testItem });
-    dispatchPlaybackBridgeMessage({ type: "PLAY_NEXT", item: testItem });
-    dispatchPlaybackBridgeMessage({ type: "FOCUS_PLAYER" });
+    await expect(operation()).rejects.toThrow("กรุณาปิดแล้วเปิดแอปใหม่อีกครั้ง");
+  });
 
-    // BroadcastChannel dispatch is synchronous/microtask in Node/jsdom
-    await new Promise((resolve) => setTimeout(resolve, 50));
+  it("does not operate on the native main window", async () => {
+    markTauri();
+    const mainWindow = makePlayWindow({ label: "main" });
+    getCurrentWindowMock.mockReturnValue(mainWindow as never);
 
-    expect(received.length).toBe(3);
-    expect(received[0]).toEqual({ type: "PLAY", item: testItem });
-    expect(received[1]).toEqual({ type: "PLAY_NEXT", item: testItem });
-    expect(received[2]).toEqual({ type: "FOCUS_PLAYER" });
+    await minimizeCurrentWindow();
+    await toggleMaximizeCurrentWindow();
+    await hideOrCloseCurrentWindow();
 
-    unsubscribe();
+    expect(mainWindow.minimize).not.toHaveBeenCalled();
+    expect(mainWindow.isMaximized).not.toHaveBeenCalled();
+    expect(mainWindow.maximize).not.toHaveBeenCalled();
+    expect(mainWindow.unmaximize).not.toHaveBeenCalled();
+    expect(mainWindow.hide).not.toHaveBeenCalled();
+  });
 
-    // After unsubscribe, messages should no longer be handled by this listener
-    dispatchPlaybackBridgeMessage({ type: "ADD_TO_QUEUE", item: testItem });
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(received.length).toBe(3);
+  it("toggles the native play window in both directions", async () => {
+    markTauri();
+    const playWindow = makePlayWindow();
+    getCurrentWindowMock.mockReturnValue(playWindow as never);
+
+    await minimizeCurrentWindow();
+    await toggleMaximizeCurrentWindow();
+    playWindow.isMaximized.mockResolvedValueOnce(true);
+    await toggleMaximizeCurrentWindow();
+    await hideOrCloseCurrentWindow();
+
+    expect(playWindow.minimize).toHaveBeenCalledOnce();
+    expect(playWindow.maximize).toHaveBeenCalledOnce();
+    expect(playWindow.unmaximize).toHaveBeenCalledOnce();
+    expect(playWindow.hide).toHaveBeenCalledOnce();
+  });
+
+  it("prevents native play close, awaits hide, reports hide failures, and cleans up once", async () => {
+    markTauri();
+    let closeHandler:
+      | ((event: { preventDefault: () => void }) => Promise<void>)
+      | undefined;
+    const unlisten = vi.fn();
+    const playWindow = makePlayWindow({
+      onCloseRequested: vi.fn().mockImplementation(async (handler) => {
+        closeHandler = handler;
+        return unlisten;
+      }),
+    });
+    getCurrentWindowMock.mockReturnValue(playWindow as never);
+
+    const onError = vi.fn();
+    const cleanup = await bindPlayWindowClose(onError);
+    const event = { preventDefault: vi.fn() };
+
+    await closeHandler?.(event);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(playWindow.hide).toHaveBeenCalledOnce();
+    expect(onError).not.toHaveBeenCalled();
+
+    cleanup();
+    cleanup();
+    expect(unlisten).toHaveBeenCalledOnce();
+
+    playWindow.hide.mockRejectedValueOnce(new Error("hide denied"));
+    await closeHandler?.(event);
+    expect(onError).toHaveBeenCalledWith(
+      expect.stringContaining("ไม่สามารถซ่อนหน้าต่าง Lalin Play ได้")
+    );
+  });
+
+  it("does not bind close handling for a native non-play caller", async () => {
+    markTauri();
+    const mainWindow = makePlayWindow({ label: "main" });
+    getCurrentWindowMock.mockReturnValue(mainWindow as never);
+
+    const cleanup = await bindPlayWindowClose(vi.fn());
+    cleanup();
+    expect(mainWindow.onCloseRequested).not.toHaveBeenCalled();
   });
 });

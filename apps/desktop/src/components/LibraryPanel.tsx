@@ -2,7 +2,7 @@
 // @req FR-16.6 — Library มี action Play ใน Lalin Play
 import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { packs, files, type Pack } from "../api";
-import { usePlaybackStore } from "../playback/usePlaybackStore";
+import { requestPlayback } from "../playback/playbackClient";
 import { Icon } from "./icons";
 
 // payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
@@ -10,14 +10,11 @@ import { Icon } from "./icons";
 export const CLIP_DRAG_MIME = "text/gmusic-clip";
 export interface LibraryDragPayload { kind: "upload"; name: string; label: string; color: string; }
 
-import { openOrFocusPlayWindow, dispatchPlaybackBridgeMessage } from "../playback/windowManager";
-
 // Library (left sector) — เลือก sound/pack แบบ GarageBand
 export function LibraryPanel() {
   const [list, setList] = useState<Pack[]>([]);
   const [sel, setSel] = useState<Pack | null>(null);
   const [q, setQ] = useState("");
-  const { play, setOpen } = usePlaybackStore();
 
   useEffect(() => {
     packs.list().then((r) => { setList(r.packs); setSel(r.packs[0] ?? null); }).catch(() => {});
@@ -54,10 +51,7 @@ export function LibraryPanel() {
                   sourcePath: sel.id,
                   ext: "wav",
                 };
-                play(item);
-                setOpen(true);
-                dispatchPlaybackBridgeMessage({ type: "PLAY", item });
-                openOrFocusPlayWindow().catch(() => {});
+                requestPlayback({ type: "PLAY", item });
               }}
               title="Play in Lalin Play"
             >

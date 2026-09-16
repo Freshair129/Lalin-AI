@@ -1,7 +1,7 @@
 ---
-version: "0.1.15b"
+version: "0.1.18b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-08-09T00:00:00+07:00,LALIN"
+last_update: "2026-09-17T04:05:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -36,6 +36,7 @@ attributes:
 - `docs/architecture/SPEC.md`: technical system specification.
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/architecture/API_SEMANTICS.md`: พฤติกรรมของ REST/WS ที่อ่านจาก OpenAPI schema ไม่ได้ (state, ลำดับ, error ที่ไม่ตรงสัญชาตญาณ).
+- `docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md`: approved/locally implemented Play Window readiness, single consumer owner, and scoped native capabilities.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
 
 ## Current Lalin UI Docs
@@ -83,7 +84,10 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 ## Validation and Evidence Docs
 
 - `docs/validation/SPRINT*_VALIDATION.md`
+- `docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md`: regression, build and isolated browser/native debug fixture evidence; broad MVP/release gates remain separate.
+- `docs/validation/2026-09-17-SIDECAR-BUILD.md`: local sidecar build, exact artifact hash, Python environment and independent runtime checks.
 - `.brain/rca/*.md`
+- `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
 - `docs/rca/RCA--LOCAL-LLM-DISPATCH.md`
 - `docs/rca/REPORT--LOCAL-LLM-DISPATCH.md`
@@ -108,6 +112,9 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.18b | 2026-09-17 | beta | Index requested sidecar build and runtime verification. | included with source repair | LALIN |
+| 0.1.17b | 2026-09-17 | beta | Index approved playback remediation and scoped native/browser validation. | uncommitted | LALIN |
+| 0.1.16b | 2026-09-17 | beta | Index CR-001 command-delivery RCA and candidate remediation plan. | uncommitted | LALIN |
 | 0.1.15b | 2026-08-09 | beta | Added API semantics doc for behavior not expressible in OpenAPI. | uncommitted | LALIN |
 | 0.1.14b | 2026-08-09 | beta | Added component registry, doc-graph scanner, and full REST API spec (42 endpoints). | uncommitted | LALIN |
 | 0.1.13b | 2026-07-24 | beta | Added Phase 8 repo rename and presentation readiness docs. | uncommitted | LALIN |

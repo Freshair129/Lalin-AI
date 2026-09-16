@@ -7,12 +7,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.3.0-draft |
+| **Doc Version** | 1.3.1b |
 | **Status** | In Review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-09-16 |
-| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 (CR-001 under review, pending final sign-off) |
+| **Last Updated** | 2026-09-17 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23; CR-001 implementation merged via PR #10, MVP acceptance remains under review |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
@@ -21,6 +21,7 @@
 | 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
 | 1.2.0b | 2026-08-23 | LALIN | เพิ่ม CPU fallback, durable/interrupted job lifecycle และ single-GPU admission contract ตาม Phase 1 G-09/G-06/G-07 |
 | 1.3.0-draft | 2026-09-16 | LALIN | ร่างข้อกำหนดจาก CR-001 (กำลังรีวิวบน feature branch): เพิ่มร่าง FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
+| 1.3.1b | 2026-09-17 | LALIN | Correct CR-001 integration status after PR #10; link command-delivery RCA and candidate remediation without claiming MVP acceptance |
 
 ---
 
@@ -290,6 +291,8 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | FR-15.6 | UI ควรแสดงไอคอนตามชนิด (โฟลเดอร์/ไฟล์เสียง/เอกสาร) และขนาดไฟล์ในมุมมอง list | Should |
 
 ### FR-16: Windows Media Player (Lalin Play)
+
+Implementation อยู่ใน default branch แล้ว; การผ่าน MVP acceptance ยังอยู่ระหว่างตรวจ ดู [CR-001 §17](CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md#17-status) และ [แผน command delivery](../architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) ซึ่งยังเป็น candidate ข้อกำหนดด้านล่างไม่เปลี่ยนจากการปรับสถานะครั้งนี้
 
 | ID | ข้อกำหนด | Priority |
 |----|----------|----------|

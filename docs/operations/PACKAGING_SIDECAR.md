@@ -2,6 +2,11 @@
 
 ## Status
 
+Current local build evidence (2026-09-17) is recorded in
+[sidecar build validation](../validation/2026-09-17-SIDECAR-BUILD.md).
+The older workstation/release evidence below is historical, not a validation of
+this checkout or the newly generated artifact.
+
 Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/dubbing/mastering/remix feature smoke are validated on this Windows workspace.
 
 Validated:
@@ -36,11 +41,16 @@ G-Music.exe (Tauri/WebView2)
   -> FastAPI app on 127.0.0.1:8756
 ```
 
-The default packaged sidecar uses the lite backend profile. It serves shell/MVP endpoints without importing ML-heavy routers, so model weights and large ML runtime dependencies are not embedded in the local installer artifact. A future full ML workstation profile must be validated separately.
+The build script defaults its smoke environment to `lite`, but the current release
+workflow invokes `-Profile full` and the Tauri launcher sets
+`GMUSIC_BACKEND_PROFILE=full`. `sidecar_entry.py` loads `app.main:app`; the selected
+profile is read at runtime. The tracked PyInstaller spec still excludes ML-heavy
+dependencies and model weights. A full route profile therefore does not imply a
+complete bundled ML workstation.
 
 ## Source Files
 
-- `apps/api/sidecar_entry.py`: versioned PyInstaller entrypoint. It imports `app.sidecar_lite.app` so local packaging does not collect ML-heavy router dependencies.
+- `apps/api/sidecar_entry.py`: versioned PyInstaller entrypoint. It starts `uvicorn` with `app.main:app`; the environment selects the runtime profile.
 - `apps/api/app/sidecar_lite.py`: lite FastAPI app for packaged MVP shell endpoints.
 - `apps/api/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
 - `tools/build/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `apps/desktop/src-tauri/binaries/`.
@@ -62,8 +72,9 @@ The script:
 - Bootstraps `pip` with `ensurepip` if needed.
 - Installs `pyinstaller` into the API venv if missing.
 - Detects the Rust target triple with `rustc -vV`, falling back to `x86_64-pc-windows-msvc`.
-- Removes stale `apps\api\dist`, `apps\api\build`, and `apps\api\g-music-backend.spec`.
-- Runs PyInstaller in `--onedir --console` mode.
+- Preserves the tracked `apps\api\g-music-backend.spec`; never delete/regenerate it.
+- Creates fresh `dist-<run-id>` and `build-<run-id>` directories, with best-effort cleanup of older generated directories.
+- Runs PyInstaller from that spec in `--onedir --console` mode.
 - Copies the onedir output into `apps\desktop\src-tauri\binaries\`.
 - Renames the executable to `g-music-backend-<target-triple>.exe`, which Tauri expects for `externalBin`.
 

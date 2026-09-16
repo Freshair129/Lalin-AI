@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.14b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-07-22T00:00:00+07:00,Codex"
+last_update: "2026-09-17T03:45:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -69,7 +69,7 @@ This document defines the target repository architecture. Phase 1 consolidated d
 | Target | Owns | Current source |
 |---|---|---|
 | `apps/desktop` | Tauri shell, React UI, desktop packaging config, and Lalin Play surface | `frontend/` |
-| `apps/desktop/src/playback` | Playback audio engine, Web Audio 10-band EQ chain, queue store, SMTC adapter | CR-001 (Phase 0/1) |
+| `apps/desktop/src/playback` | Play Window alone owns consumer audio, EQ, queue persistence and SMTC; Studio uses the command client and owner snapshot | CR-001 and approved command-delivery plan |
 | `apps/api` | FastAPI routes, ML pipelines, sidecar profiles | `backend/` |
 | `packages/contracts` | Shared API, runtime, job, agent, MCP, and playback schemas | expanded for CR-001 |
 | `tools/dev` | local launchers and developer workflows | moved setup/runtime scripts |
@@ -82,6 +82,19 @@ This document defines the target repository architecture. Phase 1 consolidated d
 | `docs/validation` | sprint and release evidence | `docs/SPRINT*_VALIDATION.md` |
 | `docs/archive` | superseded GM6/G-Music planning docs | mixed `docs/` |
 | `runtime` | local generated/user state | `data/`, `output/`, `queue/`, `state/` |
+
+### Consumer playback boundary
+
+`playbackClient.ts` exposes Studio commands without importing the consumer engine.
+`playbackBridge.ts` provides readiness, FIFO command IDs, ACK/STATE and explicit
+unknown-delivery reconciliation. `playbackOwner.ts` connects the store only on
+the lazy-loaded Play surface. Arrange keeps its editor engine/session. The old
+`LalinPlayModal.tsx` prototype remains as unmounted source, not an active owner.
+
+The predeclared native `play` window hides on close. Native capabilities authorize
+caller windows (`main` and `play` separately); they are not target-window allowlists.
+See [approved plan](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) and
+[validation](../validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md).
 
 ## Tooling Decision
 
@@ -131,6 +144,7 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.14b | 2026-09-17 | beta | Record single consumer owner and sender boundary; align stale frontmatter with existing version history | uncommitted | LALIN |
 | 0.1.13b | 2026-07-24 | beta | Updated repository identity after GitHub rename to Lalin-AI. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Marked Phase 7 release workflow repair executed. | uncommitted | LALIN |
 | 0.1.11b | 2026-07-23 | candidate | Added Phase 7 release workflow repair pointer. | uncommitted | LALIN |

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { fs, type FsEntry } from "../api";
-import { usePlaybackStore } from "../playback/usePlaybackStore";
+import { requestPlayback } from "../playback/playbackClient";
 import type { MediaItem } from "@lalin/contracts";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Icon } from "./icons";
@@ -14,8 +14,6 @@ function iconFor(e: FsEntry): string {
 function join(path: string, name: string) { return path ? `${path}/${name}` : name; }
 function fmtSize(n: number) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
 
-import { openOrFocusPlayWindow, dispatchPlaybackBridgeMessage } from "../playback/windowManager";
-
 // Adobe-style file manager (browse/create/rename/delete/move ใน workspace)
 // @req FR-16.6 — Library/File Manager มี action Play, Play next, Add to queue
 // @req FR-16W.1 — Production Phase 1: Bridge commands to Secondary Play Window
@@ -27,8 +25,6 @@ export function FileManager() {
   const [ctx, setCtx] = useState<{ x: number; y: number; entry?: FsEntry } | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [err, setErr] = useState("");
-
-  const { play, playNext, addToQueue, setOpen } = usePlaybackStore();
 
   const toMediaItem = useCallback((e: FsEntry): MediaItem => {
     const filePath = join(path, e.name);
@@ -45,23 +41,18 @@ export function FileManager() {
 
   const handlePlay = useCallback((e: FsEntry) => {
     const item = toMediaItem(e);
-    play(item);
-    setOpen(true);
-    dispatchPlaybackBridgeMessage({ type: "PLAY", item });
-    openOrFocusPlayWindow().catch(() => {});
-  }, [play, toMediaItem, setOpen]);
+    requestPlayback({ type: "PLAY", item });
+  }, [toMediaItem]);
 
   const handlePlayNext = useCallback((e: FsEntry) => {
     const item = toMediaItem(e);
-    playNext(item);
-    dispatchPlaybackBridgeMessage({ type: "PLAY_NEXT", item });
-  }, [playNext, toMediaItem]);
+    requestPlayback({ type: "PLAY_NEXT", item });
+  }, [toMediaItem]);
 
   const handleAddToQueue = useCallback((e: FsEntry) => {
     const item = toMediaItem(e);
-    addToQueue(item);
-    dispatchPlaybackBridgeMessage({ type: "ADD_TO_QUEUE", item });
-  }, [addToQueue, toMediaItem]);
+    requestPlayback({ type: "ADD_TO_QUEUE", item });
+  }, [toMediaItem]);
 
   const load = useCallback((p: string) => {
     fs.list(p).then((r) => { setEntries(r.entries); setErr(""); }).catch((e) => setErr(String(e.message ?? e)));

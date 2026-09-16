@@ -3,7 +3,7 @@
 // @req FR-16 — Lalin Play Windows media player
 // @req FR-16W — Windows media keys and SMTC
 // @req FR-17 — 10-band Playback EQ
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrainPanel } from "./components/BrainPanel";
 import { VoicesPanel } from "./components/VoicesPanel";
 import { TTSPanel } from "./components/TTSPanel";
@@ -14,8 +14,7 @@ import { FileManager } from "./components/FileManager";
 import { MarketplacePanel } from "./components/MarketplacePanel";
 import { PluginsPanel } from "./components/PluginsPanel";
 import { UpdateChecker } from "./components/UpdateChecker";
-import { LalinPlayModal } from "./components/LalinPlayModal";
-import { openOrFocusPlayWindow } from "./playback/windowManager";
+import { usePlaybackClient, requestPlayback, reconcilePlayback } from "./playback/playbackClient";
 import { Icon } from "./components/icons";
 import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
@@ -24,8 +23,6 @@ import { useBackendReadiness, type BackendReadiness } from "./hooks/useBackendRe
 import { useRuntimeActivity } from "./hooks/useRuntimeActivity";
 import { API_BASE, type RuntimeActivityStatus } from "./api";
 import { runtimeDeviceWarning } from "./runtimeDevices";
-import { usePlaybackStore } from "./playback/usePlaybackStore";
-import { initMediaSessionAdapter } from "./playback/mediaSessionAdapter";
 
 // เวอร์ชันฝังตอน build จาก package.json (ดู vite.config.ts)
 declare const __APP_VERSION__: string;
@@ -54,11 +51,8 @@ export default function App() {
   const current = NAV.find((item) => item.id === tab);
   const backendReady = backend.state === "ready";
 
-  const { nowPlaying, setOpen: setPlayOpen } = usePlaybackStore();
-
-  useEffect(() => {
-    return initMediaSessionAdapter();
-  }, []);
+  const { nowPlaying, error: playbackError } = usePlaybackClient();
+  const openPlayer = () => requestPlayback({ type: "FOCUS_PLAYER" });
 
   return (
     <EngineProvider>
@@ -70,12 +64,12 @@ export default function App() {
           <div className="commandbar-actions">
             <button type="button" onClick={() => dispatchCommand("open")}>Open</button>
             <button type="button" onClick={() => dispatchCommand("save")}>Save</button>
-            <button type="button" onClick={() => setPlayOpen(true)} title="Open Lalin Play">Play</button>
+            <button type="button" onClick={openPlayer} title="Open Lalin Play">Play</button>
             <button type="button" onClick={() => setTab("settings")}>Settings</button>
           </div>
           {menu === "file" && <div className="command-menu"><button onClick={() => { dispatchCommand("new"); setMenu(null); }}>New</button><button onClick={() => { dispatchCommand("open"); setMenu(null); }}>Open…</button><button onClick={() => { dispatchCommand("save"); setMenu(null); }}>Save</button><button onClick={() => { dispatchCommand("saveAs"); setMenu(null); }}>Save As…</button></div>}
           {menu === "edit" && <div className="command-menu muted-menu">Undo / Redo are available in the active editor.</div>}
-          {menu === "view" && <div className="command-menu"><button onClick={() => { setPlayOpen(true); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button></div>}
+          {menu === "view" && <div className="command-menu"><button onClick={() => { openPlayer(); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button></div>}
           {menu === "help" && <div className="command-menu muted-menu">Use the active tool’s inline help and keyboard shortcuts.</div>}
         </div>
         <header className="topbar">
@@ -85,10 +79,7 @@ export default function App() {
           <button
             type="button"
             className={`topbar-play-pill ${nowPlaying.state === "playing" ? "playing" : ""}`}
-            onClick={() => {
-              setPlayOpen(true);
-              openOrFocusPlayWindow().catch(() => {});
-            }}
+            onClick={openPlayer}
             title="Open Lalin Play (Secondary Window & Media Player)"
           >
             <span className="play-pill-indicator">{nowPlaying.state === "playing" ? "▶" : "🎵"}</span>
@@ -101,6 +92,7 @@ export default function App() {
           </div>
           <div className="topbar-right"><UpdateChecker /></div>
         </header>
+        {playbackError && <div className="fm-err" role="alert">{playbackError} <button type="button" onClick={reconcilePlayback}>ตรวจสถานะเครื่องเล่น</button></div>}
 
         <div className="daw-body">
           <nav className="rail" aria-label="Lalin Studio navigation">
@@ -121,7 +113,6 @@ export default function App() {
         {backendReady && STUDIO_TABS.has(tab) && tab !== "arrange" && <StudioDock />}
         <RuntimeFooter status={runtime} onOpenActivity={() => setActivityOpen(true)} />
         {activityOpen && <ActivityOverlay status={runtime} onClose={() => setActivityOpen(false)} onOpenJobs={() => { setTab("jobs"); setActivityOpen(false); }} />}
-        <LalinPlayModal />
       </div>
     </EngineProvider>
   );
