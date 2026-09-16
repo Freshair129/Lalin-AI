@@ -1,5 +1,5 @@
 ---
-version: "0.2.0-candidate"
+version: "0.2.1-candidate"
 created_at: "2026-09-16T00:00:00+07:00,LALIN"
 last_update: "2026-09-16T00:00:00+07:00,LALIN"
 status: "proposed"
@@ -338,7 +338,6 @@ Roadmap นี้กำหนด **ทิศทางระยะยาว** ไ
 **Goal:** ทำให้ playback/audio เป็น platform primitive ไม่ใช่ component ของ Arrange
 
 Deliverables:
-
 - define `MediaItem`, `PlaybackState`, `PlaybackCommand`, `PlaybackCapabilities`
 - extract/reuse shared `playback-core`
 - extract/reuse `audio-core`
@@ -348,14 +347,11 @@ Deliverables:
 
 **Exit Gate:** Studio ยังทำงานเหมือนเดิม และ Play สามารถใช้ core โดยไม่ import UI/editor-specific logic
 
----
-
 ### Phase 1 — Lalin Play MVP (Windows Local Player)
 
 **Goal:** ให้ Lalin มี local media player ใช้งานจริงโดยไม่ทำลาย Studio UX
 
 Deliverables:
-
 - secondary **Lalin Play Window** ใน Lalin desktop binary
 - local audio playback
 - queue / Now Playing
@@ -367,7 +363,6 @@ Deliverables:
 - session persistence
 
 **Default topology:**
-
 ```text
 Lalin.exe
 ├── Studio Window
@@ -376,14 +371,11 @@ Lalin.exe
 
 **Exit Gate:** MVP Acceptance Criteria ในข้อ 9 ผ่านครบ
 
----
-
 ### Phase 2 — Native Windows Media Experience
 
 **Goal:** ทำให้ Lalin Play รู้สึกเป็น Windows media application จริง ไม่ใช่ editor ที่มีปุ่ม Play เพิ่ม
 
 Deliverables:
-
 - SMTC / Windows Now Playing metadata
 - improved codec/decoder fallback
 - gapless playback เมื่อ format/decoder รองรับ
@@ -396,7 +388,6 @@ Deliverables:
 **Decision Gate A — Split Executable?**
 
 แยกเป็น `Lalin Play.exe` เมื่ออย่างน้อยหนึ่งเงื่อนไขเกิดขึ้น:
-
 - media runtime/dependencies ทำให้ Studio startup/package หนักอย่างมีนัยสำคัญ
 - Play ต้องอยู่ background independently จาก Studio lifecycle
 - release cadence ของ Play เริ่มต่างจาก Studio
@@ -404,14 +395,11 @@ Deliverables:
 
 ถ้ายังไม่เข้าเงื่อนไข ให้คง binary เดียว + multi-window ต่อไป
 
----
-
 ### Phase 3 — Video + Rich Media
 
 **Goal:** ขยายจาก audio player เป็น media player โดยยังใช้ playback contract เดิม
 
 Deliverables:
-
 - MP4/WebM video playback
 - artwork/subtitle/metadata pipeline
 - chapter support เท่าที่ source รองรับ
@@ -422,22 +410,17 @@ Deliverables:
 
 **Non-goal:** ยังไม่ทำ YouTube/DRM service integration ใน phase นี้
 
----
-
 ### Phase 4 — Lalin Remote + Device Control
 
 **Goal:** แยก **Player** ออกจาก **Controller**
 
 Deliverables:
-
 - device identity/capability registry
 - QR/LAN pairing
 - phone/PWA remote
 - transport/queue/EQ control ผ่าน local network
 - input abstraction: keyboard, gamepad, Bluetooth media keys, phone remote
 - authorization/pairing token สำหรับ local control
-
-Target flow:
 
 ```text
 Phone / Gamepad / Keyboard
@@ -454,14 +437,11 @@ Phone / Gamepad / Keyboard
 
 **Exit Gate:** remote command ใช้ command contract เดียวกับ local UI ไม่มี remote-specific playback logic
 
----
-
 ### Phase 5 — Lalin Room / Shared Queue
 
 **Goal:** เปลี่ยนจาก single-user player เป็น shared media session
 
 Deliverables:
-
 - `room-core`
 - host / participant roles
 - shared queue
@@ -471,8 +451,6 @@ Deliverables:
 - reconnect/session recovery
 - room policy เช่น max queue items per participant
 
-Target flow:
-
 ```text
 Phone A ─┐
 Phone B ─┼──> Shared Queue ──> Lalin Play
@@ -481,14 +459,11 @@ Tablet  ─┘
 
 **Architecture Gate:** Room ต้องเป็น domain แยกจาก Playback; Playback ต้องทำงานได้โดยไม่มี Room
 
----
-
 ### Phase 6 — Multi-Device Sync / Receiver Mode
 
 **Goal:** ให้หลาย device เล่น media session เดียวกันได้และให้ device หนึ่งทำหน้าที่ receiver
 
 Deliverables:
-
 - device clock/sync abstraction
 - playback position replication
 - drift detection/correction
@@ -496,8 +471,6 @@ Deliverables:
 - send-to-device
 - local-first LAN transport + optional cloud relay abstraction
 - capability negotiation (audio/video/controller/display)
-
-Target model:
 
 ```text
              Room / Queue
@@ -509,14 +482,11 @@ Target model:
 
 **Performance note:** ห้ามอ้าง frame-accurate / 0 ms sync จนกว่าจะมี measured validation จริง
 
----
-
 ### Phase 7 — TV / Leanback Experience
 
 **Goal:** สร้าง 10-foot UI สำหรับ PC/HTPC/TV โดยแยก consumer experience ออกจาก Studio
 
 Deliverables:
-
 - TV navigation mode
 - gamepad/remote navigation
 - fullscreen/kiosk option
@@ -527,14 +497,11 @@ Deliverables:
 
 **Runtime Gate:** ถ้า Leanback/Chromium requirements ขัดกับ Tauri/WebView2 ให้พิจารณา `Lalin Play` runtime แยก (เช่น Electron) โดย **แชร์ core contracts แต่ไม่ยัดสอง runtime ใน Studio process เดียว**
 
----
-
 ### Phase 8 — Lalin Ride Experience
 
 **Goal:** นำ media orchestration core ไปใช้กับ rider/passenger use case โดยไม่ทำให้ Ride logic กลายเป็น dependency ของ Play
 
 Potential deliverables:
-
 - Rider / Passenger roles
 - Hotspot/LAN session
 - passenger remote/shared queue
@@ -543,8 +510,6 @@ Potential deliverables:
 - audio ducking integration
 - optional local WebRTC intercom
 - Android companion สำหรับ notification/TTS accessibility ตาม policy/platform constraints
-
-Target relationship:
 
 ```text
 Lalin Media Platform
@@ -555,35 +520,28 @@ Lalin Media Platform
 
 Ride = vertical experience บน shared core ไม่ใช่ fork ของ player
 
----
-
 ### Phase 9 — AI Media Orchestration
 
 **Goal:** ใช้ Lalin Brain เป็น command/orchestration layer เหนือ media platform
 
 Potential capabilities:
-
 - natural-language queue control
 - contextual playlist generation
 - semantic Library search
-- "play on device X"
-- "after this, play..."
+- `play on device X`
+- `after this, play...`
 - volume/EQ/preset intent mapping
 - summarize/transcribe media where applicable
 - voice command → validated media action
 
-AI safety/UX rule:
-
+AI rule:
 - destructive Library actions ต้องยืนยันตาม policy
 - ambiguous device/media target ต้องถามกลับ
 - AI ต้องเรียก deterministic media tools/contracts ไม่แก้ playback state แบบ bypass engine
 
----
-
 ### Phase 10 — Optional Platform Expansion
 
 **Only if product evidence justifies it:**
-
 - separate `Lalin Studio.exe` / `Lalin Play.exe` release lanes
 - cloud room relay
 - multi-room home media
@@ -606,30 +564,34 @@ AI safety/UX rule:
 9. **Local-first by default.** local media/local control ต้องใช้ได้โดยไม่บังคับ cloud login
 10. **Split only when justified.** แยก executable/service เมื่อ lifecycle, dependency, performance หรือ release cadence ต้องการ ไม่แยกเพื่อความสวยของ architecture
 
-## 15. SRS / Architecture Integration Plan
+## 15. Approval Boundaries
 
-เมื่อ CR ได้รับอนุมัติ:
+การอนุมัติ CR นี้ต้องไม่ถูกตีความว่า Phase 0–10 ได้รับอนุมัติ implementation ทั้งหมด
+
+- **MVP Approval:** อนุมัติ Phase 0–1 + FR-16/FR-16W/FR-17 ให้เข้าสู่ implementation planning
+- **Near-term Direction:** Phase 2–3 ใช้เพื่อ preserve architecture และต้องมี implementation approval แยกก่อนเริ่ม
+- **Platform Direction:** Phase 4–10 เป็น strategic roadmap เท่านั้น แต่ละ phase ต้องมี CR/ADR/feature approval ของตัวเองก่อน implementation
+
+## 16. SRS / Architecture Integration Plan
+
+เมื่อ CR ได้รับอนุมัติระดับ MVP:
 
 1. Merge FR-16 / FR-16W / FR-17 เข้า `docs/product/SRS.md`
 2. เพิ่ม terminology: `MediaItem`, `NowPlaying`, `PlaybackQueue`, `PlaybackEQ`, `OutputDevice`
 3. เพิ่ม ownership ใน `docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md`
 4. เพิ่ม UI spec สำหรับ Lalin Play secondary window
-5. เพิ่ม Phase 0–2 ลง execution backlog; Phase 3+ เป็น strategic roadmap จนกว่าจะได้รับอนุมัติแยก
+5. เพิ่ม Phase 0–1 ลง execution backlog; Phase 2+ คงเป็น roadmap
 6. เพิ่ม automated acceptance-test backlog
 7. เพิ่ม doc-graph mapping หลัง code paths ถูกล็อก
 
-## 16. Status
+## 17. Status
 
 **PROPOSED — awaiting product/architecture approval.**
-
-CR นี้อนุมัติได้เป็นสองระดับ:
-
-- **MVP Approval:** อนุมัติ Phase 0–1 + FR-16/FR-16W/FR-17
-- **Roadmap Direction Approval:** ยอมรับ Phase 2–10 เป็นทิศทางสถาปัตยกรรม แต่ **ไม่ถือเป็น implementation commitment**
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Agent |
 |---|---|---|---|---|
+| 0.2.1-candidate | 2026-09-16 | proposed | Clarified approval boundaries: Phase 0–1 MVP, later phases require separate approval | LALIN |
 | 0.2.0-candidate | 2026-09-16 | proposed | Added long-term roadmap, Separate Surface/Shared Platform decision, phase gates, and product guardrails | LALIN |
 | 0.1.0-candidate | 2026-09-16 | proposed | Initial CR for Windows media player + playback EQ | LALIN |
