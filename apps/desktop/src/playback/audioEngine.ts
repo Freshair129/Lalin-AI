@@ -438,6 +438,10 @@ export class PlaybackAudioEngine {
     return this.isMuted;
   }
 
+  public getPlaybackRate(): number {
+    return this.audio?.playbackRate ?? 1.0;
+  }
+
   public on(event: AudioEngineEvent, handler: (data?: any) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());

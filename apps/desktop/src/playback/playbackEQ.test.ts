@@ -260,21 +260,40 @@ describe("PlaybackAudioEngine True Bypass & Volume Control", () => {
     expect(engine.getCurrentVolume()).toBe(0.7);
   });
 
-  it("handles output device routing gracefully in environment without setSinkId without state divergence", async () => {
-    const ok = await engine.setOutputDevice("speaker-1");
-    // In node/jsdom environment without setSinkId support, should return false gracefully without setting activeOutputDeviceId
-    expect(ok).toBe(false);
+  it("prevents phantom device state in output environment without setSinkId()", async () => {
+    // 1. Calling setOutputDevice on store returns false and does NOT store a phantom ID in nowPlaying
+    const storeResult = await usePlaybackStore.getState().setOutputDevice("phantom-dac-usb-99");
+    expect(storeResult).toBe(false);
+    expect(usePlaybackStore.getState().nowPlaying.activeOutputDeviceId).toBe("");
+
+    // 2. Direct engine call also returns false and does NOT retain phantom device ID
+    const engineResult = await engine.setOutputDevice("phantom-bluetooth-77");
+    expect(engineResult).toBe(false);
     expect(engine.getOutputDeviceId()).toBe("");
+    expect(engine.getOutputDeviceId()).not.toBe("phantom-bluetooth-77");
   });
 
-  it("clamps playback rate between 0.5 and 2.0 in both store and engine", () => {
+  it("clamps playback rate: 3.0 -> 2.0 and 0.1 -> 0.5 without state divergence in store and engine", () => {
+    // Case 1: 3.0 -> clamped to 2.0
     usePlaybackStore.getState().setPlaybackRate(3.0);
     expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(2.0);
+    expect(engine.getPlaybackRate()).toBe(2.0);
 
+    // Case 2: 0.1 -> clamped to 0.5
     usePlaybackStore.getState().setPlaybackRate(0.1);
     expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(0.5);
+    expect(engine.getPlaybackRate()).toBe(0.5);
 
+    // Case 3: Valid rate within range remains exact
     usePlaybackStore.getState().setPlaybackRate(1.25);
     expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(1.25);
+    expect(engine.getPlaybackRate()).toBe(1.25);
+
+    // Case 4: Direct engine calls also clamp correctly
+    engine.setPlaybackRate(3.0);
+    expect(engine.getPlaybackRate()).toBe(2.0);
+
+    engine.setPlaybackRate(0.1);
+    expect(engine.getPlaybackRate()).toBe(0.5);
   });
 });
