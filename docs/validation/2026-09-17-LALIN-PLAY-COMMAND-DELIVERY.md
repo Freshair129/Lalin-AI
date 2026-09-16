@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-17T03:45:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-17T04:12:00+07:00,LALIN"
+last_update: "2026-09-17T04:31:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -49,7 +49,8 @@ Luna max implemented/reviewed the native window slice and regression tests.
 | Standard Cargo check | Initially blocked by missing sidecar; **PASS** after the user's sidecar-build follow-up, with normal Tauri config |
 | Native engineering build | PASS using process-local `TAURI_CONFIG` with bundle externalBin/resources omitted; canonical packaging config unchanged |
 | API | Follow-up: 86 backend tests and real sidecar health/full-profile route smoke PASS; see sidecar report |
-| ML, packaged installer, release/hosted CI | NOT_RUN; no backend or packaging source changed |
+| Local packaged installer | **PASS**: unsigned NSIS build and isolated installed-app smoke; see [sidecar validation](2026-09-17-SIDECAR-BUILD.md) |
+| Clean VM, model inference, signed release/hosted CI | NOT_RUN |
 
 Browser assertions: first FileManager Play arrives exactly once; one Play audio
 element and one play invocation, zero Studio consumer audio elements/invocations;
@@ -108,16 +109,18 @@ Existing jsdom queue tests print unimplemented media `pause` warnings; real medi
 behavior is separately verified by the Edge/WebView2 fixture checks.
 
 Documentation links and `git diff --check` pass. Regenerated graph contains
-330 nodes / 362 edges, zero stale nodes/edges, all 46 endpoints and 35 components
+331 nodes / 366 edges, zero stale nodes/edges, all 46 endpoints and 35 components
 mapped. Graph scanning is structural traceability only, not semantic approval or
-production certification. Those graph counts describe the playback checkpoint
-before adding the sidecar follow-up document.
+production certification; these counts include the sidecar and installer
+follow-up documents.
 
 The later user request authorizes committing/pushing this repair and building
 the missing sidecar. [Sidecar validation](2026-09-17-SIDECAR-BUILD.md) records the
 successful standard `npm run check:all`, real copied executable smoke and artifact
 hash. Source/tests/docs are committed; generated binaries stay ignored. No release
-tag, installer or hosted release was created.
+tag or hosted release was created. The local unsigned NSIS installer and isolated
+installed-app smoke are recorded in the sidecar report; signed release and
+clean-VM acceptance remain open gates.
 
 ## Document version diff
 
@@ -128,11 +131,12 @@ tag, installer or hosted release was created.
 | CR-001 | 0.2.3b need review | 0.2.4b need review; scoped repair evidence, broad MVP gate retained |
 | Architecture SOT | history 0.1.13b; stale header 0.1.0b | 0.1.14b beta |
 | DOCS_INDEX | 0.1.16b | 0.1.17b |
-| This report | absent | 0.1.0b beta → 0.1.1b sidecar/commit follow-up |
+| This report | absent | 0.1.0b beta → 0.1.2b installer/sidecar follow-up |
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-17 | beta | Record unsigned installer build and isolated installed-app smoke after sidecar build | pending docs follow-up | LALIN |
 | 0.1.1b | 2026-09-17 | beta | Record authorized commit/push follow-up and successful normal-config check after sidecar build | included with source repair | LALIN |
 | 0.1.0b | 2026-09-17 | beta | Record approved repair, browser/native fixture evidence and release limitations | uncommitted | LALIN |

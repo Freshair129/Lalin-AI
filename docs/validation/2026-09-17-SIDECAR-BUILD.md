@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-17T04:05:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-17T04:12:00+07:00,LALIN"
+last_update: "2026-09-17T04:31:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -50,6 +50,27 @@ the `.exe` alone is not a standalone distribution.
 Generated executable, dependencies, venv, interpreter and raw logs remain
 gitignored. The source repair and evidence documents are the commit/push scope.
 
+## Local installer
+
+The checkout does not contain `keys/g-music.key`, so the tracked signed
+installer workflow could not produce updater signatures. For local packaging
+verification only, an ignored Tauri config set `bundle.createUpdaterArtifacts`
+to `false`; no signing key was generated and no release metadata was changed.
+The resulting NSIS installer was built from the same full-profile sidecar and
+installed into the isolated `target/installed-smoke` directory.
+
+| Property | Value |
+|---|---|
+| Installer | `apps/desktop/src-tauri/target/release/bundle/nsis/G-Music_0.1.0_x64-setup.exe` |
+| Installer bytes | 68,243,834 |
+| Installer SHA-256 | `94EEBBC4CD9E0C209F267C2A6E857EC90DB5B2AD5705DADA877081B038242D7A` |
+| Installed layout | PASS: `G-Music.exe`, `g-music-backend.exe` and adjacent `_internal/` payload present |
+| Installed runtime | PASS: isolated app launch, sidecar-owned port 8756, `/health` HTTP 200 and `/` profile `full`; test processes stopped afterward |
+
+The installer is unsigned and has no `.sig` artifact by design. This is local
+installer evidence; clean-VM acceptance, model inference and signed release
+remain separate gates.
+
 ## Verification
 
 | Check | Result |
@@ -62,7 +83,8 @@ gitignored. The source repair and evidence documents are the commit/push scope.
 | Canonical copied bundle | PASS: all 203 file hashes match the PyInstaller output manifest |
 | Canonical executable runtime | PASS: verified executable owns port 8756, health HTTP 200 and profile `full`; test process stopped afterward |
 | `npm run check:all` | PASS: contracts/MCP/desktop build, API compileall and normal-config Cargo check; no `TAURI_CONFIG` override |
-| Installer, clean VM, model inference and signed release | NOT_RUN |
+| Local unsigned NSIS installer and isolated installed-app smoke | **PASS**: installer hash/layout/runtime recorded above |
+| Clean VM, model inference and signed release | NOT_RUN |
 
 The build script's existing smoke loop allows only two seconds per `/health`
 request. An independent reproduction returned curl exit 28 at **2004 ms** using
@@ -78,7 +100,8 @@ actual HTTP 200 response. No production timeout or health semantics were changed
 
 Raw local evidence: `runtime/sidecar-build/build.log`, `api-tests.log`,
 `python-packages.txt`, `bundle-manifest.json`, `dist-runtime-smoke.json`,
-`canonical-runtime-smoke.json` and `check-all.log`.
+`canonical-runtime-smoke.json`, `installed-runtime-smoke.json`,
+`unsigned-installer.log` and `check-all.log`.
 The manifest contains the size and SHA-256 of every bundled file.
 
 ## Related evidence
@@ -90,4 +113,5 @@ The manifest contains the size and SHA-256 of every bundled file.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-17 | beta | Record local unsigned NSIS build and isolated installed-app runtime smoke | pending docs follow-up | LALIN |
 | 0.1.0b | 2026-09-17 | beta | Record local Python 3.11 sidecar build, provenance and runtime checks | included with source repair | LALIN |

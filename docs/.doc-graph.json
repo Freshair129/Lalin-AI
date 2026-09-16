@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-17T04:12:44+07:00",
+  "generated_at": "2026-09-17T04:34:31+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1163,20 +1163,20 @@
       "type": "document",
       "path": "docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md",
       "title": "2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
-      "hash": "687282c3d44f",
-      "prev_hash": "687282c3d44f",
+      "hash": "265ca37873de",
+      "prev_hash": "265ca37873de",
       "status": "current",
-      "last_verified": "2026-09-17T04:12:44+07:00"
+      "last_verified": "2026-09-17T04:34:31+07:00"
     },
     {
       "id": "doc:2026-09-17-SIDECAR-BUILD",
       "type": "document",
       "path": "docs/validation/2026-09-17-SIDECAR-BUILD.md",
       "title": "2026-09-17-SIDECAR-BUILD",
-      "hash": "de0bfb91d387",
-      "prev_hash": "de0bfb91d387",
+      "hash": "13c2adb0e6e8",
+      "prev_hash": "13c2adb0e6e8",
       "status": "current",
-      "last_verified": "2026-09-17T04:12:44+07:00"
+      "last_verified": "2026-09-17T04:34:31+07:00"
     },
     {
       "id": "doc:A-api-spec",
