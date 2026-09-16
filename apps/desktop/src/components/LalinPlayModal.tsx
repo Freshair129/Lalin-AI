@@ -43,9 +43,19 @@ export function LalinPlayModal() {
     removeFromQueue,
     reorderQueue,
     clearQueue,
+    availableOutputDevices,
+    setOutputDevice,
+    refreshOutputDevices,
   } = usePlaybackStore();
 
   const [activeTab, setActiveTab] = useState<"queue" | "eq">("queue");
+
+  // Refresh output devices when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      refreshOutputDevices();
+    }
+  }, [isOpen, refreshOutputDevices]);
 
   // Keyboard shortcuts (FR-16.14)
   useEffect(() => {
@@ -256,6 +266,24 @@ export function LalinPlayModal() {
                   <option value={2.0}>2.0×</option>
                 </select>
               </div>
+
+              {availableOutputDevices.length > 1 && (
+                <div className="output-device-group">
+                  <span className="output-device-label">Output:</span>
+                  <select
+                    className="output-device-select"
+                    value={nowPlaying.activeOutputDeviceId || ""}
+                    onChange={(e) => setOutputDevice(e.target.value)}
+                    title="Audio Output Device (FR-16W.4)"
+                  >
+                    {availableOutputDevices.map((d, i) => (
+                      <option key={`${d.deviceId}-${i}`} value={d.deviceId}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

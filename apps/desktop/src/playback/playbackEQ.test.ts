@@ -1,11 +1,79 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePlaybackStore } from "./usePlaybackStore";
 import { PlaybackAudioEngine } from "./audioEngine";
+import { resetSharedAudioContextForTest } from "./audioContext";
 import { EQ_FREQUENCIES } from "@lalin/contracts";
+
+class MockAudioParam {
+  value: number;
+  constructor(defaultValue = 0) {
+    this.value = defaultValue;
+  }
+  setTargetAtTime(val: number) {
+    this.value = val;
+  }
+}
+
+class MockAudioNode {
+  connect() {}
+}
+
+class MockGainNode extends MockAudioNode {
+  gain = new MockAudioParam(1);
+}
+
+class MockBiquadFilterNode extends MockAudioNode {
+  type = "peaking";
+  frequency = new MockAudioParam(1000);
+  Q = new MockAudioParam(1.4);
+  gain = new MockAudioParam(0);
+}
+
+class MockDynamicsCompressorNode extends MockAudioNode {
+  threshold = new MockAudioParam(-1);
+  knee = new MockAudioParam(0);
+  ratio = new MockAudioParam(20);
+  attack = new MockAudioParam(0.002);
+  release = new MockAudioParam(0.05);
+}
+
+class MockAnalyserNode extends MockAudioNode {
+  fftSize = 256;
+  smoothingTimeConstant = 0.8;
+  getByteFrequencyData() {}
+}
+
+class MockAudioContext {
+  state = "running";
+  currentTime = 0;
+  destination = new MockAudioNode();
+  resume = vi.fn().mockResolvedValue(undefined);
+  createGain() {
+    return new MockGainNode();
+  }
+  createBiquadFilter() {
+    return new MockBiquadFilterNode();
+  }
+  createDynamicsCompressor() {
+    return new MockDynamicsCompressorNode();
+  }
+  createAnalyser() {
+    return new MockAnalyserNode();
+  }
+  createMediaElementSource() {
+    return new MockAudioNode();
+  }
+}
+
+// Install mock AudioContext on window
+if (typeof window !== "undefined") {
+  (window as any).AudioContext = MockAudioContext;
+}
 
 describe("usePlaybackStore 10-Band EQ Operations", () => {
   beforeEach(() => {
     localStorage.clear();
+    resetSharedAudioContextForTest();
     usePlaybackStore.getState().resetEQ();
   });
 
@@ -133,6 +201,63 @@ describe("PlaybackAudioEngine True Bypass & Volume Control", () => {
 
     engine.setMuted(false);
     expect(engine.getIsMuted()).toBe(false);
+  });
+
+  it("applies persisted EQ band gains and preamp directly into AudioNodes when graph is created (Fix Bug #1)", () => {
+    // Simulate persisted EQ state (Bass Boost: preamp -3, bands: [5, 4, 3, 1, ...])
+    engine.applyEQ({
+      enabled: true,
+      currentPreset: "Bass Boost",
+      preamp: -3,
+      customPresets: {},
+      bands: [
+        { frequency: 31, gain: 5 },
+        { frequency: 62, gain: 4 },
+        { frequency: 125, gain: 3 },
+        { frequency: 250, gain: 1 },
+        { frequency: 500, gain: 0 },
+        { frequency: 1000, gain: 0 },
+        { frequency: 2000, gain: 0 },
+        { frequency: 4000, gain: 0 },
+        { frequency: 8000, gain: 0 },
+        { frequency: 16000, gain: 0 },
+      ],
+    });
+
+    // Trigger audio graph initialization
+    engine.ensureAudioGraphForTest();
+
+    // Verify actual AudioParam values on the filter and preamp nodes
+    const filters = engine.getFilterNodes();
+    expect(filters).toHaveLength(10);
+    expect(filters[0].gain.value).toBe(5);
+    expect(filters[1].gain.value).toBe(4);
+    expect(filters[2].gain.value).toBe(3);
+    expect(filters[3].gain.value).toBe(1);
+    expect(filters[4].gain.value).toBe(0);
+
+    const preampNode = engine.getPreampNode();
+    expect(preampNode).not.toBeNull();
+    const expectedPreampLinear = Math.pow(10, -3 / 20);
+    expect(preampNode!.gain.value).toBeCloseTo(expectedPreampLinear, 4);
+  });
+
+  it("unmutes in both engine and store when adjusting volume while muted (Fix Bug #2)", () => {
+    // 1. Mute audio
+    usePlaybackStore.getState().setVolume(0.5);
+    usePlaybackStore.getState().toggleMute();
+
+    expect(usePlaybackStore.getState().nowPlaying.muted).toBe(true);
+    expect(engine.getIsMuted()).toBe(true);
+
+    // 2. User adjusts volume slider to 0.7
+    usePlaybackStore.getState().setVolume(0.7);
+
+    // 3. Verify store and engine are both unmuted with matching volume
+    expect(usePlaybackStore.getState().nowPlaying.muted).toBe(false);
+    expect(usePlaybackStore.getState().nowPlaying.volume).toBe(0.7);
+    expect(engine.getIsMuted()).toBe(false);
+    expect(engine.getCurrentVolume()).toBe(0.7);
   });
 
   it("handles output device routing gracefully in environment without setSinkId", async () => {

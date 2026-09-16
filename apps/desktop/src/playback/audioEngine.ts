@@ -3,6 +3,8 @@
 // @req FR-16.7 — Non-destructive playback
 // @req FR-16.8 — Actionable error reporting on unsupported media
 // @req FR-16.13 — Playback speed 0.5x–2.0x
+// @req FR-16W.4 — Output device selection
+// @req FR-16W.5 — Output device fallback/loss handling
 // @req FR-17.1 — Playback EQ in playback signal chain only
 // @req FR-17.2 — 10-band EQ (31, 62, 125, 250, 500, 1k, 2k, 4k, 8k, 16k Hz)
 // @req FR-17.3 — Gain -12dB to +12dB per band
@@ -15,7 +17,21 @@
 import { EQ_FREQUENCIES, clampGain, type PlaybackEQ } from "@lalin/contracts";
 import { sharedAudioContext } from "./audioContext";
 
-export type AudioEngineEvent = "play" | "pause" | "timeupdate" | "ended" | "error" | "durationchange" | "loading";
+export type AudioEngineEvent =
+  | "play"
+  | "pause"
+  | "timeupdate"
+  | "ended"
+  | "error"
+  | "durationchange"
+  | "loading"
+  | "devicechange"
+  | "devicelost";
+
+export interface AudioOutputDevice {
+  deviceId: string;
+  label: string;
+}
 
 export class PlaybackAudioEngine {
   private static instance: PlaybackAudioEngine | null = null;
@@ -41,6 +57,7 @@ export class PlaybackAudioEngine {
     // Lazy setup audio element
     if (typeof window !== "undefined") {
       this.initAudioElement();
+      this.initDeviceChangeListener();
     }
   }
 
@@ -89,12 +106,31 @@ export class PlaybackAudioEngine {
     });
   }
 
+  private initDeviceChangeListener(): void {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.addEventListener) return;
+    navigator.mediaDevices.addEventListener("devicechange", async () => {
+      this.emit("devicechange");
+      // FR-16W.5: Check if the currently active output device disappeared
+      if (this.activeOutputDeviceId) {
+        const available = await this.getAvailableOutputDevices();
+        const stillExists = available.some((d) => d.deviceId === this.activeOutputDeviceId);
+        if (!stillExists) {
+          console.warn(`[audioEngine] Active device ${this.activeOutputDeviceId} disappeared, falling back to default`);
+          await this.setOutputDevice("");
+          this.emit("devicelost", this.activeOutputDeviceId);
+        }
+      }
+    });
+  }
+
   private ensureAudioGraph() {
     if (this.ctx && this.sourceNode) return;
     this.initAudioElement();
     if (!this.audio) return;
 
     this.ctx = sharedAudioContext();
+    if (!this.ctx) return;
+
     if (this.ctx.state === "suspended") {
       this.ctx.resume().catch(() => {});
     }
@@ -106,17 +142,18 @@ export class PlaybackAudioEngine {
       return;
     }
 
-    // 1. Preamp
+    // 1. Preamp (initialized with current preamp value)
     this.preampNode = this.ctx.createGain();
-    this.setPreamp(this.currentPreamp);
+    const initialPreampLinear = this.isBypassed ? 1.0 : Math.pow(10, this.currentPreamp / 20);
+    this.preampNode.gain.value = initialPreampLinear;
 
-    // 2. 10 BiquadFilterNodes (peaking)
-    this.filterNodes = EQ_FREQUENCIES.map((freq) => {
+    // 2. 10 BiquadFilterNodes (peaking) — initialized with current band gains (Fix Bug #1)
+    this.filterNodes = EQ_FREQUENCIES.map((freq, index) => {
       const filter = this.ctx!.createBiquadFilter();
       filter.type = "peaking";
       filter.frequency.value = freq;
       filter.Q.value = 1.4; // standard 1-octave Q
-      filter.gain.value = 0;
+      filter.gain.value = this.isBypassed ? 0 : this.currentBandGains[index];
       return filter;
     });
 
@@ -152,6 +189,9 @@ export class PlaybackAudioEngine {
     this.limiterNode.connect(this.masterGainNode);
     this.masterGainNode.connect(this.analyserNode);
     this.analyserNode.connect(this.ctx.destination);
+
+    // Apply current bypass settings to newly assembled graph
+    this.setBypass(this.isBypassed);
   }
 
   public async loadAndPlay(url: string, startTime = 0): Promise<void> {
@@ -206,16 +246,17 @@ export class PlaybackAudioEngine {
   /**
    * Set master playback volume [0.0, 1.0].
    * The audio element's volume is locked at 1.0 to prevent double-gain attenuation.
+   * Adjusting volume explicitly un-mutes playback (Fix Bug #2).
    */
   public setVolume(volume: number): void {
     const v = Math.max(0, Math.min(1, volume));
     this.currentVolume = v;
+    this.isMuted = false; // Adjusting volume automatically un-mutes
     if (this.audio) {
       this.audio.volume = 1.0;
     }
     if (this.masterGainNode && this.ctx) {
-      const targetGain = this.isMuted ? 0 : v;
-      this.masterGainNode.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.02);
+      this.masterGainNode.gain.setTargetAtTime(v, this.ctx.currentTime, 0.02);
     }
   }
 
@@ -290,8 +331,31 @@ export class PlaybackAudioEngine {
   }
 
   /**
-   * Direct output routing stub (setSinkId).
-   * Supports audio device switching with graceful fallback to default output on failure.
+   * Enumerate available audio output devices (FR-16W.4).
+   */
+  public async getAvailableOutputDevices(): Promise<AudioOutputDevice[]> {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.enumerateDevices) {
+      return [{ deviceId: "", label: "Default Audio Output" }];
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices
+        .filter((d) => d.kind === "audiooutput")
+        .map((d, i) => ({
+          deviceId: d.deviceId,
+          label: d.label || (d.deviceId === "" ? "Default Audio Output" : `Audio Output ${i + 1}`),
+        }));
+      if (outputs.length === 0) {
+        return [{ deviceId: "", label: "Default Audio Output" }];
+      }
+      return outputs;
+    } catch {
+      return [{ deviceId: "", label: "Default Audio Output" }];
+    }
+  }
+
+  /**
+   * Direct output routing (setSinkId) with graceful fallback (FR-16W.4, FR-16W.5).
    */
   public async setOutputDevice(deviceId: string): Promise<boolean> {
     this.activeOutputDeviceId = deviceId;
@@ -336,7 +400,23 @@ export class PlaybackAudioEngine {
     return this.audio?.paused ?? true;
   }
 
-  // Inspection getters for testing
+  // Inspection getters for testing and AudioParam verification
+  public ensureAudioGraphForTest(): void {
+    this.ensureAudioGraph();
+  }
+
+  public getFilterNodes(): BiquadFilterNode[] {
+    return [...this.filterNodes];
+  }
+
+  public getPreampNode(): GainNode | null {
+    return this.preampNode;
+  }
+
+  public getMasterGainNode(): GainNode | null {
+    return this.masterGainNode;
+  }
+
   public getIsBypassed(): boolean {
     return this.isBypassed;
   }

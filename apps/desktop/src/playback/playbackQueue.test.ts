@@ -25,14 +25,16 @@ describe("usePlaybackStore Queue Operations & Invariants", () => {
     expect(nowPlaying.item).toBeNull();
   });
 
-  it("adds items to queue", () => {
+  it("adds items to queue without advancing currentIndex until played", () => {
     usePlaybackStore.getState().addToQueue(itemA);
     usePlaybackStore.getState().addToQueue(itemB);
 
-    const { queue } = usePlaybackStore.getState();
+    const { queue, nowPlaying } = usePlaybackStore.getState();
     expect(queue.items).toHaveLength(2);
     expect(queue.items[0].title).toBe("Track A");
     expect(queue.items[1].title).toBe("Track B");
+    expect(queue.currentIndex).toBe(-1);
+    expect(nowPlaying.item).toBeNull();
   });
 
   it("inserts item at playNext (right after current)", () => {
@@ -186,7 +188,7 @@ describe("usePlaybackStore Queue Operations & Invariants", () => {
     );
     const sanitizedQueue = loadPersistedQueue();
     expect(sanitizedQueue.items).toHaveLength(1);
-    expect(sanitizedQueue.currentIndex).toBe(0); // clamped
+    expect(sanitizedQueue.currentIndex).toBe(-1); // out-of-bounds currentIndex resets to -1 (idle)
 
     // 3. Corrupted EQ JSON
     localStorage.setItem(STORAGE_EQ_KEY, "{ bad eq json");

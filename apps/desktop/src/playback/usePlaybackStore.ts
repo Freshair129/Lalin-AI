@@ -3,17 +3,31 @@
 // @req FR-16.3 — Now Playing state
 // @req FR-16.4 — Queue management
 // @req FR-16.5 — Repeat and Shuffle
-// @req FR-16.6 — Persistence of Queue and EQ state
+// @req FR-16.6 — Play / Play Next / Add to queue
+// @req FR-16.7 — Non-destructive playback
 // @req FR-16.8 — Actionable error reporting
-// @req FR-16.10 — Audio device output selection & fallback
 // @req FR-16.11 — Player survives route changes
+// @req FR-16.12 — Playback session persistence
 // @req FR-16.13 — Playback speed
+// @req FR-16.14 — Keyboard shortcuts
+// @req FR-16W.1 — Hardware media keys
+// @req FR-16W.2 — Windows SMTC metadata integration
+// @req FR-16W.3 — Command contract routing
+// @req FR-16W.4 — Output device selection
+// @req FR-16W.5 — Output device fallback/loss handling
+// @req FR-16W.6 — Background playback
 // @req FR-17.1 — Integrated EQ surface
 // @req FR-17.2 — 10-band EQ
+// @req FR-17.3 — Band gain clamping
+// @req FR-17.4 — Preamp gain
 // @req FR-17.5 — EQ Bypass toggle
 // @req FR-17.6 — Factory presets
 // @req FR-17.7 — User custom presets
 // @req FR-17.8 — Persistent EQ state
+// @req FR-17.9 — Clipping protection limiter
+// @req FR-17.10 — Real spectrum analyser
+// @req FR-17.11 — Real-time EQ parameter updates
+// @req FR-17.12 — Isolation from mastering parameters
 
 import { create } from "zustand";
 import {
@@ -27,7 +41,7 @@ import {
   clampGain,
   EQ_FREQUENCIES,
 } from "@lalin/contracts";
-import { PlaybackAudioEngine } from "./audioEngine";
+import { PlaybackAudioEngine, type AudioOutputDevice } from "./audioEngine";
 
 export const STORAGE_QUEUE_KEY = "lalin:playback:queue";
 export const STORAGE_EQ_KEY = "lalin:playback:eq";
@@ -41,11 +55,9 @@ export function loadPersistedQueue(): PlaybackQueue {
         const validItems: MediaItem[] = parsed.items.filter(
           (it: any) => it && typeof it.id === "string" && typeof it.url === "string"
         );
-        let idx = typeof parsed.currentIndex === "number" ? parsed.currentIndex : 0;
-        if (validItems.length === 0) {
+        let idx = typeof parsed.currentIndex === "number" ? parsed.currentIndex : -1;
+        if (validItems.length === 0 || idx < 0 || idx >= validItems.length) {
           idx = -1;
-        } else if (idx < 0 || idx >= validItems.length) {
-          idx = 0;
         }
         return {
           items: validItems,
@@ -112,6 +124,7 @@ export interface PlaybackStoreState {
   nowPlaying: NowPlaying;
   eq: PlaybackEQ;
   isOpen: boolean;
+  availableOutputDevices: AudioOutputDevice[];
 
   // Actions
   setOpen: (open: boolean) => void;
@@ -134,6 +147,7 @@ export interface PlaybackStoreState {
   setPlaybackRate: (r: number) => void;
   setRepeatMode: (mode: PlaybackRepeatMode) => void;
   toggleShuffle: () => void;
+  refreshOutputDevices: () => Promise<void>;
   setOutputDevice: (deviceId: string) => Promise<boolean>;
 
   // EQ Actions
@@ -150,7 +164,7 @@ const initialQueue = loadPersistedQueue();
 const initialEQ = loadPersistedEQ();
 const engine = PlaybackAudioEngine.getInstance();
 
-// Apply initial EQ to engine
+// Apply initial EQ to engine (stored in engine state and applied on graph creation)
 engine.applyEQ(initialEQ);
 
 export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
@@ -195,6 +209,20 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     }));
   });
 
+  engine.on("devicechange", () => {
+    get().refreshOutputDevices();
+  });
+
+  engine.on("devicelost", () => {
+    set((state) => ({
+      nowPlaying: {
+        ...state.nowPlaying,
+        activeOutputDeviceId: "",
+      },
+    }));
+    get().refreshOutputDevices();
+  });
+
   engine.on("ended", () => {
     const { queue } = get();
     if (queue.repeatMode === "one") {
@@ -226,7 +254,10 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
   return {
     queue: initialQueue,
     nowPlaying: {
-      item: initialQueue.currentIndex >= 0 && initialQueue.items[initialQueue.currentIndex] ? initialQueue.items[initialQueue.currentIndex] : null,
+      item:
+        initialQueue.currentIndex >= 0 && initialQueue.items[initialQueue.currentIndex]
+          ? initialQueue.items[initialQueue.currentIndex]
+          : null,
       state: "idle",
       currentTime: 0,
       duration: 0,
@@ -237,6 +268,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
     eq: initialEQ,
     isOpen: false,
+    availableOutputDevices: [{ deviceId: "", label: "Default Audio Output" }],
 
     setOpen: (open: boolean) => set({ isOpen: open }),
 
@@ -290,12 +322,15 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       set({ queue: nextQueue });
     },
 
+    /**
+     * Adds an item to queue without modifying currentIndex or nowPlaying if playback hasn't started.
+     * When queue has items but nothing is playing, currentIndex remains -1 and nowPlaying.item remains null.
+     */
     addToQueue: (item: MediaItem) => {
       const { queue } = get();
       const nextQueue = {
         ...queue,
         items: [...queue.items, item],
-        currentIndex: queue.currentIndex === -1 ? 0 : queue.currentIndex,
       };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
@@ -463,7 +498,8 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       } else if (nowPlaying.item) {
         await engine.play();
       } else if (queue.items.length > 0) {
-        await get().playAtIndex(Math.max(0, queue.currentIndex));
+        const targetIdx = queue.currentIndex >= 0 ? queue.currentIndex : 0;
+        await get().playAtIndex(targetIdx);
       }
     },
 
@@ -519,7 +555,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
 
     setVolume: (v: number) => {
       const vol = Math.max(0, Math.min(1, v));
-      engine.setVolume(vol);
+      engine.setVolume(vol); // adjusting volume automatically un-mutes
       set((state) => ({
         nowPlaying: { ...state.nowPlaying, volume: vol, muted: false },
       }));
@@ -553,6 +589,11 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       const nextQueue = { ...queue, shuffle: !queue.shuffle };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
+    },
+
+    refreshOutputDevices: async () => {
+      const devices = await engine.getAvailableOutputDevices();
+      set({ availableOutputDevices: devices });
     },
 
     setOutputDevice: async (deviceId: string): Promise<boolean> => {

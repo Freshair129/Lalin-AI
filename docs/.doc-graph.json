@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-16T19:51:07+07:00",
+  "generated_at": "2026-09-16T20:01:31+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -17,7 +17,7 @@
       "requirements_with_tests": "20% (8/39)",
       "code_files_referenced_by_docs": "1% (1/93)",
       "code_files_with_tests": "12% (12/93)",
-      "structured_annotations_found": 157,
+      "structured_annotations_found": 173,
       "unstructured_req_refs_found": 114
     }
   },
@@ -732,9 +732,9 @@
       "id": "code:apps/desktop/src/components/LalinPlayModal.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LalinPlayModal.tsx",
-      "hash": "6753e3a96ef3",
+      "hash": "890c0816d733",
       "status": "current",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
@@ -972,9 +972,9 @@
       "id": "code:apps/desktop/src/playback/audioEngine.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/audioEngine.ts",
-      "hash": "bbcf25f7b3e4",
+      "hash": "689aeefeb388",
       "status": "current",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/mediaSessionAdapter.ts",
@@ -988,9 +988,9 @@
       "id": "code:apps/desktop/src/playback/usePlaybackStore.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/usePlaybackStore.ts",
-      "hash": "6d9f441f1eca",
+      "hash": "5d65664c9f0f",
       "status": "current",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "code:apps/desktop/src/runtimeDevices.ts",
@@ -1224,9 +1224,9 @@
       "path": "docs/product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md",
       "title": "CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
       "hash": "b988c258514c",
-      "prev_hash": "4beebb175543",
-      "status": "changed",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "prev_hash": "b988c258514c",
+      "status": "current",
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "doc:D-traceability",
@@ -1954,9 +1954,9 @@
       "path": "docs/product/SRS.md",
       "title": "SRS",
       "hash": "e22b930e84af",
-      "prev_hash": "ff7c441d1e85",
-      "status": "changed",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "prev_hash": "e22b930e84af",
+      "status": "current",
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -2686,17 +2686,17 @@
       "id": "test:apps/desktop/src/playback/playbackEQ.test.ts",
       "type": "test",
       "path": "apps/desktop/src/playback/playbackEQ.test.ts",
-      "hash": "3c0e3907b8aa",
+      "hash": "b8098dd6bae1",
       "status": "current",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "test:apps/desktop/src/playback/playbackQueue.test.ts",
       "type": "test",
       "path": "apps/desktop/src/playback/playbackQueue.test.ts",
-      "hash": "2c4b4b3c6b90",
+      "hash": "10b89c3e8b1e",
       "status": "current",
-      "last_verified": "2026-09-16T19:51:07+07:00"
+      "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
       "id": "test:apps/desktop/src/runtimeDevices.test.ts",
