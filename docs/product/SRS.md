@@ -7,12 +7,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.3.0 |
-| **Status** | Approved |
+| **Doc Version** | 1.3.0-draft |
+| **Status** | In Review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
 | **Last Updated** | 2026-09-16 |
-| **Approved By** | Boss — CR-001 (Lalin Play + EQ) approved 2026-09-16 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 (CR-001 under review, pending final sign-off) |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
@@ -20,7 +20,7 @@
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
 | 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
 | 1.2.0b | 2026-08-23 | LALIN | เพิ่ม CPU fallback, durable/interrupted job lifecycle และ single-GPU admission contract ตาม Phase 1 G-09/G-06/G-07 |
-| 1.3.0 | 2026-09-16 | LALIN | รวมข้อกำหนดจาก CR-001: เพิ่ม FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
+| 1.3.0-draft | 2026-09-16 | LALIN | ร่างข้อกำหนดจาก CR-001 (กำลังรีวิวบน feature branch): เพิ่มร่าง FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
 
 ---
 

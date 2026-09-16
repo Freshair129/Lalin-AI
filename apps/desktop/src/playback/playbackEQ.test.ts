@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { usePlaybackStore } from "./usePlaybackStore";
+import { PlaybackAudioEngine } from "./audioEngine";
 import { EQ_FREQUENCIES } from "@lalin/contracts";
 
 describe("usePlaybackStore 10-Band EQ Operations", () => {
@@ -85,5 +86,58 @@ describe("usePlaybackStore 10-Band EQ Operations", () => {
     expect(eq.currentPreset).toBe("Flat");
     expect(eq.preamp).toBe(0);
     expect(eq.bands.every((b) => b.gain === 0)).toBe(true);
+  });
+});
+
+describe("PlaybackAudioEngine True Bypass & Volume Control", () => {
+  const engine = PlaybackAudioEngine.getInstance();
+
+  it("sets and unsets true bypass, preserving preamp and band values", () => {
+    engine.setPreamp(6);
+    engine.setBandGain(0, 4);
+    engine.setBandGain(1, -3);
+
+    expect(engine.getCurrentPreamp()).toBe(6);
+    expect(engine.getCurrentBandGains()[0]).toBe(4);
+    expect(engine.getCurrentBandGains()[1]).toBe(-3);
+    expect(engine.getIsBypassed()).toBe(false);
+
+    // Bypass enabled
+    engine.setBypass(true);
+    expect(engine.getIsBypassed()).toBe(true);
+    // Configured parameters are retained in state for restoration
+    expect(engine.getCurrentPreamp()).toBe(6);
+    expect(engine.getCurrentBandGains()[0]).toBe(4);
+
+    // Bypass disabled
+    engine.setBypass(false);
+    expect(engine.getIsBypassed()).toBe(false);
+  });
+
+  it("controls volume with master gain single source of truth", () => {
+    engine.setVolume(0.75);
+    expect(engine.getCurrentVolume()).toBe(0.75);
+
+    // Clamping
+    engine.setVolume(1.8);
+    expect(engine.getCurrentVolume()).toBe(1.0);
+
+    engine.setVolume(-0.5);
+    expect(engine.getCurrentVolume()).toBe(0.0);
+
+    // Mute
+    engine.setVolume(0.6);
+    engine.setMuted(true);
+    expect(engine.getIsMuted()).toBe(true);
+    expect(engine.getCurrentVolume()).toBe(0.6); // volume level preserved
+
+    engine.setMuted(false);
+    expect(engine.getIsMuted()).toBe(false);
+  });
+
+  it("handles output device routing gracefully in environment without setSinkId", async () => {
+    const ok = await engine.setOutputDevice("speaker-1");
+    // In node/jsdom environment without setSinkId support, should return false gracefully without throwing
+    expect(typeof ok).toBe("boolean");
   });
 });

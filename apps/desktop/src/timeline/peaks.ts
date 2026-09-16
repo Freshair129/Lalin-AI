@@ -14,19 +14,11 @@ export interface Decoded {
 // peaks per second — fixed resolution
 const PPS = 200;
 
-// module-level singletons
-let _ctx: AudioContext | null = null;
-const _cache = new Map<string, Promise<Decoded>>();
+import { sharedAudioContext } from "../playback/audioContext";
+export { sharedAudioContext };
 
-/**
- * shared singleton AudioContext (lazy-created)
- */
-export function sharedAudioContext(): AudioContext {
-  if (_ctx === null) {
-    _ctx = new window.AudioContext();
-  }
-  return _ctx;
-}
+// module-level singletons
+const _cache = new Map<string, Promise<Decoded>>();
 
 /**
  * decode + peaks, cached by url.

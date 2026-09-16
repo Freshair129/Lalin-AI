@@ -1,6 +1,9 @@
 // @req FR-16W.1 — Hardware media keys (Play/Pause, Previous, Next, Stop)
 // @req FR-16W.2 — Windows SMTC metadata integration
 // @req FR-16W.3 — Command contract routing
+// Note: This adapter leverages the W3C navigator.mediaSession API exposed through WebView2
+// as the Phase 1 media key / SMTC transport bridge. Direct native Windows WinRT SMTC via Rust/Tauri
+// plugin remains the target for hardened native OS integration once manual smoke testing confirms coverage.
 
 import { usePlaybackStore } from "./usePlaybackStore";
 

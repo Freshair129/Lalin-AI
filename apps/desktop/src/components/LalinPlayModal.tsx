@@ -7,6 +7,10 @@
 // @req FR-16.13 — Playback speed
 // @req FR-16.14 — Keyboard shortcuts
 // @req FR-17.1 — Integrated EQ surface
+// Architecture Note:
+// This in-app surface (LalinPlayModal) serves as the Phase 1 Alpha / Prototype player UI within Studio.
+// Production target architecture (CR-001) specifies a dedicated secondary Tauri window ("Play Window")
+// sharing the playback core, keeping Studio and Play lifecycle independent.
 
 import { useEffect, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
@@ -62,16 +66,13 @@ export function LalinPlayModal() {
         togglePlay();
       } else if (e.code === "ArrowRight") {
         e.preventDefault();
-        seek(nowPlaying.currentTime + (e.shiftKey ? 15 : 5));
+        seek(nowPlaying.currentTime + 5);
       } else if (e.code === "ArrowLeft") {
         e.preventDefault();
-        seek(Math.max(0, nowPlaying.currentTime - (e.shiftKey ? 15 : 5)));
-      } else if (e.code === "ArrowUp") {
+        seek(nowPlaying.currentTime - 5);
+      } else if (e.code === "KeyM") {
         e.preventDefault();
-        setVolume(Math.min(1, nowPlaying.volume + 0.05));
-      } else if (e.code === "ArrowDown") {
-        e.preventDefault();
-        setVolume(Math.max(0, nowPlaying.volume - 0.05));
+        toggleMute();
       } else if (e.code === "Escape") {
         e.preventDefault();
         setOpen(false);
@@ -80,7 +81,7 @@ export function LalinPlayModal() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, nowPlaying.currentTime, nowPlaying.volume, togglePlay, seek, setVolume, setOpen]);
+  }, [isOpen, nowPlaying.currentTime, togglePlay, seek, toggleMute, setOpen]);
 
   if (!isOpen) return null;
 
@@ -102,15 +103,15 @@ export function LalinPlayModal() {
         className="lalin-play-window"
         role="dialog"
         aria-modal="true"
-        aria-label="Lalin Play — Media Player"
+        aria-label="Lalin Play Media Player"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Window Titlebar */}
-        <div className="lalin-play-titlebar">
+        {/* Title / Drag Bar */}
+        <div className="lalin-play-header">
           <div className="lalin-play-brand">
             <span className="brand-mark" />
             <strong className="lalin-play-title">LALIN PLAY</strong>
-            <span className="lalin-play-subtitle">Windows Media Player + EQ</span>
+            <span className="lalin-play-subtitle">Windows Media Player + EQ (Prototype Surface)</span>
           </div>
 
           <div className="lalin-play-tabs">

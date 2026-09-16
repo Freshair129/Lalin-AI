@@ -1,16 +1,19 @@
 // @req FR-16.1 — Playback from Library/Workspace
-// @req FR-16.2 — Transport controls: Play, Pause, Next, Previous, Seek, Stop, Volume
-// @req FR-16.3 — Central Now Playing state
-// @req FR-16.4 — Queue management: add, remove, reorder, clear, play-next
-// @req FR-16.5 — Repeat (off/one/all) and Shuffle
-// @req FR-16.11 — Player state survives route changes
-// @req FR-16.12 — Session persistence
-// @req FR-17.3 — Gain -12dB to +12dB per band & reset
-// @req FR-17.4 — Preamp -12dB to +12dB
-// @req FR-17.5 — EQ bypass toggle
-// @req FR-17.6 — Standard presets
-// @req FR-17.7 — Custom presets CRUD
-// @req FR-17.8 — EQ preset persistence
+// @req FR-16.2 — Transport controls
+// @req FR-16.3 — Now Playing state
+// @req FR-16.4 — Queue management
+// @req FR-16.5 — Repeat and Shuffle
+// @req FR-16.6 — Persistence of Queue and EQ state
+// @req FR-16.8 — Actionable error reporting
+// @req FR-16.10 — Audio device output selection & fallback
+// @req FR-16.11 — Player survives route changes
+// @req FR-16.13 — Playback speed
+// @req FR-17.1 — Integrated EQ surface
+// @req FR-17.2 — 10-band EQ
+// @req FR-17.5 — EQ Bypass toggle
+// @req FR-17.6 — Factory presets
+// @req FR-17.7 — User custom presets
+// @req FR-17.8 — Persistent EQ state
 
 import { create } from "zustand";
 import {
@@ -26,19 +29,28 @@ import {
 } from "@lalin/contracts";
 import { PlaybackAudioEngine } from "./audioEngine";
 
-const STORAGE_QUEUE_KEY = "lalin:playback:queue";
-const STORAGE_EQ_KEY = "lalin:playback:eq";
+export const STORAGE_QUEUE_KEY = "lalin:playback:queue";
+export const STORAGE_EQ_KEY = "lalin:playback:eq";
 
-function loadPersistedQueue(): PlaybackQueue {
+export function loadPersistedQueue(): PlaybackQueue {
   try {
-    const raw = localStorage.getItem(STORAGE_QUEUE_KEY);
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_QUEUE_KEY) : null;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed.items)) {
+        const validItems: MediaItem[] = parsed.items.filter(
+          (it: any) => it && typeof it.id === "string" && typeof it.url === "string"
+        );
+        let idx = typeof parsed.currentIndex === "number" ? parsed.currentIndex : 0;
+        if (validItems.length === 0) {
+          idx = -1;
+        } else if (idx < 0 || idx >= validItems.length) {
+          idx = 0;
+        }
         return {
-          items: parsed.items,
-          currentIndex: typeof parsed.currentIndex === "number" ? parsed.currentIndex : 0,
-          repeatMode: parsed.repeatMode || "off",
+          items: validItems,
+          currentIndex: idx,
+          repeatMode: parsed.repeatMode === "one" || parsed.repeatMode === "all" ? parsed.repeatMode : "off",
           shuffle: Boolean(parsed.shuffle),
         };
       }
@@ -52,32 +64,50 @@ function loadPersistedQueue(): PlaybackQueue {
   };
 }
 
-function loadPersistedEQ(): PlaybackEQ {
+export function loadPersistedEQ(): PlaybackEQ {
   try {
-    const raw = localStorage.getItem(STORAGE_EQ_KEY);
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_EQ_KEY) : null;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed.bands) && parsed.bands.length === EQ_FREQUENCIES.length) {
-        return parsed;
+        const validBands = parsed.bands.every(
+          (b: any) => typeof b === "object" && b !== null && typeof b.frequency === "number" && typeof b.gain === "number"
+        );
+        if (validBands) {
+          return {
+            enabled: Boolean(parsed.enabled),
+            preamp: typeof parsed.preamp === "number" ? clampGain(parsed.preamp) : 0,
+            bands: parsed.bands.map((b: any, idx: number) => ({
+              frequency: EQ_FREQUENCIES[idx],
+              gain: clampGain(b.gain),
+            })),
+            currentPreset: typeof parsed.currentPreset === "string" ? parsed.currentPreset : "Flat",
+            customPresets: typeof parsed.customPresets === "object" && parsed.customPresets !== null ? parsed.customPresets : {},
+          };
+        }
       }
     }
   } catch {}
   return createDefaultEQ();
 }
 
-function persistQueue(queue: PlaybackQueue) {
+export function persistQueue(queue: PlaybackQueue) {
   try {
-    localStorage.setItem(STORAGE_QUEUE_KEY, JSON.stringify(queue));
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_QUEUE_KEY, JSON.stringify(queue));
+    }
   } catch {}
 }
 
-function persistEQ(eq: PlaybackEQ) {
+export function persistEQ(eq: PlaybackEQ) {
   try {
-    localStorage.setItem(STORAGE_EQ_KEY, JSON.stringify(eq));
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_EQ_KEY, JSON.stringify(eq));
+    }
   } catch {}
 }
 
-interface PlaybackStoreState {
+export interface PlaybackStoreState {
   queue: PlaybackQueue;
   nowPlaying: NowPlaying;
   eq: PlaybackEQ;
@@ -104,6 +134,7 @@ interface PlaybackStoreState {
   setPlaybackRate: (r: number) => void;
   setRepeatMode: (mode: PlaybackRepeatMode) => void;
   toggleShuffle: () => void;
+  setOutputDevice: (deviceId: string) => Promise<boolean>;
 
   // EQ Actions
   setBandGain: (index: number, db: number) => void;
@@ -132,7 +163,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
 
   engine.on("pause", () => {
     set((state) => ({
-      nowPlaying: { ...state.nowPlaying, state: "paused" },
+      nowPlaying: { ...state.nowPlaying, state: state.nowPlaying.state === "idle" ? "idle" : "paused" },
     }));
   });
 
@@ -195,13 +226,14 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
   return {
     queue: initialQueue,
     nowPlaying: {
-      item: initialQueue.items[initialQueue.currentIndex] ?? null,
+      item: initialQueue.currentIndex >= 0 && initialQueue.items[initialQueue.currentIndex] ? initialQueue.items[initialQueue.currentIndex] : null,
       state: "idle",
       currentTime: 0,
       duration: 0,
       volume: 1,
       muted: false,
       playbackRate: 1,
+      activeOutputDeviceId: "",
     },
     eq: initialEQ,
     isOpen: false,
@@ -269,21 +301,84 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       set({ queue: nextQueue });
     },
 
+    /**
+     * Removes an item from the queue while maintaining the invariant:
+     * If currentIndex >= 0 and queue has items, queue.items[currentIndex].id === nowPlaying.item.id
+     */
     removeFromQueue: (index: number) => {
-      const { queue } = get();
+      const { queue, nowPlaying } = get();
       if (index < 0 || index >= queue.items.length) return;
+
       const nextItems = queue.items.filter((_, i) => i !== index);
-      let nextIndex = queue.currentIndex;
+
+      // Case 1: Removed item was before the currently playing item
       if (index < queue.currentIndex) {
-        nextIndex--;
-      } else if (index === queue.currentIndex) {
-        if (nextIndex >= nextItems.length) {
-          nextIndex = nextItems.length - 1;
-        }
+        const nextIndex = queue.currentIndex - 1;
+        const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex };
+        persistQueue(nextQueue);
+        set({ queue: nextQueue });
+        return;
       }
+
+      // Case 2: Removed item was after the currently playing item
+      if (index > queue.currentIndex) {
+        const nextQueue = { ...queue, items: nextItems };
+        persistQueue(nextQueue);
+        set({ queue: nextQueue });
+        return;
+      }
+
+      // Case 3: Removed item is the currently playing item (index === queue.currentIndex)
+      if (nextItems.length === 0) {
+        // Queue is completely empty now
+        engine.stop();
+        const nextQueue: PlaybackQueue = { ...queue, items: [], currentIndex: -1 };
+        persistQueue(nextQueue);
+        set({
+          queue: nextQueue,
+          nowPlaying: {
+            ...nowPlaying,
+            item: null,
+            state: "idle",
+            currentTime: 0,
+            duration: 0,
+            error: undefined,
+          },
+        });
+        return;
+      }
+
+      // Clamp nextIndex if removing the last item
+      let nextIndex = queue.currentIndex;
+      if (nextIndex >= nextItems.length) {
+        nextIndex = nextItems.length - 1;
+      }
+      const nextItem = nextItems[nextIndex];
       const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex };
       persistQueue(nextQueue);
-      set({ queue: nextQueue });
+
+      const wasActive = nowPlaying.state === "playing" || nowPlaying.state === "loading";
+      set({
+        queue: nextQueue,
+        nowPlaying: {
+          ...nowPlaying,
+          item: nextItem,
+          currentTime: 0,
+          duration: nextItem.duration ?? 0,
+          state: wasActive ? "loading" : "idle",
+          error: undefined,
+        },
+      });
+
+      if (wasActive) {
+        engine.loadAndPlay(nextItem.url).catch((err: any) => {
+          set((state) => ({
+            nowPlaying: { ...state.nowPlaying, state: "error", error: String(err?.message ?? err) },
+          }));
+        });
+      } else {
+        engine.stop();
+      }
     },
 
     reorderQueue: (fromIndex: number, toIndex: number) => {
@@ -312,10 +407,14 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     clearQueue: () => {
-      const { queue } = get();
-      const nextQueue = { ...queue, items: [], currentIndex: -1 };
-      persistQueue(nextQueue);
       engine.stop();
+      const nextQueue: PlaybackQueue = {
+        items: [],
+        currentIndex: -1,
+        repeatMode: "off",
+        shuffle: false,
+      };
+      persistQueue(nextQueue);
       set({
         queue: nextQueue,
         nowPlaying: {
@@ -324,6 +423,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
           state: "idle",
           currentTime: 0,
           duration: 0,
+          error: undefined,
         },
       });
     },
@@ -368,7 +468,13 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     pause: () => engine.pause(),
-    stop: () => engine.stop(),
+
+    stop: () => {
+      engine.stop();
+      set((state) => ({
+        nowPlaying: { ...state.nowPlaying, state: "idle", currentTime: 0 },
+      }));
+    },
 
     next: async () => {
       const { queue } = get();
@@ -403,9 +509,11 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     seek: (timeSec: number) => {
-      engine.seek(timeSec);
+      const dur = get().nowPlaying.duration || 0;
+      const clamped = Math.max(0, dur > 0 ? Math.min(dur, timeSec) : Math.max(0, timeSec));
+      engine.seek(clamped);
       set((state) => ({
-        nowPlaying: { ...state.nowPlaying, currentTime: timeSec },
+        nowPlaying: { ...state.nowPlaying, currentTime: clamped },
       }));
     },
 
@@ -445,6 +553,17 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       const nextQueue = { ...queue, shuffle: !queue.shuffle };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
+    },
+
+    setOutputDevice: async (deviceId: string): Promise<boolean> => {
+      const ok = await engine.setOutputDevice(deviceId);
+      set((state) => ({
+        nowPlaying: {
+          ...state.nowPlaying,
+          activeOutputDeviceId: ok ? deviceId : "",
+        },
+      }));
+      return ok;
     },
 
     // ── EQ Operations ──────────────────────────────────────────
