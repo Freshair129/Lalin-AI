@@ -76,10 +76,16 @@ export function LalinPlayModal() {
         togglePlay();
       } else if (e.code === "ArrowRight") {
         e.preventDefault();
-        seek(nowPlaying.currentTime + 5);
+        seek(nowPlaying.currentTime + (e.shiftKey ? 15 : 5));
       } else if (e.code === "ArrowLeft") {
         e.preventDefault();
-        seek(nowPlaying.currentTime - 5);
+        seek(Math.max(0, nowPlaying.currentTime - (e.shiftKey ? 15 : 5)));
+      } else if (e.code === "ArrowUp") {
+        e.preventDefault();
+        setVolume(Math.min(1, nowPlaying.volume + 0.05));
+      } else if (e.code === "ArrowDown") {
+        e.preventDefault();
+        setVolume(Math.max(0, nowPlaying.volume - 0.05));
       } else if (e.code === "KeyM") {
         e.preventDefault();
         toggleMute();
@@ -91,7 +97,7 @@ export function LalinPlayModal() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, nowPlaying.currentTime, togglePlay, seek, toggleMute, setOpen]);
+  }, [isOpen, nowPlaying.currentTime, nowPlaying.volume, togglePlay, seek, setVolume, toggleMute, setOpen]);
 
   if (!isOpen) return null;
 

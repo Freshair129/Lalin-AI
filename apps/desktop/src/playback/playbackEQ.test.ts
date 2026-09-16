@@ -260,9 +260,21 @@ describe("PlaybackAudioEngine True Bypass & Volume Control", () => {
     expect(engine.getCurrentVolume()).toBe(0.7);
   });
 
-  it("handles output device routing gracefully in environment without setSinkId", async () => {
+  it("handles output device routing gracefully in environment without setSinkId without state divergence", async () => {
     const ok = await engine.setOutputDevice("speaker-1");
-    // In node/jsdom environment without setSinkId support, should return false gracefully without throwing
-    expect(typeof ok).toBe("boolean");
+    // In node/jsdom environment without setSinkId support, should return false gracefully without setting activeOutputDeviceId
+    expect(ok).toBe(false);
+    expect(engine.getOutputDeviceId()).toBe("");
+  });
+
+  it("clamps playback rate between 0.5 and 2.0 in both store and engine", () => {
+    usePlaybackStore.getState().setPlaybackRate(3.0);
+    expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(2.0);
+
+    usePlaybackStore.getState().setPlaybackRate(0.1);
+    expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(0.5);
+
+    usePlaybackStore.getState().setPlaybackRate(1.25);
+    expect(usePlaybackStore.getState().nowPlaying.playbackRate).toBe(1.25);
   });
 });

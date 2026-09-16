@@ -571,9 +571,10 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     setPlaybackRate: (r: number) => {
-      engine.setPlaybackRate(r);
+      const rate = Math.max(0.5, Math.min(2.0, r));
+      engine.setPlaybackRate(rate);
       set((state) => ({
-        nowPlaying: { ...state.nowPlaying, playbackRate: r },
+        nowPlaying: { ...state.nowPlaying, playbackRate: rate },
       }));
     },
 

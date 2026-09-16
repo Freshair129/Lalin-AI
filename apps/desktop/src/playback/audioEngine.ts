@@ -115,9 +115,10 @@ export class PlaybackAudioEngine {
         const available = await this.getAvailableOutputDevices();
         const stillExists = available.some((d) => d.deviceId === this.activeOutputDeviceId);
         if (!stillExists) {
-          console.warn(`[audioEngine] Active device ${this.activeOutputDeviceId} disappeared, falling back to default`);
+          const lostId = this.activeOutputDeviceId;
+          console.warn(`[audioEngine] Active device ${lostId} disappeared, falling back to default`);
           await this.setOutputDevice("");
-          this.emit("devicelost", this.activeOutputDeviceId);
+          this.emit("devicelost", lostId);
         }
       }
     });
@@ -358,18 +359,18 @@ export class PlaybackAudioEngine {
    * Direct output routing (setSinkId) with graceful fallback (FR-16W.4, FR-16W.5).
    */
   public async setOutputDevice(deviceId: string): Promise<boolean> {
-    this.activeOutputDeviceId = deviceId;
     if (!this.audio) return false;
     if ("setSinkId" in this.audio && typeof (this.audio as any).setSinkId === "function") {
       try {
         await (this.audio as any).setSinkId(deviceId);
+        this.activeOutputDeviceId = deviceId;
         return true;
       } catch (e) {
         console.warn("[audioEngine] setSinkId failed, falling back to default device:", e);
         try {
           await (this.audio as any).setSinkId("");
-          this.activeOutputDeviceId = "";
         } catch {}
+        this.activeOutputDeviceId = "";
         return false;
       }
     }

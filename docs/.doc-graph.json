@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-16T20:01:31+07:00",
+  "generated_at": "2026-09-16T20:24:32+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -732,9 +732,9 @@
       "id": "code:apps/desktop/src/components/LalinPlayModal.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LalinPlayModal.tsx",
-      "hash": "890c0816d733",
+      "hash": "582c63174c8c",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-16T20:24:32+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
@@ -972,9 +972,9 @@
       "id": "code:apps/desktop/src/playback/audioEngine.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/audioEngine.ts",
-      "hash": "689aeefeb388",
+      "hash": "e0184f74e501",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-16T20:24:32+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/mediaSessionAdapter.ts",
@@ -988,9 +988,9 @@
       "id": "code:apps/desktop/src/playback/usePlaybackStore.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/usePlaybackStore.ts",
-      "hash": "5d65664c9f0f",
+      "hash": "5fbaaa916d9c",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-16T20:24:32+07:00"
     },
     {
       "id": "code:apps/desktop/src/runtimeDevices.ts",
@@ -2686,9 +2686,9 @@
       "id": "test:apps/desktop/src/playback/playbackEQ.test.ts",
       "type": "test",
       "path": "apps/desktop/src/playback/playbackEQ.test.ts",
-      "hash": "b8098dd6bae1",
+      "hash": "583e32132ac5",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-16T20:24:32+07:00"
     },
     {
       "id": "test:apps/desktop/src/playback/playbackQueue.test.ts",
