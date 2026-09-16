@@ -7,12 +7,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.2.0b |
-| **Status** | Beta |
-| **Author** | Boss |
+| **Doc Version** | 1.3.0-draft |
+| **Status** | In Review |
+| **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-08-23 |
-| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
+| **Last Updated** | 2026-09-16 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23 (CR-001 under review, pending final sign-off) |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
@@ -20,6 +20,7 @@
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph (rwang:doc-architect) |
 | 1.1.0 | 2026-08-09 | Boss | เพิ่ม FR-09..FR-15 จาก reverse gap scan (ฟีเจอร์ Wave 2-5 ที่มีโค้ดแล้ว: workspace/timeline, projects, plugins+marketplace, mic, batch queue, agent+copilot, file manager) |
 | 1.2.0b | 2026-08-23 | LALIN | เพิ่ม CPU fallback, durable/interrupted job lifecycle และ single-GPU admission contract ตาม Phase 1 G-09/G-06/G-07 |
+| 1.3.0-draft | 2026-09-16 | LALIN | ร่างข้อกำหนดจาก CR-001 (กำลังรีวิวบน feature branch): เพิ่มร่าง FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
 
 ---
 
@@ -47,6 +48,11 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | **LUFS** | Loudness Units Full Scale — หน่วยวัดความดังตามมาตรฐาน |
 | **Segment** | ส่วนย่อยของเสียงที่แบ่งตาม VAD/timestamps |
 | **Job** | งานเบื้องหลังที่รายงาน progress ผ่าน WebSocket |
+| **MediaItem** | ออบเจกต์ระบุไฟล์สื่อสำหรับเล่น พร้อม id, title, duration, path และ metadata |
+| **NowPlaying** | สถานะการเล่นปัจจุบัน (media item, position, duration, volume, playback state) |
+| **PlaybackQueue** | คิวการเล่นสื่อ รองรับ add, remove, reorder, shuffle และ repeat |
+| **PlaybackEQ** | กราฟิกอีควอไลเซอร์ 10 ย่าน สำหรับปรับแต่งเสียงขณะฟังแบบ non-destructive |
+| **OutputDevice** | อุปกรณ์ขับสัญญาณเสียงขาออกของระบบปฏิบัติการ |
 
 ---
 
@@ -283,6 +289,54 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | FR-15.5 | UI ต้องมี context menu คลิกขวา (Open/Rename/Delete ของรายการ, New Folder/Refresh ของพื้นหลัง) + rename แบบ inline | Must |
 | FR-15.6 | UI ควรแสดงไอคอนตามชนิด (โฟลเดอร์/ไฟล์เสียง/เอกสาร) และขนาดไฟล์ในมุมมอง list | Should |
 
+### FR-16: Windows Media Player (Lalin Play)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-16.1 | ระบบต้องเปิดและเล่นไฟล์ audio ใน Library/Workspace ได้โดยไม่ต้องนำไฟล์เข้า Arrange timeline ก่อน | Must |
+| FR-16.2 | ระบบต้องมี Play, Pause, Previous, Next, Seek, Stop และ Volume | Must |
+| FR-16.3 | ระบบต้องมี `Now Playing` state กลางที่ระบุ media id/path, title, duration, position, playback state, artwork/thumbnail และ active output เท่าที่ข้อมูลมีจริง | Must |
+| FR-16.4 | ระบบต้องรองรับ queue: add, remove, reorder, clear และ play-next | Must |
+| FR-16.5 | ระบบต้องรองรับ Repeat Off / Repeat One / Repeat All และ Shuffle | Should |
+| FR-16.6 | Library/File Manager ต้องมี action `Play`, `Play next`, `Add to queue` | Must |
+| FR-16.7 | Playback ต้องเป็น non-destructive และไม่แก้ source media | Must |
+| FR-16.8 | Unsupported codec/container ต้องแสดง actionable error และห้าม fail เงียบ | Must |
+| FR-16.9 | ควรรองรับอย่างน้อย WAV, MP3, FLAC, M4A/AAC และ OGG เมื่อ runtime รองรับ | Should |
+| FR-16.10 | Video playback สำหรับ MP4/WebM เป็น phase ถัดไป และต้อง reuse playback contract เดียวกันเท่าที่ทำได้ | Could |
+| FR-16.11 | Player state ต้อง survive การเปลี่ยน route/window state; UI navigation ต้องไม่หยุดเพลงเอง | Must |
+| FR-16.12 | ระบบควร restore queue/session ล่าสุดแบบ opt-in (`Resume previous session`) | Should |
+| FR-16.13 | Playback speed 0.5×–2.0× สำหรับ media ที่ engine รองรับ | Should |
+| FR-16.14 | ต้องมี keyboard shortcuts สำหรับ transport, seek และ volume | Must |
+
+### FR-16W: Windows Integration
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-16W.1 | รับ hardware media keys: Play/Pause, Previous, Next และ Stop เมื่อ OS/runtime อนุญาต | Must |
+| FR-16W.2 | ควร publish Now Playing metadata ให้ Windows System Media Transport Controls (SMTC) หรือ integration ที่เทียบเท่า | Should |
+| FR-16W.3 | Media key ต้อง route ผ่าน playback command contract กลาง ห้ามผูกตรงกับ UI component | Must |
+| FR-16W.4 | ควรรองรับการเลือก audio output device และ fallback เป็น Windows default อย่างปลอดภัย | Should |
+| FR-16W.5 | เมื่อ output device หาย/ถูกถอด ระบบต้องไม่ crash | Must |
+| FR-16W.6 | Playback ต้องทำงานต่อได้เมื่อ Lalin Play ถูก minimize หรือปิด surface ย่อย | Must |
+
+### FR-17: Playback EQ
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-17.1 | Playback EQ ต้องเป็น non-destructive และอยู่ใน signal chain ของ Lalin Player เท่านั้น | Must |
+| FR-17.2 | MVP ต้องมี EQ อย่างน้อย 10 bands: 31, 62, 125, 250, 500 Hz, 1k, 2k, 4k, 8k, 16k Hz | Must |
+| FR-17.3 | Gain ต่อ band ต้องปรับได้อย่างน้อย -12 dB ถึง +12 dB และ reset ได้ | Must |
+| FR-17.4 | ต้องมี Preamp อย่างน้อย -12 dB ถึง +12 dB | Must |
+| FR-17.5 | ต้องมี EQ bypass สำหรับ instant A/B โดยไม่ล้างค่าปัจจุบัน | Must |
+| FR-17.6 | ควรมี preset อย่างน้อย Flat, Bass Boost, Treble Boost, Vocal, Rock, Pop, Classical | Should |
+| FR-17.7 | ผู้ใช้ควรสร้าง/rename/delete custom preset ได้ | Should |
+| FR-17.8 | EQ preset และค่าล่าสุดต้อง persist ระหว่าง app sessions | Must |
+| FR-17.9 | ต้องมี clipping protection ผ่าน headroom strategy และ/หรือ limiter | Must |
+| FR-17.10 | Spectrum/level visualization ต้องใช้ข้อมูลจริง; ห้าม fabricate meter | Should |
+| FR-17.11 | การปรับ EQ ต้องมีผล real-time โดยไม่ restart player/reload media | Must |
+| FR-17.12 | Playback EQ state ต้องแยกจาก Mastering parameters อย่างเด็ดขาด | Must |
+| FR-17.13 | อนาคตควรรองรับ EQ preset per output device เช่น Headphones / Speakers | Could |
+
 ---
 
 ## 4. Non-Functional Requirements
@@ -340,6 +394,18 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | NFR-06.2 | เพิ่ม TTS engine ใหม่ได้โดยเพิ่ม engine ใน `tts.py` |
 | NFR-06.3 | Config ทั้งหมดอยู่ใน `.env` + pydantic-settings, hot-reload ผ่าน API ได้ |
 
+### NFR-07: Media Player Performance & Reliability
+
+| ID | ข้อกำหนด | เกณฑ์ |
+|----|----------|-------|
+| NFR-MP-01 | Play/Pause command to audible state change | p95 ≤ 150 ms สำหรับ local media บนเครื่องอ้างอิง |
+| NFR-MP-02 | EQ parameter update | ต้องได้ยินผลโดยไม่ reload media และไม่มี audible gap |
+| NFR-MP-03 | UI route change | ต้องไม่ reset queue หรือ playback state |
+| NFR-MP-04 | Unsupported/corrupt media | ต้องแสดง actionable error และไม่ crash process |
+| NFR-MP-05 | EQ persistence | preset/current state ต้อง restore แบบ deterministic |
+| NFR-MP-06 | CPU/GPU isolation | EQ/playback ต้องไม่ใช้ ML/GPU queue และต้องไม่โหลด heavy ML model |
+| NFR-MP-07 | Startup isolation | การมี player feature ต้องไม่ทำให้ Studio cold start ช้าลง |
+
 ---
 
 ## 5. Interface Requirements
@@ -385,6 +451,7 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | GET | `/packs/{pack_id}` | — | `{...pack, installed}` | ข้อมูล pack รายชิ้น |
 | POST | `/packs/{pack_id}/download` | — | `{installed, id}` | ติดตั้ง pack (v0.1 = mock in-memory) — FR-11.4 |
 | GET | `/fs` | query `path` (default `""`) | `{path, entries: [{name, type, size, modified, ext}]}` | ลิสต์ไฟล์ใน workspace (โฟลเดอร์ก่อน) — FR-15.1 |
+| GET | `/fs/file` | query `path` | FileResponse | เสิร์ฟไฟล์จาก workspace สำหรับ Lalin Play — FR-16.1 |
 | POST | `/fs/folder` | `{path, name}` | `{ok}` | สร้างโฟลเดอร์ |
 | POST | `/fs/rename` | `{path, name}` | `{ok}` | เปลี่ยนชื่อไฟล์/โฟลเดอร์ |
 | POST | `/fs/move` | `{src, dst}` | `{ok}` | ย้ายไปโฟลเดอร์ปลายทาง |

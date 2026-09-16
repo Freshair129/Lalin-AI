@@ -68,9 +68,10 @@ This document defines the target repository architecture. Phase 1 consolidated d
 
 | Target | Owns | Current source |
 |---|---|---|
-| `apps/desktop` | Tauri shell, React UI, desktop packaging config | `frontend/` |
+| `apps/desktop` | Tauri shell, React UI, desktop packaging config, and Lalin Play surface | `frontend/` |
+| `apps/desktop/src/playback` | Playback audio engine, Web Audio 10-band EQ chain, queue store, SMTC adapter | CR-001 (Phase 0/1) |
 | `apps/api` | FastAPI routes, ML pipelines, sidecar profiles | `backend/` |
-| `packages/contracts` | Shared API, runtime, job, agent, and MCP schemas | extracted in Phase 5 |
+| `packages/contracts` | Shared API, runtime, job, agent, MCP, and playback schemas | expanded for CR-001 |
 | `tools/dev` | local launchers and developer workflows | moved setup/runtime scripts |
 | `tools/build` | sidecar, installer, updater build steps | moved build scripts |
 | `tools/verify` | smoke tests and release checks | moved smoke scripts, validation docs |

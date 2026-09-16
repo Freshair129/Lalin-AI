@@ -1,6 +1,8 @@
 // @req FR-11 — คลัง asset/pack ที่ลากลง timeline ได้ (FR-11.4)
+// @req FR-16.6 — Library มี action Play ใน Lalin Play
 import { useEffect, useMemo, useState, type DragEvent } from "react";
-import { packs, type Pack } from "../api";
+import { packs, files, type Pack } from "../api";
+import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { Icon } from "./icons";
 
 // payload ที่ใส่ใน dataTransfer ตอนลาก item จาก Library ไปวางบน timeline
@@ -13,6 +15,7 @@ export function LibraryPanel() {
   const [list, setList] = useState<Pack[]>([]);
   const [sel, setSel] = useState<Pack | null>(null);
   const [q, setQ] = useState("");
+  const { play, setOpen } = usePlaybackStore();
 
   useEffect(() => {
     packs.list().then((r) => { setList(r.packs); setSel(r.packs[0] ?? null); }).catch(() => {});
@@ -34,6 +37,29 @@ export function LibraryPanel() {
       <div className="lib-preview">
         <div className="lib-cover" style={{ background: sel ? `radial-gradient(circle at 50% 38%, ${sel.color}, #0c0d11)` : "#16181d" }} />
         <div className="lib-cover-name">{sel?.name ?? "—"}</div>
+        {sel && (
+          <div className="lib-cover-actions">
+            <button
+              className="lib-play-btn"
+              type="button"
+              onClick={() => {
+                play({
+                  id: `pack:${sel.id}`,
+                  title: sel.name,
+                  artist: sel.author || "Library Pack",
+                  url: files.inputUrl(sel.id),
+                  sourceKind: "upload",
+                  sourcePath: sel.id,
+                  ext: "wav",
+                });
+                setOpen(true);
+              }}
+              title="Play in Lalin Play"
+            >
+              ▶ Play in Lalin Play
+            </button>
+          </div>
+        )}
       </div>
 
       {/* search */}

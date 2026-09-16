@@ -30,6 +30,7 @@ apps/api/data/
 models/
 
 # Frontend (Tauri)
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/src-tauri/target/

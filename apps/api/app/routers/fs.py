@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ..config import get_settings
@@ -55,6 +56,17 @@ async def list_dir(path: str = ""):
     items = [_entry(c) for c in d.iterdir()]
     items.sort(key=lambda e: (e["type"] != "folder", e["name"].lower()))
     return {"path": path.strip("/"), "entries": items}
+
+
+# ── Serve file ──────────────────────────────────────────────────────────────
+
+@router.get("/file")
+async def get_file(path: str):
+    """เสิร์ฟไฟล์จาก workspace สำหรับเปิดฟัง/แสดงผล (FR-16.1)."""
+    p = _resolve(path)
+    if not p.exists() or p.is_dir():
+        raise HTTPException(404, "ไม่พบไฟล์")
+    return FileResponse(p)
 
 
 # ── Create folder ────────────────────────────────────────────────────────────

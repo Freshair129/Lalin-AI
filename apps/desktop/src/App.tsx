@@ -1,6 +1,9 @@
 // @req NFR-04 — shell + nav ภาษาไทย
 // @req NFR-02 — gate ทุกแท็บจนกว่า backend พร้อม (BackendGate)
-import { useState } from "react";
+// @req FR-16 — Lalin Play Windows media player
+// @req FR-16W — Windows media keys and SMTC
+// @req FR-17 — 10-band Playback EQ
+import { useEffect, useState } from "react";
 import { BrainPanel } from "./components/BrainPanel";
 import { VoicesPanel } from "./components/VoicesPanel";
 import { TTSPanel } from "./components/TTSPanel";
@@ -11,6 +14,7 @@ import { FileManager } from "./components/FileManager";
 import { MarketplacePanel } from "./components/MarketplacePanel";
 import { PluginsPanel } from "./components/PluginsPanel";
 import { UpdateChecker } from "./components/UpdateChecker";
+import { LalinPlayModal } from "./components/LalinPlayModal";
 import { Icon } from "./components/icons";
 import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
@@ -19,6 +23,8 @@ import { useBackendReadiness, type BackendReadiness } from "./hooks/useBackendRe
 import { useRuntimeActivity } from "./hooks/useRuntimeActivity";
 import { API_BASE, type RuntimeActivityStatus } from "./api";
 import { runtimeDeviceWarning } from "./runtimeDevices";
+import { usePlaybackStore } from "./playback/usePlaybackStore";
+import { initMediaSessionAdapter } from "./playback/mediaSessionAdapter";
 
 // เวอร์ชันฝังตอน build จาก package.json (ดู vite.config.ts)
 declare const __APP_VERSION__: string;
@@ -47,6 +53,12 @@ export default function App() {
   const current = NAV.find((item) => item.id === tab);
   const backendReady = backend.state === "ready";
 
+  const { nowPlaying, setOpen: setPlayOpen } = usePlaybackStore();
+
+  useEffect(() => {
+    return initMediaSessionAdapter();
+  }, []);
+
   return (
     <EngineProvider>
       <div className="daw">
@@ -57,17 +69,27 @@ export default function App() {
           <div className="commandbar-actions">
             <button type="button" onClick={() => dispatchCommand("open")}>Open</button>
             <button type="button" onClick={() => dispatchCommand("save")}>Save</button>
+            <button type="button" onClick={() => setPlayOpen(true)} title="Open Lalin Play">Play</button>
             <button type="button" onClick={() => setTab("settings")}>Settings</button>
           </div>
           {menu === "file" && <div className="command-menu"><button onClick={() => { dispatchCommand("new"); setMenu(null); }}>New</button><button onClick={() => { dispatchCommand("open"); setMenu(null); }}>Open…</button><button onClick={() => { dispatchCommand("save"); setMenu(null); }}>Save</button><button onClick={() => { dispatchCommand("saveAs"); setMenu(null); }}>Save As…</button></div>}
           {menu === "edit" && <div className="command-menu muted-menu">Undo / Redo are available in the active editor.</div>}
-          {menu === "view" && <div className="command-menu muted-menu">Arrange, Patch, and panel visibility stay in the current workspace.</div>}
+          {menu === "view" && <div className="command-menu"><button onClick={() => { setPlayOpen(true); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button></div>}
           {menu === "help" && <div className="command-menu muted-menu">Use the active tool’s inline help and keyboard shortcuts.</div>}
         </div>
         <header className="topbar">
           <div className="brand"><span className="brand-mark" /><span className="brand-name">LALIN STUDIO</span></div>
           <div className="topbar-ctx"><span>Workspace</span><span className="crumb">›</span><span>Project Alpha</span><span className="crumb">›</span><strong>{current?.label}</strong></div>
           <label className="global-search"><Icon name="search" size={15} /><input placeholder="Search projects, files, presets, devices…" /></label>
+          <button
+            type="button"
+            className={`topbar-play-pill ${nowPlaying.state === "playing" ? "playing" : ""}`}
+            onClick={() => setPlayOpen(true)}
+            title="Open Lalin Play (Windows Media Player + EQ)"
+          >
+            <span className="play-pill-indicator">{nowPlaying.state === "playing" ? "▶" : "🎵"}</span>
+            <span className="play-pill-label">{nowPlaying.item ? nowPlaying.item.title : "Lalin Play"}</span>
+          </button>
           <div className="topbar-meta mono">
             <span className={`topbar-pill ${backend.online ? "live" : backend.online === false ? "down" : ""}`}><span className={`dot ${backend.online ? "up" : backend.online === false ? "down" : ""}`} />{backend.online == null ? "CONNECTING" : backend.online ? "READY" : "OFFLINE"}</span>
             <span className="topbar-pill">{runtime?.runtime.model || backend.brainName || "model N/A"}</span>
@@ -95,6 +117,7 @@ export default function App() {
         {backendReady && STUDIO_TABS.has(tab) && tab !== "arrange" && <StudioDock />}
         <RuntimeFooter status={runtime} onOpenActivity={() => setActivityOpen(true)} />
         {activityOpen && <ActivityOverlay status={runtime} onClose={() => setActivityOpen(false)} onOpenJobs={() => { setTab("jobs"); setActivityOpen(false); }} />}
+        <LalinPlayModal />
       </div>
     </EngineProvider>
   );
