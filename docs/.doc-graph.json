@@ -1,24 +1,24 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-16T20:50:04+07:00",
+  "generated_at": "2026-09-17T04:34:31+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 321,
-    "total_edges": 347,
+    "total_nodes": 331,
+    "total_edges": 366,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (27/39)",
       "requirements_with_tests": "23% (9/39)",
-      "code_files_referenced_by_docs": "1% (1/95)",
-      "code_files_with_tests": "13% (13/95)",
-      "structured_annotations_found": 193,
-      "unstructured_req_refs_found": 117
+      "code_files_referenced_by_docs": "1% (1/98)",
+      "code_files_with_tests": "14% (14/98)",
+      "structured_annotations_found": 195,
+      "unstructured_req_refs_found": 120
     }
   },
   "nodes": [
@@ -628,9 +628,9 @@
       "id": "code:apps/desktop/src/App.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/App.tsx",
-      "hash": "3dcc40d2c0da",
+      "hash": "106d585c55cc",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
@@ -700,9 +700,9 @@
       "id": "code:apps/desktop/src/components/FileManager.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/FileManager.tsx",
-      "hash": "3f409bdc3ae1",
+      "hash": "3aca3f0da631",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FxRack.tsx",
@@ -740,17 +740,17 @@
       "id": "code:apps/desktop/src/components/LalinPlayWindow.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LalinPlayWindow.tsx",
-      "hash": "32b1e9b7839a",
+      "hash": "88da4a073aee",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LibraryPanel.tsx",
-      "hash": "ae10b3b6f7a9",
+      "hash": "1ff7a349ce68",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MarketplacePanel.tsx",
@@ -964,9 +964,9 @@
       "id": "code:apps/desktop/src/main.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/main.tsx",
-      "hash": "95f7bcc9ae43",
+      "hash": "32cc4241d1f6",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/audioContext.ts",
@@ -980,9 +980,9 @@
       "id": "code:apps/desktop/src/playback/audioEngine.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/audioEngine.ts",
-      "hash": "3c0ee046ed18",
+      "hash": "2590fb729a04",
       "status": "current",
-      "last_verified": "2026-09-16T20:35:30+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/mediaSessionAdapter.ts",
@@ -991,6 +991,30 @@
       "hash": "cee891591c9b",
       "status": "current",
       "last_verified": "2026-09-16T19:51:07+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/playback/playbackBridge.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/playback/playbackBridge.ts",
+      "hash": "9226ef15991e",
+      "status": "current",
+      "last_verified": "2026-09-17T03:51:46+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/playback/playbackClient.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/playback/playbackClient.ts",
+      "hash": "264ac8b104b7",
+      "status": "current",
+      "last_verified": "2026-09-17T03:44:57+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/playback/playbackOwner.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/playback/playbackOwner.ts",
+      "hash": "a4f33e330145",
+      "status": "current",
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/usePlaybackStore.ts",
@@ -1004,9 +1028,9 @@
       "id": "code:apps/desktop/src/playback/windowManager.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/windowManager.ts",
-      "hash": "28f2bae89d63",
+      "hash": "95e3e2d501c1",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "code:apps/desktop/src/runtimeDevices.ts",
@@ -1135,6 +1159,26 @@
       "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
+      "id": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "type": "document",
+      "path": "docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md",
+      "title": "2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "hash": "265ca37873de",
+      "prev_hash": "265ca37873de",
+      "status": "current",
+      "last_verified": "2026-09-17T04:34:31+07:00"
+    },
+    {
+      "id": "doc:2026-09-17-SIDECAR-BUILD",
+      "type": "document",
+      "path": "docs/validation/2026-09-17-SIDECAR-BUILD.md",
+      "title": "2026-09-17-SIDECAR-BUILD",
+      "hash": "13c2adb0e6e8",
+      "prev_hash": "13c2adb0e6e8",
+      "status": "current",
+      "last_verified": "2026-09-17T04:34:31+07:00"
+    },
+    {
       "id": "doc:A-api-spec",
       "type": "document",
       "path": "docs/appendices/A-api-spec.md",
@@ -1179,10 +1223,10 @@
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "c74f8c5568aa",
-      "prev_hash": "be82d260366c",
-      "status": "changed",
-      "last_verified": "2026-09-16T20:50:04+07:00"
+      "hash": "4ce73b6b249d",
+      "prev_hash": "4ce73b6b249d",
+      "status": "current",
+      "last_verified": "2026-09-17T03:47:17+07:00"
     },
     {
       "id": "doc:C-model-cards",
@@ -1239,10 +1283,10 @@
       "type": "document",
       "path": "docs/product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md",
       "title": "CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
-      "hash": "b988c258514c",
-      "prev_hash": "b988c258514c",
+      "hash": "1c155adeafdc",
+      "prev_hash": "1c155adeafdc",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-17T03:48:13+07:00"
     },
     {
       "id": "doc:D-traceability",
@@ -1269,10 +1313,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "73bd51314acd",
-      "prev_hash": "73bd51314acd",
+      "hash": "a759a1af5427",
+      "prev_hash": "a759a1af5427",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-09-17T04:12:44+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1465,6 +1509,16 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "document",
+      "path": "docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md",
+      "title": "LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "hash": "727d9d680106",
+      "prev_hash": "727d9d680106",
+      "status": "current",
+      "last_verified": "2026-09-17T04:12:44+07:00"
+    },
+    {
       "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
       "type": "document",
       "path": "docs/design/LALIN_RENAME_MIGRATION_PLAN.md",
@@ -1619,10 +1673,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "7941eae92a93",
-      "prev_hash": "7941eae92a93",
+      "hash": "3400086d2106",
+      "prev_hash": "3400086d2106",
       "status": "current",
-      "last_verified": "2026-09-16T19:26:11+07:00"
+      "last_verified": "2026-09-17T04:12:44+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1809,10 +1863,10 @@
       "type": "document",
       "path": "docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md",
       "title": "REPOSITORY_ARCHITECTURE_SOT",
-      "hash": "f8186a7ff181",
-      "prev_hash": "f8186a7ff181",
+      "hash": "fa8359555d46",
+      "prev_hash": "fa8359555d46",
       "status": "current",
-      "last_verified": "2026-09-16T19:34:30+07:00"
+      "last_verified": "2026-09-17T03:48:13+07:00"
     },
     {
       "id": "doc:REPO_MIGRATION_PLAN",
@@ -1969,10 +2023,10 @@
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "e22b930e84af",
-      "prev_hash": "e22b930e84af",
+      "hash": "c2e6f7ef4166",
+      "prev_hash": "c2e6f7ef4166",
       "status": "current",
-      "last_verified": "2026-09-16T20:01:31+07:00"
+      "last_verified": "2026-09-17T03:47:17+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -2699,12 +2753,36 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "test:apps/desktop/src/playback/audioEngineState.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/playback/audioEngineState.test.ts",
+      "hash": "86674c854f22",
+      "status": "current",
+      "last_verified": "2026-09-17T03:44:57+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/playback/playbackBridge.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/playback/playbackBridge.test.ts",
+      "hash": "bff70d6cac48",
+      "status": "current",
+      "last_verified": "2026-09-17T03:51:46+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/playback/playbackEQ.test.ts",
       "type": "test",
       "path": "apps/desktop/src/playback/playbackEQ.test.ts",
       "hash": "68fed4c1b027",
       "status": "current",
       "last_verified": "2026-09-16T20:35:30+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/playback/playbackOwnership.test.tsx",
+      "type": "test",
+      "path": "apps/desktop/src/playback/playbackOwnership.test.tsx",
+      "hash": "d4aaf15ede5d",
+      "status": "current",
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "test:apps/desktop/src/playback/playbackQueue.test.ts",
@@ -2715,12 +2793,20 @@
       "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
+      "id": "test:apps/desktop/src/playback/windowCapabilities.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/playback/windowCapabilities.test.ts",
+      "hash": "e544c9d4171d",
+      "status": "current",
+      "last_verified": "2026-09-17T03:44:57+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/playback/windowManager.test.ts",
       "type": "test",
       "path": "apps/desktop/src/playback/windowManager.test.ts",
-      "hash": "cb6b7b9522f8",
+      "hash": "6dee34df6fc0",
       "status": "current",
-      "last_verified": "2026-09-16T20:49:54+07:00"
+      "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
       "id": "test:apps/desktop/src/runtimeDevices.test.ts",
@@ -3833,6 +3919,27 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/desktop/src/playback/playbackBridge.ts",
+      "to": "req:FR-16",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/playback/playbackClient.ts",
+      "to": "req:FR-16",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/playback/playbackOwner.ts",
+      "to": "req:FR-16",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/playback/usePlaybackStore.ts",
       "to": "req:FR-16",
       "type": "implements",
@@ -3975,6 +4082,34 @@
     {
       "from": "doc:2026-08-23-phase1-runtime-robustness-and-clean-vm-candidate",
       "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "to": "doc:2026-09-17-SIDECAR-BUILD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-17-SIDECAR-BUILD",
+      "to": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-17-SIDECAR-BUILD",
+      "to": "doc:PACKAGING_SIDECAR",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -4276,6 +4411,20 @@
     {
       "from": "doc:COMPONENT_REGISTRY",
       "to": "req:FR-14",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
+      "to": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -4617,6 +4766,27 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "to": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "to": "req:FR-17",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:LALIN_SETTINGS_TAB_SPEC",
       "to": "doc:LALIN_SHELL_SOT",
       "type": "references",
@@ -4750,6 +4920,13 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:PACKAGING_SIDECAR",
+      "to": "doc:2026-09-17-SIDECAR-BUILD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:PRD",
       "to": "doc:LALIN_LAYOUT_SOT",
       "type": "references",
@@ -4792,6 +4969,20 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:ROADMAP_MUSIC",
       "to": "code:apps/api/app/pipelines/music.py",
       "type": "references",
@@ -4808,6 +4999,20 @@
     {
       "from": "doc:SPEC",
       "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5102,6 +5307,20 @@
     {
       "from": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "to": "req:NFR-02",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/playback/playbackBridge.test.ts",
+      "to": "code:apps/desktop/src/playback/playbackBridge.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/playback/playbackBridge.test.ts",
+      "to": "req:FR-16",
       "type": "verifies",
       "status": "current",
       "source": "code-scan"

@@ -76,7 +76,8 @@ export class PlaybackAudioEngine {
     // Pin audio element volume to 1.0 so masterGainNode is the single source of truth (no double-scaling)
     this.audio.volume = 1.0;
 
-    this.audio.addEventListener("play", () => this.emit("play"));
+    // playing ยืนยันว่าเสียงเริ่ม/กลับมาเล่นจริงหลัง waiting ไม่ใช่เพียงรับคำสั่ง play
+    this.audio.addEventListener("playing", () => this.emit("play"));
     this.audio.addEventListener("pause", () => this.emit("pause"));
     this.audio.addEventListener("ended", () => this.emit("ended"));
     this.audio.addEventListener("timeupdate", () => this.emit("timeupdate", this.audio?.currentTime ?? 0));

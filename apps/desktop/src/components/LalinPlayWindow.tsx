@@ -18,11 +18,12 @@ import { useEffect, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { PlaybackEQPanel } from "./PlaybackEQPanel";
 import { initMediaSessionAdapter } from "../playback/mediaSessionAdapter";
+import { connectPlaybackOwner } from "../playback/playbackOwner";
 import {
   minimizeCurrentWindow,
   toggleMaximizeCurrentWindow,
   hideOrCloseCurrentWindow,
-  listenPlaybackBridgeMessages,
+  bindPlayWindowClose,
 } from "../playback/windowManager";
 
 function formatTime(sec: number): string {
@@ -46,9 +47,6 @@ export function LalinPlayWindow() {
     setPlaybackRate,
     setRepeatMode,
     toggleShuffle,
-    play,
-    playNext,
-    addToQueue,
     playAtIndex,
     removeFromQueue,
     reorderQueue,
@@ -59,6 +57,11 @@ export function LalinPlayWindow() {
   } = usePlaybackStore();
 
   const [activeTab, setActiveTab] = useState<"queue" | "eq">("queue");
+  const [windowError, setWindowError] = useState<string | null>(null);
+  const runWindowAction = (action: () => Promise<void>) => {
+    setWindowError(null);
+    void action().catch((error: unknown) => setWindowError(`ควบคุมหน้าต่างไม่ได้: ${String(error)}`));
+  };
 
   // Initialize MediaSession adapter for SMTC / media keys
   useEffect(() => {
@@ -70,19 +73,21 @@ export function LalinPlayWindow() {
     refreshOutputDevices();
   }, [refreshOutputDevices]);
 
-  // Listen to cross-window commands from Studio Window
+  // owner อยู่ข้าม effect mount เพื่อกันคำสั่งซ้ำใน StrictMode
   useEffect(() => {
-    const unbind = listenPlaybackBridgeMessages((msg) => {
-      if (msg.type === "PLAY" && msg.item) {
-        play(msg.item);
-      } else if (msg.type === "PLAY_NEXT" && msg.item) {
-        playNext(msg.item);
-      } else if (msg.type === "ADD_TO_QUEUE" && msg.item) {
-        addToQueue(msg.item);
-      }
-    });
-    return unbind;
-  }, [play, playNext, addToQueue]);
+    try { return connectPlaybackOwner(); }
+    catch (error) { setWindowError(`เชื่อมต่อ Studio ไม่สำเร็จ: ${String(error)}`); }
+  }, []);
+
+  useEffect(() => {
+    let disposed = false;
+    let unbind: (() => void) | undefined;
+    const report = (message: string) => { if (!disposed) setWindowError(message); };
+    void bindPlayWindowClose(report).then((cleanup) => {
+      if (disposed) cleanup(); else unbind = cleanup;
+    }).catch((error: unknown) => report(`ตั้งค่าปิดหน้าต่างไม่ได้: ${String(error)}`));
+    return () => { disposed = true; unbind?.(); };
+  }, []);
 
   // Keyboard shortcuts (FR-16.14)
   useEffect(() => {
@@ -115,7 +120,7 @@ export function LalinPlayWindow() {
         toggleMute();
       } else if (e.code === "Escape") {
         e.preventDefault();
-        hideOrCloseCurrentWindow();
+        void hideOrCloseCurrentWindow().catch((error: unknown) => setWindowError(`ปิดหน้าต่างไม่ได้: ${String(error)}`));
       }
     };
 
@@ -160,21 +165,21 @@ export function LalinPlayWindow() {
         <div className="lalin-play-window-controls">
           <button
             className="win-ctrl-btn"
-            onClick={minimizeCurrentWindow}
+            onClick={() => runWindowAction(minimizeCurrentWindow)}
             title="Minimize"
           >
             —
           </button>
           <button
             className="win-ctrl-btn"
-            onClick={toggleMaximizeCurrentWindow}
+            onClick={() => runWindowAction(toggleMaximizeCurrentWindow)}
             title="Maximize / Restore"
           >
             ◻
           </button>
           <button
             className="win-ctrl-btn close"
-            onClick={hideOrCloseCurrentWindow}
+            onClick={() => runWindowAction(hideOrCloseCurrentWindow)}
             title="Close / Hide to Background"
           >
             ✕
@@ -183,6 +188,7 @@ export function LalinPlayWindow() {
       </div>
 
       {/* Main Content Body */}
+      {windowError && <div className="fm-err" role="alert">{windowError}</div>}
       <div className="lalin-play-body standalone">
         {/* Left Column: Now Playing Card & Transport */}
         <div className="lalin-play-left">

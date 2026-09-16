@@ -1,8 +1,8 @@
 ---
-version: "0.2.2-candidate"
+version: "0.2.4b"
 created_at: "2026-09-16T00:00:00+07:00,LALIN"
-last_update: "2026-09-16T00:00:00+07:00,LALIN"
-status: "proposed"
+last_update: "2026-09-17T03:45:00+07:00,LALIN"
+status: "need review"
 superseded_by: null
 attributes:
   domain: "product"
@@ -69,7 +69,7 @@ SRS ปัจจุบันมี playback engine ใน FR-09.7 (Web Audio API
 
 ## 4. Proposed Functional Requirements
 
-> หมายเลข FR-16 / FR-16W / FR-17 เป็น **proposed IDs** จนกว่า CR นี้จะได้รับอนุมัติและ merge เข้า canonical `docs/product/SRS.md`
+> FR-16 / FR-16W / FR-17 อยู่ใน canonical `docs/product/SRS.md` และ default branch แล้วจาก PR #10 แต่การรวมโค้ดไม่ใช่หลักฐานว่า MVP acceptance หรือ Windows production validation ผ่านครบ ดูสถานะและหลักฐานในข้อ 17
 
 ### FR-16: Windows Media Player
 
@@ -586,12 +586,22 @@ AI rule:
 
 ## 17. Status
 
-**PROPOSED — Candidate under architecture review on feature branch `docs/cr-media-player-eq-windows`; pending final product sign-off before default branch merge.**
+**MERGED IMPLEMENTATION — NEED REVIEW.** Prototype และข้อกำหนดรวมเข้า default branch `swarm/local-llm-refine` แล้วผ่าน [PR #10](https://github.com/Freshair129/Lalin-AI/pull/10) ที่ `9358b4c68bc2e98cdd2b6ce526ca16260978d949` เมื่อ 2026-09-16; commit `3d7b60e96fe43f2cc2564ffd13ee0e8ecb3a6446` เพิ่ม secondary Play Window ต่อมา ชื่อ commit ที่ใช้คำว่า Production ไม่ใช่ผลรับรอง production readiness
+
+- Feature branch เดิมถูกเก็บใน backup และลบ ref หลังตรวจว่า tree ตรงกับ squash commit ครบแล้ว
+- การตรวจติดตาม 2026-09-17: playback tests เดิมผ่าน 28/28 แต่ diagnostic ที่เรียก bridge จริงพบว่า `PLAY` ก่อน listener พร้อมสูญหาย; queue persistence ไม่เริ่ม playback แทนคำสั่งนั้น
+- การตรวจ source พบ Studio และ Play Window ต่างเรียก playback engine และ native capability ยังไม่ครอบคลุมคำสั่งหน้าต่างที่ใช้ ดู [RCA](../../.brain/rca/2026-09-17-lalin-play-command-delivery.md)
+- [แผนแก้ command delivery และ ownership](../architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) ได้รับ `approve` วันที่ 2026-09-17 และแก้ใน local branch แล้ว: Play Window เป็น owner เดียว, ready/ACK/state bridge, native caller permissions และ hide-on-close
+- [Validation](../validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md) แยก automated tests, browser และ Windows native debug fixture ที่ผ่านออกจาก release acceptance; native ตรวจ storage/command/window lifecycle ด้วย synthetic silence จริง ไม่ได้ยืนยันเสียงจากอุปกรณ์จริง
+- Audible physical output, media keys, output-device lifecycle และ MVP acceptance ทั้งชุด: **NOT_RUN ในงานติดตามนี้** จึงยังไม่ปิด MVP gate
+- ขอบเขตอนุมัติราย phase ในข้อ 15 ยังคงเดิม; Phase 2–10 ไม่ได้รับอนุมัติเพิ่มจากการปรับสถานะครั้งนี้
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Agent |
 |---|---|---|---|---|
+| 0.2.4b | 2026-09-17 | need review | Record approved local ownership/delivery repair and scoped native fixture evidence; retain broader MVP gate | LALIN |
+| 0.2.3b | 2026-09-17 | need review | Reconcile merged implementation and retired branch with current RCA; distinguish integration from acceptance and production validation | LALIN |
 | 0.2.2-candidate | 2026-09-16 | proposed | Reverted premature integrated status; clarified prototype MVP implementation on feature branch is pending review | LALIN |
 | 0.2.1-candidate | 2026-09-16 | proposed | Added long-term roadmap and clarified approval boundaries: Phase 0–1 MVP; later phases require separate approval | LALIN |
 | 0.1.0-candidate | 2026-09-16 | proposed | Initial CR for Windows media player + playback EQ | LALIN |

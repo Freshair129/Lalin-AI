@@ -1,7 +1,7 @@
 # BLUEPRINT.yaml — G-Music (legacy machine-readable blueprint — ดู docs/DOCS_INDEX.md)
 # Machine-readable spec ของ endpoints/components (ไม่ใช่ IA ปัจจุบัน — ดู docs/design/LALIN_SITEMAP_SOT.md สำหรับ product IA)
 # sync กับ: PRD.md · SRS.md · SPEC.md · ROADMAP_MUSIC.md (UI_SITEMAP.md ย้ายไป docs/archive/ แล้ว)
-# วันที่: 2026-08-23 (Phase 1 G-09/G-06/G-07: CPU fallback, durable jobs, GPU admission)
+# วันที่: 2026-09-17 (CR-001 approved consumer playback ownership and delivery)
 
 meta:
   name: G-Music
@@ -248,9 +248,20 @@ components:
     - {component: UpdateChecker.tsx,       role: "ปุ่มเช็คอัปเดต + overlay version/notes/ติดตั้ง/relaunch"}
     - {component: icons.tsx,               role: "ชุด line icon (stroke=currentColor) สำหรับ rail/nav"}
   media_player:                # Lalin Play (CR-001 / FR-16 / FR-17)
-    - {component: LalinPlayModal.tsx,      role: "surface หลัก Lalin Play (In-App modal prototype) — transport, queue, metadata, spectrum visualizer"}
-    - {component: LalinPlayWindow.tsx,     role: "standalone secondary Tauri window (Production Phase 1) — custom titlebar, independent surface, bridge listener"}
+    - {component: LalinPlayModal.tsx,      role: "legacy prototype source retained; no longer mounted by Studio"}
+    - {component: LalinPlayWindow.tsx,     role: "sole consumer playback owner in predeclared secondary window; native close hides; local debug validation only"}
     - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager"}
+
+consumer_playback:
+  client: apps/desktop/src/playback/playbackClient.ts
+  bridge: apps/desktop/src/playback/playbackBridge.ts
+  owner: apps/desktop/src/playback/playbackOwner.ts
+  engine: apps/desktop/src/playback/audioEngine.ts
+  state: apps/desktop/src/playback/usePlaybackStore.ts
+  delivery: "HELLO/READY -> FIFO COMMAND with session/id -> stable ACK; STATE snapshots; no blind retry after unknown delivery"
+  persistence: "Play owns existing lalin:playback:queue and lalin:playback:eq localStorage keys; no migration"
+  native_callers: "main launcher permissions; play window controls and close listener only"
+  verification: docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md
 
 # ── REST API ─────────────────────────────────────────────────
 api:
