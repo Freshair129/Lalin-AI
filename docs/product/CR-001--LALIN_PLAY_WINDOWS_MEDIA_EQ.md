@@ -592,6 +592,5 @@ AI rule:
 
 | Version | Date | Status | Summary | Agent |
 |---|---|---|---|---|
-| 0.2.1-candidate | 2026-09-16 | proposed | Clarified approval boundaries: Phase 0–1 MVP, later phases require separate approval | LALIN |
-| 0.2.0-candidate | 2026-09-16 | proposed | Added long-term roadmap, Separate Surface/Shared Platform decision, phase gates, and product guardrails | LALIN |
+| 0.2.1-candidate | 2026-09-16 | proposed | Added long-term roadmap and clarified approval boundaries: Phase 0–1 MVP; later phases require separate approval | LALIN |
 | 0.1.0-candidate | 2026-09-16 | proposed | Initial CR for Windows media player + playback EQ | LALIN |
