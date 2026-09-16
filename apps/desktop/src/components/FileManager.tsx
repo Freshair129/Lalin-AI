@@ -1,6 +1,7 @@
-// @req FR-15 — UI file manager (คู่กับ routers/fs.py)
 import { useCallback, useEffect, useState } from "react";
 import { fs, type FsEntry } from "../api";
+import { usePlaybackStore } from "../playback/usePlaybackStore";
+import type { MediaItem } from "@lalin/contracts";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Icon } from "./icons";
 
@@ -14,6 +15,7 @@ function join(path: string, name: string) { return path ? `${path}/${name}` : na
 function fmtSize(n: number) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
 
 // Adobe-style file manager (browse/create/rename/delete/move ใน workspace)
+// @req FR-16.6 — Library/File Manager มี action Play, Play next, Add to queue
 export function FileManager() {
   const [path, setPath] = useState("");
   const [entries, setEntries] = useState<FsEntry[]>([]);
@@ -22,6 +24,34 @@ export function FileManager() {
   const [ctx, setCtx] = useState<{ x: number; y: number; entry?: FsEntry } | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [err, setErr] = useState("");
+
+  const { play, playNext, addToQueue, setOpen } = usePlaybackStore();
+
+  const toMediaItem = useCallback((e: FsEntry): MediaItem => {
+    const filePath = join(path, e.name);
+    return {
+      id: `ws:${filePath}`,
+      title: e.name,
+      artist: "Workspace",
+      url: fs.fileUrl(filePath),
+      sourceKind: "workspace",
+      sourcePath: filePath,
+      ext: e.ext,
+    };
+  }, [path]);
+
+  const handlePlay = useCallback((e: FsEntry) => {
+    play(toMediaItem(e));
+    setOpen(true);
+  }, [play, toMediaItem, setOpen]);
+
+  const handlePlayNext = useCallback((e: FsEntry) => {
+    playNext(toMediaItem(e));
+  }, [playNext, toMediaItem]);
+
+  const handleAddToQueue = useCallback((e: FsEntry) => {
+    addToQueue(toMediaItem(e));
+  }, [addToQueue, toMediaItem]);
 
   const load = useCallback((p: string) => {
     fs.list(p).then((r) => { setEntries(r.entries); setErr(""); }).catch((e) => setErr(String(e.message ?? e)));
@@ -43,10 +73,24 @@ export function FileManager() {
     if (!window.confirm(`ลบ "${e.name}"?`)) return;
     try { await fs.remove(join(path, e.name)); load(path); } catch (er: any) { setErr(String(er.message ?? er)); }
   };
-  const openEntry = (e: FsEntry) => { if (e.type === "folder") setPath(join(path, e.name)); };
+  const openEntry = (e: FsEntry) => {
+    if (e.type === "folder") {
+      setPath(join(path, e.name));
+    } else if (AUDIO.includes(e.ext)) {
+      handlePlay(e);
+    }
+  };
 
   const itemMenu = (e: FsEntry): MenuItem[] => [
     ...(e.type === "folder" ? [{ label: "Open", icon: "📂", onClick: () => openEntry(e) } as MenuItem, { type: "sep" } as MenuItem] : []),
+    ...(AUDIO.includes(e.ext)
+      ? [
+          { label: "Play", icon: "▶", onClick: () => handlePlay(e) } as MenuItem,
+          { label: "Play Next", icon: "⏭", onClick: () => handlePlayNext(e) } as MenuItem,
+          { label: "Add to Queue", icon: "➕", onClick: () => handleAddToQueue(e) } as MenuItem,
+          { type: "sep" } as MenuItem,
+        ]
+      : []),
     { label: "Rename", icon: "✎", shortcut: "F2", onClick: () => setRenaming(e.name) },
     { label: "Delete", icon: "🗑", danger: true, shortcut: "Del", onClick: () => doDelete(e) },
   ];

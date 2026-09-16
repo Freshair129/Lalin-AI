@@ -247,6 +247,9 @@ components:
     - {component: JobProgress.tsx,         role: "badge สถานะ (⏳/⚙️/✅/❌) + progress bar + player + download + error"}
     - {component: UpdateChecker.tsx,       role: "ปุ่มเช็คอัปเดต + overlay version/notes/ติดตั้ง/relaunch"}
     - {component: icons.tsx,               role: "ชุด line icon (stroke=currentColor) สำหรับ rail/nav"}
+  media_player:                # Lalin Play (CR-001 / FR-16 / FR-17)
+    - {component: LalinPlayModal.tsx,      role: "surface หลัก Lalin Play — transport, queue, metadata, realtime spectrum visualizer"}
+    - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager"}
 
 # ── REST API ─────────────────────────────────────────────────
 api:
@@ -275,6 +278,7 @@ api:
     - {method: GET,    path: "/files/export/{name}",    query: "fmt=wav|mp3 (mp3 แปลงด้วย ffmpeg ฝังในตัว 320k)"}
     # fs — workspace ของ FileManager (กัน path traversal ทุก endpoint)
     - {method: GET,    path: /fs,                  query: "path (rel ใน workspace)", returns: "entries[name,type,size,modified,ext]"}
+    - {method: GET,    path: /fs/file,             query: "path (rel ใน workspace)", returns: "FileResponse (เสิร์ฟไฟล์สำหรับ Lalin Play)"}
     - {method: POST,   path: /fs/folder,           body: [path, name]}
     - {method: POST,   path: /fs/rename,           body: [path, name]}
     - {method: POST,   path: /fs/move,             body: [src, dst]}

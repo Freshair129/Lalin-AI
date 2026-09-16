@@ -101,6 +101,7 @@ export const fs = {
   rename: (path: string, name: string) => req<{ ok: boolean }>("/fs/rename", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path, name }) }),
   move: (src: string, dst: string) => req<{ ok: boolean }>("/fs/move", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ src, dst }) }),
   remove: (path: string) => req<{ ok: boolean }>(`/fs?path=${encodeURIComponent(path)}`, { method: "DELETE" }),
+  fileUrl: (path: string) => `${API_BASE}/fs/file?path=${encodeURIComponent(path)}`,
 };
 
 // ── Pipelines (คืน job_id) ────────────────────────────────

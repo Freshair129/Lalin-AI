@@ -1,8 +1,8 @@
 ---
-version: "0.2.1-candidate"
+version: "0.3.0-integrated"
 created_at: "2026-09-16T00:00:00+07:00,LALIN"
 last_update: "2026-09-16T00:00:00+07:00,LALIN"
-status: "proposed"
+status: "integrated"
 superseded_by: null
 attributes:
   domain: "product"
@@ -586,11 +586,12 @@ AI rule:
 
 ## 17. Status
 
-**PROPOSED — awaiting product/architecture approval.**
+**INTEGRATED — merged into canonical docs/product/SRS.md on 2026-09-16 (FR-16, FR-16W, FR-17, NFR-MP).**
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Agent |
 |---|---|---|---|---|
+| 0.3.0-integrated | 2026-09-16 | integrated | Merged into canonical SRS.md (FR-16, FR-16W, FR-17, NFR-MP); Phase 0 & Phase 1 approved for implementation | LALIN |
 | 0.2.1-candidate | 2026-09-16 | proposed | Added long-term roadmap and clarified approval boundaries: Phase 0–1 MVP; later phases require separate approval | LALIN |
 | 0.1.0-candidate | 2026-09-16 | proposed | Initial CR for Windows media player + playback EQ | LALIN |
