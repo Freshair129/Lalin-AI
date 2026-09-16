@@ -12,11 +12,22 @@
   "app": {
     "windows": [
       {
-        "title": "G-Music",
+        "label": "main",
+        "title": "Lalin Studio",
         "width": 1200,
         "height": 820,
         "minWidth": 900,
         "minHeight": 600
+      },
+      {
+        "label": "play",
+        "title": "Lalin Play",
+        "url": "/?surface=play",
+        "width": 960,
+        "height": 640,
+        "minWidth": 720,
+        "minHeight": 480,
+        "visible": false
       }
     ],
     "security": {

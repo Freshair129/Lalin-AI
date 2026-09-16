@@ -248,7 +248,8 @@ components:
     - {component: UpdateChecker.tsx,       role: "ปุ่มเช็คอัปเดต + overlay version/notes/ติดตั้ง/relaunch"}
     - {component: icons.tsx,               role: "ชุด line icon (stroke=currentColor) สำหรับ rail/nav"}
   media_player:                # Lalin Play (CR-001 / FR-16 / FR-17)
-    - {component: LalinPlayModal.tsx,      role: "surface หลัก Lalin Play — transport, queue, metadata, realtime spectrum visualizer"}
+    - {component: LalinPlayModal.tsx,      role: "surface หลัก Lalin Play (In-App modal prototype) — transport, queue, metadata, spectrum visualizer"}
+    - {component: LalinPlayWindow.tsx,     role: "standalone secondary Tauri window (Production Phase 1) — custom titlebar, independent surface, bridge listener"}
     - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager"}
 
 # ── REST API ─────────────────────────────────────────────────

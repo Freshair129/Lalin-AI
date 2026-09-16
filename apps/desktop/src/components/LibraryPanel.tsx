@@ -10,6 +10,8 @@ import { Icon } from "./icons";
 export const CLIP_DRAG_MIME = "text/gmusic-clip";
 export interface LibraryDragPayload { kind: "upload"; name: string; label: string; color: string; }
 
+import { openOrFocusPlayWindow, dispatchPlaybackBridgeMessage } from "../playback/windowManager";
+
 // Library (left sector) — เลือก sound/pack แบบ GarageBand
 export function LibraryPanel() {
   const [list, setList] = useState<Pack[]>([]);
@@ -43,16 +45,19 @@ export function LibraryPanel() {
               className="lib-play-btn"
               type="button"
               onClick={() => {
-                play({
+                const item = {
                   id: `pack:${sel.id}`,
                   title: sel.name,
                   artist: sel.author || "Library Pack",
                   url: files.inputUrl(sel.id),
-                  sourceKind: "upload",
+                  sourceKind: "upload" as const,
                   sourcePath: sel.id,
                   ext: "wav",
-                });
+                };
+                play(item);
                 setOpen(true);
+                dispatchPlaybackBridgeMessage({ type: "PLAY", item });
+                openOrFocusPlayWindow().catch(() => {});
               }}
               title="Play in Lalin Play"
             >

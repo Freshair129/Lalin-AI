@@ -1827,4 +1827,71 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   font-weight: 600;
 }
 
+/* ── Lalin Play Standalone Secondary Window (Phase 1) ──────────────── */
+.lalin-play-standalone-surface {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+  user-select: none;
+}
+
+.lalin-play-standalone-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.lalin-play-standalone-titlebar .lalin-play-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lalin-play-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.win-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg);
+}
+
+.win-ctrl-btn.close:hover {
+  background: #ff5555;
+  color: #ffffff;
+}
+
+.lalin-play-body.standalone {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  overflow: hidden;
+}
+
 

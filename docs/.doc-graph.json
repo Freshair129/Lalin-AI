@@ -1,24 +1,24 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-16T20:35:30+07:00",
+  "generated_at": "2026-09-16T20:50:04+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 318,
-    "total_edges": 342,
+    "total_nodes": 321,
+    "total_edges": 347,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (27/39)",
-      "requirements_with_tests": "20% (8/39)",
-      "code_files_referenced_by_docs": "1% (1/93)",
-      "code_files_with_tests": "12% (12/93)",
-      "structured_annotations_found": 173,
-      "unstructured_req_refs_found": 114
+      "requirements_with_tests": "23% (9/39)",
+      "code_files_referenced_by_docs": "1% (1/95)",
+      "code_files_with_tests": "13% (13/95)",
+      "structured_annotations_found": 193,
+      "unstructured_req_refs_found": 117
     }
   },
   "nodes": [
@@ -628,9 +628,9 @@
       "id": "code:apps/desktop/src/App.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/App.tsx",
-      "hash": "6ead1099cc0a",
+      "hash": "3dcc40d2c0da",
       "status": "current",
-      "last_verified": "2026-09-16T19:34:30+07:00"
+      "last_verified": "2026-09-16T20:49:54+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
@@ -700,9 +700,9 @@
       "id": "code:apps/desktop/src/components/FileManager.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/FileManager.tsx",
-      "hash": "3b2af0c611f4",
+      "hash": "3f409bdc3ae1",
       "status": "current",
-      "last_verified": "2026-09-16T19:34:30+07:00"
+      "last_verified": "2026-09-16T20:49:54+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/FxRack.tsx",
@@ -737,12 +737,20 @@
       "last_verified": "2026-09-16T20:24:32+07:00"
     },
     {
+      "id": "code:apps/desktop/src/components/LalinPlayWindow.tsx",
+      "type": "code_file",
+      "path": "apps/desktop/src/components/LalinPlayWindow.tsx",
+      "hash": "32b1e9b7839a",
+      "status": "current",
+      "last_verified": "2026-09-16T20:49:54+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/components/LibraryPanel.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/components/LibraryPanel.tsx",
-      "hash": "ac71a188f61f",
+      "hash": "ae10b3b6f7a9",
       "status": "current",
-      "last_verified": "2026-09-16T19:34:30+07:00"
+      "last_verified": "2026-09-16T20:49:54+07:00"
     },
     {
       "id": "code:apps/desktop/src/components/MarketplacePanel.tsx",
@@ -956,9 +964,9 @@
       "id": "code:apps/desktop/src/main.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/main.tsx",
-      "hash": "00e8415988f9",
+      "hash": "95f7bcc9ae43",
       "status": "current",
-      "last_verified": "2026-08-09T08:23:36+07:00"
+      "last_verified": "2026-09-16T20:49:54+07:00"
     },
     {
       "id": "code:apps/desktop/src/playback/audioContext.ts",
@@ -991,6 +999,14 @@
       "hash": "5fbaaa916d9c",
       "status": "current",
       "last_verified": "2026-09-16T20:24:32+07:00"
+    },
+    {
+      "id": "code:apps/desktop/src/playback/windowManager.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/playback/windowManager.ts",
+      "hash": "28f2bae89d63",
+      "status": "current",
+      "last_verified": "2026-09-16T20:49:54+07:00"
     },
     {
       "id": "code:apps/desktop/src/runtimeDevices.ts",
@@ -1163,10 +1179,10 @@
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "be82d260366c",
+      "hash": "c74f8c5568aa",
       "prev_hash": "be82d260366c",
-      "status": "current",
-      "last_verified": "2026-09-16T19:34:33+07:00"
+      "status": "changed",
+      "last_verified": "2026-09-16T20:50:04+07:00"
     },
     {
       "id": "doc:C-model-cards",
@@ -1206,7 +1222,7 @@
       "hash": "d8250e1ee71b",
       "prev_hash": "d8250e1ee71b",
       "status": "current",
-      "last_verified": "2026-08-23T17:47:09+07:00"
+      "last_verified": "2026-09-16T20:50:04+07:00"
     },
     {
       "id": "doc:CPU_GPU_DISTRIBUTION_STRATEGY",
@@ -2699,6 +2715,14 @@
       "last_verified": "2026-09-16T20:01:31+07:00"
     },
     {
+      "id": "test:apps/desktop/src/playback/windowManager.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/playback/windowManager.test.ts",
+      "hash": "cb6b7b9522f8",
+      "status": "current",
+      "last_verified": "2026-09-16T20:49:54+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/runtimeDevices.test.ts",
       "type": "test",
       "path": "apps/desktop/src/runtimeDevices.test.ts",
@@ -3557,6 +3581,20 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/desktop/src/components/LalinPlayWindow.tsx",
+      "to": "req:FR-16",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/components/LalinPlayWindow.tsx",
+      "to": "req:FR-17",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/components/LibraryPanel.tsx",
       "to": "req:FR-11",
       "type": "implements",
@@ -3804,6 +3842,13 @@
     {
       "from": "code:apps/desktop/src/playback/usePlaybackStore.ts",
       "to": "req:FR-17",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/desktop/src/playback/windowManager.ts",
+      "to": "req:FR-16",
       "type": "implements",
       "status": "current",
       "source": "code-scan"
@@ -5057,6 +5102,20 @@
     {
       "from": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "to": "req:NFR-02",
+      "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/playback/windowManager.test.ts",
+      "to": "code:apps/desktop/src/playback/windowManager.ts",
+      "type": "tests",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/playback/windowManager.test.ts",
+      "to": "req:FR-16",
       "type": "verifies",
       "status": "current",
       "source": "code-scan"

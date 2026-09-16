@@ -14,8 +14,11 @@ function iconFor(e: FsEntry): string {
 function join(path: string, name: string) { return path ? `${path}/${name}` : name; }
 function fmtSize(n: number) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
 
+import { openOrFocusPlayWindow, dispatchPlaybackBridgeMessage } from "../playback/windowManager";
+
 // Adobe-style file manager (browse/create/rename/delete/move ใน workspace)
 // @req FR-16.6 — Library/File Manager มี action Play, Play next, Add to queue
+// @req FR-16W.1 — Production Phase 1: Bridge commands to Secondary Play Window
 export function FileManager() {
   const [path, setPath] = useState("");
   const [entries, setEntries] = useState<FsEntry[]>([]);
@@ -30,7 +33,7 @@ export function FileManager() {
   const toMediaItem = useCallback((e: FsEntry): MediaItem => {
     const filePath = join(path, e.name);
     return {
-      id: `ws:${filePath}`,
+      id: `workspace:${filePath}`,
       title: e.name,
       artist: "Workspace",
       url: fs.fileUrl(filePath),
@@ -41,16 +44,23 @@ export function FileManager() {
   }, [path]);
 
   const handlePlay = useCallback((e: FsEntry) => {
-    play(toMediaItem(e));
+    const item = toMediaItem(e);
+    play(item);
     setOpen(true);
+    dispatchPlaybackBridgeMessage({ type: "PLAY", item });
+    openOrFocusPlayWindow().catch(() => {});
   }, [play, toMediaItem, setOpen]);
 
   const handlePlayNext = useCallback((e: FsEntry) => {
-    playNext(toMediaItem(e));
+    const item = toMediaItem(e);
+    playNext(item);
+    dispatchPlaybackBridgeMessage({ type: "PLAY_NEXT", item });
   }, [playNext, toMediaItem]);
 
   const handleAddToQueue = useCallback((e: FsEntry) => {
-    addToQueue(toMediaItem(e));
+    const item = toMediaItem(e);
+    addToQueue(item);
+    dispatchPlaybackBridgeMessage({ type: "ADD_TO_QUEUE", item });
   }, [addToQueue, toMediaItem]);
 
   const load = useCallback((p: string) => {

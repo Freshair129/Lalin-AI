@@ -15,6 +15,7 @@ import { MarketplacePanel } from "./components/MarketplacePanel";
 import { PluginsPanel } from "./components/PluginsPanel";
 import { UpdateChecker } from "./components/UpdateChecker";
 import { LalinPlayModal } from "./components/LalinPlayModal";
+import { openOrFocusPlayWindow } from "./playback/windowManager";
 import { Icon } from "./components/icons";
 import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
@@ -84,8 +85,11 @@ export default function App() {
           <button
             type="button"
             className={`topbar-play-pill ${nowPlaying.state === "playing" ? "playing" : ""}`}
-            onClick={() => setPlayOpen(true)}
-            title="Open Lalin Play (Windows Media Player + EQ)"
+            onClick={() => {
+              setPlayOpen(true);
+              openOrFocusPlayWindow().catch(() => {});
+            }}
+            title="Open Lalin Play (Secondary Window & Media Player)"
           >
             <span className="play-pill-indicator">{nowPlaying.state === "playing" ? "▶" : "🎵"}</span>
             <span className="play-pill-label">{nowPlaying.item ? nowPlaying.item.title : "Lalin Play"}</span>
