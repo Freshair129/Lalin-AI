@@ -258,7 +258,7 @@
         <article class="readiness"><span class="status real">REAL</span><h3>Repo + architecture</h3><p>GitHub repo renamed to Lalin-AI. Root workspace, contracts package, MCP server, release workflow path repair, and docs SOT are implemented.</p></article>
         <article class="readiness"><span class="status real">REAL</span><h3>Desktop/API codebase</h3><p>React/Tauri desktop, FastAPI backend routes, runtime telemetry, jobs, TTS, dubbing, mastering, Arrange, and MCP contracts exist in code.</p></article>
         <article class="readiness"><span class="status mock">MOCKUP</span><h3>Final Lalin visual shell</h3><p>Approved W0 and tab mockups exist. Treat visual polish and full tab parity as design-approved implementation work, not fully shipped UI.</p></article>
-        <article class="readiness"><span class="status pending">PENDING</span><h3>One-click installer</h3><p>Sidecar and signing key exist, but current NSIS installer build did not complete in the presentation window. Demo via dev runtime today.</p></article>
+        <article class="readiness"><span class="status real">LOCAL SMOKE PASS</span><h3>One-click installer</h3><p>An unsigned NSIS installer exists and passed an isolated install/runtime smoke with the full-profile sidecar. Signed release and clean-VM acceptance remain pending.</p></article>
         <article class="readiness"><span class="status real">REAL</span><h3>Local model story</h3><p>Ollama/provider abstraction and local-first runtime design are documented. Heavy ML deps remain lazy/optional for practical startup.</p></article>
         <article class="readiness"><span class="status mock">MOCKUP</span><h3>Public download page</h3><p>This page is a local presentation landing page. Publish/download automation can be the next release gate after installer build is stable.</p></article>
       </div>
@@ -285,11 +285,11 @@ cd D:\G-Music\apps\desktop
 npm run dev</code>
         </article>
         <article class="demo-card">
-          <span class="status pending">INSTALLER PENDING</span>
+          <span class="status real">LOCAL SMOKE PASS</span>
           <h3>One-click install</h3>
-          <p>Expected local artifact path after a successful package build:</p>
-          <code>D:\G-Music\apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe</code>
-          <p style="margin-top:14px">Keep this as pending today unless the artifact is created and smoke-tested before presentation.</p>
+          <p>Local artifact path after the package build:</p>
+          <code>apps/desktop/src-tauri/target/release/bundle/nsis/G-Music_0.1.0_x64-setup.exe</code>
+          <p style="margin-top:14px">This is unsigned local evidence; signed release and clean-VM acceptance remain separate gates.</p>
         </article>
       </div>
     </section>

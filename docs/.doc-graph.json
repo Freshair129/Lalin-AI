@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-17T04:34:31+07:00",
+  "generated_at": "2026-09-17T04:59:06+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 331,
-    "total_edges": 366,
+    "total_edges": 367,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1163,10 +1163,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md",
       "title": "2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
-      "hash": "265ca37873de",
-      "prev_hash": "265ca37873de",
+      "hash": "0e929e28abc4",
+      "prev_hash": "0e929e28abc4",
       "status": "current",
-      "last_verified": "2026-09-17T04:34:31+07:00"
+      "last_verified": "2026-09-17T04:58:36+07:00"
     },
     {
       "id": "doc:2026-09-17-SIDECAR-BUILD",
@@ -1833,10 +1833,10 @@
       "type": "document",
       "path": "docs/presentation/lalin-ai-launch/READINESS.md",
       "title": "READINESS",
-      "hash": "7de22ae93777",
-      "prev_hash": "7de22ae93777",
+      "hash": "2d2839060ce3",
+      "prev_hash": "2d2839060ce3",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-09-17T04:58:36+07:00"
     },
     {
       "id": "doc:REFERENCE_MANIFEST",
@@ -2373,10 +2373,10 @@
       "type": "document",
       "path": "docs/presentation/lalin-ai-launch/index.html",
       "title": "index",
-      "hash": "454798f2448d",
-      "prev_hash": "454798f2448d",
+      "hash": "9be50bfaaec4",
+      "prev_hash": "9be50bfaaec4",
       "status": "current",
-      "last_verified": "2026-08-09T08:31:25+07:00"
+      "last_verified": "2026-09-17T04:59:06+07:00"
     },
     {
       "id": "doc:model-lifecycle",
@@ -4957,6 +4957,13 @@
     {
       "from": "doc:RCA--LOCAL-LLM-DISPATCH",
       "to": "doc:REPORT--LOCAL-LLM-DISPATCH",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:READINESS",
+      "to": "doc:2026-09-17-SIDECAR-BUILD",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

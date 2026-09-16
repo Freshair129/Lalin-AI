@@ -16,7 +16,7 @@ start D:\G-Music\docs\presentation\lalin-ai-launch\index.html
 2. Show the repo rename: `Freshair129/Lalin-AI`.
 3. Show the approved Lalin mockups and clearly call them `Mockup`.
 4. Demo the real app through local dev runtime if backend starts cleanly.
-5. Do not promise one-click installer unless the NSIS artifact exists and is smoke-tested.
+5. Describe the one-click installer as locally smoke-tested only; do not present it as a signed or clean-VM release.
 
 ## Real today
 
@@ -33,23 +33,24 @@ start D:\G-Music\docs\presentation\lalin-ai-launch\index.html
 
 - Final Lalin visual shell and all tab mockups are approved references, not all fully implemented UI states.
 - Public download landing page is local presentation material, not a hosted production page yet.
-- One-click installer is pending until `G-Music_0.1.0_x64-setup.exe` exists and passes smoke.
+- Local unsigned one-click installer exists and passed an isolated install/runtime smoke; signed release and clean-VM acceptance remain open.
 
 ## Installer status
 
 Expected artifact:
 
 ```text
-D:\G-Music\apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe
+apps/desktop/src-tauri/target/release/bundle/nsis/G-Music_0.1.0_x64-setup.exe
 ```
 
 Current presentation-safe status:
 
-- Sidecar binary exists.
-- Signing key exists.
-- Installer build was attempted.
-- Frontend build passed during installer attempt.
-- Tauri/Rust release build did not produce the NSIS artifact inside the presentation window.
+- Full-profile sidecar binary exists with its adjacent `_internal/` payload.
+- Unsigned NSIS installer exists and passed an isolated install/runtime smoke.
+- Installed app started the sidecar on port 8756 and returned `/health` HTTP 200.
+- Evidence: [sidecar and installer validation](../../validation/2026-09-17-SIDECAR-BUILD.md); installer SHA-256 `94EEBBC4CD9E0C209F267C2A6E857EC90DB5B2AD5705DADA877081B038242D7A`.
+- The checkout has no `keys/g-music.key`; signed updater artifacts were not produced.
+- Clean-VM acceptance and model inference remain separate, unrun gates.
 
 ## Demo commands
 
