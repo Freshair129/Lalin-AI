@@ -1,7 +1,7 @@
 ---
 version: "0.1.1b"
 created_at: "2026-09-17T23:33:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T00:17:44+07:00,LALIN"
+last_update: "2026-09-18T00:55:57+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -46,6 +46,8 @@ clean-VM acceptance and model inference remain separate gates.
   plans' section in your settings`.
 - A controlled rerun of the same run (attempt 2, job `105305479891`) concluded
   `failure` again in three seconds with the identical pre-run billing annotation.
+- A final controlled rerun (attempt 3, job `105318554292`) concluded `failure`
+  in seven seconds with the identical annotation; retries are now stopped.
 - No `v0.1.1` GitHub release or signed `.exe`, `.exe.sig` and `latest.json`
   assets were created. Existing draft `v0.1.0` remains unchanged and historical.
 - This external account restriction is documented in
@@ -93,6 +95,7 @@ failure reason; do not alter the existing `v0.1.0` draft.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.4b | 2026-09-18 | beta | Recorded final controlled rerun attempt 3 and stopped retries after the repeated GitHub billing restriction. | pending provenance follow-up | LALIN |
 | 0.1.3b | 2026-09-18 | beta | Recorded the controlled rerun and repeated GitHub billing restriction for tag v0.1.1. | pending provenance follow-up | LALIN |
 | 0.1.2b | 2026-09-18 | beta | Recorded tag v0.1.1 and the GitHub billing restriction that prevented the draft workflow from starting. | pending provenance follow-up | LALIN |
 | 0.1.1b | 2026-09-17 | beta | Update the release candidate provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
