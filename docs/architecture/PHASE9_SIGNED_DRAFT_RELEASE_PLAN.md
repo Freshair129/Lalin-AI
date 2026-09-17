@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-17T23:33:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-17T23:33:00+07:00,LALIN"
+last_update: "2026-09-17T23:55:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 ## Decision
 
-Use merge commit `f83d440ebe766c1bd43f51f073145cfb60d24d32` as the release
+Use merge commit `d5530677b4c20bf75c98a321bde5dde08a29f1b4` as the release
 candidate and set the product version to `0.1.1`. The existing draft release
 `v0.1.0` is retained as historical evidence because it targets
 `672aa186479a03ac702566358de38751f388f87a`; it must not be overwritten or
@@ -30,7 +30,7 @@ clean-VM acceptance and model inference remain separate gates.
 
 ## Current evidence
 
-- `swarm/local-llm-refine` is clean at `f83d440ebe766c1bd43f51f073145cfb60d24d32`.
+- `swarm/local-llm-refine` is clean at `d5530677b4c20bf75c98a321bde5dde08a29f1b4`.
 - Local full-profile sidecar and unsigned NSIS installer passed independent runtime smoke; their generated files remain ignored.
 - GitHub Actions has the secret name `TAURI_SIGNING_PRIVATE_KEY`; its value is never read through chat or committed.
 - Draft `v0.1.0` has `.exe`, `.exe.sig` and `latest.json`, but its target commit is the older `672aa18`.
@@ -76,4 +76,5 @@ failure reason; do not alter the existing `v0.1.0` draft.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-17 | beta | Update the release candidate provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
 | 0.1.0b | 2026-09-17 | beta | Approved plan for a versioned signed draft release from merge commit f83d440. | uncommitted | LALIN |

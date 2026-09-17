@@ -9,7 +9,7 @@ this checkout or the newly generated artifact.
 
 ## Current signed-draft boundary (2026-09-17)
 
-- Current release candidate: merge commit `f83d440ebe766c1bd43f51f073145cfb60d24d32` on `swarm/local-llm-refine`.
+- Current release candidate: merge commit `d5530677b4c20bf75c98a321bde5dde08a29f1b4` on `swarm/local-llm-refine`.
 - Local full-profile sidecar and unsigned NSIS installer passed independent runtime smoke; exact hashes and the installed layout are recorded in [sidecar build validation](../validation/2026-09-17-SIDECAR-BUILD.md).
 - GitHub Actions has the `TAURI_SIGNING_PRIVATE_KEY` secret name and the existing workflow creates draft releases only.
 - Existing draft `v0.1.0` is retained as historical evidence for commit `672aa186479a03ac702566358de38751f388f87a`; it is not the current candidate.
