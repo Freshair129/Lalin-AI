@@ -33,7 +33,7 @@ attributes:
 - `docs/architecture/PHASE6_WORKSPACE_ORCHESTRATION_PLAN.md`: executed root workspace orchestration plan.
 - `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`: executed GitHub Actions release workflow repair plan.
 - `docs/architecture/PHASE8_REPO_RENAME_PRESENTATION_READINESS.md`: executed GitHub repository rename and presentation readiness note.
-- `docs/architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md`: approved signed draft release plan for merge commit `f83d440` and version `0.1.1`.
+- `docs/architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md`: approved signed draft release plan for merge commit `d553067` and version `0.1.1`.
 - `docs/architecture/SPEC.md`: technical system specification.
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/architecture/API_SEMANTICS.md`: พฤติกรรมของ REST/WS ที่อ่านจาก OpenAPI schema ไม่ได้ (state, ลำดับ, error ที่ไม่ตรงสัญชาตญาณ).
@@ -113,6 +113,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.20b | 2026-09-17 | beta | Updated Phase 9 release provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
 | 0.1.19b | 2026-09-17 | beta | Indexed the Phase 9 signed draft release plan for version 0.1.1. | uncommitted | LALIN |
 | 0.1.18b | 2026-09-17 | beta | Index requested sidecar build and runtime verification. | included with source repair | LALIN |
 | 0.1.17b | 2026-09-17 | beta | Index approved playback remediation and scoped native/browser validation. | uncommitted | LALIN |
