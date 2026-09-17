@@ -7,6 +7,15 @@ Current local build evidence (2026-09-17) is recorded in
 The older workstation/release evidence below is historical, not a validation of
 this checkout or the newly generated artifact.
 
+## Current signed-draft boundary (2026-09-17)
+
+- Current release candidate: merge commit `f83d440ebe766c1bd43f51f073145cfb60d24d32` on `swarm/local-llm-refine`.
+- Local full-profile sidecar and unsigned NSIS installer passed independent runtime smoke; exact hashes and the installed layout are recorded in [sidecar build validation](../validation/2026-09-17-SIDECAR-BUILD.md).
+- GitHub Actions has the `TAURI_SIGNING_PRIVATE_KEY` secret name and the existing workflow creates draft releases only.
+- Existing draft `v0.1.0` is retained as historical evidence for commit `672aa186479a03ac702566358de38751f388f87a`; it is not the current candidate.
+- The approved next candidate is version `0.1.1`, subject to [Phase 9 signed draft release plan](../architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md).
+- Signed updater assets, clean-VM acceptance and model inference remain separate gates until the versioned workflow run produces fresh artifacts.
+
 Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/dubbing/mastering/remix feature smoke are validated on this Windows workspace.
 
 Validated:

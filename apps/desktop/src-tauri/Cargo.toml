@@ -1,6 +1,6 @@
 [package]
 name = "g-music"
-version = "0.1.0"
+version = "0.1.1"
 description = "G-Music — Voice cloning, dubbing & mastering"
 edition = "2021"
 
