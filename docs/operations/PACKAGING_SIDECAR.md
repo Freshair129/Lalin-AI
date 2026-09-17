@@ -19,6 +19,8 @@ this checkout or the newly generated artifact.
   restriction; no current signed release assets exist.
 - The controlled rerun (attempt 2, job `105305479891`) hit the same pre-run
   restriction; no source or tag change was made.
+- Final controlled rerun attempt 3 (job `105318554292`) hit the same restriction;
+  retries are stopped until account billing is resolved.
 - Signed updater assets, clean-VM acceptance and model inference remain separate gates until the versioned workflow run produces fresh artifacts.
 
 Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/dubbing/mastering/remix feature smoke are validated on this Windows workspace.

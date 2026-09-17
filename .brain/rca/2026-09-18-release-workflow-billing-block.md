@@ -1,7 +1,7 @@
 ---
 version: "0.1.1b"
 created_at: "2026-09-18T00:04:01+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T00:17:44+07:00,LALIN"
+last_update: "2026-09-18T00:55:57+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -27,13 +27,16 @@ draft release was produced.
    completed in four seconds with conclusion `failure`.
 3. A controlled rerun produced attempt 2, job `105305479891`, which completed in
    three seconds with the same conclusion and no executed project steps.
-4. Both attempts have no executed steps or job log. The repeated annotation is:
+4. A final controlled rerun produced attempt 3, job `105318554292`, which
+   completed in seven seconds with the same conclusion and no executed project
+   steps.
+5. All three attempts have no executed steps or job log. The repeated annotation is:
    `The job was not started because recent account payments have failed or your
    spending limit needs to be increased. Please check the 'Billing & plans'
    section in your settings`.
-5. `gh release list` shows only the existing draft `G-Music v0.1.0`; there is no
+6. `gh release list` shows only the existing draft `G-Music v0.1.0`; there is no
    `v0.1.1` release to inspect or overwrite.
-6. Local release gates already passed before tagging: root checks, 177 desktop
+7. Local release gates already passed before tagging: root checks, 177 desktop
    tests, 86 backend tests, locked Cargo check, version consistency and stable
    doc-graph scans.
 
@@ -93,13 +96,14 @@ as usable release evidence.
 
 ## Resolution Status
 
-Blocked on GitHub account billing/spending-limit remediation. The controlled
-rerun repeated the pre-run admission failure, so no repository source fix is
-authorized or required for this RCA.
+Blocked on GitHub account billing/spending-limit remediation. Three controlled
+attempts (including the final attempt 3) repeated the pre-run admission failure,
+so no repository source fix is authorized or required for this RCA.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-18 | beta | Recorded final controlled rerun attempt 3 and stopped retries after the repeated pre-run billing restriction. | pending provenance follow-up | LALIN |
 | 0.1.1b | 2026-09-18 | beta | Recorded controlled rerun attempt 2 and the repeated pre-run billing restriction. | pending provenance follow-up | LALIN |
 | 0.1.0b | 2026-09-18 | beta | Recorded the pre-run GitHub billing restriction for the v0.1.1 signed draft workflow. | pending provenance follow-up | LALIN |
