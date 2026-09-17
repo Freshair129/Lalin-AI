@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-18T00:04:01+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T00:04:01+07:00,LALIN"
+last_update: "2026-09-18T00:17:44+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -23,15 +23,17 @@ draft release was produced.
 1. Tag `v0.1.1` is present on the remote and its peeled commit is
    `d5530677b4c20bf75c98a321bde5dde08a29f1b4`, the intended version commit.
 2. GitHub Actions run `35249842440` has event `push`, head branch `v0.1.1`,
-   head SHA `d5530677b4c20bf75c98a321bde5dde08a29f1b4`, and completed in four
-   seconds with conclusion `failure`.
-3. The run has no executed steps or job log. Its annotation is:
+   head SHA `d5530677b4c20bf75c98a321bde5dde08a29f1b4`, and its first attempt
+   completed in four seconds with conclusion `failure`.
+3. A controlled rerun produced attempt 2, job `105305479891`, which completed in
+   three seconds with the same conclusion and no executed project steps.
+4. Both attempts have no executed steps or job log. The repeated annotation is:
    `The job was not started because recent account payments have failed or your
    spending limit needs to be increased. Please check the 'Billing & plans'
    section in your settings`.
-4. `gh release list` shows only the existing draft `G-Music v0.1.0`; there is no
+5. `gh release list` shows only the existing draft `G-Music v0.1.0`; there is no
    `v0.1.1` release to inspect or overwrite.
-5. Local release gates already passed before tagging: root checks, 177 desktop
+6. Local release gates already passed before tagging: root checks, 177 desktop
    tests, 86 backend tests, locked Cargo check, version consistency and stable
    doc-graph scans.
 
@@ -91,11 +93,13 @@ as usable release evidence.
 
 ## Resolution Status
 
-Blocked on GitHub account billing/spending-limit remediation. No repository
-source fix is authorized or required for this RCA.
+Blocked on GitHub account billing/spending-limit remediation. The controlled
+rerun repeated the pre-run admission failure, so no repository source fix is
+authorized or required for this RCA.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-18 | beta | Recorded controlled rerun attempt 2 and the repeated pre-run billing restriction. | pending provenance follow-up | LALIN |
 | 0.1.0b | 2026-09-18 | beta | Recorded the pre-run GitHub billing restriction for the v0.1.1 signed draft workflow. | pending provenance follow-up | LALIN |
