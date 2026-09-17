@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-17T23:52:51+07:00",
+  "generated_at": "2026-09-18T00:06:47+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1313,10 +1313,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "26ce85ce06da",
-      "prev_hash": "26ce85ce06da",
+      "hash": "3452e498c90a",
+      "prev_hash": "3452e498c90a",
       "status": "current",
-      "last_verified": "2026-09-17T23:52:51+07:00"
+      "last_verified": "2026-09-18T00:06:47+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1673,10 +1673,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "b96e4510c11f",
-      "prev_hash": "b96e4510c11f",
+      "hash": "4821febf50b1",
+      "prev_hash": "4821febf50b1",
       "status": "current",
-      "last_verified": "2026-09-17T23:52:51+07:00"
+      "last_verified": "2026-09-18T00:06:47+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1763,10 +1763,10 @@
       "type": "document",
       "path": "docs/architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md",
       "title": "PHASE9_SIGNED_DRAFT_RELEASE_PLAN",
-      "hash": "5db600217066",
-      "prev_hash": "5db600217066",
+      "hash": "29ba90e3e8b7",
+      "prev_hash": "29ba90e3e8b7",
       "status": "current",
-      "last_verified": "2026-09-17T23:52:51+07:00"
+      "last_verified": "2026-09-18T00:06:47+07:00"
     },
     {
       "id": "doc:PHASE_0_REVIEW",

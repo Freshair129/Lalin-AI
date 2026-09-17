@@ -1,7 +1,7 @@
 ---
-version: "0.1.19b"
+version: "0.1.21b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-17T23:33:00+07:00,LALIN"
+last_update: "2026-09-18T00:04:01+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -89,6 +89,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-17-SIDECAR-BUILD.md`: local sidecar build, exact artifact hash, Python environment and independent runtime checks.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
+- `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
 - `docs/rca/RCA--LOCAL-LLM-DISPATCH.md`
 - `docs/rca/REPORT--LOCAL-LLM-DISPATCH.md`
@@ -113,6 +114,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.21b | 2026-09-18 | beta | Indexed the v0.1.1 release workflow billing-block RCA and updated current release evidence. | pending provenance follow-up | LALIN |
 | 0.1.20b | 2026-09-17 | beta | Updated Phase 9 release provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
 | 0.1.19b | 2026-09-17 | beta | Indexed the Phase 9 signed draft release plan for version 0.1.1. | uncommitted | LALIN |
 | 0.1.18b | 2026-09-17 | beta | Index requested sidecar build and runtime verification. | included with source repair | LALIN |
