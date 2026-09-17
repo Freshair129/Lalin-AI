@@ -1,7 +1,7 @@
 ---
-version: "0.1.21b"
+version: "0.1.22b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-18T00:04:01+07:00,LALIN"
+last_update: "2026-09-18T00:17:44+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -114,6 +114,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.22b | 2026-09-18 | beta | Indexed the controlled rerun and repeated GitHub billing blocker for the v0.1.1 release workflow. | pending provenance follow-up | LALIN |
 | 0.1.21b | 2026-09-18 | beta | Indexed the v0.1.1 release workflow billing-block RCA and updated current release evidence. | pending provenance follow-up | LALIN |
 | 0.1.20b | 2026-09-17 | beta | Updated Phase 9 release provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
 | 0.1.19b | 2026-09-17 | beta | Indexed the Phase 9 signed draft release plan for version 0.1.1. | uncommitted | LALIN |
