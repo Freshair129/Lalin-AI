@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-17T04:59:06+07:00",
+  "generated_at": "2026-09-17T23:46:46+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 331,
-    "total_edges": 367,
+    "total_nodes": 332,
+    "total_edges": 368,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1313,10 +1313,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "a759a1af5427",
-      "prev_hash": "a759a1af5427",
+      "hash": "aba5d323f110",
+      "prev_hash": "aba5d323f110",
       "status": "current",
-      "last_verified": "2026-09-17T04:12:44+07:00"
+      "last_verified": "2026-09-17T23:46:46+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1673,10 +1673,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "3400086d2106",
-      "prev_hash": "3400086d2106",
+      "hash": "57cee2ecc955",
+      "prev_hash": "57cee2ecc955",
       "status": "current",
-      "last_verified": "2026-09-17T04:12:44+07:00"
+      "last_verified": "2026-09-17T23:46:46+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1757,6 +1757,16 @@
       "prev_hash": "34f39585373c",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:PHASE9_SIGNED_DRAFT_RELEASE_PLAN",
+      "type": "document",
+      "path": "docs/architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md",
+      "title": "PHASE9_SIGNED_DRAFT_RELEASE_PLAN",
+      "hash": "52976c1b0ac8",
+      "prev_hash": "52976c1b0ac8",
+      "status": "current",
+      "last_verified": "2026-09-17T23:46:46+07:00"
     },
     {
       "id": "doc:PHASE_0_REVIEW",
@@ -4922,6 +4932,13 @@
     {
       "from": "doc:PACKAGING_SIDECAR",
       "to": "doc:2026-09-17-SIDECAR-BUILD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PACKAGING_SIDECAR",
+      "to": "doc:PHASE9_SIGNED_DRAFT_RELEASE_PLAN",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
