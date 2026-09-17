@@ -14,6 +14,9 @@ this checkout or the newly generated artifact.
 - GitHub Actions has the `TAURI_SIGNING_PRIVATE_KEY` secret name and the existing workflow creates draft releases only.
 - Existing draft `v0.1.0` is retained as historical evidence for commit `672aa186479a03ac702566358de38751f388f87a`; it is not the current candidate.
 - The approved next candidate is version `0.1.1`, subject to [Phase 9 signed draft release plan](../architecture/PHASE9_SIGNED_DRAFT_RELEASE_PLAN.md).
+- Tag `v0.1.1` points to the candidate commit, but workflow run `35249842440`
+  was blocked before runner start by a GitHub account billing/spending-limit
+  restriction; no current signed release assets exist.
 - Signed updater assets, clean-VM acceptance and model inference remain separate gates until the versioned workflow run produces fresh artifacts.
 
 Status as of 2026-07-03: lite-profile sidecar build, runtime smoke, local NSIS installer artifact generation, installed-app smoke, installed PyInstaller resource layout, full-profile readiness, and workstation TTS/dubbing/mastering/remix feature smoke are validated on this Windows workspace.

@@ -1,7 +1,7 @@
 ---
 version: "0.1.1b"
 created_at: "2026-09-17T23:33:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-17T23:55:00+07:00,LALIN"
+last_update: "2026-09-18T00:04:01+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -30,11 +30,26 @@ clean-VM acceptance and model inference remain separate gates.
 
 ## Current evidence
 
-- `swarm/local-llm-refine` is clean at `d5530677b4c20bf75c98a321bde5dde08a29f1b4`.
+- Release candidate commit `d5530677b4c20bf75c98a321bde5dde08a29f1b4` is the exact peeled target of the pushed annotated tag `v0.1.1`; the base branch now also contains the docs-only provenance follow-up `d17a6ea4388faa56bf14847760c15b3981edac91`.
 - Local full-profile sidecar and unsigned NSIS installer passed independent runtime smoke; their generated files remain ignored.
 - GitHub Actions has the secret name `TAURI_SIGNING_PRIVATE_KEY`; its value is never read through chat or committed.
 - Draft `v0.1.0` has `.exe`, `.exe.sig` and `latest.json`, but its target commit is the older `672aa18`.
 - The release workflow triggers on `v*`, runs `npm run check:all`, desktop/backend tests, builds the full-profile sidecar and requests a draft release with updater JSON.
+
+## Latest execution result
+
+- Tag `v0.1.1` was pushed and GitHub Actions run `35249842440` resolved to the
+  intended head SHA `d5530677b4c20bf75c98a321bde5dde08a29f1b4`.
+- The run concluded `failure` before any job step started (four seconds). GitHub
+  reported: `The job was not started because recent account payments have failed
+  or your spending limit needs to be increased. Please check the 'Billing &
+  plans' section in your settings`.
+- No `v0.1.1` GitHub release or signed `.exe`, `.exe.sig` and `latest.json`
+  assets were created. Existing draft `v0.1.0` remains unchanged and historical.
+- This external account restriction is documented in
+  [RCA: GitHub Actions release workflow blocked by account billing](../../.brain/rca/2026-09-18-release-workflow-billing-block.md).
+- After the account restriction is resolved, rerun the existing tag workflow;
+  no source or signing-key change is proposed for this blocker.
 
 ## Approved scope
 
@@ -76,5 +91,6 @@ failure reason; do not alter the existing `v0.1.0` draft.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-18 | beta | Recorded tag v0.1.1 and the GitHub billing restriction that prevented the draft workflow from starting. | pending provenance follow-up | LALIN |
 | 0.1.1b | 2026-09-17 | beta | Update the release candidate provenance to the merged version commit d553067. | pending provenance follow-up | LALIN |
 | 0.1.0b | 2026-09-17 | beta | Approved plan for a versioned signed draft release from merge commit f83d440. | uncommitted | LALIN |
