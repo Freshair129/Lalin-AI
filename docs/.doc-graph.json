@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-18T01:00:02+07:00",
+  "generated_at": "2026-09-18T02:07:25+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1313,10 +1313,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "b0d0e84df4ed",
-      "prev_hash": "b0d0e84df4ed",
+      "hash": "7e960e836241",
+      "prev_hash": "7e960e836241",
       "status": "current",
-      "last_verified": "2026-09-18T01:00:02+07:00"
+      "last_verified": "2026-09-18T02:07:25+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1673,10 +1673,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "03a143db0e75",
-      "prev_hash": "03a143db0e75",
+      "hash": "e10b181110b0",
+      "prev_hash": "e10b181110b0",
       "status": "current",
-      "last_verified": "2026-09-18T01:00:02+07:00"
+      "last_verified": "2026-09-18T02:07:25+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",

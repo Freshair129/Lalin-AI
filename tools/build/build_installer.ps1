@@ -7,13 +7,33 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
 $keyPath = Join-Path $root "keys\g-music.key"
 $frontendDir = Join-Path $root "apps\desktop"
+$tauriConfigPath = Join-Path $frontendDir "src-tauri\tauri.conf.json"
 $bundleDir = Join-Path $frontendDir "src-tauri\target\release\bundle\nsis"
 $tauriCli = Join-Path $frontendDir "node_modules\.bin\tauri.cmd"
-$setupPath = Join-Path $bundleDir "G-Music_0.1.0_x64-setup.exe"
-$setupSigPath = Join-Path $bundleDir "G-Music_0.1.0_x64-setup.exe.sig"
 $buildLog = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-build.log"
 $buildErr = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-build.err"
 $releaseBuildConfig = Join-Path $frontendDir "src-tauri\target\release\bundle\tauri-release-no-updater.json"
+
+if (-not (Test-Path $tauriConfigPath)) {
+    Write-Host "[!] Missing Tauri config: $tauriConfigPath" -ForegroundColor Red
+    exit 1
+}
+
+try {
+    $tauriConfig = Get-Content $tauriConfigPath -Raw | ConvertFrom-Json
+    $version = [string]$tauriConfig.version
+} catch {
+    Write-Host "[!] Could not read Tauri version from $tauriConfigPath" -ForegroundColor Red
+    exit 1
+}
+
+if ([string]::IsNullOrWhiteSpace($version)) {
+    Write-Host "[!] Tauri config does not define a release version." -ForegroundColor Red
+    exit 1
+}
+
+$setupPath = Join-Path $bundleDir ("G-Music_{0}_x64-setup.exe" -f $version)
+$setupSigPath = "$setupPath.sig"
 
 function Test-ArtifactReady {
     param(

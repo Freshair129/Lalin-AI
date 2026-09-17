@@ -1,7 +1,7 @@
 ---
-version: "0.1.22b"
+version: "0.1.24b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-18T00:55:57+07:00,LALIN"
+last_update: "2026-09-18T02:04:31+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -90,6 +90,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
+- `.brain/rca/2026-09-18-installer-version-hardcode.md`: documented the local packaging filename drift after the 0.1.1 version bump.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
 - `docs/rca/RCA--LOCAL-LLM-DISPATCH.md`
 - `docs/rca/REPORT--LOCAL-LLM-DISPATCH.md`
@@ -114,6 +115,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.24b | 2026-09-18 | beta | Indexed the local installer version-drift RCA and local-only packaging fix. | pending local commit | LALIN |
 | 0.1.23b | 2026-09-18 | beta | Indexed final rerun attempt 3 and stopped retries after the repeated GitHub billing blocker. | pending provenance follow-up | LALIN |
 | 0.1.22b | 2026-09-18 | beta | Indexed the controlled rerun and repeated GitHub billing blocker for the v0.1.1 release workflow. | pending provenance follow-up | LALIN |
 | 0.1.21b | 2026-09-18 | beta | Indexed the v0.1.1 release workflow billing-block RCA and updated current release evidence. | pending provenance follow-up | LALIN |
