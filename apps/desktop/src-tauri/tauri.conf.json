@@ -64,7 +64,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNUNFOEZFRUI5RkUwQ0EKUldUSzRKL3IvdWhjK3VFM1pWbDZYeVlIYllDMDlCd0ROeEpYcjNjZ1g5WjhYdDJwbzlSOGh5dVoK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEyQ0Y0Njg4NEU2QjU0MTcKUldRWFZHdE9pRWJQb25lYWVrcFMrNWZFUTh2RWFESHl6WWp4ZHdudTZhMm5zaDFmN1l3bmxTbWwK",
       "endpoints": [
         "https://github.com/Freshair129/G-Music/releases/latest/download/latest.json"
       ],
