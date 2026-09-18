@@ -65,11 +65,24 @@
 
 ---
 
-## 5. หนี้ที่พบระหว่างจด
+## 5. Lalin Play TV presentation (CR-002 / FR-18)
+
+| Component / adapter | ใช้ที่ไหน | หน้าที่ + สัญญาสำคัญ |
+|---|---|---|
+| **LalinPlayWindow** | `play` surface | เจ้าของ consumer playback เพียงจุดเดียว; สลับ normal/TV presentation โดยไม่ reset queue, EQ หรือ Now Playing; มีปุ่มเข้า/ออกและ stable accessibility hooks |
+| **tvMode.ts** | `LalinPlayWindow` | pure keyboard/gamepad semantic mapping และ lifecycle cleanup; ไม่เรียก backend และไม่สร้าง engine |
+| **windowManager fullscreen adapter** | `LalinPlayWindow` | native `play` window หรือ browser Fullscreen API; รายงาน actual state และ Thai error เมื่อ unavailable |
+
+TV layout และ focus order อยู่ใน [LALIN_PLAY_TV_MODE_SPEC.md](LALIN_PLAY_TV_MODE_SPEC.md)
+และ architecture boundary อยู่ใน [LALIN_PLAY_TV_MODE_PLAN.md](../architecture/LALIN_PLAY_TV_MODE_PLAN.md)
+
+---
+## 6. หนี้ที่พบระหว่างจด
 
 - [ ] ลบ `Timeline.tsx` ที่ไม่ถูกเรนเดอร์แล้ว — ต้องย้าย `export type TrackView` ออกไปที่ store/types ก่อน
 - [x] `@req` annotation ครบทั้ง `apps/api` + `apps/desktop` แล้ว (78 ไฟล์) — `requirements_with_code_annotations` = 100% (22/22)
 - [x] `BLUEPRINT.yaml § sitemap` + `§ views` resync กับ Lalin Studio shell 8 แท็บแล้ว — product IA ยังอ่านที่ [LALIN_SITEMAP_SOT.md](LALIN_SITEMAP_SOT.md)
+- [x] Lalin Play TV presentation contract mapped to `LalinPlayWindow` and the playback fullscreen/input adapters
 
 ---
 

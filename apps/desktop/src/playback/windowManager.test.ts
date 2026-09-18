@@ -2,9 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   bindPlayWindowClose,
   hideOrCloseCurrentWindow,
+  isCurrentPlayWindowFullscreen,
   isTauri,
   minimizeCurrentWindow,
   openOrFocusPlayWindow,
+  setCurrentPlayWindowFullscreen,
   toggleMaximizeCurrentWindow,
 } from "./windowManager";
 import {
@@ -34,8 +36,10 @@ function makePlayWindow(overrides: Partial<Record<string, unknown>> = {}) {
     setFocus: vi.fn().mockResolvedValue(undefined),
     minimize: vi.fn().mockResolvedValue(undefined),
     isMaximized: vi.fn().mockResolvedValue(false),
+    isFullscreen: vi.fn().mockResolvedValue(false),
     maximize: vi.fn().mockResolvedValue(undefined),
     unmaximize: vi.fn().mockResolvedValue(undefined),
+    setFullscreen: vi.fn().mockResolvedValue(undefined),
     hide: vi.fn().mockResolvedValue(undefined),
     onCloseRequested: vi.fn().mockResolvedValue(vi.fn()),
     ...overrides,
@@ -190,6 +194,66 @@ describe("windowManager native and browser lifecycle", () => {
     expect(playWindow.maximize).toHaveBeenCalledOnce();
     expect(playWindow.unmaximize).toHaveBeenCalledOnce();
     expect(playWindow.hide).toHaveBeenCalledOnce();
+  });
+
+  it("reads and changes fullscreen only on the native Play window", async () => {
+    markTauri();
+    const playWindow = makePlayWindow({ isFullscreen: vi.fn().mockResolvedValue(true) });
+    getCurrentWindowMock.mockReturnValue(playWindow as never);
+
+    await expect(isCurrentPlayWindowFullscreen()).resolves.toBe(true);
+    await expect(setCurrentPlayWindowFullscreen(false)).resolves.toBe(true);
+    expect(playWindow.isFullscreen).toHaveBeenCalledTimes(2);
+    expect(playWindow.setFullscreen).toHaveBeenCalledWith(false);
+  });
+
+  it("uses the browser Fullscreen API and returns the actual state", async () => {
+    const requestFullscreen = vi.fn().mockImplementation(async () => {
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: document.documentElement,
+      });
+    });
+    const exitFullscreen = vi.fn().mockImplementation(async () => {
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: null,
+      });
+    });
+    Object.defineProperty(document.documentElement, "requestFullscreen", {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    Object.defineProperty(document, "exitFullscreen", {
+      configurable: true,
+      value: exitFullscreen,
+    });
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      value: null,
+    });
+
+    await expect(setCurrentPlayWindowFullscreen(true)).resolves.toBe(true);
+    await expect(isCurrentPlayWindowFullscreen()).resolves.toBe(true);
+    await expect(setCurrentPlayWindowFullscreen(false)).resolves.toBe(false);
+    expect(requestFullscreen).toHaveBeenCalledOnce();
+    expect(exitFullscreen).toHaveBeenCalledOnce();
+  });
+
+  it("reports a Thai error when browser fullscreen is unavailable", async () => {
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      value: null,
+    });
+    Object.defineProperty(document.documentElement, "requestFullscreen", {
+      configurable: true,
+      value: undefined,
+    });
+
+    await expect(setCurrentPlayWindowFullscreen(true)).rejects.toThrow(
+      "เบราว์เซอร์นี้ไม่รองรับโหมดเต็มหน้าจอ แต่ยังใช้ TV Mode ได้ในหน้าต่างปัจจุบัน",
+    );
+    await expect(isCurrentPlayWindowFullscreen()).resolves.toBe(false);
   });
 
   it("prevents native play close, awaits hide, reports hide failures, and cleans up once", async () => {

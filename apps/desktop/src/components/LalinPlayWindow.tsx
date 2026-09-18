@@ -13,8 +13,12 @@
 // @req FR-16W.6 — Playback continues when minimized or hidden
 // @req FR-17.1 — Integrated EQ surface
 // @req FR-17.2 — 10-Band Web Audio EQ
+// @req FR-18.1 — TV Mode toggle and session-local presentation state
+// @req FR-18.2 — 10-foot layout with visible focus
+// @req FR-18.5 — Native/browser fullscreen adapter
+// @req FR-18.6 — Preserve playback state across presentation changes
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { PlaybackEQPanel } from "./PlaybackEQPanel";
 import { initMediaSessionAdapter } from "../playback/mediaSessionAdapter";
@@ -24,7 +28,16 @@ import {
   toggleMaximizeCurrentWindow,
   hideOrCloseCurrentWindow,
   bindPlayWindowClose,
+  setCurrentPlayWindowFullscreen,
 } from "../playback/windowManager";
+import {
+  activateTvFocus,
+  createGamepadAdapter,
+  isTextEditingTarget,
+  mapTvKey,
+  moveTvFocus,
+  type TvAction,
+} from "../playback/tvMode";
 
 function formatTime(sec: number): string {
   if (Number.isNaN(sec) || sec < 0) return "0:00";
@@ -57,7 +70,51 @@ export function LalinPlayWindow() {
   } = usePlaybackStore();
 
   const [activeTab, setActiveTab] = useState<"queue" | "eq">("queue");
+  const [tvMode, setTvMode] = useState(false);
+  const [tvFullscreen, setTvFullscreen] = useState(false);
+  const [tvError, setTvError] = useState<string | null>(null);
+  const tvRootRef = useRef<HTMLDivElement>(null);
+  const tvModeToggleRef = useRef<HTMLButtonElement>(null);
   const [windowError, setWindowError] = useState<string | null>(null);
+
+  const exitTvMode = useCallback(() => {
+    setTvError(null);
+    void setCurrentPlayWindowFullscreen(false)
+      .then(() => setTvFullscreen(false))
+      .catch((error: unknown) => {
+        setTvError(`ออกจากโหมดเต็มหน้าจอไม่ได้: ${String(error)}`);
+      })
+      .finally(() => {
+        setTvMode(false);
+        requestAnimationFrame(() => tvModeToggleRef.current?.focus());
+      });
+  }, []);
+
+  const enterTvMode = useCallback(() => {
+    setTvError(null);
+    setTvMode(true);
+    void setCurrentPlayWindowFullscreen(true)
+      .then((fullscreen) => setTvFullscreen(fullscreen))
+      .catch((error: unknown) => {
+        setTvFullscreen(false);
+        setTvError(`เปิดโหมดเต็มหน้าจอไม่ได้: ${String(error)}`);
+      });
+  }, []);
+
+  const handleTvAction = useCallback((action: TvAction) => {
+    const root = tvRootRef.current;
+    if (!root) return;
+    if (action === "back") {
+      exitTvMode();
+    } else if (action === "menu") {
+      tvRootRef.current?.querySelector<HTMLElement>("[data-testid=\"tv-mode-exit\"]")?.focus();
+    } else if (action === "confirm") {
+      activateTvFocus(root);
+    } else {
+      moveTvFocus(root, action);
+    }
+  }, [exitTvMode]);
+
   const runWindowAction = (action: () => Promise<void>) => {
     setWindowError(null);
     void action().catch((error: unknown) => setWindowError(`ควบคุมหน้าต่างไม่ได้: ${String(error)}`));
@@ -89,14 +146,39 @@ export function LalinPlayWindow() {
     return () => { disposed = true; unbind?.(); };
   }, []);
 
+  useEffect(() => {
+    if (!tvMode) return;
+    const frame = requestAnimationFrame(() => {
+      tvRootRef.current?.querySelector<HTMLElement>("[data-tv-focusable=\"true\"], button, input, select")?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [tvMode]);
+
+  useEffect(() => {
+    if (!tvMode) return;
+    return createGamepadAdapter({ onAction: handleTvAction });
+  }, [handleTvAction, tvMode]);
+
+  useEffect(() => {
+    if (!tvMode || typeof document === "undefined") return;
+    const updateFullscreen = () => setTvFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, [tvMode]);
+
   // Keyboard shortcuts (FR-16.14)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLSelectElement
-      ) {
+      if (isTextEditingTarget(e.target)) {
+        return;
+      }
+
+      if (tvMode) {
+        const tvAction = mapTvKey(e);
+        if (tvAction) {
+          e.preventDefault();
+          handleTvAction(tvAction);
+        }
         return;
       }
 
@@ -126,7 +208,7 @@ export function LalinPlayWindow() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [nowPlaying.currentTime, nowPlaying.volume, togglePlay, seek, setVolume, toggleMute]);
+  }, [handleTvAction, nowPlaying.currentTime, nowPlaying.volume, togglePlay, seek, setVolume, toggleMute, tvMode]);
 
   const currentItem = nowPlaying.item;
   const progressPercent =
@@ -135,7 +217,14 @@ export function LalinPlayWindow() {
       : 0;
 
   return (
-    <div className="lalin-play-standalone-surface" role="application" aria-label="Lalin Play Window">
+    <div
+      ref={tvRootRef}
+      className={`lalin-play-standalone-surface ${tvMode ? "lalin-play-tv-mode" : ""}`}
+      role="application"
+      aria-label={tvMode ? "Lalin Play TV Mode" : "Lalin Play Window"}
+      data-tv-mode={tvMode ? "true" : "false"}
+      data-fullscreen={tvFullscreen ? "true" : "false"}
+    >
       {/* Standalone Window Titlebar */}
       <div className="lalin-play-standalone-titlebar" data-tauri-drag-region>
         <div className="lalin-play-brand" data-tauri-drag-region>
@@ -145,6 +234,28 @@ export function LalinPlayWindow() {
             {currentItem ? currentItem.title : "Windows Media Player + EQ"}
           </span>
         </div>
+
+        {tvMode ? (
+          <button
+            className="lalin-tv-mode-toggle"
+            data-testid="tv-mode-exit"
+            data-tv-focusable="true"
+            onClick={exitTvMode}
+          >
+            Exit TV Mode
+          </button>
+        ) : (
+          <button
+            ref={tvModeToggleRef}
+            className="lalin-tv-mode-toggle"
+            data-testid="tv-mode-toggle"
+            data-tv-focusable="true"
+            aria-pressed={tvMode}
+            onClick={enterTvMode}
+          >
+            TV Mode
+          </button>
+        )}
 
         <div className="lalin-play-tabs">
           <button
@@ -189,6 +300,7 @@ export function LalinPlayWindow() {
 
       {/* Main Content Body */}
       {windowError && <div className="fm-err" role="alert">{windowError}</div>}
+      {tvError && <div className="lalin-tv-mode-error" role="alert">{tvError}</div>}
       <div className="lalin-play-body standalone">
         {/* Left Column: Now Playing Card & Transport */}
         <div className="lalin-play-left">
@@ -387,7 +499,16 @@ export function LalinPlayWindow() {
                       <div
                         key={`${item.id}-${idx}`}
                         className={`queue-item ${isCurrent ? "current" : ""}`}
-                        onDoubleClick={() => playAtIndex(idx)}
+                        role={tvMode ? "button" : undefined}
+                        tabIndex={tvMode ? 0 : -1}
+                        data-tv-focusable={tvMode ? "true" : undefined}
+                        aria-current={isCurrent ? "true" : undefined}
+                        onClick={(event) => {
+                          if (!tvMode) return;
+                          if (event.target instanceof Element && event.target.closest("button, input, select")) return;
+                          playAtIndex(idx);
+                        }}
+                        onDoubleClick={!tvMode ? () => playAtIndex(idx) : undefined}
                       >
                         <span className="queue-idx">
                           {isCurrent ? (nowPlaying.state === "playing" ? "▶" : "❚❚") : idx + 1}

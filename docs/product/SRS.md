@@ -7,11 +7,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.3.1b |
+| **Doc Version** | 1.4.0b |
 | **Status** | In Review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-09-17 |
+| **Last Updated** | 2026-09-18 |
 | **Approved By** | Boss — Phase 1 scope approved 2026-08-23; CR-001 implementation merged via PR #10, MVP acceptance remains under review |
 
 | Version | Date | Author | Changes |
@@ -22,6 +22,7 @@
 | 1.2.0b | 2026-08-23 | LALIN | เพิ่ม CPU fallback, durable/interrupted job lifecycle และ single-GPU admission contract ตาม Phase 1 G-09/G-06/G-07 |
 | 1.3.0-draft | 2026-09-16 | LALIN | ร่างข้อกำหนดจาก CR-001 (กำลังรีวิวบน feature branch): เพิ่มร่าง FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
 | 1.3.1b | 2026-09-17 | LALIN | Correct CR-001 integration status after PR #10; link command-delivery RCA and candidate remediation without claiming MVP acceptance |
+| 1.4.0b | 2026-09-18 | LALIN | เพิ่ม FR-18 และ NFR-TV สำหรับ Lalin Play TV / Leanback Mode ตาม CR-002 และแผน architecture ที่อนุมัติ |
 
 ---
 
@@ -341,6 +342,20 @@ Implementation อยู่ใน default branch แล้ว; การผ่�
 | FR-17.13 | อนาคตควรรองรับ EQ preset per output device เช่น Headphones / Speakers | Could |
 
 ---
+### FR-18: Lalin Play TV / Leanback Mode
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-18.1 | ผู้ใช้ต้องเข้า/ออก TV Mode จาก Lalin Play ได้ด้วยปุ่มที่มองเห็นได้ และโหมดไม่เปิดเองตอน startup | Must |
+| FR-18.2 | TV Mode ต้องแสดง layout แบบ 10-foot ด้วยตัวอักษร/ปุ่ม/ระยะห่างที่อ่านและกดได้จากระยะไกล พร้อม visible focus | Must |
+| FR-18.3 | Keyboard navigation ต้องใช้ directional focus (Arrow/Tab), Enter/Space เพื่อ activate และ Escape เพื่อออกจาก TV Mode | Must |
+| FR-18.4 | ระบบต้อง map semantic gamepad input (D-pad, A/confirm, B/back, Start/menu) ผ่าน adapter ที่ถอดเปลี่ยนได้ และ cleanup listener/polling เมื่อออกจากโหมด | Should |
+| FR-18.5 | Native Tauri ใช้ fullscreen ของหน้าต่าง `play`; browser ใช้ Fullscreen API เมื่อมี และแสดงข้อผิดพลาดภาษาไทยเมื่อทำไม่ได้ | Must |
+| FR-18.6 | การเข้า/ออก TV Mode ต้องไม่ reset queue, EQ, Now Playing, position, volume หรือ playback owner | Must |
+| FR-18.7 | TV Mode ต้องมีทางออกที่เข้าถึงได้เสมอและไม่ซ่อน error ของ fullscreen/input | Must |
+| FR-18.8 | TV Mode ต้องไม่เพิ่ม backend endpoint, network permission, media decoder หรือ playback engine ใหม่ | Must |
+
+---
 
 ## 4. Non-Functional Requirements
 
@@ -408,6 +423,16 @@ Implementation อยู่ใน default branch แล้ว; การผ่�
 | NFR-MP-05 | EQ persistence | preset/current state ต้อง restore แบบ deterministic |
 | NFR-MP-06 | CPU/GPU isolation | EQ/playback ต้องไม่ใช้ ML/GPU queue และต้องไม่โหลด heavy ML model |
 | NFR-MP-07 | Startup isolation | การมี player feature ต้องไม่ทำให้ Studio cold start ช้าลง |
+
+---
+### NFR-TV: TV / Leanback presentation
+
+| ID | ข้อกำหนด | เกณฑ์ |
+|---|---|---|
+| NFR-TV-01 | TV Mode ต้องใช้ large text, target และ visible focus ตาม design spec | body ≥ 24px, primary target ≥ 64px, secondary target ≥ 48px |
+| NFR-TV-02 | Fullscreen failure ต้องไม่ทำให้ Play surface ใช้งานต่อไม่ได้ | แสดง actionable Thai error และคง transport/Exit ได้ |
+| NFR-TV-03 | TV Mode ต้องไม่สร้าง playback owner หรือ engine เพิ่ม | one owner เท่ากับ FR-16/FR-17 |
+| NFR-TV-04 | Input listeners/polling ต้องถูก cleanup เมื่อออกจากโหมดหรือ unmount | ไม่มี listener/polling ค้างจาก automated lifecycle test |
 
 ---
 

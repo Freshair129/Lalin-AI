@@ -69,6 +69,16 @@ sheet; it is not a cramped permanent tab.
 | Mastering | Mastering → source/reference → target → preview → master/export |
 | Recovery | Jobs → job detail → open output or retry with visible failure reason |
 
+### Lalin Play deep surface
+
+Lalin Play remains a separate consumer surface opened from Library/File Manager.
+Its TV Mode is a presentation state inside the existing `play` window, not a new
+Studio destination or rail item. The canonical flow is:
+
+`Library/File Manager → Play → TV Mode → transport/queue/EQ → Exit TV Mode`
+
+TV Mode preserves the Play owner, queue, Now Playing and EQ state. Receiver mode,
+casting, network remotes and YouTube/DRM remain outside this slice.
 ## 4. Route-state requirements
 
 Each primary destination restores, where applicable: selected project, selected

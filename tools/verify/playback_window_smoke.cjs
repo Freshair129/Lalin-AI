@@ -81,6 +81,25 @@ async function waitNative(read, expected) {
         window.__playbackProbe.playCalls++;
         return originalPlay.apply(this, args);
       };
+      let fullscreenElement = null;
+      Object.defineProperty(Document.prototype, 'fullscreenElement', {
+        configurable: true,
+        get: () => fullscreenElement,
+      });
+      Object.defineProperty(Element.prototype, 'requestFullscreen', {
+        configurable: true,
+        value: async function () {
+          fullscreenElement = this;
+          document.dispatchEvent(new Event('fullscreenchange'));
+        },
+      });
+      Object.defineProperty(Document.prototype, 'exitFullscreen', {
+        configurable: true,
+        value: async () => {
+          fullscreenElement = null;
+          document.dispatchEvent(new Event('fullscreenchange'));
+        },
+      });
     });
     await context.route('http://127.0.0.1:8756/**', async route => {
       const url = new URL(route.request().url());
@@ -140,6 +159,30 @@ async function waitNative(read, expected) {
     assert.equal(await main.evaluate(() => window.__playbackProbe.playCalls), 0);
     check('first FileManager Play delivered once, one owner audio element, no Studio playback, persisted queue/EQ preserved');
 
+    const beforeTv = await snapshot(play);
+    await play.getByTestId('tv-mode-toggle').click();
+    await play.getByRole('application', { name: 'Lalin Play TV Mode' }).waitFor();
+    const tvRoot = play.getByRole('application', { name: 'Lalin Play TV Mode' });
+    assert.equal(await tvRoot.getAttribute('data-tv-mode'), 'true');
+    await play.waitForFunction(() => document.querySelector('[data-tv-mode="true"]')?.getAttribute('data-fullscreen') === 'true');
+    assert.equal(await tvRoot.getAttribute('data-fullscreen'), 'true');
+    await play.keyboard.press('ArrowDown');
+    assert.equal(await play.evaluate(() => document.activeElement?.tagName), 'BUTTON');
+    const inTv = await snapshot(play);
+    assert.deepEqual(inTv.queue.items, beforeTv.queue.items);
+    assert.equal(inTv.eq.preamp, beforeTv.eq.preamp);
+    assert.equal(inTv.nowPlaying.item?.id, beforeTv.nowPlaying.item?.id);
+    await play.keyboard.press('Escape');
+    await play.getByRole('application', { name: 'Lalin Play Window' }).waitFor();
+    const afterTv = await snapshot(play);
+    assert.equal(await play.locator('[data-tv-mode="false"]').count(), 1);
+    assert.equal(await play.locator('[data-fullscreen="false"]').count(), 1);
+    assert.deepEqual(afterTv.queue.items, beforeTv.queue.items);
+    assert.equal(afterTv.eq.preamp, beforeTv.eq.preamp);
+    assert.equal(afterTv.nowPlaying.item?.id, beforeTv.nowPlaying.item?.id);
+    result.hardwareGamepad = 'NOT_RUN (no physical controller attached)';
+    check('TV Mode enter/exit, visible focus and keyboard Escape preserve queue/EQ/Now Playing; physical gamepad evidence is NOT_RUN');
+
     await main.locator('.fm-item').filter({ hasText: 'fixture-b.wav' }).click({ button: 'right' });
     await main.getByText('Add to Queue', { exact: true }).click();
     await waitOwner(play, 's.queue.items.length === 3');
@@ -155,8 +198,15 @@ async function waitNative(read, expected) {
       const nativeInfo = () => main.evaluate(async () => {
         const { WebviewWindow } = await import('/node_modules/.vite/deps/@tauri-apps_api_webviewWindow.js');
         const win = await WebviewWindow.getByLabel('play');
-        return { visible: await win.isVisible(), minimized: await win.isMinimized(), maximized: await win.isMaximized() };
+        return { visible: await win.isVisible(), minimized: await win.isMinimized(), maximized: await win.isMaximized(), fullscreen: await win.isFullscreen() };
       });
+      await play.getByTestId('tv-mode-toggle').click();
+      await play.getByRole('application', { name: 'Lalin Play TV Mode' }).waitFor();
+      await waitNative(nativeInfo, { fullscreen: true });
+      await play.keyboard.press('Escape');
+      await play.getByRole('application', { name: 'Lalin Play Window' }).waitFor();
+      await waitNative(nativeInfo, { fullscreen: false });
+      check('native TV Mode toggles the fixed Play window fullscreen state and exits with Escape');
       await play.getByTitle('Minimize', { exact: true }).click();
       await waitNative(nativeInfo, { minimized: true });
       await main.getByTitle('Open Lalin Play', { exact: true }).click();

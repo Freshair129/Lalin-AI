@@ -42,7 +42,18 @@ Overlay: modal, inspector, activity log, command palette, popover
 | Library workspace | projects, media, outputs, packs | browse/filter region plus detail or inspector only when selected |
 | Arrange workspace | Remix | timeline is the primary surface; library and device controls are secondary |
 | Settings workspace | runtime, storage, updates, provider | grouped settings with explicit save/restart impact |
+| Lalin Play consumer surface | Play / TV Mode | separate secondary window for listening and 10-foot presentation | Play owns playback; TV Mode changes presentation/focus/fullscreen only |
 
+
+### Lalin Play / TV Mode contract
+
+Lalin Play is a separate consumer window and may switch its presentation to TV
+Mode. TV Mode uses the existing Play playback owner and state; it does not mount
+Studio shell regions, add a rail destination or create a second timeline. The
+layout expands Now Playing, transport, queue and EQ controls for 10-foot viewing,
+with a visible focus ring and an always-reachable exit action. Fullscreen is an
+adapter concern and may be unavailable in a browser or constrained runtime; the
+surface remains usable when it is unavailable.
 ### Arrange / Remix contract
 
 ```

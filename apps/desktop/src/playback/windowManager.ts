@@ -163,6 +163,59 @@ export async function toggleMaximizeCurrentWindow(): Promise<void> {
   });
 }
 
+const BROWSER_FULLSCREEN_UNAVAILABLE_MESSAGE =
+  "เบราว์เซอร์นี้ไม่รองรับโหมดเต็มหน้าจอ แต่ยังใช้ TV Mode ได้ในหน้าต่างปัจจุบัน";
+
+async function getBrowserFullscreenState(): Promise<boolean> {
+  return typeof document !== "undefined" && Boolean(document.fullscreenElement);
+}
+
+async function setBrowserFullscreen(fullscreen: boolean): Promise<boolean> {
+  if (typeof document === "undefined") return false;
+  if (fullscreen) {
+    if (document.fullscreenElement) return true;
+    const request = document.documentElement.requestFullscreen;
+    if (typeof request !== "function") {
+      throw new Error(BROWSER_FULLSCREEN_UNAVAILABLE_MESSAGE);
+    }
+    await request.call(document.documentElement);
+  } else if (document.fullscreenElement) {
+    const exit = document.exitFullscreen;
+    if (typeof exit !== "function") {
+      throw new Error(BROWSER_FULLSCREEN_UNAVAILABLE_MESSAGE);
+    }
+    await exit.call(document);
+  }
+  return Boolean(document.fullscreenElement);
+}
+
+/** Reads fullscreen state for the current Play surface only. */
+export async function isCurrentPlayWindowFullscreen(): Promise<boolean> {
+  if (!isTauri()) return getBrowserFullscreenState();
+  try {
+    const current = await getCurrentNativeWindow();
+    if (current.label !== PLAY_WINDOW_LABEL) return false;
+    return await current.isFullscreen();
+  } catch (error) {
+    throw nativeOperationError("ตรวจสอบโหมดเต็มหน้าจอ", error);
+  }
+}
+
+/** Changes fullscreen state for the current Play surface only. */
+export async function setCurrentPlayWindowFullscreen(
+  fullscreen: boolean,
+): Promise<boolean> {
+  if (!isTauri()) return setBrowserFullscreen(fullscreen);
+  try {
+    const current = await getCurrentNativeWindow();
+    if (current.label !== PLAY_WINDOW_LABEL) return false;
+    await current.setFullscreen(fullscreen);
+    return await current.isFullscreen();
+  } catch (error) {
+    throw nativeOperationError("เปลี่ยนโหมดเต็มหน้าจอ", error);
+  }
+}
+
 /**
  * Hides the native Play window while playback continues. In a browser the
  * current popup is closed because there is no native hide operation.
