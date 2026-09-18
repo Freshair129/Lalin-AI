@@ -18,7 +18,7 @@ jobs:
       # this job rather than fixing files one at a time as they're found.
       PYTHONUTF8: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Verify updater signing secret
         shell: pwsh
@@ -27,7 +27,7 @@ jobs:
         run: ./tools/verify/check_tauri_signing_key.ps1
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
@@ -40,7 +40,7 @@ jobs:
           workspaces: apps/desktop/src-tauri
 
       - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -62,7 +62,7 @@ jobs:
       # warning is actually debuggable instead of vanishing with the runner.
       - name: Upload sidecar smoke logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sidecar-smoke-logs
           path: |
