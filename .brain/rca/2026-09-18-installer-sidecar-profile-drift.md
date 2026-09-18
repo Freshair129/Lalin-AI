@@ -69,5 +69,5 @@ is intentionally absent.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.1b | 2026-09-18 | resolved locally | Propagated the Tauri package version and selected backend profile into the installed sidecar; strengthened installer smoke assertions. | pending commit | LALIN |
+| 0.1.1b | 2026-09-18 | resolved locally | Propagated the Tauri package version and selected backend profile into the installed sidecar; strengthened installer smoke assertions. | e39081a | LALIN |
 | 0.1.0b | 2026-09-18 | beta | Documented stale sidecar version/profile evidence and the required rebuild order. | pending local commit | LALIN |
