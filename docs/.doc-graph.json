@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-18T14:55:59+07:00",
+  "generated_at": "2026-09-18T23:50:33+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -396,9 +396,9 @@
       "id": "code:apps/api/app/main.py",
       "type": "code_file",
       "path": "apps/api/app/main.py",
-      "hash": "8a46fc3df2dd",
+      "hash": "3ed8f063b3db",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:23+07:00"
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "code:apps/api/app/pipelines/asr.py",
@@ -1192,9 +1192,9 @@
       "path": "docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md",
       "title": "2026-09-18-LALIN-PLAY-TV-MODE",
       "hash": "c2c43db01c67",
-      "prev_hash": "a8006510cb02",
-      "status": "changed",
-      "last_verified": "2026-09-18T14:55:59+07:00"
+      "prev_hash": "c2c43db01c67",
+      "status": "current",
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1312,9 +1312,9 @@
       "path": "docs/product/CR-002--LALIN_PLAY_TV_MODE.md",
       "title": "CR-002--LALIN_PLAY_TV_MODE",
       "hash": "1a2a12d9c9cf",
-      "prev_hash": "1cec3f08df19",
-      "status": "changed",
-      "last_verified": "2026-09-18T14:55:59+07:00"
+      "prev_hash": "1a2a12d9c9cf",
+      "status": "current",
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "doc:D-traceability",
@@ -1342,9 +1342,9 @@
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
       "hash": "171532cd79f1",
-      "prev_hash": "39e50e0e3fed",
-      "status": "changed",
-      "last_verified": "2026-09-18T14:55:59+07:00"
+      "prev_hash": "171532cd79f1",
+      "status": "current",
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1552,9 +1552,9 @@
       "path": "docs/architecture/LALIN_PLAY_TV_MODE_PLAN.md",
       "title": "LALIN_PLAY_TV_MODE_PLAN",
       "hash": "c649a95d406c",
-      "prev_hash": "a8964e82d162",
-      "status": "changed",
-      "last_verified": "2026-09-18T14:55:59+07:00"
+      "prev_hash": "c649a95d406c",
+      "status": "current",
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "doc:LALIN_PLAY_TV_MODE_SPEC",
@@ -1562,9 +1562,9 @@
       "path": "docs/design/LALIN_PLAY_TV_MODE_SPEC.md",
       "title": "LALIN_PLAY_TV_MODE_SPEC",
       "hash": "ea904fd0856a",
-      "prev_hash": "f9678f1452db",
-      "status": "changed",
-      "last_verified": "2026-09-18T14:55:59+07:00"
+      "prev_hash": "ea904fd0856a",
+      "status": "current",
+      "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
       "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
@@ -1721,10 +1721,10 @@
       "type": "document",
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
-      "hash": "e10b181110b0",
-      "prev_hash": "e10b181110b0",
-      "status": "current",
-      "last_verified": "2026-09-18T02:07:25+07:00"
+      "hash": "e42a4b7e97f8",
+      "prev_hash": "d710abe321c4",
+      "status": "changed",
+      "last_verified": "2026-09-18T23:50:33+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",

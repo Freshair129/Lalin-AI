@@ -136,8 +136,12 @@ try {
         Write-Host "[!] Unexpected /health response: $($health | ConvertTo-Json -Compress)" -ForegroundColor Red
         exit 1
     }
+    if (-not $rootResponse -or $rootResponse.version -ne $version) {
+        Write-Host "[!] Unexpected root version response (expected $version): $($rootResponse | ConvertTo-Json -Compress)" -ForegroundColor Red
+        exit 1
+    }
     if ($rootResponse.profile -ne "lite") {
-        Write-Host "[!] Unexpected root profile response: $($rootResponse | ConvertTo-Json -Compress)" -ForegroundColor Red
+        Write-Host "[!] Unexpected root profile response (expected lite): $($rootResponse | ConvertTo-Json -Compress)" -ForegroundColor Red
         exit 1
     }
 
@@ -145,7 +149,7 @@ try {
     Write-Host "     App: $appExe"
     Write-Host "     Sidecar: $($sidecarExe.FullName)"
     Write-Host "     Backend PID: $($backendProcess.ProcessId)"
-    Write-Host "     Health: status=$($health.status), service=$($health.service), profile=$($rootResponse.profile)"
+    Write-Host "     Health: status=$($health.status), service=$($health.service), version=$($rootResponse.version), profile=$($rootResponse.profile)"
 } finally {
     Stop-SmokeProcesses
     if ($app -and -not $app.HasExited) {

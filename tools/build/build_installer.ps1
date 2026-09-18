@@ -1,4 +1,6 @@
 param(
+    [ValidateSet("lite", "full")]
+    [string]$BackendProfile = "lite",
     [switch]$WithUpdaterArtifacts
 )
 
@@ -129,6 +131,8 @@ if (-not (Test-Path $tauriCli)) {
 }
 
 Write-Host "[*] Building Tauri NSIS installer." -ForegroundColor Cyan
+Write-Host "[*] Backend profile: $BackendProfile (compiled into the Tauri launcher)." -ForegroundColor Cyan
+$env:GMUSIC_BACKEND_PROFILE = $BackendProfile
 Set-Location $frontendDir
 New-Item -ItemType Directory -Path (Split-Path -Parent $buildLog) -Force | Out-Null
 if (Test-Path $setupPath) {

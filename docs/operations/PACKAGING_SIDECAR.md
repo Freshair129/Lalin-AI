@@ -57,12 +57,16 @@ G-Music.exe (Tauri/WebView2)
   -> FastAPI app on 127.0.0.1:8756
 ```
 
-The build script defaults its smoke environment to `lite`, but the current release
-workflow invokes `-Profile full` and the Tauri launcher sets
-`GMUSIC_BACKEND_PROFILE=full`. `sidecar_entry.py` loads `app.main:app`; the selected
-profile is read at runtime. The tracked PyInstaller spec still excludes ML-heavy
-dependencies and model weights. A full route profile therefore does not imply a
-complete bundled ML workstation.
+The local build flow defaults to `lite`: `build_sidecar.ps1 -Profile lite` builds
+the sidecar and `build_installer.ps1 -BackendProfile lite` compiles the Tauri
+launcher with the same profile. The launcher also passes the Cargo package
+version as `GMUSIC_BACKEND_VERSION`, so the installed backend reports the same
+version as the installer. The release workflow invokes `-Profile full`; when no
+local profile override is supplied, the Tauri launcher defaults to `full`.
+`sidecar_entry.py` loads `app.main:app`; the selected profile and version are read
+from the launcher environment at runtime. The tracked PyInstaller spec still
+excludes ML-heavy dependencies and model weights. A full route profile therefore
+does not imply a complete bundled ML workstation.
 
 ## Source Files
 
@@ -70,17 +74,18 @@ complete bundled ML workstation.
 - `apps/api/app/sidecar_lite.py`: lite FastAPI app for packaged MVP shell endpoints.
 - `apps/api/app/main.py`: source/development FastAPI app factory. The default profile remains `full`; `GMUSIC_BACKEND_PROFILE=lite` can create a lighter app shape when needed.
 - `tools/build/build_sidecar.ps1`: builds the backend sidecar with PyInstaller, defaults `GMUSIC_BACKEND_PROFILE` to `lite`, and copies the onedir output into `apps/desktop/src-tauri/binaries/`.
-- `tools/build/build_installer.ps1`: builds the Tauri NSIS installer from the generated sidecar. Default local validation mode gates on a stable setup executable because this Windows Tauri wrapper may not reliably exit after artifact generation.
+- `tools/build/build_installer.ps1`: builds the Tauri NSIS installer from the generated sidecar. `-BackendProfile` defaults to `lite` and is compiled into the launcher. Default local validation mode gates on a stable setup executable because this Windows Tauri wrapper may not reliably exit after artifact generation.
 - Both local packaging scripts derive their default installer filename from the version in `apps/desktop/src-tauri/tauri.conf.json`; `smoke_installed_app.ps1` still accepts an explicit `-InstallerPath` override.
 - `apps/desktop/src-tauri/tauri.conf.json`: declares `bundle.externalBin` as `binaries/g-music-backend` and maps `binaries/_internal/` to installed `_internal/` so PyInstaller resources sit beside the installed sidecar executable.
-- `apps/desktop/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup and stores the child process in Tauri state.
+- `apps/desktop/src-tauri/src/lib.rs`: spawns `g-music-backend` during Tauri setup, passes the compiled profile/version contract, and stores the child process in Tauri state.
 
 ## Build Flow
 
 Run from repo root:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools\build\build_sidecar.ps1
+powershell -ExecutionPolicy Bypass -File tools\build\build_sidecar.ps1 -Profile lite
+powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1 -BackendProfile lite
 ```
 
 The script:
@@ -152,6 +157,7 @@ Expected response includes:
 
 ```json
 {
+  "version": "0.1.1",
   "profile": "lite"
 }
 ```
@@ -165,10 +171,10 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 Expected local artifact:
 
 ```text
-apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.0_x64-setup.exe
+apps\desktop\src-tauri\target\release\bundle\nsis\G-Music_0.1.1_x64-setup.exe
 ```
 
-Current artifact evidence:
+Historical artifact evidence:
 
 ```text
 G-Music_0.1.0_x64-setup.exe: 53,273,749 bytes (50.81 MB), LastWriteTime 2026-07-03 15:56:24

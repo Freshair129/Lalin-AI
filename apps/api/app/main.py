@@ -25,6 +25,7 @@ def create_app(profile: str | None = None) -> FastAPI:
     selected_profile = (profile or os.getenv("GMUSIC_BACKEND_PROFILE", "full")).lower()
     if selected_profile not in {"full", "lite"}:
         selected_profile = "full"
+    backend_version = os.getenv("GMUSIC_BACKEND_VERSION") or __version__
 
     get_settings()
     configure_ffmpeg()
@@ -33,7 +34,7 @@ def create_app(profile: str | None = None) -> FastAPI:
 
     app = FastAPI(
         title="G-Music API",
-        version=__version__,
+        version=backend_version,
         description="Voice cloning, dubbing, mastering, and remixing with switchable cloud/ollama brain",
     )
     app.state.backend_profile = selected_profile
@@ -62,7 +63,7 @@ def create_app(profile: str | None = None) -> FastAPI:
     async def root():
         return {
             "service": "G-Music",
-            "version": __version__,
+            "version": backend_version,
             "profile": selected_profile,
             "docs": "/docs",
             "features": FULL_FEATURES if selected_profile == "full" else LITE_FEATURES,

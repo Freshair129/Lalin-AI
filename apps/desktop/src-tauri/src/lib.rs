@@ -12,6 +12,14 @@ use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
 const BACKEND_PORT: u16 = 8756;
+const BACKEND_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+fn backend_profile() -> &'static str {
+    match option_env!("GMUSIC_BACKEND_PROFILE") {
+        Some("lite") => "lite",
+        _ => "full",
+    }
+}
 
 /// เก็บ handle ของ sidecar ไว้ kill ตอนปิดแอป
 struct Sidecar(Mutex<Option<CommandChild>>);
@@ -41,7 +49,9 @@ fn spawn_backend(app: &tauri::AppHandle) {
             return;
         }
     };
-    let command = command.env("GMUSIC_BACKEND_PROFILE", "full");
+    let command = command
+        .env("GMUSIC_BACKEND_PROFILE", backend_profile())
+        .env("GMUSIC_BACKEND_VERSION", BACKEND_VERSION);
 
     match command.spawn() {
         Ok((mut rx, child)) => {
