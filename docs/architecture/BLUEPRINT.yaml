@@ -1,7 +1,7 @@
 # BLUEPRINT.yaml — G-Music (legacy machine-readable blueprint — ดู docs/DOCS_INDEX.md)
 # Machine-readable spec ของ endpoints/components (ไม่ใช่ IA ปัจจุบัน — ดู docs/design/LALIN_SITEMAP_SOT.md สำหรับ product IA)
 # sync กับ: PRD.md · SRS.md · SPEC.md · ROADMAP_MUSIC.md (UI_SITEMAP.md ย้ายไป docs/archive/ แล้ว)
-# วันที่: 2026-09-17 (CR-001 approved consumer playback ownership and delivery)
+# วันที่: 2026-09-18 (CR-002 approved Lalin Play TV Mode)
 
 meta:
   name: G-Music
@@ -249,8 +249,8 @@ components:
     - {component: icons.tsx,               role: "ชุด line icon (stroke=currentColor) สำหรับ rail/nav"}
   media_player:                # Lalin Play (CR-001 / FR-16 / FR-17)
     - {component: LalinPlayModal.tsx,      role: "legacy prototype source retained; no longer mounted by Studio"}
-    - {component: LalinPlayWindow.tsx,     role: "sole consumer playback owner in predeclared secondary window; native close hides; local debug validation only"}
-    - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager"}
+    - {component: LalinPlayWindow.tsx,     role: "sole consumer playback owner in predeclared secondary window; normal and TV presentation modes; native close hides"}
+    - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager; reusable in TV presentation"}
 
 consumer_playback:
   client: apps/desktop/src/playback/playbackClient.ts
@@ -260,7 +260,14 @@ consumer_playback:
   state: apps/desktop/src/playback/usePlaybackStore.ts
   delivery: "HELLO/READY -> FIFO COMMAND with session/id -> stable ACK; STATE snapshots; no blind retry after unknown delivery"
   persistence: "Play owns existing lalin:playback:queue and lalin:playback:eq localStorage keys; no migration"
-  native_callers: "main launcher permissions; play window controls and close listener only"
+  native_callers: "main launcher permissions; play window controls, close listener and fullscreen only"
+  tv_mode:
+    component: apps/desktop/src/components/LalinPlayWindow.tsx
+    input_adapter: apps/desktop/src/playback/tvMode.ts
+    fullscreen_adapter: apps/desktop/src/playback/windowManager.ts
+    contract: "session-local presentation; preserves queue/EQ/Now Playing; keyboard + semantic Gamepad API"
+    permissions: ["core:window:allow-is-fullscreen", "core:window:allow-set-fullscreen"]
+    verification: docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md
   verification: docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md
 
 # ── REST API ─────────────────────────────────────────────────

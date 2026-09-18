@@ -28,6 +28,8 @@ const requiredPlayPermissions = {
   "core:window:allow-is-maximized": ["core:window", "allow-is-maximized"],
   "core:window:allow-maximize": ["core:window", "allow-maximize"],
   "core:window:allow-unmaximize": ["core:window", "allow-unmaximize"],
+  "core:window:allow-is-fullscreen": ["core:window", "allow-is-fullscreen"],
+  "core:window:allow-set-fullscreen": ["core:window", "allow-set-fullscreen"],
 } as const;
 
 describe("native window capability contract", () => {

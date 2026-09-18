@@ -1,7 +1,7 @@
 ---
-version: "0.1.24b"
+version: "0.1.26b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-18T02:04:31+07:00,LALIN"
+last_update: "2026-09-18T05:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -38,6 +38,7 @@ attributes:
 - `docs/architecture/BLUEPRINT.yaml`: machine-readable legacy blueprint.
 - `docs/architecture/API_SEMANTICS.md`: พฤติกรรมของ REST/WS ที่อ่านจาก OpenAPI schema ไม่ได้ (state, ลำดับ, error ที่ไม่ตรงสัญชาตญาณ).
 - `docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md`: approved/locally implemented Play Window readiness, single consumer owner, and scoped native capabilities.
+- `docs/architecture/LALIN_PLAY_TV_MODE_PLAN.md`: approved TV Mode architecture, fullscreen/input adapters and native permission boundary.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
 
 ## Current Lalin UI Docs
@@ -59,6 +60,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/design/LALIN_SETTINGS_TAB_SPEC.md`
 - `docs/design/LALIN_UI_IMPLEMENTATION_PLAN.md`
 - `docs/design/COMPONENT_REGISTRY.md`
+- `docs/design/LALIN_PLAY_TV_MODE_SPEC.md`: approved 10-foot layout, focus order, input mapping and accessibility hooks.
 
 ## Product and Runtime Docs
 
@@ -68,6 +70,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/product/LOCAL_MODEL_LEDGER.md`
 - `docs/product/COMPETITIVE_BRIEF.md`
 - `docs/product/ROADMAP_EXECUTION_BACKLOG.md`
+- `docs/product/CR-002--LALIN_PLAY_TV_MODE.md`: approved TV / Leanback presentation change request and FR-18 acceptance.
 - `docs/architecture/SPEC.md`
 - `docs/architecture/BLUEPRINT.yaml`
 - `docs/operations/PACKAGING_SIDECAR.md`
@@ -85,6 +88,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 ## Validation and Evidence Docs
 
 - `docs/validation/SPRINT*_VALIDATION.md`
+- `docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md`: TV Mode unit, browser and native evidence with hardware limits.
 - `docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md`: regression, build and isolated browser/native debug fixture evidence; broad MVP/release gates remain separate.
 - `docs/validation/2026-09-17-SIDECAR-BUILD.md`: local sidecar build, exact artifact hash, Python environment and independent runtime checks.
 - `.brain/rca/*.md`
@@ -115,6 +119,8 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.26b | 2026-09-18 | beta | Indexed the approved TV Mode validation report and local browser/native evidence. | uncommitted | LALIN |
+| 0.1.25b | 2026-09-18 | beta | Indexed approved Lalin Play TV Mode product, architecture and design docs. | uncommitted | LALIN |
 | 0.1.24b | 2026-09-18 | beta | Indexed the local installer version-drift RCA and local-only packaging fix. | pending local commit | LALIN |
 | 0.1.23b | 2026-09-18 | beta | Indexed final rerun attempt 3 and stopped retries after the repeated GitHub billing blocker. | pending provenance follow-up | LALIN |
 | 0.1.22b | 2026-09-18 | beta | Indexed the controlled rerun and repeated GitHub billing blocker for the v0.1.1 release workflow. | pending provenance follow-up | LALIN |
