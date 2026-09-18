@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
-created_at: "2026-09-18T05:00:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T05:00:00+07:00,LALIN"
+version: "0.1.1b"
+created_at: "2026-09-18T05:00:00+07:00,LALIN,c86ddc4"
+last_update: "2026-09-18T14:52:43+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,9 +14,9 @@ attributes:
 
 User approval: `approve` on 2026-09-18 after the
 [C-3 / HIGH-risk TV Mode plan](../architecture/LALIN_PLAY_TV_MODE_PLAN.md).
-Baseline: `839bb9e` (local branch `codex/local-installer-version-fix`).
-The implementation remains local and uncommitted; no push or release action is
-included in this report.
+Baseline: `c86ddc4` on branch `codex/local-installer-version-fix`.
+The implementation is committed locally; no release action is included in this
+report.
 
 ## Implemented slice
 
@@ -43,6 +43,7 @@ included in this report.
 | Root `npm run check:all` | **PASS**: contracts, MCP, desktop build, API compileall and Cargo check |
 | Browser smoke | **PASS**: isolated Playwright browser context, synthetic 60-second silence WAV and mocked API; enter/exit TV, focus, Escape, fullscreen stub and queue/EQ/Now Playing preservation |
 | Native smoke | **PASS**: Windows Tauri debug executable/WebView2, isolated user-data profile and CDP; native fullscreen true/false, Escape, focus, preservation and existing window lifecycle |
+| Browser UI smoke (Codex browser control) | **PASS**: dev server loaded, Play surface opened, TV Mode rendered, and Escape returned to normal Play with focus on the toggle |
 | Physical gamepad | **NOT_RUN**: no physical controller was attached; semantic adapter unit coverage is not hardware certification |
 | Audible output, media keys, output-device hotplug, clean VM, production/release or hosted CI | **NOT_RUN** |
 
@@ -101,10 +102,11 @@ reported as hardware evidence.
 | TV interaction spec | absent | 0.1.0b beta, 10-foot layout, focus and stable hooks |
 | SRS | 1.3.x baseline | 1.4.0b with FR-18 and NFR-TV-01..04 |
 | BLUEPRINT / layout / sitemap / component registry | prior Play-only records | TV surface, ownership and adapter traceability added |
-| This validation report | absent | 0.1.0b beta, local unit/browser/native evidence |
+| This validation report | 0.1.0b beta | 0.1.1b beta, current commit provenance and browser UI smoke evidence |
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-18 | beta | Closed implementation provenance and recorded current browser UI smoke evidence while preserving hardware/release limits. | c86ddc4 | LALIN |
 | 0.1.0b | 2026-09-18 | beta | Record approved TV Mode implementation, browser/native smoke and evidence limits | uncommitted | LALIN |

@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
-created_at: "2026-09-18T09:00:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T09:00:00+07:00,LALIN"
+version: "0.1.1b"
+created_at: "2026-09-18T09:00:00+07:00,LALIN,c86ddc4"
+last_update: "2026-09-18T14:52:43+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -139,4 +139,5 @@ authorization changes are part of this plan.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-18 | beta | Closed provenance for the approved C-3 architecture implemented in the local feature commit. | c86ddc4 | LALIN |
 | 0.1.0b | 2026-09-18 | beta | Approved C-3 architecture for one-owner TV presentation, fullscreen and input adapters | uncommitted | LALIN |

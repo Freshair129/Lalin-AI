@@ -1,7 +1,7 @@
 ---
-version: "0.1.26b"
+version: "0.1.27b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-18T05:00:00+07:00,LALIN"
+last_update: "2026-09-18T14:52:43+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -119,9 +119,10 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.26b | 2026-09-18 | beta | Indexed the approved TV Mode validation report and local browser/native evidence. | uncommitted | LALIN |
-| 0.1.25b | 2026-09-18 | beta | Indexed approved Lalin Play TV Mode product, architecture and design docs. | uncommitted | LALIN |
-| 0.1.24b | 2026-09-18 | beta | Indexed the local installer version-drift RCA and local-only packaging fix. | pending local commit | LALIN |
+| 0.1.27b | 2026-09-18 | beta | Closed provenance for the TV Mode and local packaging work before feature-branch cleanup. | c86ddc4 | LALIN |
+| 0.1.26b | 2026-09-18 | beta | Indexed the approved TV Mode validation report and local browser/native evidence. | c86ddc4 | LALIN |
+| 0.1.25b | 2026-09-18 | beta | Indexed approved Lalin Play TV Mode product, architecture and design docs. | c86ddc4 | LALIN |
+| 0.1.24b | 2026-09-18 | beta | Indexed the local installer version-drift RCA and local-only packaging fix. | 839bb9e | LALIN |
 | 0.1.23b | 2026-09-18 | beta | Indexed final rerun attempt 3 and stopped retries after the repeated GitHub billing blocker. | pending provenance follow-up | LALIN |
 | 0.1.22b | 2026-09-18 | beta | Indexed the controlled rerun and repeated GitHub billing blocker for the v0.1.1 release workflow. | pending provenance follow-up | LALIN |
 | 0.1.21b | 2026-09-18 | beta | Indexed the v0.1.1 release workflow billing-block RCA and updated current release evidence. | pending provenance follow-up | LALIN |

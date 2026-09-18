@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
-created_at: "2026-09-18T02:04:31+07:00,LALIN,uncommitted"
-last_update: "2026-09-18T02:04:31+07:00,LALIN"
+version: "0.1.1b"
+created_at: "2026-09-18T02:04:31+07:00,LALIN,839bb9e"
+last_update: "2026-09-18T14:52:43+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -60,13 +60,14 @@ smoke tests.
 
 ## Implementation Status
 
-Implemented locally on branch `codex/local-installer-version-fix`; not pushed.
-PowerShell parse and version/path derivation checks pass. Full installer smoke
-remains blocked locally because the gitignored signing key is not present in
-this checkout.
+Implemented in commit `839bb9e` on branch
+`codex/local-installer-version-fix`. PowerShell parse and version/path
+derivation checks pass. Full installer smoke remains blocked locally because
+the gitignored signing key is not present in this checkout.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.0b | 2026-09-18 | beta | Documented and locally fixed stale installer artifact naming after the 0.1.1 version bump. | pending local commit | LALIN |
+| 0.1.1b | 2026-09-18 | beta | Closed provenance for the local installer artifact naming fix and recorded the signing-key gate. | 839bb9e | LALIN |
+| 0.1.0b | 2026-09-18 | beta | Documented and locally fixed stale installer artifact naming after the 0.1.1 version bump. | 839bb9e | LALIN |
