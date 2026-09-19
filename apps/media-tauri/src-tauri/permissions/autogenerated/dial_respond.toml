@@ -1,0 +1,11 @@
+# Permission for the narrow DIAL response bridge exposed to the official YouTube WebView.
+
+[[permission]]
+identifier = "allow-dial-respond"
+description = "Enables the dial_respond command without any pre-configured scope."
+commands.allow = ["dial_respond"]
+
+[[permission]]
+identifier = "deny-dial-respond"
+description = "Denies the dial_respond command."
+commands.deny = ["dial_respond"]

@@ -6,16 +6,19 @@
   "workspaces": [
     "apps/desktop",
     "apps/mcp",
+    "apps/media-desktop",
     "packages/contracts"
   ],
   "scripts": {
     "build:contracts": "npm --workspace packages/contracts run build",
     "build:mcp": "npm --workspace apps/mcp run build",
     "build:desktop": "npm --workspace apps/desktop run build",
-    "build:node": "npm run build:contracts && npm run build:mcp && npm run build:desktop",
+    "check:media": "npm --workspace apps/media-desktop run check",
+    "check:media-tauri": "cargo check --manifest-path apps/media-tauri/src-tauri/Cargo.toml",
+    "build:node": "npm run build:contracts && npm run build:mcp && npm run build:desktop && npm run check:media",
     "check:api": "powershell -NoProfile -Command \"$candidates = 'apps/api/.venv/Scripts/python.exe','apps/api/.venv-ci/Scripts/python.exe','backend/.venv/Scripts/python.exe'; $py = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1; if (-not $py) { Write-Host \\\"[!] No venv found (checked: $($candidates -join ', '))\\\"; exit 1 }; & $py -m compileall -q apps/api/app\"",
     "check:tauri": "cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml",
-    "check:all": "npm run build:node && npm run check:api && npm run check:tauri"
+    "check:all": "npm run build:node && npm run check:api && npm run check:tauri && npm run check:media-tauri"
   },
   "engines": {
     "node": ">=20"

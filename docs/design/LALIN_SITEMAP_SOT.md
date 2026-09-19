@@ -79,6 +79,26 @@ Studio destination or rail item. The canonical flow is:
 
 TV Mode preserves the Play owner, queue, Now Playing and EQ state. Receiver mode,
 casting, network remotes and YouTube/DRM remain outside this slice.
+
+### Umbrella platform surfaces (candidate)
+
+Lalin AI is being documented as an umbrella platform without changing the Studio
+rail:
+
+| Surface | Product role | Studio relationship | Status |
+|---|---|---|---|
+| Lalin Studio | Create: local AI audio workstation | current shell and rail | current |
+| Lalin Media / Lalin Play | Play, share and control; Leanback/TV candidate | launched as a separate surface, not a rail tab | P1/P2 local; P3+ gated |
+| Lalin Room | shared media/session experience | separate future surface | deferred |
+| Lalin Remote | companion control | separate future surface | deferred |
+| Lalin Ride | mobile/rider experience | separate future surface | deferred |
+
+The Media surface must use a separate runtime boundary and a pinned upstream
+VacuumTube fork. The official endpoint, authentication/pairing behavior and
+upstream ad-filter controls are acceptance gates; this sitemap does not claim
+desktop TV-code pairing or complete ad blocking. See
+[ADR-001](../architecture/ADR-001-LALIN-UMBRELLA-PLATFORM.md) and the
+[Media plan](../architecture/LALIN_MEDIA_PLATFORM_PLAN.md).
 ## 4. Route-state requirements
 
 Each primary destination restores, where applicable: selected project, selected
@@ -92,4 +112,5 @@ Update this document before adding/removing a destination, merging a current
 tool into a Lalin destination, or changing a canonical flow. Pair it with
 [LALIN_SHELL_SOT.md](LALIN_SHELL_SOT.md) and
 [LALIN_LAYOUT_SOT.md](LALIN_LAYOUT_SOT.md) when the change affects shell or
-space priority.
+space priority. For the umbrella platform, update the ADR and migration map
+before changing the Studio rail or retiring the current Play owner.

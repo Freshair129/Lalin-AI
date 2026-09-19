@@ -1,8 +1,8 @@
 ---
-version: "0.1.14b"
+version: "0.2.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-17T03:45:00+07:00,LALIN"
-status: "beta"
+last_update: "2026-09-19T20:50:00+07:00,LALIN"
+status: "candidate"
 superseded_by: null
 attributes:
   domain: "architecture"
@@ -14,13 +14,21 @@ attributes:
 
 ## Status
 
-This document defines the target repository architecture. Phase 1 consolidated documentation folders. Phase 2 consolidated executable tooling under `tools/`; `scripts/` now contains compatibility shims only. Phase 5 added the first shared contracts package and local MCP app. Phase 6A added root workspace orchestration.
+This document defines the current repository architecture and the reviewed
+candidate direction for the Lalin AI umbrella platform. Phase 1 consolidated
+documentation folders. Phase 2 consolidated executable tooling under `tools/`;
+`scripts/` now contains compatibility shims only. Phase 5 added the first shared
+contracts package and local MCP app. Phase 6A added root workspace orchestration.
+The umbrella target below is candidate-only until the linked ADR and plans are
+approved; the current tree remains authoritative for implementation.
 
 ## Current Tree Truth
 
 - `apps/desktop/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
 - `apps/api/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
 - `apps/mcp/`: local stdio MCP server that exposes read/propose tools backed by the API.
+- `apps/media-desktop/`: local candidate Electron Lalin Media runtime containing the pinned VacuumTube fork; P1/P2 are implemented locally and P3+ remain gated.
+- `apps/media-tauri/`: local Rust + Tauri v2 Lalin Media candidate that loads the pinned Leanback surface; T1 static build passes and WebView2 parity remains gated.
 - `packages/contracts/`: shared TypeScript contracts and JSON Schemas for desktop/API/MCP boundaries.
 - `tools/`: canonical developer, build, and verification tooling.
 - `scripts/`: compatibility shims that forward old commands to `tools/*`.
@@ -64,6 +72,31 @@ This document defines the target repository architecture. Phase 1 consolidated d
 └─ README.md
 ```
 
+## Proposed umbrella target (candidate, not current tree)
+
+```text
+apps/
+├─ desktop/                 # current Lalin Studio / Tauri
+├─ api/                     # current AI audio + brain backend
+├─ mcp/                     # current local MCP boundary
+├─ media-desktop/           # Electron Lalin Media + VacuumTube fork fallback
+└─ media-tauri/             # Rust + Tauri v2 Lalin Media candidate
+packages/
+├─ contracts/               # current shared seed; extend by verified contract
+├─ media-core/              # future; create only with a real second consumer
+├─ playback-core/           # future; extract only after ownership parity
+├─ device-core/             # future; only after discovery evidence
+└─ ai-actions/              # future; only after a second agent consumer
+apps/media-remote/          # future companion; not created in this slice
+apps/ride/                  # future mobile/rider surface; not created
+services/                   # future Room/signaling/relay; not created
+```
+
+See [ADR-001](ADR-001-LALIN-UMBRELLA-PLATFORM.md),
+[Lalin Media plan](LALIN_MEDIA_PLATFORM_PLAN.md) and
+[migration map](LALIN_MEDIA_MIGRATION_MAP.md). Do not create empty folders to
+make this candidate tree look implemented.
+
 ## Ownership
 
 | Target | Owns | Current source |
@@ -72,6 +105,10 @@ This document defines the target repository architecture. Phase 1 consolidated d
 | `apps/desktop/src/playback` | Play Window alone owns consumer audio, EQ, queue persistence and SMTC; Studio uses the command client and owner snapshot | CR-001 and approved command-delivery plan |
 | `apps/api` | FastAPI routes, ML pipelines, sidecar profiles | `backend/` |
 | `packages/contracts` | Shared API, runtime, job, agent, MCP, and playback schemas | expanded for CR-001 |
+| `apps/media-desktop` (local candidate) | Separate Electron Lalin Media runtime and pinned VacuumTube fork | imported from the reviewed v1.8.2 baseline |
+| `apps/media-tauri` (local candidate) | Rust + Tauri v2 shell, remote Leanback WebView and native settings boundary | new candidate; behavior reference remains `apps/media-desktop` |
+| `packages/media-core`, `device-core`, `playback-core` (candidate) | Shared primitives only after a real second consumer and ownership review | not created |
+| `apps/media-remote`, `apps/ride`, `services/*` (candidate) | Future companion, rider and Room/cloud surfaces | not created |
 | `tools/dev` | local launchers and developer workflows | moved setup/runtime scripts |
 | `tools/build` | sidecar, installer, updater build steps | moved build scripts |
 | `tools/verify` | smoke tests and release checks | moved smoke scripts, validation docs |
@@ -113,6 +150,10 @@ Phase 6A executed target:
 - `apps/api` must not import frontend code.
 - `packages/contracts` must not import app runtime code.
 - `apps/mcp` may call `apps/api` through HTTP/WebSocket contracts only and must import shared schemas from `packages/contracts`.
+- `apps/media-desktop` is a separate process/runtime; it may consume versioned contracts but must not import Tauri or Studio UI internals.
+- `apps/media-tauri` is a separate process/runtime; its remote WebView receives no broad shell/process permission and its native boundary remains Rust-owned.
+- Studio may launch/focus Media through an explicit lifecycle contract; it must not embed Electron or create a second Media playback owner.
+- YouTube/Leanback is loaded by the Media runtime; `apps/api` must not become a YouTube proxy, ad relay or credential broker for this slice.
 - `tools/*` may orchestrate apps but must not become runtime dependencies.
 - `runtime/*` is local generated state, not an import root.
 
@@ -139,11 +180,15 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 - Runtime smoke gates live in `tools/verify`; `scripts/` wrappers remain valid for old commands.
 - Root full check: `npm run check:all`
 - Release workflow path repair is executed in `docs/architecture/PHASE7_RELEASE_WORKFLOW_PLAN.md`.
+- Umbrella architecture review: ADR-001, the Media plan, the migration map and their upstream provenance links must be reviewed before any Media code is added.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-19 | candidate | Record local Lalin Media fork/bootstrap and lifecycle boundary while keeping P3+ gated | uncommitted | LALIN |
+| 0.2.2b | 2026-09-19 | candidate | Record the parallel Rust + Tauri v2 Media candidate and keep WebView2 parity gated | uncommitted | LALIN |
+| 0.2.0b | 2026-09-19 | candidate | Added candidate Lalin AI umbrella tree, separate Media process boundary and migration/provenance links | uncommitted | LALIN |
 | 0.1.14b | 2026-09-17 | beta | Record single consumer owner and sender boundary; align stale frontmatter with existing version history | uncommitted | LALIN |
 | 0.1.13b | 2026-07-24 | beta | Updated repository identity after GitHub rename to Lalin-AI. | uncommitted | LALIN |
 | 0.1.12b | 2026-07-23 | beta | Marked Phase 7 release workflow repair executed. | uncommitted | LALIN |

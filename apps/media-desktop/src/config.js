@@ -1,0 +1,140 @@
+const fs = require('fs')
+const crypto = require('crypto')
+const electron = require('electron')
+const path = require('path')
+
+const userData = electron.app.getPath('userData')
+const legacyStateFile = path.join(userData, 'state.json')
+const configFile = path.join(userData, 'config.json')
+
+let changed = false;
+let config = {}
+
+const defaults = {
+    volume: 100, //video volume (0-100)
+    adblock: true, //block ads
+    sponsorblock: false, //enable sponsorblock
+    sponsorblock_uuid: crypto.randomUUID(), //sponsorblock wants to track this per user so you can ask it for stats later
+    dearrow: false, //replaces titles and thumbnails with more accurate and less sensationalized versions from a crowdsourced database (https://dearrow.ajay.app/)
+    dislikes: false, //readds youtube dislikes via https://www.returnyoutubedislike.com/
+    remove_super_resolution: false, //block "super resolution" (ai upscaled qualities)
+    hide_shorts: false, //hide youtube shorts from homepage
+    h264ify: false, // enable codec blocking feature 
+    h264ify_disable_webm: true, //when h264ify is enabled, block webm container streams
+    h264ify_disable_vp8: true, //when h264ify is enabled, block vp8 streams
+    h264ify_disable_vp9: true, //when h264ify is enabled, block vp9 streams
+    h264ify_disable_av1: true, //when h264ify is enabled, block av1 streams
+    hardware_decoding: true, //use hardware gpu video decoding
+    wayland_hdr: false, //whether or not to enable wayland color management, which allows hdr but sometimes has issues on non-hdr systems
+    low_memory_mode: false, //enables env_isLimitedMemory
+    fullscreen: false, //whether or not to launch in fullscreen, changes automatically if user enters/exits fullscreen
+    features_enabled: false,
+    music_mode_feature: false,
+    music_mode: false,
+    no_window_decorations: false, //whether or not to disable window decorations
+    keep_on_top: false, //whether or not to keep window on top
+    pause_on_blur: false, //whether or not to pause video when out of focus (such as tabbing out)
+    userstyles: false, //whether or not to enable custom CSS injection
+    disabled_userstyles: [], //array of filenames that are disabled
+    touch_overlay: true, //whether or not to enable the touch overlay interface when touch is detected
+    controller_support: true, //whether or not to enable game controller support
+    device_discoverability: true //whether or not to enable DIAL support
+}
+
+function init(overrides = {}) {
+    if (fs.existsSync(legacyStateFile) && !fs.existsSync(configFile)) {
+        console.log('[config] Migrating legacy state.json')
+        fs.renameSync(legacyStateFile, configFile)
+    }
+
+    if (fs.existsSync(configFile) && isValidJson(configFile)) {
+        console.log(`[config] Reading config from ${configFile}`)
+
+        let parsed = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
+        if (parsed['0']) { //i was accidentally still passing the path of the config file to the init function before the overrides (old behavior), causing it to apply the path string as an override and ignore the actual overrides... oops
+            console.log('[config] Fixing config bug')
+
+            for (let key of Object.keys(parsed)) {
+                if (!isNaN(Number(key))) { //remove each character of the path string...
+                    delete parsed[key];
+                }
+            }
+
+            fs.writeFileSync(configFile, JSON.stringify(parsed, null, 4))
+        }
+
+        config = {
+            ...defaults,
+            ...parsed
+        }
+
+        console.log('[config] Loaded config', config)
+    } else {
+        console.log('[config] Initializing default config')
+
+        config = {
+            ...defaults,
+            ...overrides
+        }
+
+        try {
+            fs.mkdirSync(userData, { recursive: true })
+            fs.writeFileSync(configFile, JSON.stringify(config, null, 4))
+        } catch (err) {
+            console.error('[config] Failed to write config file', err)
+        }
+    }
+
+    setInterval(save, 500)
+
+    return config;
+}
+
+function save() {
+    if (changed) {
+        console.log('[config] Saving updated config to file')
+
+        try {
+            fs.writeFileSync(configFile, JSON.stringify(config, null, 4))
+            return true;
+        } catch (err) {
+            console.error('[config] Failed to write config file', err)
+            return false;
+        } finally {
+            changed = false;
+        }
+    }
+}
+
+function update(newConfig = {}) {
+    config = {
+        ...defaults,
+        ...config,
+        ...newConfig
+    }
+
+    changed = true;
+}
+
+function get() {
+    return config;
+}
+
+function isValidJson(file) {
+    try {
+        let text = fs.readFileSync(file, 'utf-8')
+        let json = JSON.parse(text)
+        if (typeof json !== 'object') throw new Error('Not an object');
+
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+module.exports = {
+    init,
+    save,
+    update,
+    get
+}

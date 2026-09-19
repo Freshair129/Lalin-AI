@@ -3,10 +3,14 @@
 // หมายเหตุเรื่องสิทธิ์: capability ของ Tauri v2 คุมเฉพาะ IPC command ที่เรียกจาก
 // webview — การ spawn จากฝั่ง Rust ตรงนี้ไม่ต้องเพิ่ม `shell:allow-execute`
 // (และไม่ควรเพิ่ม เพราะจะเปิดให้หน้าเว็บรัน binary อะไรก็ได้โดยไม่จำเป็น)
+use std::env;
 use std::net::{SocketAddr, TcpStream};
+use std::path::{Path, PathBuf};
+use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use std::time::Duration;
 
+use serde::Serialize;
 use tauri::{Manager, RunEvent};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
@@ -23,6 +27,208 @@ fn backend_profile() -> &'static str {
 
 /// เก็บ handle ของ sidecar ไว้ kill ตอนปิดแอป
 struct Sidecar(Mutex<Option<CommandChild>>);
+
+/// เก็บ process ของ Lalin Media ที่ Studio เป็นผู้เปิดไว้
+struct MediaProcess(Mutex<Option<Child>>);
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MediaLifecycleState {
+    state: String,
+    request_id: String,
+    pid: Option<u32>,
+    exit_code: Option<i32>,
+    code: Option<String>,
+    message: Option<String>,
+}
+
+fn media_state(state: &str, request_id: String) -> MediaLifecycleState {
+    MediaLifecycleState {
+        state: state.to_owned(),
+        request_id,
+        pid: None,
+        exit_code: None,
+        code: None,
+        message: None,
+    }
+}
+
+fn media_failure(request_id: String, code: &str, message: String) -> MediaLifecycleState {
+    MediaLifecycleState {
+        state: "failed".to_owned(),
+        request_id,
+        pid: None,
+        exit_code: None,
+        code: Some(code.to_owned()),
+        message: Some(message),
+    }
+}
+
+fn media_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("media-desktop")
+}
+
+fn media_launch_spec() -> Result<(PathBuf, PathBuf, bool), String> {
+    if let Ok(raw_executable) = env::var("LALIN_MEDIA_EXECUTABLE") {
+        let executable = PathBuf::from(raw_executable);
+        if !executable.is_file() {
+            return Err(format!(
+                "ไม่พบ Lalin Media executable ที่ {}",
+                executable.display()
+            ));
+        }
+
+        let workdir = env::var_os("LALIN_MEDIA_WORKDIR")
+            .map(PathBuf::from)
+            .or_else(|| executable.parent().map(Path::to_path_buf))
+            .unwrap_or_else(media_root);
+        return Ok((executable, workdir, false));
+    }
+
+    if cfg!(debug_assertions) {
+        let root = media_root();
+        let executable = if cfg!(windows) {
+            root.join("node_modules")
+                .join("electron")
+                .join("dist")
+                .join("electron.exe")
+        } else {
+            root.join("node_modules")
+                .join("electron")
+                .join("dist")
+                .join("electron")
+        };
+
+        if !executable.is_file() {
+            return Err(format!(
+                "ไม่พบ Electron runtime ของ Lalin Media ที่ {} กรุณารัน npm install ก่อน",
+                executable.display()
+            ));
+        }
+        return Ok((executable, root, true));
+    }
+
+    let executable = env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(|parent| parent.join("lalin-media.exe")))
+        .ok_or_else(|| "ไม่สามารถระบุตำแหน่ง Lalin Media runtime ได้".to_owned())?;
+    if !executable.is_file() {
+        return Err(format!(
+            "ไม่พบ Lalin Media runtime ที่ {} กรุณาติดตั้ง Media package ก่อน",
+            executable.display()
+        ));
+    }
+    let workdir = executable
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(media_root);
+    Ok((executable, workdir, false))
+}
+
+fn spawn_media_process(
+    executable: &Path,
+    workdir: &Path,
+    electron_app: bool,
+    focus: bool,
+) -> Result<Child, String> {
+    let mut command = Command::new(executable);
+    command
+        .current_dir(workdir)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    if electron_app {
+        command.arg(".");
+    }
+    if focus {
+        command.arg("--lalin-focus");
+    }
+    command.spawn().map_err(|error| {
+        format!(
+            "ไม่สามารถเปิด Lalin Media ได้จาก {}: {error}",
+            executable.display()
+        )
+    })
+}
+
+fn reap_media_process(process: &mut Option<Child>) -> Result<Option<u32>, String> {
+    let Some(child) = process.as_mut() else {
+        return Ok(None);
+    };
+
+    match child.try_wait() {
+        Ok(None) => Ok(Some(child.id())),
+        Ok(Some(_)) => {
+            *process = None;
+            Ok(None)
+        }
+        Err(error) => Err(format!("ตรวจสถานะ Lalin Media ไม่สำเร็จ: {error}")),
+    }
+}
+
+#[tauri::command]
+fn media_lifecycle(
+    action: String,
+    request_id: String,
+    state: tauri::State<'_, MediaProcess>,
+) -> Result<MediaLifecycleState, String> {
+    let mut process = state
+        .0
+        .lock()
+        .map_err(|_| "ไม่สามารถล็อกสถานะ Lalin Media ได้".to_owned())?;
+    let existing_pid = reap_media_process(&mut process)?;
+
+    match action.as_str() {
+        "status" => {
+            if let Some(pid) = existing_pid {
+                let mut result = media_state("ready", request_id);
+                result.pid = Some(pid);
+                Ok(result)
+            } else {
+                Ok(media_state("stopped", request_id))
+            }
+        }
+        "close" => {
+            if let Some(mut child) = process.take() {
+                let _ = child.kill();
+                let exit_code = child.wait().ok().and_then(|status| status.code());
+                let mut result = media_state("stopped", request_id);
+                result.exit_code = exit_code;
+                Ok(result)
+            } else {
+                Ok(media_state("stopped", request_id))
+            }
+        }
+        "launch" | "focus" => {
+            if let Some(pid) = existing_pid {
+                let (executable, workdir, electron_app) =
+                    media_launch_spec().map_err(|error| error.to_owned())?;
+                spawn_media_process(&executable, &workdir, electron_app, true)
+                    .map(|_| ())
+                    .map_err(|error| error.to_owned())?;
+                let mut result = media_state("ready", request_id);
+                result.pid = Some(pid);
+                return Ok(result);
+            }
+
+            let (executable, workdir, electron_app) = media_launch_spec()?;
+            let child = spawn_media_process(&executable, &workdir, electron_app, false)?;
+            let pid = child.id();
+            process.replace(child);
+            let mut result = media_state("starting", request_id);
+            result.pid = Some(pid);
+            Ok(result)
+        }
+        _ => Ok(media_failure(
+            request_id,
+            "MEDIA_ACTION_UNSUPPORTED",
+            format!("ไม่รู้จักคำสั่ง Lalin Media: {action}"),
+        )),
+    }
+}
 
 /// มี backend ตอบอยู่แล้วไหม (นักพัฒนารัน uvicorn เองอยู่ / เปิดแอปซ้อน)
 fn backend_already_running() -> bool {
@@ -85,6 +291,17 @@ fn kill_backend(app: &tauri::AppHandle) {
     }
 }
 
+fn kill_media(app: &tauri::AppHandle) {
+    if let Some(state) = app.try_state::<MediaProcess>() {
+        if let Ok(mut guard) = state.0.lock() {
+            if let Some(mut child) = guard.take() {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -92,6 +309,8 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
+        .manage(MediaProcess(Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![media_lifecycle])
         .setup(|app| {
             spawn_backend(app.handle());
             Ok(())
@@ -101,6 +320,7 @@ pub fn run() {
         .run(|app, event| {
             if let RunEvent::ExitRequested { .. } = event {
                 kill_backend(app);
+                kill_media(app);
             }
         });
 }

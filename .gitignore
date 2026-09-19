@@ -40,6 +40,8 @@ apps/desktop/dist/
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/target-stale*/
 apps/desktop/src-tauri/binaries/
+apps/media-tauri/target/
+apps/media-tauri/src-tauri/target/
 apps/mcp/node_modules/
 apps/mcp/dist/
 packages/contracts/node_modules/

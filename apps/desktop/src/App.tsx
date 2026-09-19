@@ -23,6 +23,8 @@ import { useBackendReadiness, type BackendReadiness } from "./hooks/useBackendRe
 import { useRuntimeActivity } from "./hooks/useRuntimeActivity";
 import { API_BASE, type RuntimeActivityStatus } from "./api";
 import { runtimeDeviceWarning } from "./runtimeDevices";
+import { closeMedia, openMedia } from "./media/mediaLauncher";
+import type { MediaLifecycleState } from "@lalin/contracts";
 
 // เวอร์ชันฝังตอน build จาก package.json (ดู vite.config.ts)
 declare const __APP_VERSION__: string;
@@ -46,6 +48,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("arrange");
   const [activityOpen, setActivityOpen] = useState(false);
   const [menu, setMenu] = useState<"file" | "edit" | "view" | "help" | null>(null);
+  const [mediaStatus, setMediaStatus] = useState<MediaLifecycleState | null>(null);
+  const [mediaBusy, setMediaBusy] = useState(false);
   const backend = useBackendReadiness();
   const runtime = useRuntimeActivity(backend.state === "ready");
   const current = NAV.find((item) => item.id === tab);
@@ -53,6 +57,15 @@ export default function App() {
 
   const { nowPlaying, error: playbackError } = usePlaybackClient();
   const openPlayer = () => requestPlayback({ type: "FOCUS_PLAYER" });
+  const openMediaApp = () => {
+    setMediaBusy(true);
+    void openMedia().then(setMediaStatus).finally(() => setMediaBusy(false));
+  };
+  const closeMediaApp = () => {
+    setMediaBusy(true);
+    void closeMedia().then(setMediaStatus).finally(() => setMediaBusy(false));
+  };
+  const mediaError = mediaStatus?.state === "failed" ? mediaStatus.message : null;
 
   return (
     <EngineProvider>
@@ -65,11 +78,12 @@ export default function App() {
             <button type="button" onClick={() => dispatchCommand("open")}>Open</button>
             <button type="button" onClick={() => dispatchCommand("save")}>Save</button>
             <button type="button" onClick={openPlayer} title="Open Lalin Play">Play</button>
+            <button type="button" onClick={openMediaApp} disabled={mediaBusy} title="Open Lalin Media">{mediaBusy ? "Media…" : "Media"}</button>
             <button type="button" onClick={() => setTab("settings")}>Settings</button>
           </div>
           {menu === "file" && <div className="command-menu"><button onClick={() => { dispatchCommand("new"); setMenu(null); }}>New</button><button onClick={() => { dispatchCommand("open"); setMenu(null); }}>Open…</button><button onClick={() => { dispatchCommand("save"); setMenu(null); }}>Save</button><button onClick={() => { dispatchCommand("saveAs"); setMenu(null); }}>Save As…</button></div>}
           {menu === "edit" && <div className="command-menu muted-menu">Undo / Redo are available in the active editor.</div>}
-          {menu === "view" && <div className="command-menu"><button onClick={() => { openPlayer(); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button></div>}
+          {menu === "view" && <div className="command-menu"><button onClick={() => { openPlayer(); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button><button onClick={() => { openMediaApp(); setMenu(null); }}>Lalin Media (Leanback)…</button><button onClick={() => { closeMediaApp(); setMenu(null); }}>ปิด Lalin Media</button></div>}
           {menu === "help" && <div className="command-menu muted-menu">Use the active tool’s inline help and keyboard shortcuts.</div>}
         </div>
         <header className="topbar">
@@ -93,6 +107,7 @@ export default function App() {
           <div className="topbar-right"><UpdateChecker /></div>
         </header>
         {playbackError && <div className="fm-err" role="alert">{playbackError} <button type="button" onClick={reconcilePlayback}>ตรวจสถานะเครื่องเล่น</button></div>}
+        {mediaError && <div className="fm-err" role="alert">{mediaError} <button type="button" onClick={openMediaApp}>ลองเปิด Lalin Media ใหม่</button></div>}
 
         <div className="daw-body">
           <nav className="rail" aria-label="Lalin Studio navigation">

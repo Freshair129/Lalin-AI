@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="desktop-application">
+  <!--Created with jdAppStreamEdit 9.2-->
+  <id>rocks.shy.VacuumTube</id>
+  <name>VacuumTube</name>
+  <summary>YouTube for TV, on your PC</summary>
+  <developer id="rocks.shy">
+    <name>shy</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <update_contact>shy@shy.rocks</update_contact>
+  <description>
+    <p>VacuumTube is an unofficial open source wrapper of YouTube Leanback (the console and Smart TV version of YouTube) for PCs, with a built-in adblocker and other enhancements. It is the best way to experience YouTube on your media center or handheld PC!</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Watching a video</caption>
+      <image type="source">https://raw.githubusercontent.com/shy1132/VacuumTube/refs/heads/main/flatpak/screenshots/video.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Searching</caption>
+      <image type="source">https://raw.githubusercontent.com/shy1132/VacuumTube/refs/heads/main/flatpak/screenshots/search.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Settings</caption>
+      <image type="source">https://raw.githubusercontent.com/shy1132/VacuumTube/refs/heads/main/flatpak/screenshots/settings.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.8.2" date="2026-07-30" type="stable">
+      <description>
+        <p>v1.8.2</p>
+        <ul>
+          <li>Added option to let you hide specific guide tabs</li>
+          <li>Added music mode feature</li>
+          <li>Added "Features" tab to settings</li>
+          <li>Fixed video playback issues sometimes happening ("Something went wrong")</li>
+          <li>Removed settings keybind on controllers due to being too easy to accidentally press</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  <url type="homepage">https://github.com/shy1132/VacuumTube</url>
+  <url type="bugtracker">https://github.com/shy1132/VacuumTube/issues</url>
+  <url type="vcs-browser">https://github.com/shy1132/VacuumTube</url>
+  <url type="contribute">https://github.com/shy1132/VacuumTube</url>
+  <requires>
+    <internet>always</internet>
+  </requires>
+  <recommends>
+    <control>gamepad</control>
+    <control>tv-remote</control>
+  </recommends>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>tablet</control>
+    <control>touch</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <launchable type="desktop-id">rocks.shy.VacuumTube.desktop</launchable>
+  <keywords>
+    <keyword>youtube</keyword>
+    <keyword>yt</keyword>
+    <keyword>leanback</keyword>
+  </keywords>
+</component>

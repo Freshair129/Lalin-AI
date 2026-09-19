@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=VacuumTube
+Exec=startvacuumtube %U
+Terminal=false
+Type=Application
+Icon=rocks.shy.VacuumTube
+StartupWMClass=VacuumTube
+Categories=AudioVideo;
+Keywords=YouTube;YT;
+Comment=Watch and explore videos on YouTube

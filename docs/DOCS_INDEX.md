@@ -1,8 +1,8 @@
 ---
-version: "0.1.27b"
+version: "0.2.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-18T14:52:43+07:00,LALIN"
-status: "beta"
+last_update: "2026-09-19T20:50:00+07:00,LALIN"
+status: "candidate"
 superseded_by: null
 attributes:
   domain: "documentation"
@@ -22,6 +22,11 @@ attributes:
 ## Canonical Architecture Docs
 
 - `docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md`: target repo architecture and ownership.
+- `docs/architecture/ADR-001-LALIN-UMBRELLA-PLATFORM.md`: candidate umbrella platform decision and Tauri/Electron/YouTube boundaries.
+- `docs/architecture/ADR-002-LALIN-MEDIA-TAURI-PORT.md`: approved local Rust + Tauri v2 port boundary and VacuumTube feature matrix.
+- `docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md`: candidate Lalin Media vertical slice, ownership matrix, VacuumTube provenance and verification gates.
+- `docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md`: candidate current-to-target migration, rollback and retention map.
+- `apps/media-desktop/LALIN_PROVENANCE.md`: local VacuumTube fork pin, source hash and Lalin patch boundary.
 - `docs/architecture/REPO_MIGRATION_PLAN.md`: phased migration plan and execution status.
 - `docs/architecture/DOCS_PHASE1_MOVE_MAP.md`: exact documentation consolidation move map and rollback guide.
 - `docs/architecture/DOCS_PHASE2_MOVE_MAP.md`: exact tooling consolidation move map and rollback guide.
@@ -119,6 +124,9 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-19 | candidate | Indexed the local Lalin Media fork provenance and P1/P2 implementation evidence | uncommitted | LALIN |
+| 0.2.2b | 2026-09-19 | candidate | Indexed the approved Rust + Tauri v2 Media port ADR | uncommitted | LALIN |
+| 0.2.0b | 2026-09-19 | candidate | Indexed the candidate Lalin AI umbrella platform ADR, Media plan and migration map | uncommitted | LALIN |
 | 0.1.27b | 2026-09-18 | beta | Closed provenance for the TV Mode and local packaging work before feature-branch cleanup. | c86ddc4 | LALIN |
 | 0.1.26b | 2026-09-18 | beta | Indexed the approved TV Mode validation report and local browser/native evidence. | c86ddc4 | LALIN |
 | 0.1.25b | 2026-09-18 | beta | Indexed approved Lalin Play TV Mode product, architecture and design docs. | c86ddc4 | LALIN |

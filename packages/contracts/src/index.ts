@@ -1,5 +1,6 @@
 export * from "./agent.js";
 export * from "./jobs.js";
+export * from "./media.js";
 export * from "./mcp.js";
 export * from "./projects.js";
 export * from "./playback.js";
