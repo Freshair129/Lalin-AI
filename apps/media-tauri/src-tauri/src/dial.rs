@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::io::{self, Read, Write};
 use std::net::{IpAddr, Ipv4Addr, TcpListener, TcpStream, UdpSocket};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use serde::Serialize;
@@ -19,6 +20,8 @@ const SSDP_PORT: u16 = 1900;
 const MAX_HEADER_BYTES: usize = 16 * 1024;
 const MAX_BODY_BYTES: usize = 102_400;
 const RESPONSE_WAIT: Duration = Duration::from_secs(5);
+const SUPERVISOR_POLL: Duration = Duration::from_secs(1);
+const REBIND_DELAY: Duration = Duration::from_secs(2);
 const APP_AGENT: &str = "VacuumTube/1.8.2";
 
 #[derive(Clone, Serialize)]
@@ -48,9 +51,10 @@ struct PendingResponse {
 type ResponseStore = Arc<(Mutex<HashMap<String, PendingResponse>>, Condvar)>;
 
 pub struct DialState {
-    info: Option<DialInfo>,
+    info: Arc<Mutex<Option<DialInfo>>>,
     device_id: Arc<Mutex<String>>,
     responses: ResponseStore,
+    stop: Arc<AtomicBool>,
 }
 
 struct HttpRequest {
@@ -61,78 +65,71 @@ struct HttpRequest {
 
 pub fn disabled_state() -> DialState {
     DialState {
-        info: None,
+        info: Arc::new(Mutex::new(None)),
         device_id: Arc::new(Mutex::new(String::new())),
         responses: Arc::new((Mutex::new(HashMap::new()), Condvar::new())),
+        stop: Arc::new(AtomicBool::new(true)),
     }
 }
 
 pub fn start(app: &AppHandle) -> Result<DialState, String> {
-    let local_ip = local_ipv4().unwrap_or(Ipv4Addr::LOCALHOST);
     let device_id = Arc::new(Mutex::new(load_or_create_device_id(app)));
-    let hostname = hostname();
-
-    let http_listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0))
-        .map_err(|error| format!("DIAL HTTP bind failed: {error}"))?;
-    http_listener
-        .set_nonblocking(true)
-        .map_err(|error| format!("DIAL HTTP nonblocking setup failed: {error}"))?;
-    let port = http_listener
-        .local_addr()
-        .map_err(|error| format!("DIAL HTTP address lookup failed: {error}"))?
-        .port();
-
-    let ssdp_socket = bind_ssdp_socket(local_ip)
-        .map_err(|error| format!("DIAL SSDP bind failed on UDP {SSDP_PORT}: {error}"))?;
-    ssdp_socket
-        .set_read_timeout(Some(Duration::from_millis(500)))
-        .map_err(|error| format!("DIAL SSDP timeout setup failed: {error}"))?;
-    ssdp_socket
-        .set_multicast_ttl_v4(2)
-        .map_err(|error| format!("DIAL SSDP multicast setup failed: {error}"))?;
-    ssdp_socket
-        .join_multicast_v4(&SSDP_ADDRESS, &local_ip)
-        .map_err(|error| format!("DIAL SSDP multicast membership failed: {error}"))?;
-
-    let info = DialInfo {
-        host: local_ip.to_string(),
-        port,
-        base: format!("http://{local_ip}:{port}"),
-    };
+    let info = Arc::new(Mutex::new(None));
     let responses = Arc::new((Mutex::new(HashMap::new()), Condvar::new()));
     let stop = Arc::new(AtomicBool::new(false));
-    let state = DialState {
-        info: Some(info.clone()),
-        device_id: device_id.clone(),
-        responses: responses.clone(),
-    };
 
-    let http_app = app.clone();
-    let http_state = RuntimeState {
+    let supervisor = SupervisorState {
+        app: app.clone(),
         info: info.clone(),
         device_id: device_id.clone(),
-        hostname: hostname.clone(),
-        responses,
+        responses: responses.clone(),
         stop: stop.clone(),
     };
     thread::Builder::new()
-        .name("lalin-dial-http".to_owned())
-        .spawn(move || run_http(http_listener, http_app, http_state))
-        .map_err(|error| format!("DIAL HTTP thread failed: {error}"))?;
+        .name("lalin-dial-supervisor".to_owned())
+        .spawn(move || run_supervisor(supervisor))
+        .map_err(|error| format!("DIAL supervisor thread failed: {error}"))?;
 
-    let ssdp_state = RuntimeState {
+    Ok(DialState {
         info,
         device_id,
-        hostname,
-        responses: Arc::new((Mutex::new(HashMap::new()), Condvar::new())),
+        responses,
         stop,
-    };
-    thread::Builder::new()
-        .name("lalin-dial-ssdp".to_owned())
-        .spawn(move || run_ssdp(ssdp_socket, ssdp_state))
-        .map_err(|error| format!("DIAL SSDP thread failed: {error}"))?;
+    })
+}
 
-    Ok(state)
+impl Drop for DialState {
+    fn drop(&mut self) {
+        self.stop.store(true, Ordering::Relaxed);
+    }
+}
+
+struct SupervisorState {
+    app: AppHandle,
+    info: Arc<Mutex<Option<DialInfo>>>,
+    device_id: Arc<Mutex<String>>,
+    responses: ResponseStore,
+    stop: Arc<AtomicBool>,
+}
+
+#[derive(Clone, Copy)]
+enum ListenerKind {
+    Http,
+    Ssdp,
+}
+
+struct ListenerFailure {
+    generation: u64,
+    kind: ListenerKind,
+    message: String,
+}
+
+struct Generation {
+    id: u64,
+    info: DialInfo,
+    stop: Arc<AtomicBool>,
+    http: JoinHandle<()>,
+    ssdp: JoinHandle<()>,
 }
 
 #[derive(Clone)]
@@ -142,6 +139,8 @@ struct RuntimeState {
     hostname: String,
     responses: ResponseStore,
     stop: Arc<AtomicBool>,
+    failure_tx: Sender<ListenerFailure>,
+    generation_id: u64,
 }
 
 #[tauri::command]
@@ -198,11 +197,15 @@ pub fn dial_respond(
 
 #[tauri::command]
 pub fn dial_get_info(state: State<'_, DialState>) -> Option<DialInfo> {
-    state.info.clone()
+    state.info.lock().ok()?.clone()
 }
 
 #[tauri::command]
-pub fn dial_set_device_id(device_id: String, state: State<'_, DialState>) -> Result<(), String> {
+pub fn dial_set_device_id(
+    device_id: String,
+    app: AppHandle,
+    state: State<'_, DialState>,
+) -> Result<(), String> {
     if device_id.is_empty() || device_id.len() > 128 || device_id.contains(['\r', '\n', '<', '>']) {
         return Err("DIAL device id is invalid".to_owned());
     }
@@ -210,8 +213,188 @@ pub fn dial_set_device_id(device_id: String, state: State<'_, DialState>) -> Res
         .device_id
         .lock()
         .map_err(|_| "DIAL device identity is unavailable".to_owned())?;
-    *current = device_id;
+    if *current != device_id {
+        *current = device_id.clone();
+        persist_device_id(&app, &device_id);
+    }
     Ok(())
+}
+
+fn run_supervisor(runtime: SupervisorState) {
+    let (failure_tx, failure_rx): (Sender<ListenerFailure>, Receiver<ListenerFailure>) =
+        mpsc::channel();
+    let mut generation: Option<Generation> = None;
+    let mut generation_id = 0_u64;
+
+    while !runtime.stop.load(Ordering::Relaxed) {
+        if generation.is_some() {
+            let active_id = generation
+                .as_ref()
+                .map(|active| active.id)
+                .unwrap_or_default();
+            let active_host = generation
+                .as_ref()
+                .map(|active| active.info.host.clone())
+                .unwrap_or_default();
+            let current_ip = local_ipv4().ok();
+
+            if address_changed(&active_host, current_ip) {
+                eprintln!("Lalin Media: DIAL LAN address changed; rebinding listeners");
+                stop_generation(generation.take());
+                clear_info(&runtime.info);
+                continue;
+            }
+
+            match failure_rx.recv_timeout(SUPERVISOR_POLL) {
+                Ok(failure) if failure.generation == active_id => {
+                    let listener = match failure.kind {
+                        ListenerKind::Http => "HTTP",
+                        ListenerKind::Ssdp => "SSDP",
+                    };
+                    eprintln!(
+                        "Lalin Media: DIAL {listener} listener stopped; rebinding: {}",
+                        failure.message
+                    );
+                    stop_generation(generation.take());
+                    clear_info(&runtime.info);
+                    thread::sleep(REBIND_DELAY);
+                }
+                Ok(_) => {}
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+                Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            }
+            continue;
+        }
+
+        let Some(local_ip) = local_ipv4().ok() else {
+            clear_info(&runtime.info);
+            thread::sleep(REBIND_DELAY);
+            continue;
+        };
+
+        generation_id = generation_id.wrapping_add(1);
+        match start_generation(&runtime, failure_tx.clone(), local_ip, generation_id) {
+            Ok(active) => {
+                set_info(&runtime.info, Some(active.info.clone()));
+                eprintln!(
+                    "Lalin Media: DIAL ready at {} (UDP {SSDP_PORT})",
+                    active.info.base
+                );
+                generation = Some(active);
+            }
+            Err(error) => {
+                clear_info(&runtime.info);
+                eprintln!("Lalin Media: DIAL bind failed; retrying: {error}");
+                thread::sleep(REBIND_DELAY);
+            }
+        }
+    }
+
+    stop_generation(generation);
+    clear_info(&runtime.info);
+}
+
+fn start_generation(
+    runtime: &SupervisorState,
+    failure_tx: Sender<ListenerFailure>,
+    local_ip: Ipv4Addr,
+    generation_id: u64,
+) -> Result<Generation, String> {
+    let http_listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0))
+        .map_err(|error| format!("HTTP bind failed: {error}"))?;
+    http_listener
+        .set_nonblocking(true)
+        .map_err(|error| format!("HTTP nonblocking setup failed: {error}"))?;
+    let port = http_listener
+        .local_addr()
+        .map_err(|error| format!("HTTP address lookup failed: {error}"))?
+        .port();
+
+    let ssdp_socket = bind_ssdp_socket(local_ip)
+        .map_err(|error| format!("SSDP bind failed on UDP {SSDP_PORT}: {error}"))?;
+    ssdp_socket
+        .set_read_timeout(Some(Duration::from_millis(500)))
+        .map_err(|error| format!("SSDP timeout setup failed: {error}"))?;
+    ssdp_socket
+        .set_multicast_ttl_v4(2)
+        .map_err(|error| format!("SSDP multicast setup failed: {error}"))?;
+    ssdp_socket
+        .join_multicast_v4(&SSDP_ADDRESS, &local_ip)
+        .map_err(|error| format!("SSDP multicast membership failed: {error}"))?;
+
+    let info = DialInfo {
+        host: local_ip.to_string(),
+        port,
+        base: format!("http://{local_ip}:{port}"),
+    };
+    let stop = Arc::new(AtomicBool::new(false));
+    let hostname = hostname();
+    let http_state = RuntimeState {
+        info: info.clone(),
+        device_id: runtime.device_id.clone(),
+        hostname: hostname.clone(),
+        responses: runtime.responses.clone(),
+        stop: stop.clone(),
+        failure_tx: failure_tx.clone(),
+        generation_id,
+    };
+    let http_app = runtime.app.clone();
+    let http = thread::Builder::new()
+        .name("lalin-dial-http".to_owned())
+        .spawn(move || run_http(http_listener, http_app, http_state))
+        .map_err(|error| format!("HTTP thread failed: {error}"))?;
+
+    let ssdp_state = RuntimeState {
+        info: info.clone(),
+        device_id: runtime.device_id.clone(),
+        hostname,
+        responses: runtime.responses.clone(),
+        stop: stop.clone(),
+        failure_tx,
+        generation_id,
+    };
+    let ssdp = match thread::Builder::new()
+        .name("lalin-dial-ssdp".to_owned())
+        .spawn(move || run_ssdp(ssdp_socket, ssdp_state))
+    {
+        Ok(thread) => thread,
+        Err(error) => {
+            stop.store(true, Ordering::Relaxed);
+            let _ = http.join();
+            return Err(format!("SSDP thread failed: {error}"));
+        }
+    };
+
+    Ok(Generation {
+        id: generation_id,
+        info,
+        stop,
+        http,
+        ssdp,
+    })
+}
+
+fn stop_generation(generation: Option<Generation>) {
+    let Some(generation) = generation else {
+        return;
+    };
+    generation.stop.store(true, Ordering::Relaxed);
+    let _ = generation.http.join();
+    let _ = generation.ssdp.join();
+}
+
+fn set_info(info: &Arc<Mutex<Option<DialInfo>>>, value: Option<DialInfo>) {
+    if let Ok(mut current) = info.lock() {
+        *current = value;
+    }
+}
+
+fn clear_info(info: &Arc<Mutex<Option<DialInfo>>>) {
+    set_info(info, None);
+}
+
+fn address_changed(advertised_host: &str, current_ip: Option<Ipv4Addr>) -> bool {
+    current_ip.map(|ip| ip.to_string()).as_deref() != Some(advertised_host)
 }
 
 fn run_http(listener: TcpListener, app: AppHandle, state: RuntimeState) {
@@ -229,6 +412,11 @@ fn run_http(listener: TcpListener, app: AppHandle, state: RuntimeState) {
             }
             Err(error) => {
                 eprintln!("Lalin Media: DIAL HTTP accept failed: {error}");
+                let _ = state.failure_tx.send(ListenerFailure {
+                    generation: state.generation_id,
+                    kind: ListenerKind::Http,
+                    message: error.to_string(),
+                });
                 break;
             }
         }
@@ -307,6 +495,11 @@ fn run_ssdp(socket: UdpSocket, state: RuntimeState) {
                 ) => {}
             Err(error) => {
                 eprintln!("Lalin Media: DIAL SSDP receive failed: {error}");
+                let _ = state.failure_tx.send(ListenerFailure {
+                    generation: state.generation_id,
+                    kind: ListenerKind::Ssdp,
+                    message: error.to_string(),
+                });
                 break;
             }
         }
@@ -529,6 +722,16 @@ fn load_or_create_device_id(app: &AppHandle) -> String {
     Uuid::new_v4().to_string()
 }
 
+fn persist_device_id(app: &AppHandle, device_id: &str) {
+    let Ok(store) = app.store("media-settings.json") else {
+        return;
+    };
+    store.set("dialDeviceId", device_id);
+    if let Err(error) = store.save() {
+        eprintln!("Lalin Media: DIAL device id could not be saved: {error}");
+    }
+}
+
 fn xml_escape(value: &str) -> String {
     value
         .replace('&', "&amp;")
@@ -543,6 +746,7 @@ mod tests {
     use super::{device_description, is_dial_search, ssdp_response, DialInfo, RuntimeState};
     use std::collections::HashMap;
     use std::sync::atomic::AtomicBool;
+    use std::sync::mpsc;
     use std::sync::{Arc, Condvar, Mutex};
 
     fn state() -> RuntimeState {
@@ -556,6 +760,8 @@ mod tests {
             hostname: "Lalin-PC".to_owned(),
             responses: Arc::new((Mutex::new(HashMap::new()), Condvar::new())),
             stop: Arc::new(AtomicBool::new(false)),
+            failure_tx: mpsc::channel().0,
+            generation_id: 1,
         }
     }
 
@@ -579,5 +785,18 @@ mod tests {
         assert!(descriptor.contains("Lalin-PC"));
         assert!(response.contains("LOCATION: http://192.168.1.5:43210/"));
         assert!(response.contains("USN: uuid:device-123::urn:dial-multiscreen-org:service:dial:1"));
+    }
+
+    #[test]
+    fn detects_lan_address_loss_or_change_for_rebind() {
+        assert!(!super::address_changed(
+            "192.168.1.5",
+            Some("192.168.1.5".parse().unwrap())
+        ));
+        assert!(super::address_changed(
+            "192.168.1.5",
+            Some("192.168.1.6".parse().unwrap())
+        ));
+        assert!(super::address_changed("192.168.1.5", None));
     }
 }

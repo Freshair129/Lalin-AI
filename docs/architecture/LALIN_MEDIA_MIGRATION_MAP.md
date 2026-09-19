@@ -1,7 +1,7 @@
 ---
-version: "0.6.0b"
+version: "0.7.0b"
 created_at: "2026-09-19T18:01:18+07:00,LALIN,uncommitted"
-last_update: "2026-09-20T02:27:46+07:00,LALIN"
+last_update: "2026-09-20T03:44:16+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -94,9 +94,10 @@ stage.
 Play. Remove only the candidate app and its workspace registration if the
 WebView2 boundary cannot meet the required gates.
 
-**Local status:** **PARTIAL / static + process start + DIAL + user-confirmed
-iPhone pairing**; the restricted-host settings-store failure is non-fatal now;
-GUI/WebView2 parity, packaged repeatability and production gates remain pending.
+**Local status:** **PARTIAL / static + process start + supervised DIAL +
+user-confirmed iPhone pairing**; the restricted-host settings-store failure is
+non-fatal now; physical network-drop recovery, GUI/WebView2 parity, packaged
+repeatability and production gates remain pending.
 
 ### M4 — Ownership decision
 
@@ -141,7 +142,7 @@ created.
 | M0 | docs links, provenance and boundary review | **PASS / local** |
 | M1 | reproducible Electron start/build | **PASS / local bootstrap** |
 | M2 | lifecycle contract tests and local process smoke | **PASS / contract; process smoke pending** |
-| M2-T | Tauri Rust shell, remote URL/User-Agent, native boundary and DIAL descriptor | **PASS / local + user-confirmed iPhone TV-code connection; GUI/package parity pending** |
+| M2-T | Tauri Rust shell, remote URL/User-Agent, native boundary and supervised DIAL descriptor | **PASS / local + user-confirmed iPhone TV-code connection; network-drop, GUI and package parity pending** |
 | M3 | real endpoint/auth/pairing/ad-filter/controller evidence | **PARTIAL / TV-code pairing only; endpoint/account/ad-filter/controller evidence pending** |
 | M4 | ownership/storage/playback comparison | **NOT_RUN** |
 | M5 | separate product/security/architecture approval | **NOT_RUN** |
@@ -154,5 +155,6 @@ created.
 | 0.4.0b | 2026-09-19 | beta | Recorded process-start smoke and non-fatal settings persistence fallback | uncommitted | LALIN |
 | 0.5.0b | 2026-09-20 | beta | Recorded the approved bounded DIAL/H5VCC slice and kept phone pairing as a separate gate | uncommitted | LALIN |
 | 0.6.0b | 2026-09-20 | beta | Recorded user-confirmed local iPhone TV-code connection after the Ethernet profile/firewall fix; packaging and parity gates remain open | uncommitted | LALIN |
+| 0.7.0b | 2026-09-20 | beta | Recorded supervised DIAL retry/rebind and continuous Leanback device-id persistence after the disconnect RCA | uncommitted | LALIN |
 | 0.2.0b | 2026-09-19 | beta | Recorded local M0-M2 implementation status and retained M3+ as explicit gates | uncommitted | LALIN |
 | 0.1.0b | 2026-09-19 | candidate | Added reversible current-to-target map and retention/deletion inventory for the umbrella platform | uncommitted | LALIN |

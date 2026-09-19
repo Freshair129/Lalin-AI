@@ -1,7 +1,7 @@
 ---
-version: "0.6.0b"
+version: "0.7.0b"
 created_at: "2026-09-19T18:01:18+07:00,LALIN,uncommitted"
-last_update: "2026-09-20T02:27:46+07:00,LALIN"
+last_update: "2026-09-20T03:44:16+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -152,7 +152,7 @@ a second consumer or a required cross-process state transition.
 | Endpoint | browser/runtime screenshot or trace showing the selected official surface | endpoint unavailable/redirected; record actual URL |
 | Sign-in | real local sign-in flow without storing credentials in repo | sign-in unavailable; do not claim paired |
 | TV code | only if the surface genuinely exposes it to this runtime | `NOT_AVAILABLE_ON_DESKTOP` |
-| DIAL | local UDP 1900 bind + HTTP descriptor; same-Wi-Fi iPhone TV-code connection user-confirmed in debug runtime | packaged/repeatability evidence still required |
+| DIAL | supervised local UDP 1900 bind + HTTP descriptor; same-Wi-Fi iPhone TV-code connection user-confirmed in debug runtime | physical network-drop recovery and packaged/repeatability evidence still required |
 | Ad filter | upstream setting behavior in the pinned build | `UPSTREAM_SETTING_UNVERIFIED` |
 | Custom bypass | separate approved design and compatibility review | out of scope for this plan |
 
@@ -192,7 +192,7 @@ logged by the implementation.
 | P2 launcher/lifecycle | contract implemented; process smoke blocked | Tauri `media_lifecycle`, Studio launcher, status polling and single-instance focus patch; Electron minimal smoke hit host `0xC0000005` |
 | T0 Tauri port boundary | implemented in docs | `ADR-002-LALIN-MEDIA-TAURI-PORT.md` defines shell, WebView, User-Agent, permissions and ad-filter gates |
 | T1 Tauri shell candidate | **PASS / static + process start** | Rust checks/build pass; sandbox `cargo run` stays alive with a window handle and degrades settings persistence to a warning; GUI/WebView2 endpoint smoke pending |
-| T2 DIAL compatibility slice | **PASS / local + user-confirmed iPhone connection** | 2 Rust tests pass; debug runtime binds LAN UDP 1900 and returns HTTP `GET /` 200 with `Application-URL`; after Ethernet changed to `Private` and app relaunch, user confirmed iPhone TV-code connection |
+| T2 DIAL compatibility slice | **PASS / local + user-confirmed iPhone connection** | 3 Rust tests pass; supervised debug runtime binds LAN UDP 1900, returns HTTP `GET /` 200 with `Application-URL`, retries bind/rebinds on LAN address change, and persists the synced Leanback device id; after Ethernet changed to `Private` and app relaunch, user confirmed iPhone TV-code connection |
 | P3 endpoint/auth/pairing/ad-filter | **PARTIAL / pairing only** | numeric TV-code connection is user-confirmed for the current debug runtime; endpoint/account/controller and ad-filter behavior remain open |
 | P4 controller/fullscreen/ownership parity | **NOT_RUN** | requires real Media runtime and playback comparison |
 | P5 packaging/distribution | **NOT_RUN** | upstream app identity retained during P1/P2 |
@@ -232,4 +232,5 @@ clean-VM, account or release readiness.
 | 0.4.0b | 2026-09-19 | beta | Recorded Tauri process-start smoke and best-effort settings fallback | uncommitted | LALIN |
 | 0.5.0b | 2026-09-20 | beta | Added approved T2 Rust DIAL/H5VCC slice and separated local descriptor evidence from phone pairing | uncommitted | LALIN |
 | 0.6.0b | 2026-09-20 | beta | Recorded user-confirmed local iPhone TV-code connection after the Ethernet profile/firewall fix; packaging and parity gates remain open | uncommitted | LALIN |
+| 0.7.0b | 2026-09-20 | beta | Added supervised DIAL retry/rebind and continuous Leanback device-id persistence after the disconnect RCA | uncommitted | LALIN |
 | 0.1.0b | 2026-09-19 | candidate | Proposed Lalin Media vertical slice, ownership matrix, VacuumTube provenance and ordered gates | uncommitted | LALIN |

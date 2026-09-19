@@ -118,20 +118,27 @@
   };
 
   const syncLeanbackDeviceId = async () => {
-    const started = Date.now();
-    while (Date.now() - started < 10000) {
+    let lastDeviceId = null;
+    const sync = async () => {
       try {
         const raw = localStorage.getItem("yt.leanback.default::mdx-device-id");
         const deviceId = JSON.parse(raw || "null")?.data;
-        if (typeof deviceId === "string" && deviceId.length > 0 && deviceId.length <= 128) {
+        if (
+          typeof deviceId === "string" &&
+          deviceId.length > 0 &&
+          deviceId.length <= 128 &&
+          deviceId !== lastDeviceId
+        ) {
           await invoke("dial_set_device_id", { deviceId });
-          return;
+          lastDeviceId = deviceId;
         }
       } catch {
         // Leanback may initialize localStorage after the document script.
       }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
+    };
+
+    await sync();
+    window.setInterval(sync, 2000);
   };
 
   const installBridge = async () => {

@@ -12,16 +12,20 @@ Current scope:
 - single-instance focus;
 - fullscreen, keep-on-top, reload and quit native menu actions;
 - best-effort shell-setting persistence through the Tauri Store plugin;
-- Rust DIAL SSDP discovery on the LAN plus a bounded HTTP device descriptor;
+- supervised Rust DIAL SSDP discovery on the LAN plus a bounded HTTP device
+  descriptor that rebinds after listener/IP failure;
 - narrow `window.h5vcc` DIAL route bridge for the official YouTube WebView.
+- continuous Leanback device-id sync with best-effort persistence.
 
 If the local settings store is unavailable, the shell uses safe defaults and
 still opens; the failure is not allowed to block the media window.
 
-Current evidence: local debug runtime binds the DIAL SSDP port and returns the
-device descriptor with an `Application-URL` header. Same-Wi-Fi iPhone discovery,
-numeric TV-code pairing, WebView2 ad filtering, SponsorBlock parity, controller
-parity, production packaging and account acceptance are not claimed yet.
+Current evidence: local debug runtime binds the DIAL SSDP port, returns the
+device descriptor with an `Application-URL` header and passes the DIAL unit
+tests. Same-Wi-Fi iPhone TV-code connection is user-confirmed for the current
+debug runtime; network-drop recovery, WebView2 ad filtering, SponsorBlock
+parity, controller parity, production packaging and account acceptance remain
+separate gates.
 
 Static check:
 

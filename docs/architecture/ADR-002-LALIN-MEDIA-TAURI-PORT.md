@@ -1,7 +1,7 @@
 ---
-version: "0.5.0b"
+version: "0.6.0b"
 created_at: "2026-09-19T19:25:00+07:00,LALIN,uncommitted"
-last_update: "2026-09-20T02:27:46+07:00,LALIN"
+last_update: "2026-09-20T03:44:16+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -68,8 +68,8 @@ Play owner is replaced by this candidate.
 | SponsorBlock/DeArrow/Return Dislikes | JS adapter after CSP/runtime review | deferred | feature-by-feature parity |
 | upstream ad-block controls | separate compatibility gate | deferred | setting behavior in real WebView |
 | Electron request/response interception | Rust/native WebView2 adapter | not in P0 | WebView2 API proof and security review |
-| DIAL discovery | Rust SSDP + bounded HTTP Rust boundary | local slice implemented | port/descriptor and same-Wi-Fi device evidence |
-| H5VCC DIAL bridge | narrow initialization script + `dial_respond` command | local slice implemented | route callback and real controller/device evidence |
+| DIAL discovery | supervised Rust SSDP + bounded HTTP Rust boundary | local slice implemented with retry/rebind | port/descriptor, listener recovery and same-Wi-Fi device evidence |
+| H5VCC DIAL bridge | narrow initialization script + `dial_respond` command | local slice implemented with continuous device-id sync | route callback and real controller/device evidence |
 | numeric TV-code pairing | not assumed | user-confirmed for current debug runtime | repeat/relink and packaged-app evidence |
 
 ## Endpoint and identity boundary
@@ -128,7 +128,9 @@ as a promise that every future ad format is blocked.
 - The approved DIAL slice now binds the LAN interface on UDP 1900 with
   `SO_REUSEADDR`, serves a DIAL XML descriptor on an ephemeral local HTTP port,
   persists a non-secret device identity, and exposes only the upstream-shaped
-  `window.h5vcc.dial.DialServer` route surface.
+  `window.h5vcc.dial.DialServer` route surface. A supervisor retries startup,
+  rebinds after listener errors or LAN IPv4 changes, and continuously syncs the
+  official Leanback device id.
 - Static evidence: `cargo fmt --check`, offline `cargo check` and
   `cargo test` (2 DIAL tests) and `tauri build --debug --no-bundle --ci`
   **PASS**. Runtime process evidence shows UDP 1900 and an HTTP `GET /` 200
@@ -140,6 +142,9 @@ as a promise that every future ad format is blocked.
 - Packaged/clean-VM repeatability, endpoint/account/controller parity and
   ad-filter behavior remain **NOT_RUN/PARTIAL**; the local pairing result is
   not a production-readiness claim.
+- Physical network-drop/reconnect recovery remains a separate runtime gate;
+  the rebuilt local runtime has not yet been accepted as clean-VM or production
+  ready.
 
 ## Rejected shortcuts
 
@@ -167,3 +172,4 @@ as a promise that every future ad format is blocked.
 | 0.3.0b | 2026-09-19 | beta | Made local settings persistence best-effort after access-denied runtime RCA | uncommitted | LALIN |
 | 0.4.0b | 2026-09-20 | beta | Implemented the approved bounded Rust DIAL listener, descriptor and H5VCC response bridge; phone pairing remains unverified | uncommitted | LALIN |
 | 0.5.0b | 2026-09-20 | beta | Recorded user-confirmed same-Wi-Fi iPhone TV-code connection after the Ethernet profile/firewall fix; packaged and production gates remain open | uncommitted | LALIN |
+| 0.6.0b | 2026-09-20 | beta | Added supervised DIAL retry/rebind, continuous device-id persistence and local runtime listener verification | uncommitted | LALIN |
