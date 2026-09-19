@@ -136,7 +136,7 @@ The actual workflow must:
 2. install the pinned Node/Rust/Tauri build dependencies;
 3. run standalone checks and tests;
 4. verify that the signing secrets are present without printing their values;
-5. invoke `tauri-apps/tauri-action@v0` for the Cast project;
+5. invoke `tauri-apps/tauri-action@v1` for the Cast project;
 6. set `includeUpdaterJson: true`;
 7. create a draft release named `Lalin Cast v__VERSION__` initially;
 8. upload the NSIS installer, updater signature and `latest.json`;
