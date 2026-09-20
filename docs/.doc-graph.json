@@ -1,24 +1,24 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-20T23:04:30+07:00",
+  "generated_at": "2026-09-21T01:48:58+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 408,
-    "total_edges": 531,
+    "total_nodes": 412,
+    "total_edges": 536,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
-      "requirements_with_code_annotations": "66% (28/42)",
+      "requirements_with_code_annotations": "69% (29/42)",
       "requirements_with_tests": "23% (10/42)",
-      "code_files_referenced_by_docs": "1% (1/100)",
-      "code_files_with_tests": "16% (16/100)",
-      "structured_annotations_found": 201,
-      "unstructured_req_refs_found": 123
+      "code_files_referenced_by_docs": "2% (3/102)",
+      "code_files_with_tests": "15% (16/102)",
+      "structured_annotations_found": 202,
+      "unstructured_req_refs_found": 124
     }
   },
   "nodes": [
@@ -1145,6 +1145,22 @@
       "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
+      "id": "code:tools/verify/diarize_transcript.py",
+      "type": "code_file",
+      "path": "tools/verify/diarize_transcript.py",
+      "hash": "5511410021f6",
+      "status": "current",
+      "last_verified": "2026-09-21T01:01:20+07:00"
+    },
+    {
+      "id": "code:tools/verify/voice_worker_eval_clips.py",
+      "type": "code_file",
+      "path": "tools/verify/voice_worker_eval_clips.py",
+      "hash": "4d5f776bdc96",
+      "status": "current",
+      "last_verified": "2026-09-21T00:35:30+07:00"
+    },
+    {
       "id": "doc:2026-08-19-render-portability-sidecar",
       "type": "document",
       "path": "docs/superpowers/plans/2026-08-19-render-portability-sidecar.md",
@@ -1223,6 +1239,16 @@
       "prev_hash": "42adb75deb17",
       "status": "current",
       "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "type": "document",
+      "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
+      "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "hash": "3a2ec195ec71",
+      "prev_hash": "3a2ec195ec71",
+      "status": "current",
+      "last_verified": "2026-09-21T01:01:20+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1429,10 +1455,10 @@
       "type": "document",
       "path": "docs/appendices/D-traceability.md",
       "title": "D-traceability",
-      "hash": "65c8381e6527",
-      "prev_hash": "65c8381e6527",
+      "hash": "dd531316ede9",
+      "prev_hash": "dd531316ede9",
       "status": "current",
-      "last_verified": "2026-09-20T23:03:56+07:00"
+      "last_verified": "2026-09-21T00:12:02+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -1449,10 +1475,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "0b634d402ebf",
-      "prev_hash": "0b634d402ebf",
+      "hash": "b4d2e39e9df9",
+      "prev_hash": "b4d2e39e9df9",
       "status": "current",
-      "last_verified": "2026-09-20T23:04:30+07:00"
+      "last_verified": "2026-09-21T01:22:03+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1983,6 +2009,16 @@
       "prev_hash": "2f2f903a4ab9",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:MEETING_TRANSCRIPT_PIPELINE",
+      "type": "document",
+      "path": "docs/architecture/MEETING_TRANSCRIPT_PIPELINE.md",
+      "title": "MEETING_TRANSCRIPT_PIPELINE",
+      "hash": "f276a887dffc",
+      "prev_hash": "f276a887dffc",
+      "status": "current",
+      "last_verified": "2026-09-21T01:48:58+07:00"
     },
     {
       "id": "doc:PACKAGING_SIDECAR",
@@ -4283,6 +4319,13 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/api/app/voice_worker/engine_faster_whisper.py",
+      "to": "req:FR-19",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/api/app/voice_worker/profile.py",
       "to": "req:FR-02",
       "type": "implements",
@@ -4971,6 +5014,27 @@
     {
       "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
       "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "to": "code:tools/verify/diarize_transcript.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "to": "code:tools/verify/voice_worker_eval_clips.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -6630,6 +6694,13 @@
     {
       "from": "doc:LALIN_WORKSPACE_TAB_SPEC",
       "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:MEETING_TRANSCRIPT_PIPELINE",
+      "to": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

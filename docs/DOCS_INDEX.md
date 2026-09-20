@@ -1,7 +1,7 @@
 ---
-version: "0.10.0b"
+version: "0.10.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T23:50:00+07:00,LALIN"
+last_update: "2026-09-21T04:35:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -29,6 +29,7 @@ attributes:
 - `docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md`: local tests, native Full/Compact screenshots, user-confirmed audible output and explicit unverified gates.
 - `docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md`: candidate fail-closed voice-worker entrypoint, control/engine process split, speech-core seams and profile-scoped exceptions to Studio jobs/WS/auth rules (CR-005).
 - `docs/architecture/JAITTS_EASY_COMPARISON.md`: source-only comparison of JaiTTS-Easy with Studio `tts.py` and the voice worker; verified F5-TTS license facts, Thai chunking gap and eval protocol proposal.
+- `docs/architecture/MEETING_TRANSCRIPT_PIPELINE.md`: draft 6-stage offline meeting-transcript pipeline (whisper + pyannote + Meet ring gate + local narrative agent); eval helper outside the voice-worker scope, D14/D15 raised.
 - `docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md`: candidate Lalin Media vertical slice, ownership matrix, VacuumTube provenance and verification gates.
 - `docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md`: candidate current-to-target migration, rollback and retention map.
 - `docs/architecture/LALIN_CAST_REPOSITORY_SPLIT_PLAN.md`: executed export inventory, history policy and staged release gates.
@@ -118,6 +119,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-17-SIDECAR-BUILD.md`: local sidecar build, exact artifact hash, Python environment and independent runtime checks.
 - `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md`: H0 source/contract review for the PRP voice worker handoff, fit-gap LVP-REQ-001..032, decisions D1–D13 and environment evidence.
 - `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A.md`: Slice A stub-engine evidence — 171 backend tests, headless smoke, D12 schema export; speech/GPU/quality NOT_RUN.
+- `docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md`: Slice B ASR evidence — faster-whisper engine adapter, D8 manifests asr-th-en-01 (turbo) / -medium, speech venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED (D9).
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
@@ -146,6 +148,8 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.2b | 2026-09-21 | beta | Index the draft meeting-transcript pipeline design | based on b5acf61 | LALIN |
+| 0.10.1b | 2026-09-21 | beta | Index Slice B ASR evidence (faster-whisper engine, asr-th-en-01 manifests) | based on 7d6235d | LALIN |
 | 0.10.0b | 2026-09-20 | beta | Index voice-worker CR-005/ADR-005, H0 and Slice A evidence and the JaiTTS-Easy comparison after PR #20 merged | based on a6c5a4d | LALIN |
 | 0.9.0b | 2026-09-20 | beta | Index complete Play current/candidate documentation, traceability and user/release guides | based on f5a6681 | LALIN |
 | 0.8.0b | 2026-09-20 | beta | Index approved fullscreen/relative-seek implementation and native verification | based on 8429010 | LALIN |

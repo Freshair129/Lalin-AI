@@ -184,8 +184,7 @@ class Worker:
 WorkerFactory = Callable[..., Worker]
 
 
-@pytest.fixture()
-def worker_factory(tmp_path_factory) -> WorkerFactory:
+def _make_worker_factory(tmp_path_factory) -> tuple[WorkerFactory, ExitStack]:
     stack = ExitStack()
 
     def factory(kind: str = "asr", *, manifest: dict[str, Any] | None = None, settings: dict[str, Any] | None = None,
@@ -204,5 +203,19 @@ def worker_factory(tmp_path_factory) -> WorkerFactory:
         client = stack.enter_context(TestClient(app))
         return Worker(client=client, runtime=app.state.runtime, manifest=loaded, settings=worker_settings, manifest_path=manifest_path)
 
+    return factory, stack
+
+
+@pytest.fixture()
+def worker_factory(tmp_path_factory) -> WorkerFactory:
+    factory, stack = _make_worker_factory(tmp_path_factory)
+    yield factory
+    stack.close()
+
+
+@pytest.fixture(scope="module")
+def worker_factory_module(tmp_path_factory) -> WorkerFactory:
+    """แชร์ worker ทั้งโมดูล — สำหรับ engine จริงที่โหลดโมเดลช้า (Slice B)"""
+    factory, stack = _make_worker_factory(tmp_path_factory)
     yield factory
     stack.close()

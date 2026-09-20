@@ -1,0 +1,76 @@
+{
+  "_comment": "D8 primary ASR profile (Slice B): faster-whisper large-v3-turbo, cuda:0 int8_float16 (~1.2 GB VRAM). RTX 3060/5060 Ti both run CTranslate2 CUDA 12; measured only on 5060 Ti so far. CPU host: set device=cpu + compute_type=int8.",
+  "_model_source": {
+    "repo": "mobiuslabsgmbh/faster-whisper-large-v3-turbo",
+    "license": "MIT (OpenAI Whisper weights, CTranslate2 conversion)",
+    "pinned_on": "2026-09-20",
+    "downloaded_by": "huggingface_hub.snapshot_download; worker itself never fetches"
+  },
+  "profile_id": "asr-th-en-01",
+  "profile_revision": "rev-2026-09-20-large-v3-turbo",
+  "kind": "asr",
+  "runtime_id": "speech-asr-fw",
+  "physical_resource_id": "gpu0-local-host",
+  "device": "cuda:0",
+  "engine": "faster-whisper",
+  "engine_options": {
+    "compute_type": "int8_float16",
+    "beam_size": 5,
+    "heartbeat_seconds": 0.25,
+    "warmup": true
+  },
+  "languages": [
+    "th",
+    "en"
+  ],
+  "accepted_audio_formats": [
+    "audio/wav",
+    "audio/x-wav",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/flac",
+    "audio/mp4"
+  ],
+  "max_concurrency": 1,
+  "limits": {
+    "max_audio_bytes": 10485760,
+    "max_audio_seconds": 60,
+    "max_text_code_points": 800,
+    "max_output_seconds": 60,
+    "speed_min": 1.0,
+    "speed_max": 1.0
+  },
+  "assets": [
+    {
+      "role": "config.json",
+      "path": "../../models/faster-whisper/large-v3-turbo/config.json",
+      "sha256": "b0253ea6c0d3bea6b1e19e91a02acfd3b53f4467362efcb5a3e6b16c9b3a9b7e",
+      "bytes": 2263
+    },
+    {
+      "role": "model.bin",
+      "path": "../../models/faster-whisper/large-v3-turbo/model.bin",
+      "sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+      "bytes": 1617884929
+    },
+    {
+      "role": "preprocessor_config.json",
+      "path": "../../models/faster-whisper/large-v3-turbo/preprocessor_config.json",
+      "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711",
+      "bytes": 340
+    },
+    {
+      "role": "tokenizer.json",
+      "path": "../../models/faster-whisper/large-v3-turbo/tokenizer.json",
+      "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd",
+      "bytes": 2710337
+    },
+    {
+      "role": "vocabulary.json",
+      "path": "../../models/faster-whisper/large-v3-turbo/vocabulary.json",
+      "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1",
+      "bytes": 1068114
+    }
+  ],
+  "_language_note": "auto removed 2026-09-21: Whisper language detection returned 'en' (p~0.8) on every window of a real Thai meeting recording and then emitted English 'translation' hallucinations; the caller must state th/en explicitly (real-work evidence, Slice B doc §5)"
+}

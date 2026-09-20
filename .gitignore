@@ -4,6 +4,8 @@ __pycache__/
 .venv/
 backend/.venv/
 apps/api/.venv/
+apps/api/.venv-speech/
+apps/api/.venv-diar/
 
 # Config / secrets
 .env
@@ -20,6 +22,7 @@ state/
 backend/data/
 apps/api/data/
 *.wav
+!apps/api/tests/voice_worker/fixtures/*.wav
 *.mp3
 *.mp4
 !backend/app/**/sample*.wav

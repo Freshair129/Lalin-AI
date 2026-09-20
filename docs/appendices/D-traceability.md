@@ -1,7 +1,7 @@
 ---
-version: "1.4.2b"
+version: "1.4.3b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T23:30:00+07:00,LALIN"
+last_update: "2026-09-21T00:45:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -43,7 +43,7 @@ attributes:
 | FR-13 | Batch Queue | SWARM_PLAN W3.5 · SPEC §4 | `useBatchQueue.ts` + `BatchQueue.tsx` | `useBatchQueue.test.tsx` | ✅ persist/re-attach/interrupted/queued |
 | FR-14 | Workspace Agent + Mix Copilot | ai-system/agent-architecture (AI-AGT-001) · SWARM_PLAN W4.1-4.3 | `routers/agent.py` + `MixCopilot.tsx` | ✏️ TODO | ✅ done |
 | FR-15 | File Manager | UI_SITEMAP§3 (files) | `routers/fs.py` + `FileManager.tsx` | ✏️ TODO | ✅ done |
-| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub engine) | `tests/voice_worker/*` (72) · `tools/verify/smoke_voice_worker_control.ps1` | 🟡 Slice A stub ผ่านในเครื่อง / speech engine, GPU, quality, joint PRP = NOT_RUN/BLOCKED |
+| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub + faster-whisper engines; `profiles/voice-worker/asr-th-en-01*.json`) | `tests/voice_worker/*` (94 ใน speech venv / 85+1 skip ใน venv หลัก) · `tools/verify/smoke_voice_worker_control.ps1 -Manifest` | 🟡 Slice A stub + Slice B ASR (turbo/medium, cuda int8_float16) ผ่านในเครื่อง 5060 Ti / Thai quality, RTX 3060, joint PRP = NOT_RUN; TTS BLOCKED (D9) |
 
 ## Lalin Play — separate Studio baseline and standalone evidence
 
@@ -152,6 +152,7 @@ graph LR
 | 1.4.0b | 2026-09-20 | LALIN | Link standalone Play requirements/evidence separately from historical Studio and preserve concurrent worker mapping |
 | 1.4.1b | 2026-09-20 | LALIN | Clarify that the isolated Play review branch excludes concurrent voice-worker work |
 | 1.4.2b | 2026-09-20 | LALIN | Merge `main` (PR #19) into the shared branch that carries the FR-19 voice-worker row; both histories retained |
+| 1.4.3b | 2026-09-21 | LALIN | FR-19 row: Slice B ASR (faster-whisper engine, asr-th-en-01 manifests) evidence linked; Thai/3060/joint still NOT_RUN |
 
 ## CHANGELOG
 
@@ -160,6 +161,7 @@ date and historical scan sections remain unchanged.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.3b | 2026-09-21 | beta | Update FR-19 row with Slice B ASR engine/manifests/tests | based on 7d6235d | LALIN |
 | 1.4.2b | 2026-09-20 | beta | Resolve merge of main (PR #19, 8a36a60) into codex/lalin-play-split; keep FR-19 voice-worker row and Play sections from both sides | merge of 8a36a60 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Clarify isolated review scope without introducing unrelated worker changes | based on 2e1eb73 | LALIN |
 | 1.4.0b | 2026-09-20 | beta | Add Play ownership/traceability links and version metadata; preserve prior content | based on f5a6681 | LALIN |
