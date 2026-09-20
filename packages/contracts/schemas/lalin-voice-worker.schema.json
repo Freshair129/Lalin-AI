@@ -1,0 +1,1946 @@
+{
+  "$defs": {
+    "Admission": {
+      "additionalProperties": false,
+      "properties": {
+        "content_fence": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Fence"
+        },
+        "deadline_at": {
+          "format": "date-time",
+          "title": "Deadline At",
+          "type": "string"
+        },
+        "lease_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Lease Id",
+          "type": "string"
+        },
+        "start_before": {
+          "format": "date-time",
+          "title": "Start Before",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lease_id",
+        "start_before",
+        "deadline_at"
+      ],
+      "title": "Admission",
+      "type": "object"
+    },
+    "AsrEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "contract_version": {
+          "const": "1.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/$defs/AsrInput"
+        },
+        "invocation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Invocation Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "asr",
+          "title": "Kind",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        }
+      },
+      "required": [
+        "contract_version",
+        "invocation_id",
+        "attempt_id",
+        "target",
+        "admission",
+        "kind",
+        "input"
+      ],
+      "title": "AsrEnvelope",
+      "type": "object"
+    },
+    "AsrInput": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Audio Bytes",
+          "type": "integer"
+        },
+        "audio_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Audio Sha256",
+          "type": "string"
+        },
+        "declared_mime_type": {
+          "maxLength": 64,
+          "minLength": 3,
+          "title": "Declared Mime Type",
+          "type": "string"
+        },
+        "language": {
+          "default": "auto",
+          "maxLength": 8,
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        }
+      },
+      "required": [
+        "audio_sha256",
+        "audio_bytes",
+        "declared_mime_type"
+      ],
+      "title": "AsrInput",
+      "type": "object"
+    },
+    "AsrResult": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Seconds"
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Engine"
+        },
+        "kind": {
+          "const": "asr",
+          "title": "Kind",
+          "type": "string"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provenance"
+        },
+        "segments": {
+          "items": {},
+          "title": "Segments",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "text"
+      ],
+      "title": "AsrResult",
+      "type": "object"
+    },
+    "AssetPublic": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "sha256"
+      ],
+      "title": "AssetPublic",
+      "type": "object"
+    },
+    "CancelResponse": {
+      "additionalProperties": false,
+      "description": "``WorkerRuntime.cancel()`` — ``OperationStatus`` บวก ``disposition``.",
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "cancellation_requested": {
+          "title": "Cancellation Requested",
+          "type": "boolean"
+        },
+        "compute_stopped": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compute Stopped"
+        },
+        "content_fence": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Fence"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "ACK",
+            "UNSUPPORTED",
+            "CANCELLED_BEFORE_START",
+            "ALREADY_FINISHED"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperationError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "execution_status": {
+          "enum": [
+            "ACCEPTED",
+            "DISPATCHING",
+            "RUNNING",
+            "FINISHED",
+            "UNKNOWN"
+          ],
+          "title": "Execution Status",
+          "type": "string"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finished At"
+        },
+        "invocation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Invocation Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "asr",
+            "tts"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "operation_outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "SUCCEEDED",
+                "FAILED",
+                "CANCELLED"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operation Outcome"
+        },
+        "payload_state": {
+          "enum": [
+            "NONE",
+            "AVAILABLE",
+            "ERASE_REQUESTED",
+            "ERASED",
+            "EXPIRED"
+          ],
+          "title": "Payload State",
+          "type": "string"
+        },
+        "profile_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Profile Revision",
+          "type": "string"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "asr": "#/$defs/AsrResult",
+                  "tts": "#/$defs/TtsResult"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/AsrResult"
+                },
+                {
+                  "$ref": "#/$defs/TtsResult"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        },
+        "runtime_epoch": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Runtime Epoch",
+          "type": "string"
+        },
+        "runtime_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Runtime Id",
+          "type": "string"
+        },
+        "safe_to_retry": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Safe To Retry"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "stop_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StopEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UsageReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "attempt_id",
+        "invocation_id",
+        "kind",
+        "runtime_id",
+        "runtime_epoch",
+        "profile_id",
+        "profile_revision",
+        "execution_status",
+        "cancellation_requested",
+        "payload_state",
+        "created_at",
+        "disposition"
+      ],
+      "title": "CancelResponse",
+      "type": "object"
+    },
+    "Capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "async_status": {
+          "title": "Async Status",
+          "type": "boolean"
+        },
+        "cancel": {
+          "title": "Cancel",
+          "type": "string"
+        },
+        "erase_payload": {
+          "title": "Erase Payload",
+          "type": "boolean"
+        },
+        "operations": {
+          "items": {
+            "enum": [
+              "asr",
+              "tts"
+            ],
+            "type": "string"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "output_fetch": {
+          "title": "Output Fetch",
+          "type": "boolean"
+        },
+        "text_policy_revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text Policy Revision"
+        }
+      },
+      "required": [
+        "operations",
+        "cancel",
+        "async_status",
+        "output_fetch",
+        "erase_payload"
+      ],
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "CapacityInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "in_use": {
+          "title": "In Use",
+          "type": "integer"
+        },
+        "max_concurrency": {
+          "title": "Max Concurrency",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_concurrency",
+        "in_use"
+      ],
+      "title": "CapacityInfo",
+      "type": "object"
+    },
+    "DescribeResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "capacity": {
+          "$ref": "#/$defs/CapacityInfo"
+        },
+        "contract_version": {
+          "const": "1.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "draining": {
+          "title": "Draining",
+          "type": "boolean"
+        },
+        "engine": {
+          "$ref": "#/$defs/EngineInfo"
+        },
+        "observation_seq": {
+          "title": "Observation Seq",
+          "type": "integer"
+        },
+        "observed_at": {
+          "title": "Observed At",
+          "type": "string"
+        },
+        "physical_resource_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Physical Resource Id",
+          "type": "string"
+        },
+        "profiles": {
+          "items": {
+            "$ref": "#/$defs/ProfileDescribe"
+          },
+          "title": "Profiles",
+          "type": "array"
+        },
+        "residency": {
+          "$ref": "#/$defs/Residency"
+        },
+        "runtime_epoch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Runtime Epoch"
+        },
+        "runtime_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Runtime Id",
+          "type": "string"
+        },
+        "worker": {
+          "$ref": "#/$defs/WorkerInfo"
+        }
+      },
+      "required": [
+        "contract_version",
+        "worker",
+        "runtime_id",
+        "physical_resource_id",
+        "engine",
+        "profiles",
+        "capabilities",
+        "capacity",
+        "residency",
+        "draining",
+        "observed_at",
+        "observation_seq"
+      ],
+      "title": "DescribeResponse",
+      "type": "object"
+    },
+    "DeviceInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "configured": {
+          "title": "Configured",
+          "type": "string"
+        },
+        "effective": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effective"
+        }
+      },
+      "required": [
+        "configured"
+      ],
+      "title": "DeviceInfo",
+      "type": "object"
+    },
+    "EngineInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "labeled_stub": {
+          "title": "Labeled Stub",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "labeled_stub"
+      ],
+      "title": "EngineInfo",
+      "type": "object"
+    },
+    "ErasePayloadResponse": {
+      "additionalProperties": false,
+      "description": "``WorkerRuntime.erase()``.",
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "execution_status": {
+          "enum": [
+            "ACCEPTED",
+            "DISPATCHING",
+            "RUNNING",
+            "FINISHED",
+            "UNKNOWN"
+          ],
+          "title": "Execution Status",
+          "type": "string"
+        },
+        "payload_state": {
+          "enum": [
+            "NONE",
+            "AVAILABLE",
+            "ERASE_REQUESTED",
+            "ERASED",
+            "EXPIRED"
+          ],
+          "title": "Payload State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "payload_state",
+        "execution_status"
+      ],
+      "title": "ErasePayloadResponse",
+      "type": "object"
+    },
+    "ErrorBody": {
+      "additionalProperties": false,
+      "description": "``WorkerError.to_body()`` — ส่วนใน ``{\"error\": ...}``; ``details`` ขาดหายได้ (ไม่ใช่แค่ null).",
+      "properties": {
+        "attempt_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attempt Id"
+        },
+        "code": {
+          "enum": [
+            "AUDIO_FORMAT_UNSUPPORTED",
+            "AUDIO_TOO_LARGE",
+            "AUDIO_UNINTELLIGIBLE",
+            "CANCEL_REQUESTED",
+            "DEADLINE_EXCEEDED",
+            "EXECUTION_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "INVALID_REQUEST",
+            "LANGUAGE_UNSUPPORTED",
+            "MODEL_UNAVAILABLE",
+            "NOT_FOUND",
+            "NO_SPEECH",
+            "OUTPUT_INVALID",
+            "OUTPUT_LIMIT",
+            "OUTPUT_NOT_READY",
+            "PAYLOAD_ERASED",
+            "PROFILE_MISMATCH",
+            "RUNTIME_FAILED",
+            "RUNTIME_OOM",
+            "SCOPE_DENIED",
+            "TARGET_MISMATCH",
+            "UNAUTHORIZED",
+            "UNSUPPORTED_PARAMETER",
+            "VOICE_NOT_APPROVED",
+            "WORKER_BUSY"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Details"
+        },
+        "execution_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "ACCEPTED",
+                "DISPATCHING",
+                "RUNNING",
+                "FINISHED",
+                "UNKNOWN"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Status"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "safe_to_retry": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Safe To Retry"
+        },
+        "started": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "request_id"
+      ],
+      "title": "ErrorBody",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ErrorBody"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "InvocationEnvelope": {
+      "discriminator": {
+        "mapping": {
+          "asr": "#/$defs/AsrEnvelope",
+          "tts": "#/$defs/TtsEnvelope"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AsrEnvelope"
+        },
+        {
+          "$ref": "#/$defs/TtsEnvelope"
+        }
+      ]
+    },
+    "OperationError": {
+      "additionalProperties": false,
+      "description": "``receipts.Receipt.error`` — เสมอมีแค่สองคีย์นี้ (ต่างจาก ``ErrorBody`` ของ HTTP error envelope).",
+      "properties": {
+        "code": {
+          "enum": [
+            "AUDIO_FORMAT_UNSUPPORTED",
+            "AUDIO_TOO_LARGE",
+            "AUDIO_UNINTELLIGIBLE",
+            "CANCEL_REQUESTED",
+            "DEADLINE_EXCEEDED",
+            "EXECUTION_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "INVALID_REQUEST",
+            "LANGUAGE_UNSUPPORTED",
+            "MODEL_UNAVAILABLE",
+            "NOT_FOUND",
+            "NO_SPEECH",
+            "OUTPUT_INVALID",
+            "OUTPUT_LIMIT",
+            "OUTPUT_NOT_READY",
+            "PAYLOAD_ERASED",
+            "PROFILE_MISMATCH",
+            "RUNTIME_FAILED",
+            "RUNTIME_OOM",
+            "SCOPE_DENIED",
+            "TARGET_MISMATCH",
+            "UNAUTHORIZED",
+            "UNSUPPORTED_PARAMETER",
+            "VOICE_NOT_APPROVED",
+            "WORKER_BUSY"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "OperationError",
+      "type": "object"
+    },
+    "OperationStatus": {
+      "additionalProperties": false,
+      "description": "``Receipt.to_status()`` — GET /operations/{attempt_id} และ body ของ POST /operations.",
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "cancellation_requested": {
+          "title": "Cancellation Requested",
+          "type": "boolean"
+        },
+        "compute_stopped": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compute Stopped"
+        },
+        "content_fence": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Fence"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperationError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "execution_status": {
+          "enum": [
+            "ACCEPTED",
+            "DISPATCHING",
+            "RUNNING",
+            "FINISHED",
+            "UNKNOWN"
+          ],
+          "title": "Execution Status",
+          "type": "string"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finished At"
+        },
+        "invocation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Invocation Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "asr",
+            "tts"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "operation_outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "SUCCEEDED",
+                "FAILED",
+                "CANCELLED"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operation Outcome"
+        },
+        "payload_state": {
+          "enum": [
+            "NONE",
+            "AVAILABLE",
+            "ERASE_REQUESTED",
+            "ERASED",
+            "EXPIRED"
+          ],
+          "title": "Payload State",
+          "type": "string"
+        },
+        "profile_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Profile Revision",
+          "type": "string"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "asr": "#/$defs/AsrResult",
+                  "tts": "#/$defs/TtsResult"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/AsrResult"
+                },
+                {
+                  "$ref": "#/$defs/TtsResult"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        },
+        "runtime_epoch": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Runtime Epoch",
+          "type": "string"
+        },
+        "runtime_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Runtime Id",
+          "type": "string"
+        },
+        "safe_to_retry": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Safe To Retry"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "stop_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StopEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UsageReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "attempt_id",
+        "invocation_id",
+        "kind",
+        "runtime_id",
+        "runtime_epoch",
+        "profile_id",
+        "profile_revision",
+        "execution_status",
+        "cancellation_requested",
+        "payload_state",
+        "created_at"
+      ],
+      "title": "OperationStatus",
+      "type": "object"
+    },
+    "ProfileDescribe": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_audio_formats": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Accepted Audio Formats",
+          "type": "array"
+        },
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/AssetPublic"
+          },
+          "title": "Assets",
+          "type": "array"
+        },
+        "device": {
+          "$ref": "#/$defs/DeviceInfo"
+        },
+        "engine": {
+          "title": "Engine",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "asr",
+            "tts"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Languages",
+          "type": "array"
+        },
+        "limits": {
+          "$ref": "#/$defs/ProfileLimits"
+        },
+        "manifest_sha256": {
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "max_concurrency": {
+          "title": "Max Concurrency",
+          "type": "integer"
+        },
+        "output_formats": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Formats",
+          "type": "array"
+        },
+        "profile_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Profile Revision",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ProfileState"
+        },
+        "voices": {
+          "items": {
+            "$ref": "#/$defs/VoicePresetPublic"
+          },
+          "title": "Voices",
+          "type": "array"
+        }
+      },
+      "required": [
+        "profile_id",
+        "profile_revision",
+        "kind",
+        "engine",
+        "languages",
+        "accepted_audio_formats",
+        "output_formats",
+        "limits",
+        "max_concurrency",
+        "voices",
+        "assets",
+        "manifest_sha256",
+        "device",
+        "state"
+      ],
+      "title": "ProfileDescribe",
+      "type": "object"
+    },
+    "ProfileLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_audio_bytes": {
+          "title": "Max Audio Bytes",
+          "type": "integer"
+        },
+        "max_audio_seconds": {
+          "title": "Max Audio Seconds",
+          "type": "number"
+        },
+        "max_output_seconds": {
+          "title": "Max Output Seconds",
+          "type": "number"
+        },
+        "max_text_code_points": {
+          "title": "Max Text Code Points",
+          "type": "integer"
+        },
+        "speed_max": {
+          "title": "Speed Max",
+          "type": "number"
+        },
+        "speed_min": {
+          "title": "Speed Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "max_audio_bytes",
+        "max_audio_seconds",
+        "max_text_code_points",
+        "max_output_seconds",
+        "speed_min",
+        "speed_max"
+      ],
+      "title": "ProfileLimits",
+      "type": "object"
+    },
+    "ProfileState": {
+      "additionalProperties": false,
+      "properties": {
+        "configured": {
+          "title": "Configured",
+          "type": "boolean"
+        },
+        "loaded": {
+          "title": "Loaded",
+          "type": "boolean"
+        },
+        "qualification_note": {
+          "title": "Qualification Note",
+          "type": "string"
+        },
+        "qualified": {
+          "title": "Qualified",
+          "type": "boolean"
+        },
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "ready_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ready Reason"
+        },
+        "supported": {
+          "title": "Supported",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "configured",
+        "supported",
+        "loaded",
+        "ready",
+        "qualified",
+        "qualification_note"
+      ],
+      "title": "ProfileState",
+      "type": "object"
+    },
+    "ReadinessProfileEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Profile Revision",
+          "type": "string"
+        },
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "profile_id",
+        "profile_revision",
+        "ready"
+      ],
+      "title": "ReadinessProfileEntry",
+      "type": "object"
+    },
+    "ReadinessResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "$ref": "#/$defs/DeviceInfo"
+        },
+        "draining": {
+          "title": "Draining",
+          "type": "boolean"
+        },
+        "engine_alive": {
+          "title": "Engine Alive",
+          "type": "boolean"
+        },
+        "heartbeat_age_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heartbeat Age Seconds"
+        },
+        "last_reconcile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReconcileReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "observation_seq": {
+          "title": "Observation Seq",
+          "type": "integer"
+        },
+        "observed_at": {
+          "title": "Observed At",
+          "type": "string"
+        },
+        "profiles": {
+          "items": {
+            "$ref": "#/$defs/ReadinessProfileEntry"
+          },
+          "title": "Profiles",
+          "type": "array"
+        },
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "residency": {
+          "$ref": "#/$defs/Residency"
+        },
+        "runtime_epoch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Runtime Epoch"
+        },
+        "runtime_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Runtime Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ready",
+        "runtime_id",
+        "profiles",
+        "engine_alive",
+        "device",
+        "residency",
+        "draining",
+        "observed_at",
+        "observation_seq"
+      ],
+      "title": "ReadinessResponse",
+      "type": "object"
+    },
+    "ReconcileReport": {
+      "additionalProperties": false,
+      "properties": {
+        "epoch": {
+          "title": "Epoch",
+          "type": "string"
+        },
+        "never_started": {
+          "title": "Never Started",
+          "type": "integer"
+        },
+        "unknown": {
+          "title": "Unknown",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "epoch",
+        "never_started",
+        "unknown"
+      ],
+      "title": "ReconcileReport",
+      "type": "object"
+    },
+    "Residency": {
+      "additionalProperties": false,
+      "description": "``supervisor.snapshot()[\"residency\"]`` — อาจเหลือแค่ ``{\"provenance\": \"unavailable\"}`` ก่อน engine ตอบ hello.",
+      "properties": {
+        "device": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device"
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Engine"
+        },
+        "model_loaded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Loaded"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "vram_bytes_allocated": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vram Bytes Allocated"
+        },
+        "vram_bytes_reserved": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vram Bytes Reserved"
+        }
+      },
+      "required": [
+        "provenance"
+      ],
+      "title": "Residency",
+      "type": "object"
+    },
+    "StopEvidence": {
+      "additionalProperties": true,
+      "description": "หลักฐานการหยุด compute — ``kind`` เป็น discriminator แบบหลวม (ไม่ใช้ pydantic discriminator จริง)\nเพราะคีย์ที่เหลือต่างกันไปตาม kind (``process_exit`` มี pid/exitcode/exited/intentional/runtime_epoch/\nvram_reclaimed; ``never_started``/``engine_returned``/… มีแค่ observed_at) — จึงยอม extra fields.",
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "StopEvidence",
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "physical_resource_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Physical Resource Id",
+          "type": "string"
+        },
+        "profile_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Profile Revision",
+          "type": "string"
+        },
+        "runtime_epoch": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Runtime Epoch",
+          "type": "string"
+        },
+        "runtime_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Runtime Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "runtime_id",
+        "runtime_epoch",
+        "physical_resource_id",
+        "profile_id",
+        "profile_revision"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "TtsEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "contract_version": {
+          "const": "1.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/$defs/TtsInput"
+        },
+        "invocation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Invocation Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "tts",
+          "title": "Kind",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        }
+      },
+      "required": [
+        "contract_version",
+        "invocation_id",
+        "attempt_id",
+        "target",
+        "admission",
+        "kind",
+        "input"
+      ],
+      "title": "TtsEnvelope",
+      "type": "object"
+    },
+    "TtsInput": {
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "default": "wav",
+          "enum": [
+            "wav",
+            "mp3"
+          ],
+          "title": "Response Format",
+          "type": "string"
+        },
+        "speed": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "maximum": 4.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Speed"
+        },
+        "text": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "voice_preset_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Voice Preset Id",
+          "type": "string"
+        },
+        "voice_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Voice Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "voice_preset_id",
+        "voice_revision"
+      ],
+      "title": "TtsInput",
+      "type": "object"
+    },
+    "TtsResult": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "channels": {
+          "title": "Channels",
+          "type": "integer"
+        },
+        "duration_seconds": {
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Engine"
+        },
+        "format": {
+          "title": "Format",
+          "type": "string"
+        },
+        "kind": {
+          "const": "tts",
+          "title": "Kind",
+          "type": "string"
+        },
+        "language": {
+          "title": "Language",
+          "type": "string"
+        },
+        "mime_type": {
+          "title": "Mime Type",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provenance"
+        },
+        "sample_rate": {
+          "title": "Sample Rate",
+          "type": "integer"
+        },
+        "sample_width_bytes": {
+          "title": "Sample Width Bytes",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "text_code_points": {
+          "title": "Text Code Points",
+          "type": "integer"
+        },
+        "text_policy_revision": {
+          "title": "Text Policy Revision",
+          "type": "string"
+        },
+        "voice_preset_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Voice Preset Id",
+          "type": "string"
+        },
+        "voice_revision": {
+          "title": "Voice Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "voice_preset_id",
+        "voice_revision",
+        "language",
+        "text_policy_revision",
+        "text_code_points",
+        "format",
+        "mime_type",
+        "channels",
+        "sample_rate",
+        "sample_width_bytes",
+        "duration_seconds",
+        "bytes",
+        "sha256"
+      ],
+      "title": "TtsResult",
+      "type": "object"
+    },
+    "UsageReport": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_input_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Input Seconds"
+        },
+        "audio_output_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Output Seconds"
+        },
+        "processing_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Processing Seconds"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provenance"
+        }
+      },
+      "title": "UsageReport",
+      "type": "object"
+    },
+    "VoicePresetPublic": {
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "title": "Language",
+          "type": "string"
+        },
+        "rights_status": {
+          "title": "Rights Status",
+          "type": "string"
+        },
+        "voice_preset_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Voice Preset Id",
+          "type": "string"
+        },
+        "voice_revision": {
+          "title": "Voice Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "voice_preset_id",
+        "voice_revision",
+        "language",
+        "rights_status"
+      ],
+      "title": "VoicePresetPublic",
+      "type": "object"
+    },
+    "WorkerInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source_commit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Commit"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "WorkerInfo",
+      "type": "object"
+    }
+  },
+  "$id": "https://lalin.ai/schemas/lalin-voice-worker.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lalin Voice Worker Contract 1.0"
+}

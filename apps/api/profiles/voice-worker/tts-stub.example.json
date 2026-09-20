@@ -1,0 +1,32 @@
+{
+  "_comment": "ตัวอย่าง profile manifest สำหรับ Slice A (stub engine ที่ติดป้าย) — preset เป็น synthetic ไม่ใช่เสียงคนจริง และไม่ใช่การอนุมัติสิทธิ์เสียง",
+  "profile_id": "tts-stub-01",
+  "profile_revision": "rev-stub-2026-09-20",
+  "kind": "tts",
+  "runtime_id": "speech-stub-tts",
+  "physical_resource_id": "cpu-local-host",
+  "device": "cpu",
+  "engine": "stub",
+  "engine_options": {"work_seconds": 0.2, "output_seconds": 0.5},
+  "languages": ["th", "en"],
+  "output_formats": ["wav"],
+  "max_concurrency": 1,
+  "limits": {
+    "max_audio_bytes": 10485760,
+    "max_audio_seconds": 60,
+    "max_text_code_points": 800,
+    "max_output_seconds": 60,
+    "speed_min": 0.8,
+    "speed_max": 1.2
+  },
+  "voices": [
+    {
+      "voice_preset_id": "preset-stub-th",
+      "voice_revision": "r1",
+      "language": "th",
+      "ref_text": "[stub] synthetic reference transcript — no real voice",
+      "rights_status": "stub-synthetic"
+    }
+  ],
+  "assets": []
+}

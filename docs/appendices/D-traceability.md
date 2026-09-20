@@ -1,7 +1,7 @@
 ---
-version: "1.4.1b"
+version: "1.4.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:53:00+07:00,LALIN"
+last_update: "2026-09-20T23:30:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.4.1b |
+| **Version** | 1.4.2b |
 | **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
@@ -43,12 +43,14 @@ attributes:
 | FR-13 | Batch Queue | SWARM_PLAN W3.5 · SPEC §4 | `useBatchQueue.ts` + `BatchQueue.tsx` | `useBatchQueue.test.tsx` | ✅ persist/re-attach/interrupted/queued |
 | FR-14 | Workspace Agent + Mix Copilot | ai-system/agent-architecture (AI-AGT-001) · SWARM_PLAN W4.1-4.3 | `routers/agent.py` + `MixCopilot.tsx` | ✏️ TODO | ✅ done |
 | FR-15 | File Manager | UI_SITEMAP§3 (files) | `routers/fs.py` + `FileManager.tsx` | ✏️ TODO | ✅ done |
+| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub engine) | `tests/voice_worker/*` (72) · `tools/verify/smoke_voice_worker_control.ps1` | 🟡 Slice A stub ผ่านในเครื่อง / speech engine, GPU, quality, joint PRP = NOT_RUN/BLOCKED |
 
 ## Lalin Play — separate Studio baseline and standalone evidence
 
-The existing functional table above remains unchanged. This manually maintained
-mapping is not generated doc-graph output. The isolated Play review branch does
-not include the separate voice-worker changes from the shared development branch.
+The existing functional table and concurrent voice-worker row above remain
+unchanged. This manually maintained mapping is not generated doc-graph output.
+The isolated Play review branch (`codex/lalin-play-review`, merged to `main` as
+PR #19) did not include the voice-worker changes; this shared branch carries both.
 
 | Requirement | Design owner | Code | Tests / status |
 |---|---|---|---|
@@ -149,6 +151,7 @@ graph LR
 | 1.3.1b | 2026-08-23 | LALIN | เพิ่ม automated evidence ของ G-09/G-06/G-07 และแยก manual CPU/RTX/clean-VM gates ที่ยังเปิด |
 | 1.4.0b | 2026-09-20 | LALIN | Link standalone Play requirements/evidence separately from historical Studio and preserve concurrent worker mapping |
 | 1.4.1b | 2026-09-20 | LALIN | Clarify that the isolated Play review branch excludes concurrent voice-worker work |
+| 1.4.2b | 2026-09-20 | LALIN | Merge `main` (PR #19) into the shared branch that carries the FR-19 voice-worker row; both histories retained |
 
 ## CHANGELOG
 
@@ -157,5 +160,6 @@ date and historical scan sections remain unchanged.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.2b | 2026-09-20 | beta | Resolve merge of main (PR #19, 8a36a60) into codex/lalin-play-split; keep FR-19 voice-worker row and Play sections from both sides | merge of 8a36a60 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Clarify isolated review scope without introducing unrelated worker changes | based on 2e1eb73 | LALIN |
 | 1.4.0b | 2026-09-20 | beta | Add Play ownership/traceability links and version metadata; preserve prior content | based on f5a6681 | LALIN |

@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.1.1b |
+| **Version** | 1.2.0b |
 | **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-23 |
+| **Last Updated** | 2026-09-20 |
 | **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 ความน่าจะเป็น/ผลกระทบ: L(ต่ำ) M(กลาง) H(สูง) — ทบทวนทุกครั้งที่จะ release
@@ -22,6 +22,7 @@
 | R-007 | **GGUF/chat-template เสีย** ใน local model (เคยเจอ: gemma-4-12B คืน token รั่ว) | M | L | Verify Gate + ban list ใน [LOCAL_MODEL_LEDGER.md](../LOCAL_MODEL_LEDGER.md) | Boss |
 | R-008 | **Backend ไม่มีเทสต์อัตโนมัติ** — regression เงียบใน pipeline | L (เดิม H) | M | ✅ **MITIGATED 2026-08-19** (PR #9, merge `d836536`): `apps/api/tests/` มี 63 เทสต์ (bundle, render plan/mix, validate, agent contract, files upload traversal, smoke API) + frontend 111 เทสต์ (vitest) — `test.bat` รันทั้งสองชุดใน CI แล้ว ([release.yml](../../.github/workflows/release.yml)) · ยังไม่ครอบ: dubbing/mastering/music pipeline เอง (มีแต่ smoke script ไม่ใช่ pytest) | Boss |
 | R-009 | **ซาก build artifacts ปลอมตัวเป็น monorepo** — สแกน 2026-08-09 พบ `apps/api` มีแต่ `.pyc` 75 ไฟล์ (ไม่มี `.py` เลย), `apps/mcp` มีแต่ dist/node_modules, `apps/desktop` มีแต่ src-tauri bundle ~55k ไฟล์ — เสี่ยงคน/agent เข้าใจผิดว่าเป็น source จริงแล้วไปแก้ผิดที่ | L | — | ✅ **RESOLVED 2026-08-19** (PR #9): monorepo ย้ายเป็นของจริงแล้ว — `backend/`+`frontend/` (flat) ย้ายเข้า `apps/api/`+`apps/desktop/` จริง พร้อม `apps/mcp/`+`packages/contracts/` ใหม่, ถอดบล็อก `apps/`+`packages/` ออกจาก .gitignore ตามที่คอมเมนต์เดิมเตือนไว้ · **source of truth ปัจจุบัน = `apps/` + `packages/`** (ไม่ใช่ `backend/`/`frontend/` อีกต่อไป) · `backend/.venv` ย้ายไป `apps/api/.venv` สำเร็จแล้ว (2026-08-19 — ล็อกไฟล์ตอนแรกหายไปเอง หลัง retry) — พบผลข้างเคียงที่ควรรู้: ย้าย venv แบบนี้ทำให้ pip console-script wrapper exe (`Scripts\pyinstaller.exe` ฯลฯ) พังเงียบ ๆ เพราะ path ที่ฝังไว้ตอนติดตั้งอ้างที่เดิม — แก้แล้วโดยเรียกผ่าน `python -m PyInstaller` แทนใน `tools/build/build_sidecar.ps1` (ทนทานกว่า ไม่พังถ้าย้าย venv อีกในอนาคต) · เศษที่เหลือบนดิสก์เครื่องนี้ (untracked, ไม่กระทบ git): `backend/app/*.py`, `backend/data/`, `frontend/node_modules/`, `frontend/dist/`, `frontend/src-tauri/target/` ฯลฯ ยังอยู่จริงบนดิสก์ (ghosts เหมือนที่ scan 2026-08-09 เจอ แค่กลับด้าน — ตอนนั้น apps/ เป็น ghost, ตอนนี้ backend/frontend เป็น ghost) — ลบได้ปลอดภัยเมื่อ Boss ยืนยัน (`git ls-files backend frontend` ยืนยันว่า git ไม่ track อะไรที่นั่นแล้ว) | Boss |
+| R-010 | **TTS model license ไม่ชัด** — `VIZINTZOR/F5-TTS-THAI` ติด tag CC-BY-4.0 แต่เป็น finetune ของ `SWivid/F5-TTS` ซึ่งผู้เขียนประกาศ weights เป็น **CC BY-NC-4.0** (เพราะข้อมูล Emilia) และ dataset ไทยหลัก `Porameht/processed-voice-th-169k` เป็น **CC BY-SA-4.0**; model card เดิมบันทึกเฉพาะ tag ของผู้ finetune จึงระบุ "commercial OK" เกินหลักฐาน · candidate ทางเลือก `JTS-AI/JaiTTS-F5TTS` ไม่มี repo public (404, ตรวจ 2026-09-20) | M | H — กระทบทั้ง installer ที่ขายและ PRP voice worker (LVP-REQ-008 / D9) | 🔴 **OPEN 2026-09-20**: บันทึกข้อเท็จจริงใน [model card](../ai-system/model-cards/f5-tts-thai.md) และ [JAITTS_EASY_COMPARISON §2.2](../architecture/JAITTS_EASY_COMPARISON.md); rights owner ต้องตัดสิน (ขอความชัดเจนจากผู้เผยแพร่/ที่ปรึกษากฎหมาย) ก่อนอนุมัติ TTS profile ใด ๆ ใน CR-005 Slice B และก่อนอ้าง "commercial OK" ในเอกสารใหม่; ทางเลือกถ้า NC: ใช้เฉพาะ non-commercial/internal หรือหาโมเดลไทยที่ base ไม่ใช่ NC | Boss |
 
 ## Version History
 
@@ -30,3 +31,4 @@
 | 1.0.0 | 2026-08-09 | Boss | สร้างผ่าน rwang:doc-architect |
 | 1.1.0 | 2026-08-09 | Boss | R-009: reframe เป็น artifact ghosts (จากผลสแกน) → **MITIGATED** ด้วย .gitignore (commit 389e346), โอกาส H→L |
 | 1.1.1b | 2026-08-23 | LALIN | บันทึก G-07 automated admission evidence ใน R-004 โดยคง risk เปิดจนกว่าจะมี measured VRAM/manual RTX gate |
+| 1.2.0b | 2026-09-20 | LALIN | เพิ่ม R-010 TTS model license (base CC BY-NC / dataset CC BY-SA) จากการตรวจ HF/GitHub; สถานะ OPEN รอ rights owner |
