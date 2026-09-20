@@ -127,7 +127,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.4.0 | 2026-09-20 | active | Recorded the completed Lalin Cast repository split and root-repository handoff | root-cleanup-commit | LALIN |
+| 0.4.0 | 2026-09-20 | active | Recorded the completed Lalin Cast repository split and root-repository handoff | 6163c57 | LALIN |
 | 0.2.1b | 2026-09-19 | candidate | Indexed the local Lalin Media fork provenance and P1/P2 implementation evidence | uncommitted | LALIN |
 | 0.2.2b | 2026-09-19 | candidate | Indexed the approved Rust + Tauri v2 Media port ADR | uncommitted | LALIN |
 | 0.2.0b | 2026-09-19 | candidate | Indexed the candidate Lalin AI umbrella platform ADR, Media plan and migration map | uncommitted | LALIN |

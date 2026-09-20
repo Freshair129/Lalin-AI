@@ -1,7 +1,7 @@
 ---
 version: "0.2.0"
 created_at: "2026-09-20T12:00:00+07:00,LALIN,eb90421"
-last_update: "2026-09-20T12:00:00+07:00,LALIN,root-cleanup-commit"
+last_update: "2026-09-20T12:00:00+07:00,LALIN,6163c57"
 status: "active"
 superseded_by: null
 attributes:
@@ -105,4 +105,4 @@ Cast fixes must be made in `Freshair129/lalin-cast`.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.2.0 | 2026-09-20 | active | Recorded the pushed Lalin Cast ownership boundary, Studio process contract and root-repository cleanup scope | root-cleanup-commit | LALIN |
+| 0.2.0 | 2026-09-20 | active | Recorded the pushed Lalin Cast ownership boundary, Studio process contract and root-repository cleanup scope | 6163c57 | LALIN |

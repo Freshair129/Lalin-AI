@@ -187,5 +187,5 @@ documented even if the fallback is later removed from release artifacts.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.2.0 | 2026-09-20 | active | Recorded accepted standalone Cast split, target push and umbrella cleanup handoff | root-cleanup-commit | LALIN |
+| 0.2.0 | 2026-09-20 | active | Recorded accepted standalone Cast split, target push and umbrella cleanup handoff | 6163c57 | LALIN |
 | 0.1.0b | 2026-09-20 | candidate | Proposed standalone Lalin Cast repository boundary, identity and approval gates | 11c62a8 | LALIN |

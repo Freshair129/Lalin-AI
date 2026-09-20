@@ -165,5 +165,5 @@ returns the expected signed manifest.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.2.0 | 2026-09-20 | active | Recorded executed standalone export/push and root cleanup handoff | root-cleanup-commit | LALIN |
+| 0.2.0 | 2026-09-20 | active | Recorded executed standalone export/push and root cleanup handoff | 6163c57 | LALIN |
 | 0.1.0b | 2026-09-20 | candidate | Proposed exact split inventory, history-preserving export and staged release gates | 11c62a8 | LALIN |

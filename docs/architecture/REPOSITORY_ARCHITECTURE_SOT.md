@@ -180,7 +180,7 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.3.0 | 2026-09-20 | active | Record Lalin Cast as an external product and remove its implementation from the umbrella tree | root-cleanup-commit | LALIN |
+| 0.3.0 | 2026-09-20 | active | Record Lalin Cast as an external product and remove its implementation from the umbrella tree | 6163c57 | LALIN |
 | 0.2.2b | 2026-09-19 | candidate | Record the parallel Rust + Tauri v2 Media candidate and keep WebView2 parity gated | uncommitted | LALIN |
 | 0.2.0b | 2026-09-19 | candidate | Added candidate Lalin AI umbrella tree, separate Media process boundary and migration/provenance links | uncommitted | LALIN |
 | 0.1.14b | 2026-09-17 | beta | Record single consumer owner and sender boundary; align stale frontmatter with existing version history | uncommitted | LALIN |
