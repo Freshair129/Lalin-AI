@@ -2,10 +2,14 @@ param(
     [string]$PythonPath,
     [ValidateSet("asr", "tts")][string]$Kind = "tts",
     [int]$Port = 8790,
-    [string]$WorkDir
+    [string]$WorkDir,
+    [string]$Manifest,
+    [string]$Audio
 )
 
-# Slice A smoke (LVP-AT-001/002/005): boot `python -m app.voice_worker` headless with a stub manifest,
+# Slice A/B smoke (LVP-AT-001/002/005): boot `python -m app.voice_worker` headless with a manifest (stub by default;
+# pass -Manifest profilesoice-workersr-th-en-01.json -PythonPath appspi\.venv-speech\Scripts\python.exe -Audio <speech.wav>
+# for the Slice B faster-whisper engine),
 # check liveness/describe/readiness, negative auth, one operation via the reference client, output + erase,
 # then stop the process. No torch/model/GPU involved. PASS = control plane boots and honours the contract;
 # it is NOT speech-quality or GPU evidence.
@@ -28,7 +32,16 @@ if ([string]::IsNullOrWhiteSpace($WorkDir)) {
 }
 New-Item -ItemType Directory -Force $WorkDir | Out-Null
 
-$manifest = Join-Path $apiDir ("profiles\voice-worker\" + $Kind + "-stub.example.json")
+if ([string]::IsNullOrWhiteSpace($Manifest)) {
+    $manifest = Join-Path $apiDir ("profiles\voice-worker\" + $Kind + "-stub.example.json")
+} else {
+    $manifest = $Manifest
+    if (-not [System.IO.Path]::IsPathRooted($manifest)) { $manifest = Join-Path $apiDir $manifest }
+}
+if (-not (Test-Path $manifest)) {
+    Write-Host "[!] Missing manifest: $manifest" -ForegroundColor Red
+    exit 1
+}
 $token = "smoke-inference-" + [guid]::NewGuid().ToString("N")
 $mgmt = "smoke-management-" + [guid]::NewGuid().ToString("N")
 $env:LALIN_VOICE_WORKER_PROFILE_PATH = $manifest
@@ -39,7 +52,7 @@ $env:LALIN_VOICE_WORKER_MANAGEMENT_TOKEN = $mgmt
 $env:DATA_DIR = Join-Path $WorkDir "studio-data-must-not-exist"
 $env:PYTHONIOENCODING = "utf-8"
 
-Write-Host "[*] Booting voice worker ($Kind stub) on 127.0.0.1:$Port ..." -ForegroundColor Cyan
+Write-Host "[*] Booting voice worker ($Kind, manifest $manifest) on 127.0.0.1:$Port ..." -ForegroundColor Cyan
 $stdout = Join-Path $WorkDir "worker.out.log"
 $stderr = Join-Path $WorkDir "worker.err.log"
 $proc = Start-Process -FilePath $PythonPath -ArgumentList "-m", "app.voice_worker" -WorkingDirectory $apiDir `
@@ -89,9 +102,9 @@ try {
 
     [void](Invoke-Client -Label "describe" -ClientArgs @("describe"))
 
-    Write-Host "[*] readiness (wait up to 30s)" -ForegroundColor Cyan
+    Write-Host "[*] readiness (wait up to 120s; real engines warm up first)" -ForegroundColor Cyan
     $ready = $false
-    for ($i = 0; $i -lt 60; $i++) {
+    for ($i = 0; $i -lt 240; $i++) {
         $json = (& $PythonPath $client readiness 2>$null) -join "`n"
         if ($json -match '"ready":\s*true') { $ready = $true; break }
         Start-Sleep -Milliseconds 500
@@ -124,9 +137,23 @@ try {
             [void](Invoke-Client -Label "output fetch + sha256 check" -ClientArgs @("output", "--attempt", $attempt, "--out", $out))
         }
     } else {
-        $clip = Join-Path $WorkDir "clip.wav"
-        [System.IO.File]::WriteAllBytes($clip, [byte[]](1..2048 | ForEach-Object { $_ % 251 }))
-        [void](Invoke-Client -Label "asr operation $attempt" -ClientArgs @("asr", "--attempt", $attempt, "--audio", $clip, "--language", "th", "--wait"))
+        if ([string]::IsNullOrWhiteSpace($Audio)) {
+            $clip = Join-Path $WorkDir "clip.wav"
+            [System.IO.File]::WriteAllBytes($clip, [byte[]](1..2048 | ForEach-Object { $_ % 251 }))
+            $lang = "th"
+        } else {
+            $clip = $Audio
+            $lang = "auto"
+        }
+        [void](Invoke-Client -Label "asr operation $attempt" -ClientArgs @("asr", "--attempt", $attempt, "--audio", $clip, "--language", $lang, "--wait"))
+        $final = (& $PythonPath $client status --attempt $attempt 2>$null) -join "`n"
+        if ($final -match '"operation_outcome":\s*"SUCCEEDED"') {
+            Write-Host "[*] asr outcome SUCCEEDED" -ForegroundColor Green
+        } elseif (-not [string]::IsNullOrWhiteSpace($Audio)) {
+            $failures.Add("asr operation did not SUCCEED on the supplied audio")
+        } else {
+            Write-Host "[*] asr outcome not SUCCEEDED (synthetic non-speech clip; acceptable for stub-less engines)"
+        }
     }
     [void](Invoke-Client -Label "erase payload" -ClientArgs @("erase", "--attempt", $attempt))
 
@@ -136,7 +163,7 @@ try {
         Write-Host "FAIL: $($failures -join '; ')" -ForegroundColor Red
         exit 1
     }
-    Write-Host "PASS: voice worker control plane booted headless with the labeled stub engine (not a speech/GPU qualification)" -ForegroundColor Green
+    Write-Host "PASS: voice worker booted headless with manifest $manifest and honoured the contract (not a Thai-quality qualification)" -ForegroundColor Green
     exit 0
 } finally {
     if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }

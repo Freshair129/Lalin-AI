@@ -2,7 +2,7 @@
 
 worker เริ่มได้เฉพาะเมื่อ manifest ผ่านทุกข้อ:
   • ``device`` explicit (``cpu`` หรือ ``cuda:N``) — ห้าม ``auto``
-  • ``engine`` อยู่ใน allowlist (Slice A: ``stub`` เท่านั้น)
+  • ``engine`` อยู่ใน allowlist (``stub``, ``faster-whisper``) — faster-whisper ต้อง kind=asr, compute_type ที่รู้จัก และ pin model.bin/config.json
   • assets ทุกชิ้นมี path + sha256 และตรวจตรง (ไม่มี network fetch)
   • TTS preset ทุกตัวมี ``ref_text`` ไม่ว่าง (กัน hidden reference-ASR) และ ``rights_status`` ที่รู้จัก
 """
@@ -17,7 +17,9 @@ from typing import Any
 
 from .contract import ID_PATTERN
 
-ALLOWED_ENGINES = frozenset({"stub"})  # Slice B จะเพิ่ม "faster-whisper", "f5"
+ALLOWED_ENGINES = frozenset({"stub", "faster-whisper"})  # Slice B TTS จะเพิ่ม "f5" หลัง D9
+FASTER_WHISPER_COMPUTE_TYPES = frozenset({"int8", "int8_float16", "float16", "float32"})
+FASTER_WHISPER_REQUIRED_ASSETS = ("model.bin", "config.json")
 DEVICE_RE = re.compile(r"^(cpu|cuda:\d+)$")
 ID_RE = re.compile(ID_PATTERN)
 ASR_LANGUAGES = frozenset({"th", "en", "auto"})
@@ -267,6 +269,8 @@ def manifest_from_dict(
         raise ProfileError("output_formats รองรับเฉพาะ wav/mp3")
     voices = _voices(data.get("voices"), frozenset(languages_raw)) if kind == "tts" else ()
     assets = _assets(data.get("assets"), base_dir, verify_assets)
+    if engine == "faster-whisper":
+        _check_faster_whisper(kind, device, engine_options, assets)
     return ProfileManifest(
         profile_id=_id(data, "profile_id"),
         profile_revision=_require(data, "profile_revision", str) or _fail("profile_revision ว่าง"),
@@ -292,6 +296,29 @@ def _fail(message: str) -> str:
     raise ProfileError(message)
 
 
+def _check_faster_whisper(kind: str, device: str, options: dict[str, Any], assets: tuple[AssetPin, ...]) -> None:
+    if kind != "asr":
+        raise ProfileError("engine faster-whisper รองรับเฉพาะ kind=asr")
+    compute = options.get("compute_type")
+    if compute not in FASTER_WHISPER_COMPUTE_TYPES:
+        raise ProfileError(f"engine_options.compute_type ต้องเป็นหนึ่งใน {sorted(FASTER_WHISPER_COMPUTE_TYPES)} (ห้ามว่าง/auto)")
+    if device == "cpu" and compute in {"float16", "int8_float16"}:
+        raise ProfileError(f"compute_type {compute} ใช้บน cpu ไม่ได้ — ใช้ int8 หรือ float32")
+    beam = options.get("beam_size", 5)
+    if not isinstance(beam, int) or isinstance(beam, bool) or not (1 <= beam <= 10):
+        raise ProfileError("engine_options.beam_size ต้องเป็นจำนวนเต็ม 1–10")
+    threads = options.get("cpu_threads", 0)
+    if not isinstance(threads, int) or isinstance(threads, bool) or threads < 0:
+        raise ProfileError("engine_options.cpu_threads ต้องเป็นจำนวนเต็ม ≥ 0")
+    roles = {asset.role for asset in assets}
+    missing = [role for role in FASTER_WHISPER_REQUIRED_ASSETS if role not in roles]
+    if missing:
+        raise ProfileError(f"engine faster-whisper ต้อง pin assets {missing} (MODEL_UNAVAILABLE — ไม่ดาวน์โหลดเอง)")
+    parents = {str(Path(asset.path).parent) for asset in assets}
+    if len(parents) != 1:
+        raise ProfileError("assets ของ faster-whisper ต้องอยู่ใน directory เดียวกัน (CTranslate2 โหลดทั้งโฟลเดอร์)")
+
+
 def load_manifest(path: Path | str | None, *, verify_assets: bool = True) -> ProfileManifest:
     if path is None:
         raise ProfileError("ไม่ได้ตั้ง LALIN_VOICE_WORKER_PROFILE_PATH — worker ไม่มี default profile (fail-closed)")
@@ -314,6 +341,7 @@ def load_manifest(path: Path | str | None, *, verify_assets: bool = True) -> Pro
 
 __all__ = [
     "ALLOWED_ENGINES",
+    "FASTER_WHISPER_COMPUTE_TYPES",
     "AssetPin",
     "Limits",
     "ProfileError",

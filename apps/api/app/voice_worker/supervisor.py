@@ -14,11 +14,11 @@ import uuid
 from concurrent.futures import Future
 from typing import Any
 
-from . import engine_stub
+from . import engine_faster_whisper, engine_stub
 from .profile import ProfileManifest
 from .timeutil import iso, utc_now
 
-ENGINE_TARGETS = {"stub": engine_stub.serve}
+ENGINE_TARGETS = {"stub": engine_stub.serve, "faster-whisper": engine_faster_whisper.serve}
 
 
 class EngineStartError(RuntimeError):
@@ -79,6 +79,8 @@ class EngineSupervisor:
                 return False, "heartbeat_stale"
             if self.effective_device != self.manifest.device:
                 return False, "device_mismatch"
+            if isinstance(self.residency, dict) and self.residency.get("warm") is False:
+                return False, "warming_up"
             return True, None
 
     def snapshot(self) -> dict[str, Any]:
@@ -90,6 +92,8 @@ class EngineSupervisor:
                     reason = "heartbeat_stale"
                 elif self.effective_device != self.manifest.device:
                     reason = "device_mismatch"
+                elif isinstance(self.residency, dict) and self.residency.get("warm") is False:
+                    reason = "warming_up"  # engine จริงยังอุ่น CUDA kernel/JIT ไม่เสร็จ — ยังไม่รับงาน
                 else:
                     ready, reason = True, None
             return {
@@ -109,6 +113,14 @@ class EngineSupervisor:
             }
 
     # ── lifecycle ────────────────────────────────────────────
+    def _engine_options(self) -> dict[str, Any]:
+        """manifest.engine_options + device/assets ที่ profile ตรวจแล้ว (engine ห้ามหา path/อุปกรณ์เอง)."""
+        return {
+            **dict(self.manifest.engine_options),
+            "device": self.manifest.device,
+            "assets": {asset.role: asset.path for asset in self.manifest.assets},
+        }
+
     def start(self) -> str:
         with self._lock:
             if self.alive:
@@ -119,7 +131,7 @@ class EngineSupervisor:
         parent_conn, child_conn = self._ctx.Pipe(duplex=True)
         proc = self._ctx.Process(
             target=target,
-            args=(child_conn, dict(self.manifest.engine_options)),
+            args=(child_conn, self._engine_options()),
             name="lalin-voice-worker-engine",
             daemon=True,
         )

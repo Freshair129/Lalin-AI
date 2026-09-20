@@ -1,0 +1,70 @@
+{
+  "_comment": "D8 fallback ASR profile (Slice B): faster-whisper medium, cuda:0 int8_float16 — for hosts with less VRAM or as CPU int8 fallback (device=cpu, compute_type=int8).",
+  "_model_source": {
+    "repo": "Systran/faster-whisper-medium",
+    "license": "MIT (OpenAI Whisper weights, CTranslate2 conversion)",
+    "pinned_on": "2026-09-20",
+    "downloaded_by": "huggingface_hub.snapshot_download; worker itself never fetches"
+  },
+  "profile_id": "asr-th-en-01-medium",
+  "profile_revision": "rev-2026-09-20-medium",
+  "kind": "asr",
+  "runtime_id": "speech-asr-fw",
+  "physical_resource_id": "gpu0-local-host",
+  "device": "cuda:0",
+  "engine": "faster-whisper",
+  "engine_options": {
+    "compute_type": "int8_float16",
+    "beam_size": 5,
+    "heartbeat_seconds": 0.25,
+    "warmup": true
+  },
+  "languages": [
+    "th",
+    "en",
+    "auto"
+  ],
+  "accepted_audio_formats": [
+    "audio/wav",
+    "audio/x-wav",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/flac",
+    "audio/mp4"
+  ],
+  "max_concurrency": 1,
+  "limits": {
+    "max_audio_bytes": 10485760,
+    "max_audio_seconds": 60,
+    "max_text_code_points": 800,
+    "max_output_seconds": 60,
+    "speed_min": 1.0,
+    "speed_max": 1.0
+  },
+  "assets": [
+    {
+      "role": "config.json",
+      "path": "../../models/faster-whisper/medium/config.json",
+      "sha256": "3622a2ddc41ec0e0fd4e68c13c6830f03b90c38d89aaad184de02c8c642cf807",
+      "bytes": 2257
+    },
+    {
+      "role": "model.bin",
+      "path": "../../models/faster-whisper/medium/model.bin",
+      "sha256": "9b45e1009dcc4ab601eff815b61d80e60ce3fd8c74c1a14f4a282258286b51ae",
+      "bytes": 1527906378
+    },
+    {
+      "role": "tokenizer.json",
+      "path": "../../models/faster-whisper/medium/tokenizer.json",
+      "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+      "bytes": 2203239
+    },
+    {
+      "role": "vocabulary.txt",
+      "path": "../../models/faster-whisper/medium/vocabulary.txt",
+      "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913",
+      "bytes": 459861
+    }
+  ]
+}

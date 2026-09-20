@@ -133,7 +133,7 @@ class WorkerRuntime:
             "ready_reason": snap["reason"],
             "qualified": False,
             "qualification_note": "stub engine — not qualified for speech; no quality or GPU evidence"
-            if self.manifest.engine == "stub" else "qualification pending Slice B evidence",
+            if self.manifest.engine == "stub" else "Slice B engine — real speech path; Thai quality/GPU qualification evidence pending",
         }
         return {
             "contract_version": WORKER_CONTRACT_VERSION,
@@ -258,7 +258,8 @@ class WorkerRuntime:
             if len(audio) != envelope.input.audio_bytes or hashlib.sha256(audio).hexdigest() != envelope.input.audio_sha256:
                 raise WorkerError("INVALID_REQUEST", "audio bytes do not match declared audio_bytes/audio_sha256", attempt_id=envelope.attempt_id,
                                   started=False)
-            return {"language": envelope.input.language, "declared_mime_type": envelope.input.declared_mime_type}
+            return {"language": envelope.input.language, "declared_mime_type": envelope.input.declared_mime_type,
+                    "max_audio_seconds": self.manifest.limits.max_audio_seconds}
         if audio is not None:
             raise WorkerError("INVALID_REQUEST", "tts uses application/json without an audio part", attempt_id=envelope.attempt_id, started=False)
         return check_tts_input(envelope, self.manifest)
