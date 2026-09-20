@@ -1,7 +1,7 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-09-21T00:40:00+07:00,LALIN,7d6235d"
-last_update: "2026-09-21T02:10:00+07:00,LALIN"
+last_update: "2026-09-21T03:20:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -93,6 +93,7 @@ turbo ทั้ง 4 คลิปรวม 180 s เสียง ใช้เว
 3. **เสียงประชุมหลายคน/ไกลไมค์** ยังต้องมี VAD หรือ diarization ก่อนส่งเข้า worker — worker ปิด `vad_filter` (ไม่ตัดสินใจแทน caller) ผลจึงมี hallucination ต่างภาษาในช่วงพูดซ้อน
    → เสนอ engine option `vad_filter` ระดับ manifest (ไม่ใช่ per-request) เป็น **D14** ให้ PRP owner ตัดสิน
 4. Full-file transcript ภาษาไทย (`th` forced, turbo, VAD on) ของทั้งไฟล์สร้างไว้เป็นไฟล์ท้องถิ่นให้ผู้ใช้ตรวจ (ไม่ commit) — ใช้เป็น reference ร่างสำหรับทำ WER รอบถัดไป
+5. **Speaker diarization (นอก scope worker)** — pyannote 3.1 ใน `apps/api/.venv-diar` (torch cu128; lock `requirements-diar.lock.txt`) แยกผู้พูดทั้งไฟล์ได้ 4 คนใน 189 s บน GPU; รวมเข้ากับ transcript ด้วย [`tools/verify/diarize_transcript.py`](../../tools/verify/diarize_transcript.py) เป็น `[hh:mm:ss] S1: …`; ต้องใช้ HF login ของผู้ใช้ + ยอมรับ gated repos เอง (script ไม่แตะ token) — เป็น eval helper เท่านั้น ไม่ต่อเข้า worker เว้นแต่ PRP เพิ่ม requirement
 
 ## 4. Open before Slice B (ASR) can be called qualified
 
@@ -105,5 +106,6 @@ turbo ทั้ง 4 คลิปรวม 180 s เสียง ใช้เว
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-21 | beta | Add offline diarization eval helper (pyannote 3.1, .venv-diar lock); full-file speaker-labelled Thai transcript produced locally, not committed | based on 79335cd | LALIN |
 | 0.2.0b | 2026-09-21 | beta | Real-work Thai meeting evidence (§5): 4 clips through the contract on both manifests; auto language removed from D8 manifests; medium demoted to CPU-only fallback; eval tool added | based on 13fee6c | LALIN |
 | 0.1.0b | 2026-09-21 | beta | Slice B ASR: speech venv + pinned turbo/medium weights, two D8 manifests, faster-whisper engine adapter; 94/94 in speech venv, 171/171+1 skip in main venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED | based on 7d6235d | LALIN |

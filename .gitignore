@@ -5,6 +5,7 @@ __pycache__/
 backend/.venv/
 apps/api/.venv/
 apps/api/.venv-speech/
+apps/api/.venv-diar/
 
 # Config / secrets
 .env

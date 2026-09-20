@@ -1,22 +1,22 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T00:35:30+07:00",
+  "generated_at": "2026-09-21T01:01:20+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 410,
-    "total_edges": 534,
+    "total_nodes": 411,
+    "total_edges": 535,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (29/42)",
       "requirements_with_tests": "23% (10/42)",
-      "code_files_referenced_by_docs": "1% (2/101)",
-      "code_files_with_tests": "15% (16/101)",
+      "code_files_referenced_by_docs": "2% (3/102)",
+      "code_files_with_tests": "15% (16/102)",
       "structured_annotations_found": 202,
       "unstructured_req_refs_found": 124
     }
@@ -1145,6 +1145,14 @@
       "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
+      "id": "code:tools/verify/diarize_transcript.py",
+      "type": "code_file",
+      "path": "tools/verify/diarize_transcript.py",
+      "hash": "5511410021f6",
+      "status": "current",
+      "last_verified": "2026-09-21T01:01:20+07:00"
+    },
+    {
       "id": "code:tools/verify/voice_worker_eval_clips.py",
       "type": "code_file",
       "path": "tools/verify/voice_worker_eval_clips.py",
@@ -1237,10 +1245,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
       "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
-      "hash": "20395b9a9e5a",
-      "prev_hash": "20395b9a9e5a",
+      "hash": "3a2ec195ec71",
+      "prev_hash": "3a2ec195ec71",
       "status": "current",
-      "last_verified": "2026-09-21T00:35:30+07:00"
+      "last_verified": "2026-09-21T01:01:20+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -4996,6 +5004,13 @@
     {
       "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
       "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "to": "code:tools/verify/diarize_transcript.py",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
