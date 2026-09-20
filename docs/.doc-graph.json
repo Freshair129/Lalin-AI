@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T01:01:20+07:00",
+  "generated_at": "2026-09-21T01:48:58+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 411,
-    "total_edges": 535,
+    "total_nodes": 412,
+    "total_edges": 536,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1475,10 +1475,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "154cab879b39",
-      "prev_hash": "154cab879b39",
+      "hash": "b4d2e39e9df9",
+      "prev_hash": "b4d2e39e9df9",
       "status": "current",
-      "last_verified": "2026-09-21T00:12:02+07:00"
+      "last_verified": "2026-09-21T01:22:03+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -2009,6 +2009,16 @@
       "prev_hash": "2f2f903a4ab9",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:MEETING_TRANSCRIPT_PIPELINE",
+      "type": "document",
+      "path": "docs/architecture/MEETING_TRANSCRIPT_PIPELINE.md",
+      "title": "MEETING_TRANSCRIPT_PIPELINE",
+      "hash": "f276a887dffc",
+      "prev_hash": "f276a887dffc",
+      "status": "current",
+      "last_verified": "2026-09-21T01:48:58+07:00"
     },
     {
       "id": "doc:PACKAGING_SIDECAR",
@@ -6684,6 +6694,13 @@
     {
       "from": "doc:LALIN_WORKSPACE_TAB_SPEC",
       "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:MEETING_TRANSCRIPT_PIPELINE",
+      "to": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
