@@ -1,7 +1,7 @@
 ---
-version: "0.9.0b"
+version: "0.10.0b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-20T23:50:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -27,6 +27,8 @@ attributes:
 - `docs/architecture/ADR-003-LALIN-CAST-REPOSITORY-SPLIT.md`: accepted Lalin Cast repository boundary and product identity decision.
 - `docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md`: approved standalone local Play specification; additive native foundation exists, Studio handoff and migration/export/release gates remain open.
 - `docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md`: local tests, native Full/Compact screenshots, user-confirmed audible output and explicit unverified gates.
+- `docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md`: candidate fail-closed voice-worker entrypoint, control/engine process split, speech-core seams and profile-scoped exceptions to Studio jobs/WS/auth rules (CR-005).
+- `docs/architecture/JAITTS_EASY_COMPARISON.md`: source-only comparison of JaiTTS-Easy with Studio `tts.py` and the voice worker; verified F5-TTS license facts, Thai chunking gap and eval protocol proposal.
 - `docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md`: candidate Lalin Media vertical slice, ownership matrix, VacuumTube provenance and verification gates.
 - `docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md`: candidate current-to-target migration, rollback and retention map.
 - `docs/architecture/LALIN_CAST_REPOSITORY_SPLIT_PLAN.md`: executed export inventory, history policy and staged release gates.
@@ -87,6 +89,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/LALIN_PLAY_MINIMAL_COMPACT.md`: 40 frontend/6 Rust tests, native MP4/WebM preview, minimum viewport screenshots and explicit remaining DPI/touch/performance limits.
 - `docs/validation/LALIN_PLAY_LOCAL_VIDEO.md`: native MP4/WebM/silent-video screenshots, pause/seek/layout continuity, Compact sizing RCA, automated checks and explicit audio/device limitations.
 - `docs/product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md`: existing audio-first playback/EQ requirements; standalone Full/Compact delta is in PRD/ADR-004.
+- `docs/product/CR-005--HEADLESS_VOICE_WORKER.md`: candidate headless ASR/preset-TTS worker for PRP with FR-19/NFR-08 text; Slice A stub implemented locally, speech/GPU/quality and rights (R-010) still open.
 - `docs/product/SRS.md`
 - `docs/product/ROADMAP_MUSIC.md`
 - `docs/product/LOCAL_MODEL_LEDGER.md`
@@ -113,6 +116,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md`: TV Mode unit, browser and native evidence with hardware limits.
 - `docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md`: regression, build and isolated browser/native debug fixture evidence; broad MVP/release gates remain separate.
 - `docs/validation/2026-09-17-SIDECAR-BUILD.md`: local sidecar build, exact artifact hash, Python environment and independent runtime checks.
+- `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md`: H0 source/contract review for the PRP voice worker handoff, fit-gap LVP-REQ-001..032, decisions D1–D13 and environment evidence.
+- `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A.md`: Slice A stub-engine evidence — 171 backend tests, headless smoke, D12 schema export; speech/GPU/quality NOT_RUN.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
@@ -141,6 +146,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.0b | 2026-09-20 | beta | Index voice-worker CR-005/ADR-005, H0 and Slice A evidence and the JaiTTS-Easy comparison after PR #20 merged | based on a6c5a4d | LALIN |
 | 0.9.0b | 2026-09-20 | beta | Index complete Play current/candidate documentation, traceability and user/release guides | based on f5a6681 | LALIN |
 | 0.8.0b | 2026-09-20 | beta | Index approved fullscreen/relative-seek implementation and native verification | based on 8429010 | LALIN |
 | 0.7.1b | 2026-09-20 | beta | Index approved Compact implementation and native preview verification | based on 8429010 | LALIN |

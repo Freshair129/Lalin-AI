@@ -1,24 +1,24 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-18T23:50:33+07:00",
+  "generated_at": "2026-09-20T23:04:30+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 339,
-    "total_edges": 387,
+    "total_nodes": 408,
+    "total_edges": 531,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
-      "requirements_with_code_annotations": "70% (28/40)",
-      "requirements_with_tests": "25% (10/40)",
-      "code_files_referenced_by_docs": "1% (1/99)",
-      "code_files_with_tests": "15% (15/99)",
+      "requirements_with_code_annotations": "66% (28/42)",
+      "requirements_with_tests": "23% (10/42)",
+      "code_files_referenced_by_docs": "1% (1/100)",
+      "code_files_with_tests": "16% (16/100)",
       "structured_annotations_found": 201,
-      "unstructured_req_refs_found": 122
+      "unstructured_req_refs_found": 123
     }
   },
   "nodes": [
@@ -628,9 +628,9 @@
       "id": "code:apps/desktop/src/App.tsx",
       "type": "code_file",
       "path": "apps/desktop/src/App.tsx",
-      "hash": "106d585c55cc",
+      "hash": "e3a47e6be047",
       "status": "current",
-      "last_verified": "2026-09-17T03:44:57+07:00"
+      "last_verified": "2026-09-20T23:03:55+07:00"
     },
     {
       "id": "code:apps/desktop/src/api.ts",
@@ -969,6 +969,14 @@
       "last_verified": "2026-09-17T03:44:57+07:00"
     },
     {
+      "id": "code:apps/desktop/src/media/mediaLauncher.ts",
+      "type": "code_file",
+      "path": "apps/desktop/src/media/mediaLauncher.ts",
+      "hash": "fc7aa2f5f3ce",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:55+07:00"
+    },
+    {
       "id": "code:apps/desktop/src/playback/audioContext.ts",
       "type": "code_file",
       "path": "apps/desktop/src/playback/audioContext.ts",
@@ -1197,6 +1205,26 @@
       "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
+      "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "document",
+      "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
+      "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "hash": "a0a244f0f091",
+      "prev_hash": "a0a244f0f091",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "document",
+      "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A.md",
+      "title": "2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "hash": "42adb75deb17",
+      "prev_hash": "42adb75deb17",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:A-api-spec",
       "type": "document",
       "path": "docs/appendices/A-api-spec.md",
@@ -1207,14 +1235,64 @@
       "last_verified": "2026-08-23T04:11:47+07:00"
     },
     {
+      "id": "doc:ADR-001-LALIN-UMBRELLA-PLATFORM",
+      "type": "document",
+      "path": "docs/architecture/ADR-001-LALIN-UMBRELLA-PLATFORM.md",
+      "title": "ADR-001-LALIN-UMBRELLA-PLATFORM",
+      "hash": "468689654b83",
+      "prev_hash": "468689654b83",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:ADR-002-LALIN-MEDIA-TAURI-PORT",
+      "type": "document",
+      "path": "docs/architecture/ADR-002-LALIN-MEDIA-TAURI-PORT.md",
+      "title": "ADR-002-LALIN-MEDIA-TAURI-PORT",
+      "hash": "a2147ce37a5a",
+      "prev_hash": "a2147ce37a5a",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:ADR-003-LALIN-CAST-REPOSITORY-SPLIT",
+      "type": "document",
+      "path": "docs/architecture/ADR-003-LALIN-CAST-REPOSITORY-SPLIT.md",
+      "title": "ADR-003-LALIN-CAST-REPOSITORY-SPLIT",
+      "hash": "879d59244964",
+      "prev_hash": "879d59244964",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "document",
+      "path": "docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md",
+      "title": "ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "hash": "37d744d5fd75",
+      "prev_hash": "37d744d5fd75",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "type": "document",
+      "path": "docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md",
+      "title": "ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "hash": "12451b1a4935",
+      "prev_hash": "12451b1a4935",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:API_SEMANTICS",
       "type": "document",
       "path": "docs/architecture/API_SEMANTICS.md",
       "title": "API_SEMANTICS",
-      "hash": "60e8436813d7",
-      "prev_hash": "60e8436813d7",
+      "hash": "cfd32efa8794",
+      "prev_hash": "cfd32efa8794",
       "status": "current",
-      "last_verified": "2026-08-23T17:46:15+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
@@ -1241,20 +1319,20 @@
       "type": "document",
       "path": "docs/architecture/BLUEPRINT.yaml",
       "title": "BLUEPRINT",
-      "hash": "7104e57615f6",
-      "prev_hash": "7104e57615f6",
+      "hash": "52fd10ae884d",
+      "prev_hash": "52fd10ae884d",
       "status": "current",
-      "last_verified": "2026-09-18T05:08:44+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:C-model-cards",
       "type": "document",
       "path": "docs/appendices/C-model-cards.md",
       "title": "C-model-cards",
-      "hash": "12121011964d",
-      "prev_hash": "12121011964d",
+      "hash": "8d87dd18d76b",
+      "prev_hash": "8d87dd18d76b",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:CLEAN_VM_CHECKLIST",
@@ -1317,14 +1395,44 @@
       "last_verified": "2026-09-18T23:48:59+07:00"
     },
     {
+      "id": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "document",
+      "path": "docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md",
+      "title": "CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "hash": "c5ab409032e8",
+      "prev_hash": "c5ab409032e8",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "document",
+      "path": "docs/product/CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md",
+      "title": "CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "hash": "8722472a044b",
+      "prev_hash": "8722472a044b",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "type": "document",
+      "path": "docs/product/CR-005--HEADLESS_VOICE_WORKER.md",
+      "title": "CR-005--HEADLESS_VOICE_WORKER",
+      "hash": "d2f2211e2c44",
+      "prev_hash": "d2f2211e2c44",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:D-traceability",
       "type": "document",
       "path": "docs/appendices/D-traceability.md",
       "title": "D-traceability",
-      "hash": "7823a545650b",
-      "prev_hash": "7823a545650b",
+      "hash": "65c8381e6527",
+      "prev_hash": "65c8381e6527",
       "status": "current",
-      "last_verified": "2026-08-23T17:46:15+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",
@@ -1341,10 +1449,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "171532cd79f1",
-      "prev_hash": "171532cd79f1",
+      "hash": "0b634d402ebf",
+      "prev_hash": "0b634d402ebf",
       "status": "current",
-      "last_verified": "2026-09-18T23:48:59+07:00"
+      "last_verified": "2026-09-20T23:04:30+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -1371,10 +1479,10 @@
       "type": "document",
       "path": "docs/appendices/E-risk-matrix.md",
       "title": "E-risk-matrix",
-      "hash": "ff8a63d423ab",
-      "prev_hash": "ff8a63d423ab",
+      "hash": "aa0bf41a1d71",
+      "prev_hash": "aa0bf41a1d71",
       "status": "current",
-      "last_verified": "2026-08-23T17:46:15+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:F-glossary",
@@ -1427,6 +1535,16 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:JAITTS_EASY_COMPARISON",
+      "type": "document",
+      "path": "docs/architecture/JAITTS_EASY_COMPARISON.md",
+      "title": "JAITTS_EASY_COMPARISON",
+      "hash": "a5cc1d8f91b9",
+      "prev_hash": "a5cc1d8f91b9",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:LALIN_ARRANGE_TAB_SPEC",
       "type": "document",
       "path": "docs/design/LALIN_ARRANGE_TAB_SPEC.md",
@@ -1445,6 +1563,36 @@
       "prev_hash": "858e1929682c",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:LALIN_CAST_REPOSITORY_SPLIT_PLAN",
+      "type": "document",
+      "path": "docs/architecture/LALIN_CAST_REPOSITORY_SPLIT_PLAN.md",
+      "title": "LALIN_CAST_REPOSITORY_SPLIT_PLAN",
+      "hash": "e05a0a15daea",
+      "prev_hash": "e05a0a15daea",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_CAST_SEPARATION_HANDOFF",
+      "type": "document",
+      "path": "docs/architecture/LALIN_CAST_SEPARATION_HANDOFF.md",
+      "title": "LALIN_CAST_SEPARATION_HANDOFF",
+      "hash": "84dea83e5477",
+      "prev_hash": "84dea83e5477",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_CAST_UPDATER_SPEC",
+      "type": "document",
+      "path": "docs/architecture/LALIN_CAST_UPDATER_SPEC.md",
+      "title": "LALIN_CAST_UPDATER_SPEC",
+      "hash": "577a50e0f081",
+      "prev_hash": "577a50e0f081",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:LALIN_DUBBING_TAB_SPEC",
@@ -1537,6 +1685,26 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:LALIN_MEDIA_MIGRATION_MAP",
+      "type": "document",
+      "path": "docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md",
+      "title": "LALIN_MEDIA_MIGRATION_MAP",
+      "hash": "86424268e481",
+      "prev_hash": "86424268e481",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_MEDIA_PLATFORM_PLAN",
+      "type": "document",
+      "path": "docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md",
+      "title": "LALIN_MEDIA_PLATFORM_PLAN",
+      "hash": "135f230a204b",
+      "prev_hash": "135f230a204b",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
       "type": "document",
       "path": "docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md",
@@ -1545,6 +1713,96 @@
       "prev_hash": "727d9d680106",
       "status": "current",
       "last_verified": "2026-09-17T04:12:44+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "document",
+      "path": "docs/product/LALIN_PLAY_DOCUMENTATION.md",
+      "title": "LALIN_PLAY_DOCUMENTATION",
+      "hash": "8e9b0de20015",
+      "prev_hash": "8e9b0de20015",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "document",
+      "path": "docs/validation/LALIN_PLAY_FULLSCREEN_SKIP.md",
+      "title": "LALIN_PLAY_FULLSCREEN_SKIP",
+      "hash": "f99a1de64437",
+      "prev_hash": "f99a1de64437",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "type": "document",
+      "path": "docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md",
+      "title": "LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "hash": "302d96579a7b",
+      "prev_hash": "302d96579a7b",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "document",
+      "path": "docs/validation/LALIN_PLAY_LOCAL_VIDEO.md",
+      "title": "LALIN_PLAY_LOCAL_VIDEO",
+      "hash": "d148bbc02a85",
+      "prev_hash": "d148bbc02a85",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "document",
+      "path": "docs/validation/LALIN_PLAY_MINIMAL_COMPACT.md",
+      "title": "LALIN_PLAY_MINIMAL_COMPACT",
+      "hash": "20bf5e806cb2",
+      "prev_hash": "20bf5e806cb2",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "type": "document",
+      "path": "docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md",
+      "title": "LALIN_PLAY_RELEASE_RUNBOOK",
+      "hash": "c22e47bf5dcf",
+      "prev_hash": "c22e47bf5dcf",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "document",
+      "path": "docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md",
+      "title": "LALIN_PLAY_SEPARATION_HANDOFF",
+      "hash": "9a9975ca67e5",
+      "prev_hash": "9a9975ca67e5",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
+      "type": "document",
+      "path": "docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md",
+      "title": "LALIN_PLAY_STANDALONE_FOUNDATION",
+      "hash": "b1b5f75f5515",
+      "prev_hash": "b1b5f75f5515",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "document",
+      "path": "docs/validation/LALIN_PLAY_TRACEABILITY.md",
+      "title": "LALIN_PLAY_TRACEABILITY",
+      "hash": "6991987da94e",
+      "prev_hash": "6991987da94e",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:LALIN_PLAY_TV_MODE_PLAN",
@@ -1565,6 +1823,16 @@
       "prev_hash": "ea904fd0856a",
       "status": "current",
       "last_verified": "2026-09-18T23:48:59+07:00"
+    },
+    {
+      "id": "doc:LALIN_PLAY_USER_GUIDE",
+      "type": "document",
+      "path": "docs/guides/LALIN_PLAY_USER_GUIDE.md",
+      "title": "LALIN_PLAY_USER_GUIDE",
+      "hash": "b0d9547ca753",
+      "prev_hash": "b0d9547ca753",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:LALIN_RENAME_MIGRATION_PLAN",
@@ -1611,10 +1879,10 @@
       "type": "document",
       "path": "docs/design/LALIN_SITEMAP_SOT.md",
       "title": "LALIN_SITEMAP_SOT",
-      "hash": "19a4717fd6c0",
-      "prev_hash": "19a4717fd6c0",
+      "hash": "0b00cd537a2f",
+      "prev_hash": "0b00cd537a2f",
       "status": "current",
-      "last_verified": "2026-09-18T05:05:15+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:LALIN_UI_IMPLEMENTATION_PLAN",
@@ -1722,9 +1990,9 @@
       "path": "docs/operations/PACKAGING_SIDECAR.md",
       "title": "PACKAGING_SIDECAR",
       "hash": "e42a4b7e97f8",
-      "prev_hash": "d710abe321c4",
-      "status": "changed",
-      "last_verified": "2026-09-18T23:50:33+07:00"
+      "prev_hash": "e42a4b7e97f8",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:55+07:00"
     },
     {
       "id": "doc:PHASE3_RUNTIME_MOVE_MAP",
@@ -1831,10 +2099,10 @@
       "type": "document",
       "path": "docs/product/PRD.md",
       "title": "PRD",
-      "hash": "17636dbdf194",
-      "prev_hash": "17636dbdf194",
+      "hash": "04eca4065f26",
+      "prev_hash": "04eca4065f26",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:PROPOSED_V03_DUBBING_PRO",
@@ -1921,10 +2189,10 @@
       "type": "document",
       "path": "docs/architecture/REPOSITORY_ARCHITECTURE_SOT.md",
       "title": "REPOSITORY_ARCHITECTURE_SOT",
-      "hash": "fa8359555d46",
-      "prev_hash": "fa8359555d46",
+      "hash": "1ac2a3f299e9",
+      "prev_hash": "1ac2a3f299e9",
       "status": "current",
-      "last_verified": "2026-09-17T03:48:13+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:REPO_MIGRATION_PLAN",
@@ -2081,10 +2349,10 @@
       "type": "document",
       "path": "docs/product/SRS.md",
       "title": "SRS",
-      "hash": "99bf181dcfe8",
-      "prev_hash": "99bf181dcfe8",
+      "hash": "de3cbc75156c",
+      "prev_hash": "de3cbc75156c",
       "status": "current",
-      "last_verified": "2026-09-18T05:05:15+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:SWARM_PLAN",
@@ -2135,6 +2403,56 @@
       "prev_hash": "42db1e456563",
       "status": "current",
       "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:audio-after-video",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/audio-after-video.png",
+      "title": "audio-after-video",
+      "hash": "50a3bc793081",
+      "prev_hash": "50a3bc793081",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:audio-before",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/audio-before.png",
+      "title": "audio-before",
+      "hash": "03f8f4d5eb2d",
+      "prev_hash": "03f8f4d5eb2d",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:audio-fullscreen",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/audio-fullscreen.png",
+      "title": "audio-fullscreen",
+      "hash": "0dcd5466c8ab",
+      "prev_hash": "0dcd5466c8ab",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:audio-minimum",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/audio-minimum.png",
+      "title": "audio-minimum",
+      "hash": "50ada758994e",
+      "prev_hash": "50ada758994e",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:audio-plus-ten",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/audio-plus-ten.png",
+      "title": "audio-plus-ten",
+      "hash": "4da74f87a708",
+      "prev_hash": "4da74f87a708",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:chinda-qwen3-4b",
@@ -2377,6 +2695,46 @@
       "last_verified": "2026-08-09T08:31:25+07:00"
     },
     {
+      "id": "doc:compact-native",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-split/compact-native.png",
+      "title": "compact-native",
+      "hash": "b7854ad51331",
+      "prev_hash": "b7854ad51331",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:compact-native-latest",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-split/compact-native-latest.png",
+      "title": "compact-native-latest",
+      "hash": "b43ab7e7d2ad",
+      "prev_hash": "b43ab7e7d2ad",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:compact-restored",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/compact-restored.png",
+      "title": "compact-restored",
+      "hash": "8064dfd238c9",
+      "prev_hash": "8064dfd238c9",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:controls-hidden",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/controls-hidden.png",
+      "title": "controls-hidden",
+      "hash": "db4d2054b6dd",
+      "prev_hash": "db4d2054b6dd",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:data-pipeline",
       "type": "document",
       "path": "docs/ai-system/data-pipeline.md",
@@ -2385,6 +2743,16 @@
       "prev_hash": "721dc32d5957",
       "status": "current",
       "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:escape-restored",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/escape-restored.png",
+      "title": "escape-restored",
+      "hash": "ccaccb4b41a3",
+      "prev_hash": "ccaccb4b41a3",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:ethics-governance",
@@ -2401,10 +2769,10 @@
       "type": "document",
       "path": "docs/ai-system/model-cards/f5-tts-thai.md",
       "title": "f5-tts-thai",
-      "hash": "4f44893f993b",
-      "prev_hash": "4f44893f993b",
+      "hash": "739c9cfad6e9",
+      "prev_hash": "739c9cfad6e9",
       "status": "current",
-      "last_verified": "2026-08-23T04:11:47+07:00"
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:faster-whisper-large-v3",
@@ -2415,6 +2783,46 @@
       "prev_hash": "d51176e7d7be",
       "status": "current",
       "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:full-native",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-split/full-native.png",
+      "title": "full-native",
+      "hash": "33656b10e1df",
+      "prev_hash": "33656b10e1df",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:full-native-latest",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-split/full-native-latest.png",
+      "title": "full-native-latest",
+      "hash": "f30bfa2d47a2",
+      "prev_hash": "f30bfa2d47a2",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:full-return",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/full-return.png",
+      "title": "full-return",
+      "hash": "da931fd4cd4a",
+      "prev_hash": "da931fd4cd4a",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:fullscreen-preview",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/fullscreen-preview.png",
+      "title": "fullscreen-preview",
+      "hash": "782b6fba728b",
+      "prev_hash": "782b6fba728b",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:htdemucs",
@@ -2437,6 +2845,56 @@
       "last_verified": "2026-09-17T04:59:06+07:00"
     },
     {
+      "id": "doc:maximized-before",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/maximized-before.png",
+      "title": "maximized-before",
+      "hash": "cb31c2c5b8bb",
+      "prev_hash": "cb31c2c5b8bb",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:maximized-restored",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/maximized-restored.png",
+      "title": "maximized-restored",
+      "hash": "cb48e054b6ed",
+      "prev_hash": "cb48e054b6ed",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:minimum-controls",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/minimum-controls.png",
+      "title": "minimum-controls",
+      "hash": "40afb56515e2",
+      "prev_hash": "40afb56515e2",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:minimum-left-edge",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/minimum-left-edge.png",
+      "title": "minimum-left-edge",
+      "hash": "b46868f829f3",
+      "prev_hash": "b46868f829f3",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:minimum-right-edge",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/minimum-right-edge.png",
+      "title": "minimum-right-edge",
+      "hash": "83e52534dffe",
+      "prev_hash": "83e52534dffe",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:model-lifecycle",
       "type": "document",
       "path": "docs/ai-system/model-lifecycle.md",
@@ -2447,6 +2905,106 @@
       "last_verified": "2026-08-23T17:46:15+07:00"
     },
     {
+      "id": "doc:mp4-compact-eq",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/mp4-compact-eq.png",
+      "title": "mp4-compact-eq",
+      "hash": "eaf596793d35",
+      "prev_hash": "eaf596793d35",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:mp4-compact-initial",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/mp4-compact-initial.png",
+      "title": "mp4-compact-initial",
+      "hash": "999ee99c6cf8",
+      "prev_hash": "999ee99c6cf8",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:mp4-full",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/mp4-full.png",
+      "title": "mp4-full",
+      "hash": "cab390d663a2",
+      "prev_hash": "cab390d663a2",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:mp4-full-latest",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/mp4-full-latest.png",
+      "title": "mp4-full-latest",
+      "hash": "853a9afc44a4",
+      "prev_hash": "853a9afc44a4",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:mp4-hover",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/mp4-hover.png",
+      "title": "mp4-hover",
+      "hash": "0a88a1280048",
+      "prev_hash": "0a88a1280048",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:mp4-seek",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/mp4-seek.png",
+      "title": "mp4-seek",
+      "hash": "e9c7234cd09e",
+      "prev_hash": "e9c7234cd09e",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:native-fullscreen",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/native-fullscreen.png",
+      "title": "native-fullscreen",
+      "hash": "fee7417e9cfd",
+      "prev_hash": "fee7417e9cfd",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:paused-before",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/paused-before.png",
+      "title": "paused-before",
+      "hash": "ef31d4072109",
+      "prev_hash": "ef31d4072109",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:paused-minus-ten",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/paused-minus-ten.png",
+      "title": "paused-minus-ten",
+      "hash": "663bcaa9972d",
+      "prev_hash": "663bcaa9972d",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:paused-plus-ten",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/paused-plus-ten.png",
+      "title": "paused-plus-ten",
+      "hash": "f4e619804332",
+      "prev_hash": "f4e619804332",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
       "id": "doc:prompt-engineering",
       "type": "document",
       "path": "docs/ai-system/prompt-engineering.md",
@@ -2455,6 +3013,106 @@
       "prev_hash": "1a5fd1bd311b",
       "status": "current",
       "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:silent-mp4",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/silent-mp4.png",
+      "title": "silent-mp4",
+      "hash": "8ed66e54715c",
+      "prev_hash": "8ed66e54715c",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:skip-end-clamped",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/skip-end-clamped.png",
+      "title": "skip-end-clamped",
+      "hash": "35d042303edb",
+      "prev_hash": "35d042303edb",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-compact",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/webm-compact.png",
+      "title": "webm-compact",
+      "hash": "e781a5829694",
+      "prev_hash": "e781a5829694",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-expanded",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/webm-expanded.png",
+      "title": "webm-expanded",
+      "hash": "e668890d19dc",
+      "prev_hash": "e668890d19dc",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-full",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/webm-full.png",
+      "title": "webm-full",
+      "hash": "2f84e95b5886",
+      "prev_hash": "2f84e95b5886",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-fullscreen-playing",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/webm-fullscreen-playing.png",
+      "title": "webm-fullscreen-playing",
+      "hash": "3e3f4dd2e74f",
+      "prev_hash": "3e3f4dd2e74f",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-hover",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-compact/webm-hover.png",
+      "title": "webm-hover",
+      "hash": "fbf38f32a94d",
+      "prev_hash": "fbf38f32a94d",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-paused",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/webm-paused.png",
+      "title": "webm-paused",
+      "hash": "fb22840f4610",
+      "prev_hash": "fb22840f4610",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-playing-skip",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-fullscreen/webm-playing-skip.png",
+      "title": "webm-playing-skip",
+      "hash": "caff6636e3f1",
+      "prev_hash": "caff6636e3f1",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
+    },
+    {
+      "id": "doc:webm-seek",
+      "type": "document",
+      "path": "docs/validation/evidence/lalin-play-video/webm-seek.png",
+      "title": "webm-seek",
+      "hash": "e7e4a89d35e2",
+      "prev_hash": "e7e4a89d35e2",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:56+07:00"
     },
     {
       "id": "doc:xtts-v2",
@@ -2731,6 +3389,14 @@
       "last_verified": "2026-09-18T05:05:07+07:00"
     },
     {
+      "id": "req:FR-19",
+      "type": "requirement",
+      "label": "FR-19",
+      "defined_in": "docs/DOCS_INDEX.md",
+      "status": "current",
+      "last_verified": "2026-09-20T23:04:29+07:00"
+    },
+    {
       "id": "req:NFR-01",
       "type": "requirement",
       "label": "NFR-01",
@@ -2787,6 +3453,14 @@
       "last_verified": "2026-09-16T19:29:21+07:00"
     },
     {
+      "id": "req:NFR-08",
+      "type": "requirement",
+      "label": "NFR-08",
+      "defined_in": "docs/DOCS_INDEX.md",
+      "status": "current",
+      "last_verified": "2026-09-20T23:04:29+07:00"
+    },
+    {
       "id": "test:apps/desktop/src/components/JobProgress.test.tsx",
       "type": "test",
       "path": "apps/desktop/src/components/JobProgress.test.tsx",
@@ -2817,6 +3491,14 @@
       "hash": "b20f74818afc",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "test:apps/desktop/src/media/mediaLauncher.test.ts",
+      "type": "test",
+      "path": "apps/desktop/src/media/mediaLauncher.test.ts",
+      "hash": "c53bd0949d9f",
+      "status": "current",
+      "last_verified": "2026-09-20T23:03:55+07:00"
     },
     {
       "id": "test:apps/desktop/src/playback/audioEngineState.test.ts",
@@ -3601,6 +4283,13 @@
       "source": "code-scan"
     },
     {
+      "from": "code:apps/api/app/voice_worker/profile.py",
+      "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
       "from": "code:apps/desktop/src/App.tsx",
       "to": "req:FR-16",
       "type": "implements",
@@ -4217,6 +4906,76 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "doc:JAITTS_EASY_COMPARISON",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:NFR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "req:NFR-08",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:A-api-spec",
       "to": "doc:E-risk-matrix",
       "type": "references",
@@ -4252,8 +5011,218 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:ADR-003-LALIN-CAST-REPOSITORY-SPLIT",
+      "to": "doc:ADR-002-LALIN-MEDIA-TAURI-PORT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-003-LALIN-CAST-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_MEDIA_MIGRATION_MAP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-003-LALIN-CAST-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_MEDIA_PLATFORM_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_CAST_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_PLAY_TV_MODE_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:PRD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "req:NFR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "req:NFR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:API_SEMANTICS",
       "to": "doc:BLUEPRINT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:CR-005--HEADLESS_VOICE_WORKER",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -4630,6 +5599,160 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "to": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "to": "doc:PRD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:FR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:FR-02",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:FR-06",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:FR-18",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:NFR-01",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:NFR-07",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:CR-005--HEADLESS_VOICE_WORKER",
+      "to": "req:NFR-08",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:D-traceability",
       "to": "doc:SRS",
       "type": "references",
@@ -4778,6 +5901,34 @@
     },
     {
       "from": "doc:D-traceability",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-17",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-18",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
+      "to": "req:FR-19",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:D-traceability",
       "to": "req:NFR-01",
       "type": "references",
       "status": "current",
@@ -4834,7 +5985,21 @@
     },
     {
       "from": "doc:E-risk-matrix",
+      "to": "doc:JAITTS_EASY_COMPARISON",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
       "to": "doc:ethics-governance",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:E-risk-matrix",
+      "to": "doc:f5-tts-thai",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -4952,6 +6117,20 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:LALIN_MEDIA_PLATFORM_PLAN",
+      "to": "doc:ADR-001-LALIN-UMBRELLA-PLATFORM",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_MEDIA_PLATFORM_PLAN",
+      "to": "doc:ADR-002-LALIN-MEDIA-TAURI-PORT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
       "to": "doc:2026-09-17-LALIN-PLAY-COMMAND-DELIVERY",
       "type": "references",
@@ -4973,8 +6152,302 @@
       "source": "doc-scan"
     },
     {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_PLAY_USER_GUIDE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:LALIN_SITEMAP_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:PRD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_DOCUMENTATION",
+      "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "to": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "to": "doc:PRD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "to": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "to": "doc:LALIN_PLAY_USER_GUIDE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "to": "doc:LALIN_PLAY_INTEGRATION_MIGRATION_SPEC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "to": "doc:LALIN_PLAY_RELEASE_RUNBOOK",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:D-traceability",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "doc:PRD",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "req:FR-17",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_TRACEABILITY",
+      "to": "req:FR-18",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
       "from": "doc:LALIN_PLAY_TV_MODE_PLAN",
       "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_USER_GUIDE",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_PLAY_USER_GUIDE",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -4988,6 +6461,34 @@
     },
     {
       "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:LALIN_CAST_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
       "to": "doc:LALIN_LAYOUT_SOT",
       "type": "references",
       "status": "current",
@@ -4995,7 +6496,28 @@
     },
     {
       "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
       "to": "doc:LALIN_SHELL_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:LALIN_SITEMAP_SOT",
+      "to": "doc:PRD",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5128,7 +6650,70 @@
     },
     {
       "from": "doc:PRD",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
       "to": "doc:LALIN_LAYOUT_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_FULLSCREEN_SKIP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_MINIMAL_COMPACT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5143,6 +6728,20 @@
     {
       "from": "doc:PRD",
       "to": "doc:ROADMAP_MUSIC",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "req:FR-16",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:PRD",
+      "to": "req:FR-18",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5184,7 +6783,49 @@
     },
     {
       "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:ADR-001-LALIN-UMBRELLA-PLATFORM",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:LALIN_CAST_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
       "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:LALIN_PLAY_SEPARATION_HANDOFF",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:REPOSITORY_ARCHITECTURE_SOT",
+      "to": "doc:LALIN_PLAY_STANDALONE_FOUNDATION",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5212,6 +6853,13 @@
     },
     {
       "from": "doc:SRS",
+      "to": "doc:ADR-004-LALIN-PLAY-REPOSITORY-SPLIT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
       "to": "doc:CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ",
       "type": "references",
       "status": "current",
@@ -5219,7 +6867,42 @@
     },
     {
       "from": "doc:SRS",
+      "to": "doc:CR-003--LALIN_PLAY_LOCAL_VIDEO",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
       "to": "doc:LALIN_PLAY_COMMAND_DELIVERY_PLAN",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:LALIN_PLAY_DOCUMENTATION",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:LALIN_PLAY_TRACEABILITY",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:SRS",
+      "to": "doc:PRD",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5331,6 +7014,13 @@
     },
     {
       "from": "doc:f5-tts-thai",
+      "to": "doc:JAITTS_EASY_COMPARISON",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:f5-tts-thai",
       "to": "doc:ethics-governance",
       "type": "references",
       "status": "current",
@@ -5339,13 +7029,6 @@
     {
       "from": "doc:f5-tts-thai",
       "to": "req:AI-ETH-001",
-      "type": "references",
-      "status": "current",
-      "source": "doc-scan"
-    },
-    {
-      "from": "doc:f5-tts-thai",
-      "to": "req:AI-ETH-003",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -5515,6 +7198,13 @@
       "from": "test:apps/desktop/src/hooks/useBackendReadiness.test.tsx",
       "to": "req:NFR-02",
       "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "test:apps/desktop/src/media/mediaLauncher.test.ts",
+      "to": "code:apps/desktop/src/media/mediaLauncher.ts",
+      "type": "tests",
       "status": "current",
       "source": "code-scan"
     },
