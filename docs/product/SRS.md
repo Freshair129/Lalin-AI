@@ -1,3 +1,15 @@
+---
+version: "1.5.0b"
+created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
+status: "under review"
+superseded_by: null
+attributes:
+  domain: "product"
+  doc_type: "requirements"
+  scope: "Existing Studio SRS with standalone Play requirement ownership mapping"
+---
+
 # Software Requirements Specification (SRS)
 
 **ระบบ:** G-Music — AI Audio Studio
@@ -7,11 +19,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.4.0b |
+| **Doc Version** | 1.5.0b |
 | **Status** | In Review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-09-18 |
+| **Last Updated** | 2026-09-20 |
 | **Approved By** | Boss — Phase 1 scope approved 2026-08-23; CR-001 implementation merged via PR #10, MVP acceptance remains under review |
 
 | Version | Date | Author | Changes |
@@ -23,6 +35,7 @@
 | 1.3.0-draft | 2026-09-16 | LALIN | ร่างข้อกำหนดจาก CR-001 (กำลังรีวิวบน feature branch): เพิ่มร่าง FR-16 (Windows Media Player), FR-16W (Windows Integration), FR-17 (Playback EQ) และ NFR-MP-01..07 |
 | 1.3.1b | 2026-09-17 | LALIN | Correct CR-001 integration status after PR #10; link command-delivery RCA and candidate remediation without claiming MVP acceptance |
 | 1.4.0b | 2026-09-18 | LALIN | เพิ่ม FR-18 และ NFR-TV สำหรับ Lalin Play TV / Leanback Mode ตาม CR-002 และแผน architecture ที่อนุมัติ |
+| 1.5.0b | 2026-09-20 | LALIN | Add standalone Play ownership/traceability, clarify historical video deferral and add version frontmatter without changing Studio acceptance |
 
 ---
 
@@ -293,7 +306,11 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 
 ### FR-16: Windows Media Player (Lalin Play)
 
-Implementation อยู่ใน default branch แล้ว; การผ่าน MVP acceptance ยังอยู่ระหว่างตรวจ ดู [CR-001 §17](CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md#17-status) และ [แผน command delivery](../architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) ซึ่งยังเป็น candidate ข้อกำหนดด้านล่างไม่เปลี่ยนจากการปรับสถานะครั้งนี้
+ส่วนนี้เป็น baseline ของ Play ที่ยังอยู่ใน Studio binary; ไม่ใช่หลักฐานว่า
+standalone Play merge หรือ release แล้ว ดู [CR-001 §17](CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md#17-status)
+และ [แผน command delivery](../architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md)
+ซึ่ง approved/implemented locally แล้ว พร้อมข้อจำกัด acceptance ในรายงานของมัน
+สำหรับ standalone ที่ `apps/play-desktop` ใช้ข้อกำหนดเพิ่มเติมและ mapping ด้านล่าง
 
 | ID | ข้อกำหนด | Priority |
 |----|----------|----------|
@@ -306,11 +323,34 @@ Implementation อยู่ใน default branch แล้ว; การผ่�
 | FR-16.7 | Playback ต้องเป็น non-destructive และไม่แก้ source media | Must |
 | FR-16.8 | Unsupported codec/container ต้องแสดง actionable error และห้าม fail เงียบ | Must |
 | FR-16.9 | ควรรองรับอย่างน้อย WAV, MP3, FLAC, M4A/AAC และ OGG เมื่อ runtime รองรับ | Should |
-| FR-16.10 | Video playback สำหรับ MP4/WebM เป็น phase ถัดไป และต้อง reuse playback contract เดียวกันเท่าที่ทำได้ | Could |
+| FR-16.10 | Studio baseline เดิมเลื่อน video ไป phase ถัดไป; standalone ได้รับอนุมัติ local MP4/WebM ตาม CR-003 แล้วโดย reuse owner/contract ดู PLAY-V01–10 ไม่ใช่อนุมัติทุก codec | Could (Studio baseline) |
 | FR-16.11 | Player state ต้อง survive การเปลี่ยน route/window state; UI navigation ต้องไม่หยุดเพลงเอง | Must |
 | FR-16.12 | ระบบควร restore queue/session ล่าสุดแบบ opt-in (`Resume previous session`) | Should |
 | FR-16.13 | Playback speed 0.5×–2.0× สำหรับ media ที่ engine รองรับ | Should |
 | FR-16.14 | ต้องมี keyboard shortcuts สำหรับ transport, seek และ volume | Must |
+
+### Standalone Play requirement ownership (approved deltas, partial acceptance)
+
+Canonical definitions remain in [PRD §4.9](PRD.md#49-lalin-play--standalone-local-media-player-approved),
+[CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md) and
+[CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md); do not duplicate/reassign
+their IDs as new FR numbers. [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md)
+maps all 33 criteria to source/tests/evidence with local/partial/not-run status.
+
+| Requirement group | Scope and relationship to SRS |
+|---|---|
+| PLAY-01–10 | Independent local runtime, Full/Compact, data, Studio handoff and separate release; extends FR-16/16W/17 |
+| PLAY-V01–10 | Approved bounded local video; extends FR-16.10, preserves one playback owner and EQ |
+| PLAY-C01–13 | Approved minimal Compact, isolated preview, native fullscreen and ±10; queue/EQ controls remain in Full |
+| FR-18 / NFR-TV | Retained TV presentation target; Compact fullscreen is separate and does not prove native TV/gamepad parity |
+
+Source `f5a6681` is pushed on `codex/lalin-play-split` in Lalin-AI, not exported
+to an independent repository. S1 local pass/S2 partial/S3–S7 not run remain per
+[ADR-004](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md). New detailed
+IPC/migration/release specifications linked by the [document register](LALIN_PLAY_DOCUMENTATION.md)
+are candidates, not implemented interfaces or a new approved release scope.
+Studio Python/CUDA/ML constraints elsewhere in this SRS do not apply to standalone
+Play. Local file support does not promise a universal decoder, streaming or DIAL.
 
 ### FR-16W: Windows Integration
 
@@ -587,3 +627,13 @@ data/
 | **GPU VRAM** | F5-TTS + Whisper ต้องการ VRAM ~4-6GB |
 | **Ollama cold start** | Request แรกช้า >4 นาทีเมื่อเขี่ยโมเดลใหญ่ออกจาก VRAM |
 | **cp1252 console** | Windows console ไม่แสดงภาษาไทย — ต้องตั้ง PYTHONIOENCODING=utf-8 |
+
+## CHANGELOG
+
+Frontmatter was introduced in this revision; its `created_at` records metadata
+creation, while Document Control retains the original 2026-06-27 document date.
+Older version history is retained above.
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |

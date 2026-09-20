@@ -1,7 +1,7 @@
 ---
-version: "1.4.1b"
+version: "1.4.2b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:01:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -19,7 +19,7 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.4.1b |
+| **Doc Version** | 1.4.2b |
 | **Status** | CR-004 Addendum A approved and implemented locally; bounded native evidence, device/release gates remain open |
 | **Author** | Boss |
 | **Created** | 2026-06-27 |
@@ -38,6 +38,7 @@ attributes:
 | 1.3.1b | 2026-09-20 | LALIN | CR-004 approved; minimal Compact และ real-frame preview มี local evidence พร้อมข้อจำกัด |
 | 1.4.0b | 2026-09-20 | LALIN | เสนอ Compact native fullscreen และ ±10 วินาทีตาม CR-004 Addendum A; รออนุมัติ |
 | 1.4.1b | 2026-09-20 | LALIN | Addendum A approved; fullscreen/±10 implemented พร้อม tests และ native evidence ที่ระบุข้อจำกัด |
+| 1.4.2b | 2026-09-20 | LALIN | เชื่อม current status, traceability และเอกสารส่งมอบ; ไม่เปลี่ยน acceptance หรือปิด split gates |
 
 ---
 
@@ -187,6 +188,12 @@ API, MCP และ contracts เป็นส่วนประกอบของ
 สถานะ implementation: foundation มี native debug build และผู้ใช้ยืนยันได้ยิน
 เสียงไฟล์ในเครื่องแล้ว; ยังไม่ผ่าน requirements ทั้งชุด ดู
 [หลักฐานและงานค้าง](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md)
+
+Candidate source commit `f5a6681` push แล้วใน Lalin-AI branch แต่ยังไม่ export
+เป็น repo ใหม่ ดู [สถานะเอกสารปัจจุบัน](LALIN_PLAY_DOCUMENTATION.md) และ
+[traceability ทุก PLAY criterion](../validation/LALIN_PLAY_TRACEABILITY.md).
+รายละเอียด IPC/migration/release ที่เพิ่มในชุดเอกสารเป็น candidate รอ review
+ไม่ใช่การเปลี่ยน acceptance ที่อนุมัติไว้หรือหลักฐานว่า implementation เสร็จ
 
 **เป้าหมาย:** ติดตั้งและเปิด Lalin Play เพื่อฟังไฟล์ในเครื่องได้โดยไม่ต้องเปิด
 Studio, FastAPI, Ollama หรือโหลดโมเดล AI ใช้งาน offline ได้สำหรับไฟล์ที่อยู่บนดิสก์
@@ -359,6 +366,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.2b | 2026-09-20 | beta | Link current publication status and complete Play evidence/document map | based on f5a6681 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Record approved fullscreen/relative seek implementation and bounded local evidence | based on 8429010 | LALIN |
 | 1.4.0b | 2026-09-20 | candidate | Propose Compact fullscreen and relative seek requirements; retain approved preview baseline | based on 8429010 | LALIN |
 | 1.3.1b | 2026-09-20 | beta | Record approved CR-004 and local native preview evidence; retain device/release gates | based on 8429010 | LALIN |

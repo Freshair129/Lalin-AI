@@ -1,7 +1,7 @@
 ---
-version: "0.4.1b"
+version: "0.4.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T19:35:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -136,12 +136,15 @@ See [approved plan](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) and
 
 ## Candidate Play separation
 
-[ADR-004](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) proposes a separately installed
+[ADR-004](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) defines the approved target for a separately installed
 `lalin-play` application with one owner shared by Full/Compact, local-file access
-without the Studio API, and a thin native Studio command adapter. Proposed
-`apps/play-desktop/` is temporary staging on `codex/lalin-play-split`, not current
-source or a permanent umbrella app. The target repository name is
-`Freshair129/lalin-play`; it has not been created by this documentation change.
+without the Studio API, and a thin native Studio command adapter.
+`apps/play-desktop/` is current additive candidate source on `codex/lalin-play-split`,
+not the replacement for the retained Studio owner or a permanent umbrella app.
+Candidate commit `f5a6681` has been pushed to the Lalin-AI branch; this is not an
+export to the proposed `Freshair129/lalin-play` repository. See the
+[current document/status register](../product/LALIN_PLAY_DOCUMENTATION.md) and
+[pending handoff](LALIN_PLAY_SEPARATION_HANDOFF.md).
 
 Before retiring `apps/desktop/src/playback`, retain Arrange's `audioContext`
 dependency, the `isTauri` helper used by the Cast launcher, and required shared
@@ -201,6 +204,7 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.2b | 2026-09-20 | beta | Reconcile existing candidate source versus future export and link current handoff status | based on f5a6681 | LALIN |
 | 0.4.1b | 2026-09-20 | beta | Record independent candidate manifests and preserve existing Studio ownership | based on 8429010 | LALIN |
 | 0.4.0b | 2026-09-20 | candidate | Add Play standalone target and retention gates without changing current source ownership | based on 8429010 | LALIN |
 | 0.3.0 | 2026-09-20 | active | Record Lalin Cast as an external product and remove its implementation from the umbrella tree | 6163c57 | LALIN |

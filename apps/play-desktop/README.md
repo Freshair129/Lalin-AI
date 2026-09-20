@@ -1,7 +1,7 @@
 ---
-version: "0.4.0b"
+version: "0.4.1b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:01:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -21,6 +21,14 @@ Application version: `0.1.0`; executable: `lalin-play.exe`; app identifier:
 `ai.lalin.play`. This is an additive development candidate, not a published release.
 There is no Python/API/Studio runtime dependency. Studio's original Play remains
 untouched until integration, migration and export gates pass.
+
+Candidate source was committed/pushed as `f5a6681` on `codex/lalin-play-split`
+in Lalin-AI, not exported to a new repository. Start at the
+[documentation/status register](../../docs/product/LALIN_PLAY_DOCUMENTATION.md),
+[user guide](../../docs/guides/LALIN_PLAY_USER_GUIDE.md) and
+[requirements/evidence matrix](../../docs/validation/LALIN_PLAY_TRACEABILITY.md).
+Future IPC/migration, extraction and release runbooks linked there are candidate
+designs; they do not change the current runtime or approve publication.
 
 ## Develop and verify
 
@@ -138,6 +146,7 @@ Do not invent a license grant from this README.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.1b | 2026-09-20 | beta | Link complete docs/user guide and record candidate branch publication | based on f5a6681 | LALIN |
 | 0.4.0b | 2026-09-20 | beta | Add approved native fullscreen, bounded relative seek and local verification | based on 8429010 | LALIN |
 | 0.3.0b | 2026-09-20 | beta | Document minimal Compact, isolated frame preview, reduced bounds and evidence limits | based on 8429010 | LALIN |
 | 0.2.0b | 2026-09-20 | beta | Document local video stage, shared media element, fixtures and codec limits | based on 8429010 | LALIN |

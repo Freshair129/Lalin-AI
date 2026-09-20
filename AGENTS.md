@@ -1,7 +1,7 @@
 ---
-version: "0.2.1b"
+version: "0.2.2b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:01:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -64,6 +64,10 @@ Lalin Play เป็นหนึ่งโปรดัค มีสองรู�
 - product split: `docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md` (approved, implementation partial),
   `docs/architecture/LALIN_CAST_SEPARATION_HANDOFF.md` (Cast split completed)
 - Play local evidence: `docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md`
+- Play documentation/status register: `docs/product/LALIN_PLAY_DOCUMENTATION.md`;
+  links current traceability, user guide and candidate integration/migration,
+  separation handoff and release runbook. Candidate detail still needs R5 review;
+  branch commit/push is not repo export or release acceptance.
 - Local video: approved `docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md` and
   `docs/validation/LALIN_PLAY_LOCAL_VIDEO.md`; standalone uses one persistent
   video-capable media element for audio/video, not a second playback owner
@@ -146,6 +150,7 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-09-20 | beta | Link complete Play document register and clarify candidate execution boundaries | based on f5a6681 | LALIN |
 | 0.2.1b | 2026-09-20 | beta | Link approved fullscreen/relative-seek evidence and clarify Full distinction | based on 8429010 | LALIN |
 | 0.2.0b | 2026-09-20 | beta | Add approved minimal Compact and preview-only decoder boundary with native evidence | based on 8429010 | LALIN |
 | 0.1.2b | 2026-09-20 | beta | Reference approved video scope and persistent media owner evidence | based on 8429010 | LALIN |
