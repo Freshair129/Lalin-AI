@@ -1,1 +1,0 @@
-{"media-default":{"identifier":"media-default","description":"สิทธิ์พื้นฐานของ Lalin Media WebView และ DIAL response bridge","remote":{"urls":["https://www.youtube.com/*"]},"local":true,"windows":["media"],"permissions":["core:default","core:event:allow-listen","core:event:allow-unlisten","allow-dial-respond","allow-dial-set-device-id"]}}

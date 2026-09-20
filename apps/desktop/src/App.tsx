@@ -78,12 +78,12 @@ export default function App() {
             <button type="button" onClick={() => dispatchCommand("open")}>Open</button>
             <button type="button" onClick={() => dispatchCommand("save")}>Save</button>
             <button type="button" onClick={openPlayer} title="Open Lalin Play">Play</button>
-            <button type="button" onClick={openMediaApp} disabled={mediaBusy} title="Open Lalin Media">{mediaBusy ? "Media…" : "Media"}</button>
+            <button type="button" onClick={openMediaApp} disabled={mediaBusy} title="Open Lalin Cast">{mediaBusy ? "Cast…" : "Cast"}</button>
             <button type="button" onClick={() => setTab("settings")}>Settings</button>
           </div>
           {menu === "file" && <div className="command-menu"><button onClick={() => { dispatchCommand("new"); setMenu(null); }}>New</button><button onClick={() => { dispatchCommand("open"); setMenu(null); }}>Open…</button><button onClick={() => { dispatchCommand("save"); setMenu(null); }}>Save</button><button onClick={() => { dispatchCommand("saveAs"); setMenu(null); }}>Save As…</button></div>}
           {menu === "edit" && <div className="command-menu muted-menu">Undo / Redo are available in the active editor.</div>}
-          {menu === "view" && <div className="command-menu"><button onClick={() => { openPlayer(); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button><button onClick={() => { openMediaApp(); setMenu(null); }}>Lalin Media (Leanback)…</button><button onClick={() => { closeMediaApp(); setMenu(null); }}>ปิด Lalin Media</button></div>}
+          {menu === "view" && <div className="command-menu"><button onClick={() => { openPlayer(); setMenu(null); }}>Lalin Play (Media Player + EQ)…</button><button onClick={() => { openMediaApp(); setMenu(null); }}>Lalin Cast (Leanback)…</button><button onClick={() => { closeMediaApp(); setMenu(null); }}>ปิด Lalin Cast</button></div>}
           {menu === "help" && <div className="command-menu muted-menu">Use the active tool’s inline help and keyboard shortcuts.</div>}
         </div>
         <header className="topbar">
@@ -107,7 +107,7 @@ export default function App() {
           <div className="topbar-right"><UpdateChecker /></div>
         </header>
         {playbackError && <div className="fm-err" role="alert">{playbackError} <button type="button" onClick={reconcilePlayback}>ตรวจสถานะเครื่องเล่น</button></div>}
-        {mediaError && <div className="fm-err" role="alert">{mediaError} <button type="button" onClick={openMediaApp}>ลองเปิด Lalin Media ใหม่</button></div>}
+        {mediaError && <div className="fm-err" role="alert">{mediaError} <button type="button" onClick={openMediaApp}>ลองเปิด Lalin Cast ใหม่</button></div>}
 
         <div className="daw-body">
           <nav className="rail" aria-label="Lalin Studio navigation">

@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.0"
 created_at: "2026-09-20T04:12:08+07:00,LALIN,uncommitted"
-last_update: "2026-09-20T04:12:08+07:00,LALIN"
-status: "candidate"
+last_update: "2026-09-20T12:00:00+07:00,LALIN"
+status: "active"
 superseded_by: null
 attributes:
   domain: "architecture"
@@ -14,8 +14,11 @@ attributes:
 
 ## Status and risk
 
-**CANDIDATE — documentation phase only.** No source move, rename, GitHub push or
-release workflow has been executed from this plan.
+**IMPLEMENTED — source separation and target push completed.** The standalone
+Cast source is in `Freshair129/lalin-cast` at commit
+`eb904213dd470e78eb502e118fb4b26b6c00cfa8`. The root cleanup below removes the
+duplicated source trees from `Freshair129/Lalin-AI`; signed release and update
+smoke remain separate open gates.
 
 Complexity: **C-3**. Risk: **HIGH**. The plan is additive and reversible until
 the target repository push is explicitly approved.
@@ -31,8 +34,8 @@ The split is complete only when all of the following are evidenced:
 3. The shipped identity is consistently `Lalin Cast` / `lalin-cast.exe` and the
    approved Tauri identifier is used everywhere.
 4. The VacuumTube baseline and MIT notice remain attributable and reproducible.
-5. Lalin Studio can consume a versioned installed Cast artifact without a
-   source-tree dependency.
+5. Lalin Studio consumes an installed Cast artifact through
+   `LALIN_CAST_EXECUTABLE` without a source-tree dependency.
 6. The updater checks a signed GitHub Releases manifest and fails closed when a
    signature, version or download check is invalid.
 7. A tagged GitHub Actions build produces an NSIS installer, signed updater
@@ -60,8 +63,9 @@ The split is complete only when all of the following are evidenced:
 | `.brain/rca/2026-09-20-lalin-media-tauri-pairing-missing-dial.md` | `.brain/rca/` | preserve pairing/firewall evidence |
 | `.brain/rca/2026-09-20-lalin-media-tauri-dial-disconnect.md` | `.brain/rca/` | preserve listener recovery RCA and commit result |
 
-The final target path names above are a migration contract, not an instruction to
-move files during this documentation phase.
+The final target path names above were executed in the standalone export. The
+source paths are removed from the umbrella repository by the root cleanup
+commit; the previous content remains recoverable from Git history.
 
 ### Retain in `Freshair129/Lalin-AI`
 
@@ -83,9 +87,9 @@ move files during this documentation phase.
 runtime state, user settings, cookies, pairing state, local logs and unrelated
 Studio/API/MCP files must not enter the target repository.
 
-## History-preserving export procedure
+## History-preserving export evidence
 
-The implementation phase should use a disposable clone or isolated worktree:
+The implementation used a disposable isolated worktree:
 
 1. Freeze and record the source revision (`58af113` is the current DIAL-recovery
    baseline) and verify a clean source worktree.
@@ -97,22 +101,24 @@ The implementation phase should use a disposable clone or isolated worktree:
 4. Run a secret/path scan. A match for `keys/`, user data, `F:\lalin`, Studio
    icon paths or private updater material blocks the export.
 5. Build and test from the standalone checkout before adding the new remote.
-6. Add the target remote only after the exact exported commit is reviewed.
-7. Push `main` only after explicit approval of the commit and scope.
+6. Add the target remote only after the exact exported commit was reviewed.
+7. Push `main` after explicit approval; remote `main` now resolves to
+   `eb904213dd470e78eb502e118fb4b26b6c00cfa8`.
 
-The original `Freshair129/Lalin-AI` branch is never reset, force-pushed or
-rewritten as part of this operation.
+The original `Freshair129/Lalin-AI` branch is not reset, force-pushed or
+rewritten; its cleanup is a normal deletion commit.
 
 ## Ordered execution slices
 
 | Slice | Work | Evidence / exit state |
 |---|---|---|
-| S0 | this documentation and identity decision | approval recorded; no code changed |
-| S1 | isolated export dry-run | file list, path scan, history report and exact commit candidate |
-| S2 | standalone code rename | Rust/Tauri build, unit tests, JS syntax and no old identity/path leaks |
-| S3 | updater implementation | local update-check tests and signed-artifact fixture |
-| S4 | Cast GitHub Actions workflow | workflow lint/static review; no release claim yet |
-| S5 | target repo push | exact approved SHA visible on `Freshair129/lalin-cast` |
+| S0 | documentation and identity decision | complete |
+| S1 | isolated export dry-run | complete; path/secret scan recorded |
+| S2 | standalone code rename | complete; Rust/Tauri build and unit tests passed |
+| S3 | updater implementation | complete locally; published update check not run |
+| S4 | Cast GitHub Actions workflow | complete; release remains draft-first |
+| S5 | target repo push | complete; exact SHA visible on `Freshair129/lalin-cast` |
+| S5b | umbrella cleanup | complete in the root cleanup commit |
 | S6 | draft release | NSIS, `.sig`, `latest.json`, checksums and draft review |
 | S7 | publish/update smoke | clean install, update, restart, rollback/failure evidence |
 
@@ -159,4 +165,5 @@ returns the expected signed manifest.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.0b | 2026-09-20 | candidate | Proposed exact split inventory, history-preserving export and staged release gates | uncommitted | LALIN |
+| 0.2.0 | 2026-09-20 | active | Recorded executed standalone export/push and root cleanup handoff | root-cleanup-commit | LALIN |
+| 0.1.0b | 2026-09-20 | candidate | Proposed exact split inventory, history-preserving export and staged release gates | 11c62a8 | LALIN |

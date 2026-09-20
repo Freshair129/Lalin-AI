@@ -28,7 +28,7 @@ fn backend_profile() -> &'static str {
 /// เก็บ handle ของ sidecar ไว้ kill ตอนปิดแอป
 struct Sidecar(Mutex<Option<CommandChild>>);
 
-/// เก็บ process ของ Lalin Media ที่ Studio เป็นผู้เปิดไว้
+/// เก็บ process ของ Lalin Cast ที่ Studio เป็นผู้เปิดไว้
 struct MediaProcess(Mutex<Option<Child>>);
 
 #[derive(Clone, Debug, Serialize)]
@@ -64,91 +64,53 @@ fn media_failure(request_id: String, code: &str, message: String) -> MediaLifecy
     }
 }
 
-fn media_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("..")
-        .join("media-desktop")
-}
-
-fn media_launch_spec() -> Result<(PathBuf, PathBuf, bool), String> {
-    if let Ok(raw_executable) = env::var("LALIN_MEDIA_EXECUTABLE") {
+fn cast_launch_spec() -> Result<(PathBuf, PathBuf), String> {
+    if let Ok(raw_executable) = env::var("LALIN_CAST_EXECUTABLE") {
         let executable = PathBuf::from(raw_executable);
         if !executable.is_file() {
             return Err(format!(
-                "ไม่พบ Lalin Media executable ที่ {}",
+                "ไม่พบ Lalin Cast executable ที่ {}",
                 executable.display()
             ));
         }
 
-        let workdir = env::var_os("LALIN_MEDIA_WORKDIR")
+        let workdir = env::var_os("LALIN_CAST_WORKDIR")
             .map(PathBuf::from)
             .or_else(|| executable.parent().map(Path::to_path_buf))
-            .unwrap_or_else(media_root);
-        return Ok((executable, workdir, false));
-    }
-
-    if cfg!(debug_assertions) {
-        let root = media_root();
-        let executable = if cfg!(windows) {
-            root.join("node_modules")
-                .join("electron")
-                .join("dist")
-                .join("electron.exe")
-        } else {
-            root.join("node_modules")
-                .join("electron")
-                .join("dist")
-                .join("electron")
-        };
-
-        if !executable.is_file() {
-            return Err(format!(
-                "ไม่พบ Electron runtime ของ Lalin Media ที่ {} กรุณารัน npm install ก่อน",
-                executable.display()
-            ));
-        }
-        return Ok((executable, root, true));
+            .unwrap_or_else(|| PathBuf::from("."));
+        return Ok((executable, workdir));
     }
 
     let executable = env::current_exe()
         .ok()
-        .and_then(|path| path.parent().map(|parent| parent.join("lalin-media.exe")))
-        .ok_or_else(|| "ไม่สามารถระบุตำแหน่ง Lalin Media runtime ได้".to_owned())?;
+        .and_then(|path| path.parent().map(|parent| parent.join("lalin-cast.exe")))
+        .ok_or_else(|| "ไม่สามารถระบุตำแหน่ง Lalin Cast runtime ได้".to_owned())?;
     if !executable.is_file() {
         return Err(format!(
-            "ไม่พบ Lalin Media runtime ที่ {} กรุณาติดตั้ง Media package ก่อน",
+            "ไม่พบ Lalin Cast runtime ที่ {} กรุณาตั้งค่า LALIN_CAST_EXECUTABLE หรือวาง lalin-cast.exe ไว้ข้าง Studio",
             executable.display()
         ));
     }
     let workdir = executable
         .parent()
         .map(Path::to_path_buf)
-        .unwrap_or_else(media_root);
-    Ok((executable, workdir, false))
+        .unwrap_or_else(|| PathBuf::from("."));
+    Ok((executable, workdir))
 }
 
-fn spawn_media_process(
-    executable: &Path,
-    workdir: &Path,
-    electron_app: bool,
-    focus: bool,
-) -> Result<Child, String> {
+fn spawn_media_process(executable: &Path, workdir: &Path, focus: bool) -> Result<Child, String> {
     let mut command = Command::new(executable);
     command
         .current_dir(workdir)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    if electron_app {
-        command.arg(".");
-    }
     if focus {
         command.arg("--lalin-focus");
     }
     command.spawn().map_err(|error| {
         format!(
-            "ไม่สามารถเปิด Lalin Media ได้จาก {}: {error}",
+            "ไม่สามารถเปิด Lalin Cast ได้จาก {}: {error}",
             executable.display()
         )
     })
@@ -165,7 +127,7 @@ fn reap_media_process(process: &mut Option<Child>) -> Result<Option<u32>, String
             *process = None;
             Ok(None)
         }
-        Err(error) => Err(format!("ตรวจสถานะ Lalin Media ไม่สำเร็จ: {error}")),
+        Err(error) => Err(format!("ตรวจสถานะ Lalin Cast ไม่สำเร็จ: {error}")),
     }
 }
 
@@ -178,7 +140,7 @@ fn media_lifecycle(
     let mut process = state
         .0
         .lock()
-        .map_err(|_| "ไม่สามารถล็อกสถานะ Lalin Media ได้".to_owned())?;
+        .map_err(|_| "ไม่สามารถล็อกสถานะ Lalin Cast ได้".to_owned())?;
     let existing_pid = reap_media_process(&mut process)?;
 
     match action.as_str() {
@@ -204,9 +166,8 @@ fn media_lifecycle(
         }
         "launch" | "focus" => {
             if let Some(pid) = existing_pid {
-                let (executable, workdir, electron_app) =
-                    media_launch_spec().map_err(|error| error.to_owned())?;
-                spawn_media_process(&executable, &workdir, electron_app, true)
+                let (executable, workdir) = cast_launch_spec().map_err(|error| error.to_owned())?;
+                spawn_media_process(&executable, &workdir, true)
                     .map(|_| ())
                     .map_err(|error| error.to_owned())?;
                 let mut result = media_state("ready", request_id);
@@ -214,8 +175,8 @@ fn media_lifecycle(
                 return Ok(result);
             }
 
-            let (executable, workdir, electron_app) = media_launch_spec()?;
-            let child = spawn_media_process(&executable, &workdir, electron_app, false)?;
+            let (executable, workdir) = cast_launch_spec()?;
+            let child = spawn_media_process(&executable, &workdir, false)?;
             let pid = child.id();
             process.replace(child);
             let mut result = media_state("starting", request_id);
@@ -225,7 +186,7 @@ fn media_lifecycle(
         _ => Ok(media_failure(
             request_id,
             "MEDIA_ACTION_UNSUPPORTED",
-            format!("ไม่รู้จักคำสั่ง Lalin Media: {action}"),
+            format!("ไม่รู้จักคำสั่ง Lalin Cast: {action}"),
         )),
     }
 }

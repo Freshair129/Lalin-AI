@@ -21,7 +21,7 @@ function nextRequestId(): string {
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   if (typeof error === "string" && error.trim()) return error.trim();
-  return "ไม่สามารถเชื่อมต่อ Lalin Media launcher ได้";
+  return "ไม่สามารถเชื่อมต่อ Lalin Cast launcher ได้";
 }
 
 function failedState(requestId: string, code: string, message: string): MediaLifecycleState {
@@ -40,7 +40,7 @@ export async function requestMediaLifecycle(
     return failedState(
       request.requestId,
       "MEDIA_NATIVE_ONLY",
-      "Lalin Media launcher ใช้งานได้จาก Lalin Studio desktop เท่านั้น",
+      "Lalin Cast launcher ใช้งานได้จาก Lalin Studio desktop เท่านั้น",
     );
   }
 
@@ -68,7 +68,7 @@ export async function openMedia(): Promise<MediaLifecycleState> {
       return failedState(
         status.requestId,
         "MEDIA_EXITED_EARLY",
-        "Lalin Media ปิดตัวก่อนพร้อมใช้งาน",
+        "Lalin Cast ปิดตัวก่อนพร้อมใช้งาน",
       );
     }
   }
@@ -76,7 +76,7 @@ export async function openMedia(): Promise<MediaLifecycleState> {
   return failedState(
     initial.requestId,
     "MEDIA_START_TIMEOUT",
-    "Lalin Media ใช้เวลาเริ่มต้นนานเกินกำหนด กรุณาตรวจสอบ runtime แล้วลองใหม่",
+    "Lalin Cast ใช้เวลาเริ่มต้นนานเกินกำหนด กรุณาตรวจสอบ runtime แล้วลองใหม่",
   );
 }
 

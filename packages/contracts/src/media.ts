@@ -1,4 +1,4 @@
-// @req Lalin Media P1/P2 — cross-process lifecycle contract
+// @req Lalin Cast — cross-process lifecycle compatibility contract
 
 export type MediaLifecycleAction = "launch" | "focus" | "close" | "status";
 

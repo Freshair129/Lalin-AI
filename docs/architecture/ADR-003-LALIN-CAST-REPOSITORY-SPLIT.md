@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.0"
 created_at: "2026-09-20T04:12:08+07:00,LALIN,uncommitted"
-last_update: "2026-09-20T04:12:08+07:00,LALIN"
-status: "candidate"
+last_update: "2026-09-20T12:00:00+07:00,LALIN"
+status: "active"
 superseded_by: null
 attributes:
   domain: "architecture"
@@ -14,9 +14,10 @@ attributes:
 
 ## Decision status
 
-**PROPOSED — NOT APPROVED FOR CODE, REPOSITORY PUSH OR RELEASE.** This document
-is the design gate requested before the implementation split. Existing local
-Media commits remain in the Lalin AI repository until the export is reviewed.
+**ACCEPTED / IMPLEMENTED FOR SOURCE SPLIT.** The standalone Cast repository
+has been built and pushed. The umbrella cleanup removes the duplicated Cast
+source trees without rewriting their history. Release publication remains a
+separate gate.
 
 Complexity: **C-3**. Risk: **HIGH** (repository history, installed-app identity,
 updater signing, release automation and cross-repository Studio integration).
@@ -29,7 +30,8 @@ updater signing, release automation and cross-repository Studio integration).
 - The current Media sources are `apps/media-tauri` (Rust + Tauri v2) and
   `apps/media-desktop` (pinned VacuumTube Electron reference/fallback).
 - `https://github.com/Freshair129/lalin-cast` exists, is public, uses `main` as
-  its default branch, and was empty when inspected on 2026-09-20.
+  its default branch, and now contains commit
+  `eb904213dd470e78eb502e118fb4b26b6c00cfa8`.
 - The current Tauri candidate is still named `lalin-media`, displays “Lalin
   Media”, uses identifier `ai.lalin.media`, and loads
   `https://www.youtube.com/tv`.
@@ -129,8 +131,8 @@ separate approval decision.
 
 ### 5. History and provenance
 
-The split will be performed in an isolated export clone/worktree. The source
-repository's `main` history must remain untouched. The export should preserve
+The split was performed in an isolated export clone/worktree. The source
+repository's `main` history remains intact. The export preserves
 the relevant file history where practical, record the source commit and path
 rewrite, and exclude:
 
@@ -154,17 +156,14 @@ documented even if the fallback is later removed from release artifacts.
 | Make Studio depend on the Cast source tree | recreates the monorepo coupling the split is meant to remove |
 | Publish a release before updater/install smoke | makes the first public artifact an unverified update channel |
 
-## Approval gates
+## Approval gates and evidence
 
-1. Approve this ADR, the split plan and the updater spec together.
-2. Approve the recommended new identifier `ai.lalin.cast`, or explicitly choose
-   to preserve `ai.lalin.media` for in-place migration.
-3. Review the dry-run file inventory and history/provenance report.
-4. Approve code rename, standalone build wiring and updater implementation.
-5. Approve the exact commit and target repository push before any external
-   write.
-6. Approve a tagged release only after signed artifact, install and update
-   smoke evidence is recorded.
+1. ADR, split plan and updater spec approved.
+2. New identifier `ai.lalin.cast` approved and implemented.
+3. Dry-run inventory, provenance scan and standalone build reviewed.
+4. Code rename, standalone wiring and updater implemented.
+5. Exact commit pushed to `Freshair129/lalin-cast` after explicit approval.
+6. Tagged release, install and update smoke remain open.
 
 ## Non-goals
 
@@ -188,4 +187,5 @@ documented even if the fallback is later removed from release artifacts.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.0b | 2026-09-20 | candidate | Proposed standalone Lalin Cast repository boundary, identity and approval gates | uncommitted | LALIN |
+| 0.2.0 | 2026-09-20 | active | Recorded accepted standalone Cast split, target push and umbrella cleanup handoff | root-cleanup-commit | LALIN |
+| 0.1.0b | 2026-09-20 | candidate | Proposed standalone Lalin Cast repository boundary, identity and approval gates | 11c62a8 | LALIN |
