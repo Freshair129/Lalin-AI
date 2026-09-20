@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-resolve-media"
+description = "Enables the resolve_media command without any pre-configured scope."
+commands.allow = ["resolve_media"]
+
+[[permission]]
+identifier = "deny-resolve-media"
+description = "Denies the resolve_media command without any pre-configured scope."
+commands.deny = ["resolve_media"]

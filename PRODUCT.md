@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.2.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-07-22T00:00:00+07:00,Codex"
+last_update: "2026-09-20T20:01:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -26,6 +26,30 @@ This file is the new product-level source of truth. It documents the intended pr
 - Current desktop package identity: `G-Music`, `com.gmusic.app`, `g-music-backend`
 
 ## Register
+
+### Product ownership
+
+| Product | Purpose | Current / target boundary |
+|---|---|---|
+| Lalin Studio | Create, edit and produce AI audio | Current `Freshair129/Lalin-AI`; desktop, API and MCP are its components |
+| Lalin Play | Local media library/player, Full like Spotify/Winamp and Compact like VLC | Additive standalone candidate at `apps/play-desktop` on `codex/lalin-play-split`; original Studio owner retained |
+| Lalin Cast | YouTube TV / Leanback and phone pairing | Already separated to `Freshair129/lalin-cast`; release evidence remains separately gated |
+
+Play's two surfaces share one playback owner, queue and EQ; they are not two
+products or Studio rail tabs. Lalin Media is the old Cast name, not a synonym for
+Play. Full is a library-oriented layout, not a fullscreen requirement; Compact
+does not promise VLC's codec coverage. The audio-first foundation now also has
+bounded local MP4/WebM video display under approved
+[CR-003](docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md), without a new decoder.
+
+See [PRD §4.9](docs/product/PRD.md#49-lalin-play--standalone-local-media-player-approved),
+[Play split ADR](docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) and
+[Cast handoff](docs/architecture/LALIN_CAST_SEPARATION_HANDOFF.md).
+The user approved the detailed specification and branch implementation. Native
+local playback is evidenced in the [foundation report](docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md);
+Studio integration, migration and independent repository export remain open.
+
+### Studio register
 
 Lalin Studio is a product UI, not a marketing surface. The interface should feel like a local AI audio workstation: dense, predictable, fast to scan, and built around repeated editing tasks.
 
@@ -79,5 +103,8 @@ The approved desktop shell has eight top-level tabs:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-09-20 | beta | Record bounded local video support under approved CR-003 | based on 8429010 | LALIN |
+| 0.2.1b | 2026-09-20 | beta | Record approved Play scope and additive standalone foundation | based on 8429010 | LALIN |
+| 0.2.0b | 2026-09-20 | candidate | Separate Studio, local Play Full/Compact and external Cast product ownership | based on 8429010 | LALIN |
 | 0.1.1b | 2026-07-24 | beta | Updated repository identity after GitHub rename to Lalin-AI. | uncommitted | LALIN |
 | 0.1.0b | 2026-07-22 | beta | Created product identity SOT from current codebase and approved Lalin direction. | uncommitted | Codex |

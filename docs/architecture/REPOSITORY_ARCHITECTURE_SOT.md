@@ -1,8 +1,8 @@
 ---
-version: "0.3.0"
+version: "0.4.2b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T12:00:00+07:00,LALIN"
-status: "active"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
+status: "beta"
 superseded_by: null
 attributes:
   domain: "architecture"
@@ -23,9 +23,15 @@ Lalin Cast is now a separately owned repository. The current tree below is
 authoritative for the umbrella repository; Cast source and release ownership
 are recorded in [the separation handoff](LALIN_CAST_SEPARATION_HANDOFF.md).
 
+The Play separation specification is approved. An additive standalone candidate
+exists at `apps/play-desktop`; original Studio Play ownership remains unchanged.
+No independent repository export or source removal has happened. See the
+[foundation evidence](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md).
+
 ## Current Tree Truth
 
 - `apps/desktop/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
+- `apps/play-desktop/`: additive standalone Play candidate with its own npm/Cargo manifests and lockfiles; deliberately outside root npm workspaces. Studio IPC and migration are not implemented.
 - `apps/api/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
 - `apps/mcp/`: local stdio MCP server that exposes read/propose tools backed by the API.
 - `packages/contracts/`: shared TypeScript contracts and JSON Schemas for desktop/API/MCP boundaries.
@@ -128,6 +134,24 @@ caller windows (`main` and `play` separately); they are not target-window allowl
 See [approved plan](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) and
 [validation](../validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md).
 
+## Candidate Play separation
+
+[ADR-004](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) defines the approved target for a separately installed
+`lalin-play` application with one owner shared by Full/Compact, local-file access
+without the Studio API, and a thin native Studio command adapter.
+`apps/play-desktop/` is current additive candidate source on `codex/lalin-play-split`,
+not the replacement for the retained Studio owner or a permanent umbrella app.
+Candidate commit `f5a6681` has been pushed to the Lalin-AI branch; this is not an
+export to the proposed `Freshair129/lalin-play` repository. See the
+[current document/status register](../product/LALIN_PLAY_DOCUMENTATION.md) and
+[pending handoff](LALIN_PLAY_SEPARATION_HANDOFF.md).
+
+Before retiring `apps/desktop/src/playback`, retain Arrange's `audioContext`
+dependency, the `isTauri` helper used by the Cast launcher, and required shared
+contracts. Queue/EQ migration is opt-in. Independent checkout, runtime, delivery
+and regression gates precede removal; installer/updater release gates are separate.
+Do not add an empty `playback-core` package as a shortcut for the split.
+
 ## Tooling Decision
 
 Do not add Nx, Turborepo, Bazel, or Lerna in Phase 6. The repo now has a real shared package, so root orchestration is justified, but native npm workspaces are still the smallest adequate tool.
@@ -180,6 +204,9 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.2b | 2026-09-20 | beta | Reconcile existing candidate source versus future export and link current handoff status | based on f5a6681 | LALIN |
+| 0.4.1b | 2026-09-20 | beta | Record independent candidate manifests and preserve existing Studio ownership | based on 8429010 | LALIN |
+| 0.4.0b | 2026-09-20 | candidate | Add Play standalone target and retention gates without changing current source ownership | based on 8429010 | LALIN |
 | 0.3.0 | 2026-09-20 | active | Record Lalin Cast as an external product and remove its implementation from the umbrella tree | 6163c57 | LALIN |
 | 0.2.2b | 2026-09-19 | candidate | Record the parallel Rust + Tauri v2 Media candidate and keep WebView2 parity gated | uncommitted | LALIN |
 | 0.2.0b | 2026-09-19 | candidate | Added candidate Lalin AI umbrella tree, separate Media process boundary and migration/provenance links | uncommitted | LALIN |

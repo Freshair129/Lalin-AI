@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "play-local-ui",
+  "description": "Local Play UI only; file selection and grants are native-owned",
+  "windows": ["main"],
+  "permissions": [
+    "core:event:default", "allow-get-library", "allow-select-media",
+    "allow-remove-library-track", "allow-resolve-media", "allow-set-surface",
+    "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen"
+  ]
+}

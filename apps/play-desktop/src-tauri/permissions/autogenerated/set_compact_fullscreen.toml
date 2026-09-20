@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-compact-fullscreen"
+description = "Enables the set_compact_fullscreen command without any pre-configured scope."
+commands.allow = ["set_compact_fullscreen"]
+
+[[permission]]
+identifier = "deny-set-compact-fullscreen"
+description = "Denies the set_compact_fullscreen command without any pre-configured scope."
+commands.deny = ["set_compact_fullscreen"]
