@@ -1,8 +1,8 @@
 ---
-version: "0.4.0"
+version: "0.8.0b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T12:00:00+07:00,LALIN"
-status: "active"
+last_update: "2026-09-20T22:01:00+07:00,LALIN"
+status: "beta"
 superseded_by: null
 attributes:
   domain: "documentation"
@@ -25,6 +25,8 @@ attributes:
 - `docs/architecture/ADR-001-LALIN-UMBRELLA-PLATFORM.md`: candidate umbrella platform decision and Tauri/Electron/YouTube boundaries.
 - `docs/architecture/ADR-002-LALIN-MEDIA-TAURI-PORT.md`: approved local Rust + Tauri v2 port boundary and VacuumTube feature matrix.
 - `docs/architecture/ADR-003-LALIN-CAST-REPOSITORY-SPLIT.md`: accepted Lalin Cast repository boundary and product identity decision.
+- `docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md`: approved standalone local Play specification; additive native foundation exists, Studio handoff and migration/export/release gates remain open.
+- `docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md`: local tests, native Full/Compact screenshots, user-confirmed audible output and explicit unverified gates.
 - `docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md`: candidate Lalin Media vertical slice, ownership matrix, VacuumTube provenance and verification gates.
 - `docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md`: candidate current-to-target migration, rollback and retention map.
 - `docs/architecture/LALIN_CAST_REPOSITORY_SPLIT_PLAN.md`: executed export inventory, history policy and staged release gates.
@@ -72,7 +74,13 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 ## Product and Runtime Docs
 
-- `docs/product/PRD.md`
+- `docs/product/PRD.md`: Studio baseline plus approved Play standalone requirements (§4.9); distinguish document version from application versions and partial implementation evidence.
+- `docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md`: approved local MP4/WebM display in Full/Compact with one persistent media element and shared EQ; implemented locally.
+- `docs/product/CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md`: approved minimal Compact overlay, Full-only queue/EQ controls and isolated local frame previews; Addendum A native fullscreen/±10 approved and implemented locally.
+- `docs/validation/LALIN_PLAY_FULLSCREEN_SKIP.md`: 48 frontend/7 Rust tests, native fullscreen/restore/relative-seek captures and explicit device limitations; current Addendum A build evidence.
+- `docs/validation/LALIN_PLAY_MINIMAL_COMPACT.md`: 40 frontend/6 Rust tests, native MP4/WebM preview, minimum viewport screenshots and explicit remaining DPI/touch/performance limits.
+- `docs/validation/LALIN_PLAY_LOCAL_VIDEO.md`: native MP4/WebM/silent-video screenshots, pause/seek/layout continuity, Compact sizing RCA, automated checks and explicit audio/device limitations.
+- `docs/product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md`: existing audio-first playback/EQ requirements; standalone Full/Compact delta is in PRD/ADR-004.
 - `docs/product/SRS.md`
 - `docs/product/ROADMAP_MUSIC.md`
 - `docs/product/LOCAL_MODEL_LEDGER.md`
@@ -127,6 +135,13 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.8.0b | 2026-09-20 | beta | Index approved fullscreen/relative-seek implementation and native verification | based on 8429010 | LALIN |
+| 0.7.1b | 2026-09-20 | beta | Index approved Compact implementation and native preview verification | based on 8429010 | LALIN |
+| 0.7.0b | 2026-09-20 | candidate | Index pending CR-004 Compact and scrub-preview proposal separately from implemented video | based on 8429010 | LALIN |
+| 0.6.1b | 2026-09-20 | beta | Index approved local video implementation and native verification | based on 8429010 | LALIN |
+| 0.6.0b | 2026-09-20 | beta | Index pending local-video proposal separately from approved audio evidence | based on 8429010 | LALIN |
+| 0.5.1b | 2026-09-20 | beta | Index approved Play specification and local foundation evidence | based on 8429010 | LALIN |
+| 0.5.0b | 2026-09-20 | candidate | Index Play split proposal and align AGENTS/product/PRD pointers; preserve current runtime evidence | based on 8429010 | LALIN |
 | 0.4.0 | 2026-09-20 | active | Recorded the completed Lalin Cast repository split and root-repository handoff | 6163c57 | LALIN |
 | 0.2.1b | 2026-09-19 | candidate | Indexed the local Lalin Media fork provenance and P1/P2 implementation evidence | uncommitted | LALIN |
 | 0.2.2b | 2026-09-19 | candidate | Indexed the approved Rust + Tauri v2 Media port ADR | uncommitted | LALIN |
