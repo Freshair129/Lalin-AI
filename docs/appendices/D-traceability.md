@@ -1,7 +1,7 @@
 ---
-version: "1.4.0b"
+version: "1.4.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-20T22:53:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.4.0b |
+| **Version** | 1.4.1b |
 | **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
@@ -46,8 +46,9 @@ attributes:
 
 ## Lalin Play — separate Studio baseline and standalone evidence
 
-The existing functional table and concurrent voice-worker row above remain
-unchanged. This manually maintained mapping is not generated doc-graph output.
+The existing functional table above remains unchanged. This manually maintained
+mapping is not generated doc-graph output. The isolated Play review branch does
+not include the separate voice-worker changes from the shared development branch.
 
 | Requirement | Design owner | Code | Tests / status |
 |---|---|---|---|
@@ -147,6 +148,7 @@ graph LR
 | 1.3.0 | 2026-08-19 | Boss | สแกนใหม่หลัง PR #9 (monorepo migration เข้า apps/) — path ref backend/frontend -> apps/api/apps/desktop, coverage 61%->69% @req / 2%->13% verifies / 3%->8% files-with-tests, endpoint scan 45 (3 ขาดจาก BLUEPRINT.yaml) |
 | 1.3.1b | 2026-08-23 | LALIN | เพิ่ม automated evidence ของ G-09/G-06/G-07 และแยก manual CPU/RTX/clean-VM gates ที่ยังเปิด |
 | 1.4.0b | 2026-09-20 | LALIN | Link standalone Play requirements/evidence separately from historical Studio and preserve concurrent worker mapping |
+| 1.4.1b | 2026-09-20 | LALIN | Clarify that the isolated Play review branch excludes concurrent voice-worker work |
 
 ## CHANGELOG
 
@@ -155,4 +157,5 @@ date and historical scan sections remain unchanged.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.1b | 2026-09-20 | beta | Clarify isolated review scope without introducing unrelated worker changes | based on 2e1eb73 | LALIN |
 | 1.4.0b | 2026-09-20 | beta | Add Play ownership/traceability links and version metadata; preserve prior content | based on f5a6681 | LALIN |
