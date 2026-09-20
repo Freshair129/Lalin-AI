@@ -1,7 +1,7 @@
 ---
-version: "0.4.0b"
+version: "0.4.1b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:01:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -30,6 +30,9 @@ attributes:
 
 ## 2. Parent and peer alignment
 
+- [Current document/status register](../product/LALIN_PLAY_DOCUMENTATION.md): source `f5a6681` pushed on the Lalin-AI branch; S4 independent export remains NOT_RUN.
+- [Integration/migration detail](LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md), [prepared handoff](LALIN_PLAY_SEPARATION_HANDOFF.md) and [release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) elaborate future work as candidates; their new protocol/transaction/release decisions require review before code. They do not supersede this ADR's approved invariants.
+- [Standalone traceability](../validation/LALIN_PLAY_TRACEABILITY.md) maps each PLAY requirement to implementation, dated tests and still-open acceptance.
 - [PRODUCT](../../PRODUCT.md) and [PRD](../product/PRD.md): Studio creates/edits; Play listens to local media; Cast owns YouTube TV.
 - [CR-001](../product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md): preserve consumer queue/EQ, audio-first baseline and later video scope.
 - [Command delivery plan](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md): one consumer owner, readiness, FIFO, ACK/STATE and explicit unknown-delivery reconciliation remain required.
@@ -242,6 +245,7 @@ decoder boundary. See [local proof and remaining checks](../validation/LALIN_PLA
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.1b | 2026-09-20 | beta | Link candidate execution details, traceability and published branch status without closing split gates | based on f5a6681 | LALIN |
 | 0.4.0b | 2026-09-20 | beta | Add approved native fullscreen snapshot/restore and live relative-seek boundaries | based on 8429010 | LALIN |
 | 0.3.1b | 2026-09-20 | beta | Record approved isolated preview architecture, minimal bounds and bounded native proof | based on 8429010 | LALIN |
 | 0.3.0b | 2026-09-20 | candidate | Propose preview-only decoder exception and minimal Compact without changing playback ownership | based on 8429010 | LALIN |

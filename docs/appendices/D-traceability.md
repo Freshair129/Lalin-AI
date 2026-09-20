@@ -1,12 +1,24 @@
+---
+version: "1.4.0b"
+created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
+status: "beta"
+superseded_by: null
+attributes:
+  domain: "validation"
+  doc_type: "traceability-matrix"
+  scope: "Studio requirements and linked standalone Play criteria"
+---
+
 # Appendix D — Traceability Matrix
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.3.1b |
+| **Version** | 1.4.0b |
 | **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
-| **Last Updated** | 2026-08-23 |
+| **Last Updated** | 2026-09-20 |
 | **Approved By** | Boss — Phase 1 scope approved 2026-08-23 |
 
 โยง requirement ([SRS.md](../product/SRS.md)) ↔ design ↔ โค้ด ↔ เทสต์ — แถวไหน Test ว่าง = ช่องโหว่ coverage ที่รู้ตัว
@@ -31,6 +43,24 @@
 | FR-13 | Batch Queue | SWARM_PLAN W3.5 · SPEC §4 | `useBatchQueue.ts` + `BatchQueue.tsx` | `useBatchQueue.test.tsx` | ✅ persist/re-attach/interrupted/queued |
 | FR-14 | Workspace Agent + Mix Copilot | ai-system/agent-architecture (AI-AGT-001) · SWARM_PLAN W4.1-4.3 | `routers/agent.py` + `MixCopilot.tsx` | ✏️ TODO | ✅ done |
 | FR-15 | File Manager | UI_SITEMAP§3 (files) | `routers/fs.py` + `FileManager.tsx` | ✏️ TODO | ✅ done |
+
+## Lalin Play — separate Studio baseline and standalone evidence
+
+The existing functional table and concurrent voice-worker row above remain
+unchanged. This manually maintained mapping is not generated doc-graph output.
+
+| Requirement | Design owner | Code | Tests / status |
+|---|---|---|---|
+| FR-16 / FR-16W | CR-001; approved Studio command-delivery plan | `apps/desktop/src/playback`, `LalinPlayWindow.tsx` | Historical Studio reports only; not standalone IPC/release proof |
+| FR-17 | Playback EQ baseline; ADR-004 owner retention | Studio EQ and separate candidate `apps/play-desktop/src/playback` | Standalone EQ suite mapped in Play matrix; physical device coverage partial |
+| FR-18 | CR-002, TV Mode architecture/design | Studio TV adapters; separate standalone candidate adapter | Historical Studio native evidence + standalone input mocks; native standalone gamepad not qualified |
+| PLAY-01–10 | PRD §4.9 / ADR-004 | `apps/play-desktop`; integration/import/release missing | Per-criterion partial/not-implemented status in linked matrix |
+| PLAY-V01–10 | CR-003 local video | Candidate VideoStage/media owner/native catalog | App/Rust tests + video snapshots; physical A/V limits |
+| PLAY-C01–13 | CR-004 including Addendum A | Candidate CompactTransport/preview/fullscreen/relativeSeek | 48 frontend/7 Rust suite and native evidence with device gaps |
+
+Canonical row-level mapping: [LALIN_PLAY_TRACEABILITY](../validation/LALIN_PLAY_TRACEABILITY.md).
+Current publication/status: [Play documentation register](../product/LALIN_PLAY_DOCUMENTATION.md).
+Do not treat the old scan counts below as coverage of these 33 standalone criteria.
 
 ## Non-Functional Requirements
 
@@ -116,3 +146,13 @@ graph LR
 | 1.2.0 | 2026-08-09 | Boss | ปิด reverse gap (FR-09..15 เข้า SRS v1.1.0 + แถวในตาราง FR) · annotation `@req` ลงโค้ด 44 ไฟล์ → coverage 61%, verifies FR-09 |
 | 1.3.0 | 2026-08-19 | Boss | สแกนใหม่หลัง PR #9 (monorepo migration เข้า apps/) — path ref backend/frontend -> apps/api/apps/desktop, coverage 61%->69% @req / 2%->13% verifies / 3%->8% files-with-tests, endpoint scan 45 (3 ขาดจาก BLUEPRINT.yaml) |
 | 1.3.1b | 2026-08-23 | LALIN | เพิ่ม automated evidence ของ G-09/G-06/G-07 และแยก manual CPU/RTX/clean-VM gates ที่ยังเปิด |
+| 1.4.0b | 2026-09-20 | LALIN | Link standalone Play requirements/evidence separately from historical Studio and preserve concurrent worker mapping |
+
+## CHANGELOG
+
+Frontmatter timestamps record metadata introduction; original document creation
+date and historical scan sections remain unchanged.
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 1.4.0b | 2026-09-20 | beta | Add Play ownership/traceability links and version metadata; preserve prior content | based on f5a6681 | LALIN |

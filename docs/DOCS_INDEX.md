@@ -1,7 +1,7 @@
 ---
-version: "0.8.0b"
+version: "0.9.0b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T22:01:00+07:00,LALIN"
+last_update: "2026-09-20T22:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -74,6 +74,12 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 ## Product and Runtime Docs
 
+- `docs/product/LALIN_PLAY_DOCUMENTATION.md`: Play documentation entrypoint, source publication status and document ownership; approval/evidence/export remain distinct.
+- `docs/validation/LALIN_PLAY_TRACEABILITY.md`: all 33 PLAY product/video/Compact criteria mapped to source, tests, dated native evidence and open gates.
+- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: current native/storage contracts plus candidate wire protocol and opt-in migration/rollback; future portions NOT_IMPLEMENTED.
+- `docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md`: candidate export inventory, retained consumers, license/notices audit and recovery record; not an executed split.
+- `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: candidate NSIS/signing/updater/draft-publication and rollback qualification; all distribution gates remain open.
+- `docs/guides/LALIN_PLAY_USER_GUIDE.md`: current candidate controls, local files/state and non-destructive troubleshooting.
 - `docs/product/PRD.md`: Studio baseline plus approved Play standalone requirements (§4.9); distinguish document version from application versions and partial implementation evidence.
 - `docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md`: approved local MP4/WebM display in Full/Compact with one persistent media element and shared EQ; implemented locally.
 - `docs/product/CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md`: approved minimal Compact overlay, Full-only queue/EQ controls and isolated local frame previews; Addendum A native fullscreen/±10 approved and implemented locally.
@@ -135,6 +141,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.9.0b | 2026-09-20 | beta | Index complete Play current/candidate documentation, traceability and user/release guides | based on f5a6681 | LALIN |
 | 0.8.0b | 2026-09-20 | beta | Index approved fullscreen/relative-seek implementation and native verification | based on 8429010 | LALIN |
 | 0.7.1b | 2026-09-20 | beta | Index approved Compact implementation and native preview verification | based on 8429010 | LALIN |
 | 0.7.0b | 2026-09-20 | candidate | Index pending CR-004 Compact and scrub-preview proposal separately from implemented video | based on 8429010 | LALIN |

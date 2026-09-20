@@ -252,6 +252,28 @@ components:
     - {component: LalinPlayWindow.tsx,     role: "sole consumer playback owner in predeclared secondary window; normal and TV presentation modes; native close hides"}
     - {component: PlaybackEQPanel.tsx,     role: "10-band playback EQ faders, preamp, bypass toggle, preset manager; reusable in TV presentation"}
 
+# Standalone Play entry added 2026-09-20; the existing consumer_playback below
+# still describes the retained Studio player. Not generated acceptance evidence.
+standalone_play:
+  doc_version: "0.1.0b"
+  last_update: "2026-09-20T22:40:00+07:00,LALIN"
+  status: beta
+  source: apps/play-desktop
+  source_commit: f5a66819ad58b481635733dd29e1658d67e29e3d
+  branch: codex/lalin-play-split
+  app_identifier: ai.lalin.play
+  app_version: "0.1.0"
+  surfaces: [Full, Compact]
+  playback: "One persistent HTMLVideoElement/Web Audio owner; one paused muted preview-only decoder"
+  native_contract: docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md
+  traceability: docs/validation/LALIN_PLAY_TRACEABILITY.md
+  documentation: docs/product/LALIN_PLAY_DOCUMENTATION.md
+  verification: docs/validation/LALIN_PLAY_FULLSCREEN_SKIP.md
+  studio_ipc: NOT_IMPLEMENTED
+  old_state_migration: NOT_IMPLEMENTED
+  independent_export: NOT_RUN
+  installer_updater: NOT_RUN
+
 consumer_playback:
   client: apps/desktop/src/playback/playbackClient.ts
   bridge: apps/desktop/src/playback/playbackBridge.ts
