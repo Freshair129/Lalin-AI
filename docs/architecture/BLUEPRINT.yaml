@@ -37,7 +37,7 @@ stack:
 models:
   tts:
     engine_primary: F5-TTS
-    repo: VIZINTZOR/F5-TTS-THAI    # CC-BY-4.0 (commercial OK + attribution)
+    repo: VIZINTZOR/F5-TTS-THAI    # tag CC-BY-4.0 แต่ base SWivid/F5-TTS weights = CC BY-NC-4.0 และ dataset TH = CC BY-SA-4.0 (ตรวจ 2026-09-20) → commercial use รอ rights owner (D9, R-010)
     arch: F5TTS_Base + vocos
     sample_rate: 24000
     engine_fallback: XTTS v2       # CPML (non-commercial), ไม่รองรับไทย
@@ -78,6 +78,9 @@ sitemap:
   backend_profile:             # main.py — router ที่ mount ขึ้นกับ profile (apps/api)
     lite: [health, brain, voices, files, fs, packs, projects, render, jobs, agent, plugins, speech]   # ไม่โหลด ML หนัก — ใช้ตรวจ installer/packaging (render ใช้แค่ scipy/soundfile)
     full: lite + [tts, dubbing, mastering, music]                                              # dev/source ปกติ
+    # voice-worker ไม่ใช่ค่าของ GMUSIC_BACKEND_PROFILE — เป็น entrypoint แยก `python -m app.voice_worker` (app/voice_worker/app.py)
+    # mount เฉพาะ allowlist ด้านล่างใน § api; profile manifest ผิด → exit 2 ไม่ fallback (CR-005 candidate / ADR-005)
+    voice-worker: [health/live, worker/v1/describe, worker/v1/readiness, worker/v1/operations(+status/cancel/output/payload)]
   global_state:
     app: [tab, activityOpen, menu]                              # App.tsx
     backend: useBackendReadiness() — poll /health, state(checking|ready|error), retry()
@@ -330,6 +333,16 @@ api:
     - {method: POST,   path: "/packs/{pack_id}/download"}
     - {method: GET,    path: /plugins,             returns: "สถานะ available ต่อ dep (pedalboard|psola|matchering) + license"}
     - {method: POST,   path: "/plugins/{name}/install",  returns: "คำสั่ง uv pip install (ยังไม่รัน pip จริง)"}
+    # voice-worker profile เท่านั้น (CR-005 candidate / ADR-005, Slice A stub) — entrypoint `python -m app.voice_worker`
+    # port default 8790 loopback; service auth (Bearer, สองบทบาท inference/management); ไม่ mount route ใด ๆ ด้านบน
+    - {method: GET,    path: /health/live,                     returns: "status=live เท่านั้น (ไม่มี readiness/engine/profile)", auth: none}
+    - {method: GET,    path: /worker/v1/describe,              returns: "contract_version, runtime_id/epoch, physical_resource_id, engine{name,labeled_stub}, profiles[state{configured,supported,loaded,ready,qualified}], limits, capabilities, residency(null ถ้าไม่ได้วัด)", auth: inference|management}
+    - {method: GET,    path: /worker/v1/readiness,             returns: "ready, runtime_epoch, profiles[ready,reason], engine_alive, heartbeat_age_seconds, device{configured,effective}, observed_at, observation_seq", auth: inference|management}
+    - {method: POST,   path: /worker/v1/operations,            body: "asr: multipart envelope(JSON)+audio · tts: JSON envelope", returns: "202 receipt (accepted≠started) · 200 receipt เดิมเมื่อ digest ซ้ำ · 409 TARGET/PROFILE_MISMATCH|IDEMPOTENCY_CONFLICT|DEADLINE_EXCEEDED · 503 WORKER_BUSY|MODEL_UNAVAILABLE", auth: inference}
+    - {method: GET,    path: "/worker/v1/operations/{attempt_id}",         returns: "execution_status, operation_outcome, cancellation_requested, compute_stopped, stop_evidence, payload_state, result, error, usage (scoped ตาม issuer; ไม่มี path)", auth: inference}
+    - {method: POST,   path: "/worker/v1/operations/{attempt_id}/cancel",  returns: "202 ACK|UNSUPPORTED (ยังไม่หยุด) · 200 CANCELLED_BEFORE_START|ALREADY_FINISHED", auth: inference}
+    - {method: GET,    path: "/worker/v1/operations/{attempt_id}/output",  returns: "tts only: validated WAV + X-Content-SHA256 · 409 OUTPUT_NOT_READY · 410 PAYLOAD_ERASED", auth: inference}
+    - {method: DELETE, path: "/worker/v1/operations/{attempt_id}/payload", returns: "200 ERASED · 202 ERASE_REQUESTED (fence ระหว่าง compute); receipt/dedupe ยังอยู่", auth: inference}
   errors:                          # สัญญา error ร่วม (รายละเอียดใน docs/product/SRS.md §5.1)
     fs: {out_of_root: 400, not_found: 404, name_conflict: 409, delete_root: 400}
     projects: {bad_pid: 404, not_found: 404, delete: idempotent}   # pid มี / \ .. -> 404 (กัน traversal)

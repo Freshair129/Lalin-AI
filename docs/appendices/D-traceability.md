@@ -31,6 +31,7 @@
 | FR-13 | Batch Queue | SWARM_PLAN W3.5 · SPEC §4 | `useBatchQueue.ts` + `BatchQueue.tsx` | `useBatchQueue.test.tsx` | ✅ persist/re-attach/interrupted/queued |
 | FR-14 | Workspace Agent + Mix Copilot | ai-system/agent-architecture (AI-AGT-001) · SWARM_PLAN W4.1-4.3 | `routers/agent.py` + `MixCopilot.tsx` | ✏️ TODO | ✅ done |
 | FR-15 | File Manager | UI_SITEMAP§3 (files) | `routers/fs.py` + `FileManager.tsx` | ✏️ TODO | ✅ done |
+| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub engine) | `tests/voice_worker/*` (72) · `tools/verify/smoke_voice_worker_control.ps1` | 🟡 Slice A stub ผ่านในเครื่อง / speech engine, GPU, quality, joint PRP = NOT_RUN/BLOCKED |
 
 ## Non-Functional Requirements
 
