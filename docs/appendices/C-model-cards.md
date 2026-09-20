@@ -13,7 +13,7 @@
 
 | โมเดล | งาน | License | ขายเชิงพาณิชย์ | Card |
 |---|---|---|---|---|
-| F5-TTS-THAI | TTS/โคลนเสียง (หลัก) | CC-BY-4.0 | ✅ + attribution | [f5-tts-thai](../ai-system/model-cards/f5-tts-thai.md) |
+| F5-TTS-THAI | TTS/โคลนเสียง (หลัก) | tag CC-BY-4.0 · base weights CC BY-NC-4.0 · dataset CC BY-SA-4.0 (ตรวจ 2026-09-20) | ⚠️ ยังไม่ยืนยัน — R-010 / D9 รอ rights owner | [f5-tts-thai](../ai-system/model-cards/f5-tts-thai.md) |
 | XTTS v2 | TTS fallback | CPML | ❌ non-commercial | [xtts-v2](../ai-system/model-cards/xtts-v2.md) |
 | faster-whisper large-v3 | ASR | MIT | ✅ | [faster-whisper-large-v3](../ai-system/model-cards/faster-whisper-large-v3.md) |
 | Demucs htdemucs | Stem split | MIT | ✅ | [htdemucs](../ai-system/model-cards/htdemucs.md) |
