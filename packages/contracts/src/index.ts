@@ -7,3 +7,4 @@ export * from "./playback.js";
 export * from "./runtime.js";
 export * from "./speech.js";
 export * from "./voices.js";
+export * from "./voiceWorker.js";
