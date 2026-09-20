@@ -1,7 +1,7 @@
 ---
-version: "1.4.0b"
+version: "1.4.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-20T23:30:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.4.0b |
+| **Version** | 1.4.2b |
 | **Status** | Beta |
 | **Author** | Boss |
 | **Created** | 2026-08-09 |
@@ -49,6 +49,8 @@ attributes:
 
 The existing functional table and concurrent voice-worker row above remain
 unchanged. This manually maintained mapping is not generated doc-graph output.
+The isolated Play review branch (`codex/lalin-play-review`, merged to `main` as
+PR #19) did not include the voice-worker changes; this shared branch carries both.
 
 | Requirement | Design owner | Code | Tests / status |
 |---|---|---|---|
@@ -148,6 +150,8 @@ graph LR
 | 1.3.0 | 2026-08-19 | Boss | สแกนใหม่หลัง PR #9 (monorepo migration เข้า apps/) — path ref backend/frontend -> apps/api/apps/desktop, coverage 61%->69% @req / 2%->13% verifies / 3%->8% files-with-tests, endpoint scan 45 (3 ขาดจาก BLUEPRINT.yaml) |
 | 1.3.1b | 2026-08-23 | LALIN | เพิ่ม automated evidence ของ G-09/G-06/G-07 และแยก manual CPU/RTX/clean-VM gates ที่ยังเปิด |
 | 1.4.0b | 2026-09-20 | LALIN | Link standalone Play requirements/evidence separately from historical Studio and preserve concurrent worker mapping |
+| 1.4.1b | 2026-09-20 | LALIN | Clarify that the isolated Play review branch excludes concurrent voice-worker work |
+| 1.4.2b | 2026-09-20 | LALIN | Merge `main` (PR #19) into the shared branch that carries the FR-19 voice-worker row; both histories retained |
 
 ## CHANGELOG
 
@@ -156,4 +160,6 @@ date and historical scan sections remain unchanged.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.2b | 2026-09-20 | beta | Resolve merge of main (PR #19, 8a36a60) into codex/lalin-play-split; keep FR-19 voice-worker row and Play sections from both sides | merge of 8a36a60 | LALIN |
+| 1.4.1b | 2026-09-20 | beta | Clarify isolated review scope without introducing unrelated worker changes | based on 2e1eb73 | LALIN |
 | 1.4.0b | 2026-09-20 | beta | Add Play ownership/traceability links and version metadata; preserve prior content | based on f5a6681 | LALIN |
