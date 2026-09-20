@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-09-21T00:40:00+07:00,LALIN,7d6235d"
-last_update: "2026-09-21T00:40:00+07:00,LALIN"
+last_update: "2026-09-21T02:10:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -28,7 +28,7 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 | Headless smoke `asr-th-en-01` (large-v3-turbo, **cuda:0 int8_float16**, RTX 5060 Ti) | **PASS** — boot → describe (`labeled_stub:false`, effective `cuda:0`) → readiness รอ `warm:true` → 401/403 → ASR SUCCEEDED บน `en-short.wav` (3.82 s เสียง, processing 0.78 s) → erase → Studio `DATA_DIR` ไม่ถูกสร้าง |
 | Headless smoke `asr-th-en-01-medium` (medium, cuda:0 int8_float16) | **PASS** เงื่อนไขเดียวกัน |
 | RTX 3060 | **NOT_RUN** — เครื่องนี้เป็น RTX 5060 Ti; เส้นทางนี้ไม่ใช้ torch (CTranslate2 + cuBLAS/cuDNN 12 จาก pip wheel) จึงคาดว่าใช้ได้บน Ampere แต่ยังไม่มีหลักฐาน |
-| Thai transcription quality (LVP-AT-014–016) | **NOT_RUN** — ต้องมีคลิปเสียงพูดไทยที่มีสิทธิ์ใช้ก่อน |
+| Thai transcription quality (LVP-AT-014–016) | **RUN (qualitative)** บนงานจริง 4 คลิปจากบันทึกประชุมของผู้ใช้ (§5) — turbo ใช้ได้, medium ไม่ผ่าน; ยังไม่มี WER เพราะไม่มี reference transcript |
 | TTS Slice B | **BLOCKED** (D9/R-010) |
 | Production activation | none |
 
@@ -65,9 +65,38 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 - `ollama list` มี `hf.co/mradermacher/qwen-tts-thai-sft-GGUF` แต่ Ollama ไม่มี audio output และ worker ห้ามแตะ Ollama → เป็นแค่ candidate ใน survey D9 ไม่ใช่ทางลัด
 - Sandbox decoder (LVP-REQ-014) ยังเป็น **partial**: PyAV decode ใน engine child (ไม่ใช่ subprocess ffmpeg) — child ถูก supervisor terminate ได้, มี size/duration cap, แต่ไม่มี OS mem/CPU cap บน Windows (D13 เดิม)
 
+## 5. Real-work evidence (บันทึกประชุมของผู้ใช้ 2026-09-19, 1 h 54 min, ไมค์ห้องประชุม)
+
+แหล่ง: `C:\Users\pc\Videos\2026-09-19 11-08-00.mp4` (5.3 GB, AAC 48 kHz stereo) → ffmpeg (imageio bundle) → mono 16 kHz WAV
+คลิปตัดไว้ที่ `apps/api/runtime/eval/asr-th/*.wav` (**gitignored — เนื้อหาธุรกิจส่วนตัว ห้าม commit**) รันผ่าน contract จริงด้วย
+[`tools/verify/voice_worker_eval_clips.py`](../../tools/verify/voice_worker_eval_clips.py) (boot worker ต่อ manifest → readiness → envelope → status → erase)
+
+### 5.1 ผลผ่าน worker (`language: th`, RTX 5060 Ti, cuda:0 int8_float16)
+
+| Clip | เนื้อหา | turbo proc / RTF | turbo คุณภาพ (อ่านเทียบเสียง) | medium proc / RTF | medium คุณภาพ |
+|---|---|---|---|---|---|
+| clean-short 15 s | ผู้พูดใกล้ไมค์ | 0.80 s / 0.05 | ดี อ่านรู้เรื่องทั้งประโยค ชื่อสินค้าอังกฤษบางคำเพี้ยน | 1.8 s / 0.12 | พอใช้ มี filler "อ่า..." และคำผิดมากกว่า |
+| clean-long 60 s | ต่อเนื่องจาก clip แรก | 5.5 s / 0.09 | ดี code-switch ไทย/อังกฤษได้ ("implement", "Smart Clip") | 18.2 s / 0.30 | **ตกหล่นช่วงกลาง ~30 s** ข้ามจาก "สันแบบรูปนะ" ไป "ช่วงสั้นๆ" |
+| farfield-noisy 60 s | เสียงไกลไมค์ ต้นประชุม | 8.3 s / 0.14 | ใช้ได้ มีคำต่างภาษาหลุด 3–4 จุด ("Carry Gott Hora", "aconteceu") | 24.1 s / 0.40 | **ได้แค่ 7 segment** ครึ่งแรกหายทั้งหมด |
+| mid-meeting 45 s | หลายคนพูดซ้อน เสียงไกล | 6.8 s / 0.15 | **แย่** ครึ่งหนึ่งเป็นอักขระต่างภาษา (จีน/รัสเซีย/ญี่ปุ่น) ปนไทย | 13.7 s / 0.30 | **แย่กว่า** ได้ 4 segment ท้ายคลิปเท่านั้น |
+
+ทุก attempt = `SUCCEEDED` ที่ระดับ contract (usage `provenance: measured`, erase สำเร็จ) — ตัวเลขอยู่ใน `runtime/eval/asr-th/results.json` (ไม่ commit);
+turbo ทั้ง 4 คลิปรวม 180 s เสียง ใช้เวลา 21.4 s
+
+### 5.2 ข้อค้นพบที่เปลี่ยนการตัดสินใจ
+
+1. **`language: auto` อันตรายกับงานไทย** — Whisper `detect_language` ตอบ `en` (p ≈ 0.79–0.83) ทุก window ที่ลอง (0–30 s, 82–112 s, 1840–1870 s)
+   ทั้งที่เป็นไทยล้วน จากนั้น decode ทั้ง 1 h 54 min ออกมาเป็น **ประโยคอังกฤษที่ไม่ใช่คำแปล** ("We sell the goods. We sell the goods.") 2,242 segment, 0 อักขระไทย
+   → ถอด `auto` ออกจาก `languages` ของทั้ง 2 manifest (D8) ผู้เรียกต้องระบุ `th`/`en` เอง; `AsrInput.language` ยังรับ `auto` ที่ระดับ contract สำหรับ profile อื่นในอนาคต
+2. **medium ไม่เหมาะเป็น fallback ภาษาไทย** — ตกหล่นเป็นช่วงยาวบนคลิป ≥ 45 s ทุกคลิป และช้ากว่า turbo 3–4 เท่าบน GPU เดียวกัน
+   → D8: host ที่ VRAM ต่ำใช้ **turbo int8_float16 (~1.2 GB)** อยู่แล้ว; medium คงไว้เป็น CPU-only fallback เท่านั้น และต้องมี evidence เพิ่มก่อนอนุมัติ
+3. **เสียงประชุมหลายคน/ไกลไมค์** ยังต้องมี VAD หรือ diarization ก่อนส่งเข้า worker — worker ปิด `vad_filter` (ไม่ตัดสินใจแทน caller) ผลจึงมี hallucination ต่างภาษาในช่วงพูดซ้อน
+   → เสนอ engine option `vad_filter` ระดับ manifest (ไม่ใช่ per-request) เป็น **D14** ให้ PRP owner ตัดสิน
+4. Full-file transcript ภาษาไทย (`th` forced, turbo, VAD on) ของทั้งไฟล์สร้างไว้เป็นไฟล์ท้องถิ่นให้ผู้ใช้ตรวจ (ไม่ commit) — ใช้เป็น reference ร่างสำหรับทำ WER รอบถัดไป
+
 ## 4. Open before Slice B (ASR) can be called qualified
 
-1. คลิปเสียงพูดไทยที่มีสิทธิ์ใช้ ≥ 3 ตัวอย่าง (สั้น/ยาว/มีเสียงรบกวน) → รัน WER/CER เทียบ turbo vs medium → บันทึกในเอกสารนี้
+1. ทำ reference transcript (คนตรวจ) ของ 4 คลิปใน §5 → คำนวณ WER/CER จริงของ turbo (medium ตกจากรายการ fallback GPU แล้ว)
 2. รัน smoke ทั้งสอง manifest บนเครื่อง RTX 3060 จริง (หรือ CPU int8 ถ้าไม่มี GPU) → บันทึก VRAM/RTF
 3. PRP owner ยืนยัน D8 (ชื่อ/revision profile) และ D10 (residency: int8_float16 ~1.2 GB ไม่ evict LLM)
 4. TTS: รอ rights owner (D9/R-010)
@@ -76,4 +105,5 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-09-21 | beta | Real-work Thai meeting evidence (§5): 4 clips through the contract on both manifests; auto language removed from D8 manifests; medium demoted to CPU-only fallback; eval tool added | based on 13fee6c | LALIN |
 | 0.1.0b | 2026-09-21 | beta | Slice B ASR: speech venv + pinned turbo/medium weights, two D8 manifests, faster-whisper engine adapter; 94/94 in speech venv, 171/171+1 skip in main venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED | based on 7d6235d | LALIN |

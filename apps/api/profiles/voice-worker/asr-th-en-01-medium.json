@@ -21,8 +21,7 @@
   },
   "languages": [
     "th",
-    "en",
-    "auto"
+    "en"
   ],
   "accepted_audio_formats": [
     "audio/wav",
@@ -66,5 +65,6 @@
       "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913",
       "bytes": 459861
     }
-  ]
+  ],
+  "_language_note": "auto removed 2026-09-21: Whisper language detection returned 'en' (p~0.8) on every window of a real Thai meeting recording and then emitted English 'translation' hallucinations; the caller must state th/en explicitly (real-work evidence, Slice B doc §5)"
 }
