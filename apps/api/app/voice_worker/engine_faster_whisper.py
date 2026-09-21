@@ -75,6 +75,28 @@ def register_cuda_dlls() -> list[str]:
     return added
 
 
+_OOM_MARKERS = ("out of memory", "bad allocation", "bad_alloc")
+
+
+def classify_engine_error(exc: BaseException, *, stage: str) -> str:
+    """map exception ของ engine → รหัสใน error contract
+
+    - ``RUNTIME_OOM``: ``MemoryError`` (CTranslate2 ยก C++ ``std::bad_alloc`` มาเป็น ``MemoryError("bad allocation")``)
+      หรือข้อความ CUDA OOM — เจอจริงระหว่าง A/B 2026-09-21 และเดิมถูกรายงานเป็น ``RUNTIME_FAILED``
+    - ``AUDIO_FORMAT_UNSUPPORTED``: ตอน decode (stage="decode") และ exception มาจาก PyAV จริง
+      (โมดูล ``av`` หรือ ``av.*`` — เดิมเช็ค ``"av" in module`` ซึ่งจับโมดูลใดก็ได้ที่มีตัวอักษร av)
+    - อื่น ๆ: ``RUNTIME_FAILED``
+    """
+    message = str(exc).lower()
+    if isinstance(exc, MemoryError) or any(marker in message for marker in _OOM_MARKERS):
+        return "RUNTIME_OOM"
+    if stage == "decode":
+        module = type(exc).__module__ or ""
+        if module == "av" or module.startswith("av.") or "decode" in message:
+            return "AUDIO_FORMAT_UNSUPPORTED"
+    return "RUNTIME_FAILED"
+
+
 def _split_device(device: str) -> tuple[str, int]:
     if device == "cpu":
         return "cpu", 0
@@ -190,8 +212,8 @@ class _Engine:
             if vad:
                 kwargs["vad_parameters"] = {"min_silence_duration_ms": int(self.opts.get("vad_min_silence_ms") or 700)}
             segments_iter, info = self.model.transcribe(input_path, **kwargs)
-        except Exception as exc:  # noqa: BLE001
-            code = "AUDIO_FORMAT_UNSUPPORTED" if "av" in type(exc).__module__ or "decode" in str(exc).lower() else "RUNTIME_FAILED"
+        except Exception as exc:  # noqa: BLE001 — MemoryError เป็น subclass ของ Exception จึงถูกจับที่นี่
+            code = classify_engine_error(exc, stage="decode")
             return {"outcome": "FAILED", "error": {"code": code, "message": f"decode/transcribe failed: {type(exc).__name__}"}}
         max_seconds = float(payload.get("max_audio_seconds") or 0.0)
         if max_seconds and info.duration > max_seconds + 0.5:
@@ -208,7 +230,7 @@ class _Engine:
                             "audio_seconds": float(info.duration)}
                 segments.append({"start": round(float(segment.start), 3), "end": round(float(segment.end), 3), "text": segment.text.strip()})
         except Exception as exc:  # noqa: BLE001
-            code = "RUNTIME_OOM" if "out of memory" in str(exc).lower() else "RUNTIME_FAILED"
+            code = classify_engine_error(exc, stage="generate")
             return {"outcome": "FAILED", "error": {"code": code, "message": f"transcribe failed: {type(exc).__name__}"},
                     "audio_seconds": float(info.duration)}
         text = " ".join(s["text"] for s in segments if s["text"]).strip()
@@ -250,7 +272,8 @@ def _execute(conn: Any, engine: _Engine, message: dict[str, Any], opts: dict[str
         try:
             box.update(engine.transcribe(payload, cancel, deadline))
         except Exception as exc:  # noqa: BLE001 — กัน thread ตายเงียบ
-            box.update({"outcome": "FAILED", "error": {"code": "RUNTIME_FAILED", "message": f"engine thread crashed: {type(exc).__name__}"}})
+            box.update({"outcome": "FAILED", "error": {"code": classify_engine_error(exc, stage="thread"),
+                                                       "message": f"engine thread crashed: {type(exc).__name__}"}})
 
     worker = threading.Thread(target=run, name="faster-whisper-job", daemon=True)
     _send(conn, {"op": "started", "request_id": request_id, "observed_at": _now_iso()})
@@ -338,4 +361,4 @@ def serve(conn: Any, options: dict[str, Any] | None = None) -> None:
                 return
 
 
-__all__ = ["ALLOWED_COMPUTE_TYPES", "ENGINE_NAME", "register_cuda_dlls", "serve"]
+__all__ = ["ALLOWED_COMPUTE_TYPES", "ENGINE_NAME", "classify_engine_error", "register_cuda_dlls", "serve"]

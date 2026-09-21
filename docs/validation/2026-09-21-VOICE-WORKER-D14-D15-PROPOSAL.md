@@ -1,7 +1,7 @@
 ---
-version: "0.4.0c"
+version: "0.5.0c"
 created_at: "2026-09-21T06:00:00+07:00,LALIN,16b3daa"
-last_update: "2026-09-21T11:30:00+07:00,LALIN"
+last_update: "2026-09-21T13:30:00+07:00,LALIN"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -184,11 +184,43 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 - เหตุผลเดียวที่เคยเขียนไว้ว่าเก็บ medium ไว้คือ "CPU fallback" — หลักฐานบอกว่า**ไม่จริง** turbo บน CPU ที่ RTF 0.72 ยังอยู่ในงบ 60 s ได้ ส่วน medium ไม่ได้
 - **สรุป D8: เปิด `asr-th-en-01` ตัวเดียว** ถ้าต้อง deploy บน CPU ให้ใช้ manifest เดียวกันเปลี่ยนเป็น `device: cpu`, `compute_type: int8`
 - ข้อแม้ที่ยังเปิด: เครื่องนี้ CPU 28 threads — host ที่เล็กกว่าจะช้ากว่านี้ ต้องวัดบน host จริงก่อนอนุมัติ CPU deployment
-- หมายเหตุ: การวัด RAM รอบนี้ **ไม่สำเร็จ** (helper คืน 0) จึงไม่มีตัวเลขหน่วยความจำ — แก้ helper แล้ว รอบหน้าจะมี
+- หมายเหตุ: การวัด RAM รอบนี้ **ไม่สำเร็จ** จึงไม่มีตัวเลขหน่วยความจำ · **แก้ไขข้อความเดิม:** ครั้งแรกผมเขียนว่า "แก้ helper แล้ว" แต่การแก้นั้น (เปลี่ยนไปเรียก `K32GetProcessMemoryInfo`) **ไม่ได้แก้อะไร** — สาเหตุจริงคือ ctypes ส่ง pseudo-handle `-1` ของ `GetCurrentProcess` เป็น int 32-bit ทำให้ call 64-bit ได้ค่าผิดและล้มเงียบ ๆ แก้จริงแล้วใน §4.6 ด้วยการประกาศ `HANDLE` types
 
-### 4.6 ข้อค้นพบเชิงปฏิบัติการ
-`MemoryError: bad allocation` หลังเรียก `transcribe` ราว 60 ครั้งใน process เดียว (ขณะ VRAM ถูกแอป desktop ใช้อยู่ 10.3 GB จาก 16 GB)
-→ engine child ของ worker ที่รันยาวอาจเจอเหมือนกัน; supervisor restart ครอบคลุมอยู่แล้ว (engine ตาย → epoch ใหม่) แต่ควรมี soak test ใน Slice C
+### 4.6 `MemoryError: bad allocation` — สืบแล้ว (2026-09-21)
+
+**เหตุการณ์เดิม:** ระหว่าง A/B เจอ `MemoryError: bad allocation` หลังเรียก `transcribe` ราว 60 ครั้งใน process เดียว
+ข้อความนี้คือ C++ `std::bad_alloc` = จอง **host RAM** ไม่ได้ (ไม่ใช่ข้อความ CUDA OOM)
+
+**ผลการสืบ: ไม่มี leak ในเส้นทางไหนเลย และทำให้เกิดซ้ำไม่ได้**
+
+| การทดสอบ | จำนวน | พัง? | หน่วยความจำ |
+|---|---|---|---|
+| **soak ผ่าน worker จริง** (manifest ที่ ship: VAD เปิด, ไม่มี glossary) · [`voice_worker_soak.py`](../../tools/verify/voice_worker_soak.py) | 200 request (3.3× จุดที่เคยพัง) | **ไม่พัง** · engine restart 0 · PID เดียวตลอด | engine private 3074.8 → 3106.3 MiB (+31.5) · slope ครึ่งหลัง **+0.13 MiB/request** |
+| **จำลองเงื่อนไขตอนพังเป๊ะ ๆ** ใน process เดียว (glossary prompt, VAD ปิด, ลำดับเดียวกับ A/B) · [`asr_inprocess_memory.py`](../../tools/verify/asr_inprocess_memory.py) | 120 call (2× จุดที่เคยพัง) | **ไม่พัง** | ดูด้านล่าง |
+
+การจำลองในข้อสอง แยกตัวเลขที่ปนกันออกเป็น 2 ส่วน:
+- **+970 MiB ครั้งเดียวที่ call แรก** — CUDA/cuBLAS/cuDNN จอง workspace แบบ lazy ตอน inference แรก **ไม่ใช่ leak**
+- **หลังจากนั้น +27.8 MiB ตลอด 119 call = +0.02 MiB/call** และบางช่วง**ลดลง** → steady state แบน
+- spike ชั่วคราวสูงสุด +90 MiB เหนือค่าสุดท้าย (call 24, `clean-long/glossary_vad`)
+- ถ้าอ่านแค่ "end − start" จะได้ +998 MiB ซึ่งดูเหมือนรั่ว ~1 GB — tool ตอนนี้รายงานสองส่วนแยกกันเพื่อกันการอ่านผิดแบบนี้
+
+**GPU (system-wide):** แบนจาก request 32–144 แล้วกระโดดครั้งเดียว ~345 MiB แล้วแบนต่อ — **ไม่ใช่รูปแบบ leak** (leak จะขึ้นต่อเนื่อง)
+และระบุว่าเป็นของ engine ไม่ได้: ตัวเลขเป็นของทั้งเครื่อง และแอปอื่นใช้ GPU เพิ่มจาก 10.3 → 12.9 GB ระหว่าง session เดียวกัน (Windows WDDM ไม่ให้ค่า per-process)
+
+**สภาพเครื่องตลอดการทดสอบ:** RAM 31.8 GB ว่าง 6–8 GB · commit 69–73 GB จาก 85.8 GB · **`vmmemWSL` (VM ของ WSL2) ถือ ~23 GB** · Ollama ไม่ได้โหลดโมเดล
+
+**ข้อสรุปที่พูดได้:** ตัดความเป็นไปได้ของ leak สะสมต่อ call ทิ้งได้ทั้งเส้นทางที่ ship และเส้นทาง glossary
+**ข้อสรุปที่พูดไม่ได้:** สาเหตุของเหตุการณ์ครั้งเดียวนั้น — ทำให้เกิดซ้ำไม่ได้ สมมติฐานที่สอดคล้องกับหลักฐานที่สุดคือความกดดันหน่วยความจำของเครื่องขณะนั้น (WSL2 + แอปอื่น) หรือ decode ผิดปกติครั้งเดียวที่จองก้อนใหญ่ (engine ไม่ deterministic §4.1) แต่ **ยังไม่ยืนยัน**
+
+**drift ที่เหลือ:** ~0.1–0.13 MiB/request ในเส้นทาง worker ยังอยู่หลังช่วงแรก · ถ้าคงที่ 10,000 request ≈ +1–1.3 GB — ไม่ใช่ปัญหาเร็ว ๆ นี้ แต่ **ต้อง soak ยาวกว่านี้ใน Slice C** เพื่อแยกว่าเป็น leak ช้า ๆ หรือ allocator fragmentation ก่อนกำหนด restart policy
+
+**บั๊กที่แก้ระหว่างสืบ**
+1. **engine รายงาน OOM ผิดรหัส:** `MemoryError("bad allocation")` ถูกจับแล้วรายงานเป็น `RUNTIME_FAILED` ทั้งที่สัญญามี `RUNTIME_OOM` (เช็คแค่ข้อความ "out of memory") → เพิ่ม `classify_engine_error` ใช้ทั้ง 3 จุดที่จับ exception · ไม่ใช่ contract change (รหัสมีอยู่แล้ว)
+2. **จับ PyAV ผิด:** เดิมเช็ค `"av" in type(exc).__module__` = โมดูลไหนก็ได้ที่มีตัวอักษร av (เช่น `java_bridge`, `savepoint`) ถูกตีเป็น `AUDIO_FORMAT_UNSUPPORTED` → เปลี่ยนเป็น `module == "av" or startswith("av.")`
+3. **เครื่องมือวัดหน่วยความจำอ่านไม่ได้:** ctypes ส่ง pseudo-handle เป็น int 32-bit → ประกาศ `HANDLE` types ใน 3 tools และเลิกคำนวณ growth จากค่า sentinel `-1` (เคยได้ "0.0" ที่ไม่มีความหมาย)
+- เทสต์ใหม่ 11 ข้อ ขับ `_Engine.transcribe` จริงด้วยโมเดลปลอม (รันได้ใน venv หลักไม่ต้องมี speech stack) · **mutation check:** คืนกฎเดิมแล้วเทสต์ `bad allocation` ระหว่าง decode ล้มจริง
+
+**คำถามที่เปิดไว้ (ไม่ได้ทำ):** หลัง `RUNTIME_OOM` ควรให้ supervisor restart engine ทันทีไหม — CUDA state อาจไม่สมบูรณ์หลัง bad_alloc กลางทาง แต่ restart ทุกครั้งแลกกับ warm-up ~20 s ต่อครั้ง ต้องตัดสินพร้อม restart policy ใน Slice C
 
 ## 6. D14 — applied (2026-09-21)
 
@@ -215,6 +247,7 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.5.0c | 2026-09-21 | candidate | MemoryError investigated: no leak on the shipped or glossary path (200-request worker soak, 120-call reproduction), cause of the single event unconfirmed; fixed OOM misclassification, PyAV module check and the ctypes handle bug in the tools; corrected the earlier claim that the RAM helper was fixed | based on 55fbf6e | LALIN |
 | 0.4.0c | 2026-09-21 | candidate | D14 applied (VAD on, pinned VAD hash, revision bump); corrected the false claim that describe() exposes engine_options | based on 877a121 | LALIN |
 | 0.3.0c | 2026-09-21 | candidate | VAD blocks all five non-speech classes while preserving speech, and no_speech_prob is unusable (turbo returns 0.0) → D14 back to default true; CPU benchmark closes D8 (turbo beats medium on CPU too, drop the medium profile) | based on b0a9e81 | LALIN |
 | 0.2.0c | 2026-09-21 | candidate | A/B measured over 3 repeats: engine is non-deterministic (new D16); glossary helps clean audio but truncates degraded audio; VAD's proven benefit is silence-hallucination suppression only → D14 default changed to false | based on fd814d9 | LALIN |

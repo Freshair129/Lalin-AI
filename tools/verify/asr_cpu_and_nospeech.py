@@ -25,7 +25,24 @@ import os
 import re
 import sys
 import time
+from ctypes import wintypes
 from pathlib import Path
+
+def _declare_win32_types() -> None:
+    """ctypes ต้องรู้ว่าเป็น HANDLE 64-bit — ไม่งั้น pseudo-handle ของ GetCurrentProcess (-1) ถูกส่งเป็น int 32-bit
+    กลายเป็น 0x00000000FFFFFFFF แล้ว call ล้มเงียบ ๆ (เจอจริง 2026-09-21: RAM ของ benchmark CPU และ memtrace อ่านไม่ได้ทั้งคู่)"""
+    kernel32 = ctypes.windll.kernel32
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.K32GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD]
+    kernel32.K32GetProcessMemoryInfo.restype = wintypes.BOOL
+
+
+if os.name == "nt":
+    _declare_win32_types()
+
 
 FOREIGN_RE = re.compile(r"[一-鿿぀-ヿЀ-ӿ가-힯ऀ-ॿ]")
 

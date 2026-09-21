@@ -1,5 +1,5 @@
 ---
-version: "0.2.4b"
+version: "0.2.5b"
 created_at: "2026-09-21T00:40:00+07:00,LALIN,7d6235d"
 last_update: "2026-09-21T10:00:00+07:00,LALIN"
 status: "beta"
@@ -22,13 +22,14 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 | Gate | Result |
 |---|---|
 | Voice worker suite ใน venv หลัก (`apps/api/.venv`, ไม่มี speech stack) | **PASS 85 / SKIP 1** — engine test ข้ามอย่างชัดเจน ไม่นับเป็น PASS |
-| Voice worker suite ใน speech venv (`apps/api/.venv-speech`) | **PASS 105/105** (หลัง D14; เดิม 94) รวม 9 ข้อของ `test_engine_faster_whisper.py` (medium, cpu int8) |
-| ชุดเต็ม `apps/api` (Studio regression, venv หลัก) | **171 passed, 1 skipped** |
+| Voice worker suite ใน speech venv (`apps/api/.venv-speech`) | **PASS 116/116** (หลัง D14 + OOM mapping; เดิม 94) รวม 9 ข้อของ `test_engine_faster_whisper.py` (medium, cpu int8) |
+| ชุดเต็ม `apps/api` (Studio regression, venv หลัก) | **182 passed, 1 skipped** (เดิม 171; +11 OOM mapping) |
 | `compileall apps/api/app` · `schema --check` | PASS · in sync (contract ไม่เปลี่ยน) |
 | Headless smoke `asr-th-en-01` (large-v3-turbo, **cuda:0 int8_float16**, RTX 5060 Ti) | **PASS** — boot → describe (`labeled_stub:false`, effective `cuda:0`) → readiness รอ `warm:true` → 401/403 → ASR SUCCEEDED บน `en-short.wav` (3.82 s เสียง, processing 0.78 s) → erase → Studio `DATA_DIR` ไม่ถูกสร้าง |
 | **แก้ไขหลักฐาน 2026-09-21** | smoke ข้างบนวัด**ก่อน** commit 79335cd ที่ถอด `auto` ออกจาก manifest — script ส่ง `language: auto` เมื่อให้ `-Audio` จึง**ล้มตั้งแต่ commit นั้นจนถึง 0.2.3b** (worker ตอบ `LANGUAGE_UNSUPPORTED` ถูกต้องตาม fail-closed) ไม่ได้รันซ้ำหลังเปลี่ยน manifest · แก้แล้ว: เพิ่ม `-Language` (default `th`, ห้าม auto) + ลบ control bytes ที่ค้างในหัวไฟล์ · รันใหม่ **PASS** ทั้ง `asr-th-en-01 -Language en` และ stub asr/tts |
 | Headless smoke `asr-th-en-01-medium` (medium, cuda:0 int8_float16) | **PASS** เงื่อนไขเดียวกัน — *profile นี้ถูกตัดออกแล้ว 2026-09-21 ตาม D8 (ดู [proposal §4.5](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md))* |
 | **D14 non-speech guard** (2026-09-21) | **PASS** — silence/noise/hum → `NO_SPEECH` (เดิม SUCCEEDED พร้อมข้อความแต่ง); mutation check ยืนยันว่าเทสต์จับได้; GPU end-to-end ความเงียบ 6 s → `NO_SPEECH`, 4 คลิปไทยยัง SUCCEEDED — [proposal §6](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) |
+| **Soak / memory** (2026-09-21) | **PASS (no leak)** — 200 request ผ่าน worker จริง ไม่พัง ไม่ restart; จำลองเงื่อนไขที่เคยพัง 120 call ไม่พัง, steady state +0.02 MiB/call · drift ~0.1 MiB/request ต้อง soak ยาวกว่าใน Slice C · OOM ตอนนี้รายงานเป็น `RUNTIME_OOM` — [proposal §4.6](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) |
 | RTX 3060 | **NOT_RUN** — เครื่องนี้เป็น RTX 5060 Ti; เส้นทางนี้ไม่ใช้ torch (CTranslate2 + cuBLAS/cuDNN 12 จาก pip wheel) จึงคาดว่าใช้ได้บน Ampere แต่ยังไม่มีหลักฐาน |
 | Thai transcription quality (LVP-AT-014–016) | **RUN (qualitative)** บนงานจริง 4 คลิปจากบันทึกประชุมของผู้ใช้ (§5) — turbo ใช้ได้, medium ไม่ผ่าน; ยังไม่มี WER เพราะไม่มี reference transcript |
 | TTS Slice B | **BLOCKED** (D9/R-010) |
@@ -108,6 +109,7 @@ turbo ทั้ง 4 คลิปรวม 180 s เสียง ใช้เว
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-09-21 | beta | Soak and MemoryError investigation: no leak; OOM now RUNTIME_OOM; suites 116 / 182+1 | based on 55fbf6e | LALIN |
 | 0.2.4b | 2026-09-21 | beta | D14 applied: VAD on, non-speech now NO_SPEECH; suite 105/105 | based on 877a121 | LALIN |
 | 0.2.3b | 2026-09-21 | beta | Correct the record: the GPU smoke claimed in PR #21 broke at 79335cd (script sent auto after it was removed); smoke fixed with -Language and re-run PASS x3 | based on e5ce2d3 | LALIN |
 | 0.2.2b | 2026-09-21 | beta | D8 applied: asr-th-en-01-medium removed; engine test switched to the shipped turbo weights | based on e5ce2d3 | LALIN |

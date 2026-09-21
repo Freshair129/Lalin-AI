@@ -1,22 +1,22 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T09:46:05+07:00",
+  "generated_at": "2026-09-21T10:25:01+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 414,
-    "total_edges": 542,
+    "total_nodes": 416,
+    "total_edges": 544,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (29/42)",
       "requirements_with_tests": "23% (10/42)",
-      "code_files_referenced_by_docs": "3% (4/103)",
-      "code_files_with_tests": "15% (16/103)",
+      "code_files_referenced_by_docs": "5% (6/105)",
+      "code_files_with_tests": "15% (16/105)",
       "structured_annotations_found": 202,
       "unstructured_req_refs_found": 124
     }
@@ -1145,6 +1145,14 @@
       "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
+      "id": "code:tools/verify/asr_inprocess_memory.py",
+      "type": "code_file",
+      "path": "tools/verify/asr_inprocess_memory.py",
+      "hash": "8ee31291bc37",
+      "status": "current",
+      "last_verified": "2026-09-21T10:25:00+07:00"
+    },
+    {
       "id": "code:tools/verify/asr_prompt_vad_ab.py",
       "type": "code_file",
       "path": "tools/verify/asr_prompt_vad_ab.py",
@@ -1167,6 +1175,14 @@
       "hash": "02ea41d63b64",
       "status": "current",
       "last_verified": "2026-09-21T09:25:29+07:00"
+    },
+    {
+      "id": "code:tools/verify/voice_worker_soak.py",
+      "type": "code_file",
+      "path": "tools/verify/voice_worker_soak.py",
+      "hash": "84b49dbfffdf",
+      "status": "current",
+      "last_verified": "2026-09-21T10:25:00+07:00"
     },
     {
       "id": "doc:2026-08-19-render-portability-sidecar",
@@ -1253,20 +1269,20 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
       "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
-      "hash": "dce098182653",
-      "prev_hash": "dce098182653",
+      "hash": "196c692a0911",
+      "prev_hash": "196c692a0911",
       "status": "current",
-      "last_verified": "2026-09-21T09:46:05+07:00"
+      "last_verified": "2026-09-21T10:25:01+07:00"
     },
     {
       "id": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
       "type": "document",
       "path": "docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md",
       "title": "2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
-      "hash": "da809cfd77b8",
-      "prev_hash": "da809cfd77b8",
+      "hash": "6659ebc71b92",
+      "prev_hash": "6659ebc71b92",
       "status": "current",
-      "last_verified": "2026-09-21T09:46:05+07:00"
+      "last_verified": "2026-09-21T10:25:01+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -5080,7 +5096,21 @@
     },
     {
       "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "to": "code:tools/verify/asr_inprocess_memory.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
       "to": "code:tools/verify/asr_prompt_vad_ab.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "to": "code:tools/verify/voice_worker_soak.py",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
