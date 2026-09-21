@@ -84,6 +84,11 @@ def part_a(clips: list[Path], api_dir: Path, repeats: int) -> dict:
     configs = [("turbo", "cpu", "int8"), ("medium", "cpu", "int8"), ("turbo", "cuda", "int8_float16")]
     for model_name, device, compute in configs:
         directory = api_dir / "models" / "faster-whisper" / ("large-v3-turbo" if model_name == "turbo" else "medium")
+        if not (directory / "model.bin").is_file():
+            # medium weights were deleted after D8 dropped that profile (2026-09-21); results kept in the proposal doc
+            print(f"  skip {model_name}-{device}-{compute}: weights not present at {directory}", flush=True)
+            out[f"{model_name}-{device}-{compute}"] = {"skipped": "weights not present"}
+            continue
         if device == "cuda":
             register_cuda_dlls()
         before = peak_rss_mib()
