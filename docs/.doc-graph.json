@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T07:34:58+07:00",
+  "generated_at": "2026-09-21T09:10:14+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1263,10 +1263,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md",
       "title": "2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
-      "hash": "b882b2b2f862",
-      "prev_hash": "b882b2b2f862",
+      "hash": "ab05e9249a1c",
+      "prev_hash": "ab05e9249a1c",
       "status": "current",
-      "last_verified": "2026-09-21T07:34:58+07:00"
+      "last_verified": "2026-09-21T09:10:14+07:00"
     },
     {
       "id": "doc:A-api-spec",

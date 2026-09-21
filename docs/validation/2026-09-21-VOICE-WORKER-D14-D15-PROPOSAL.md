@@ -1,7 +1,7 @@
 ---
-version: "0.2.0c"
+version: "0.3.0c"
 created_at: "2026-09-21T06:00:00+07:00,LALIN,16b3daa"
-last_update: "2026-09-21T07:30:00+07:00,LALIN"
+last_update: "2026-09-21T09:15:00+07:00,LALIN"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -14,15 +14,17 @@ attributes:
 
 **สำหรับ:** PRP owner (ผู้ตัดสิน) · **จาก:** LALIN · **สถานะ:** ข้อเสนอ ยังไม่แตะ contract/โค้ด
 **ที่มา:** หลักฐานงานจริงจาก [Slice B §5](2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md) และการทดลอง [pipeline](../architecture/MEETING_TRANSCRIPT_PIPELINE.md) บนบันทึกประชุมไทย 1 h 54 min
-**อัปเดต 2026-09-21 (§4):** วัด A/B แล้ว → **เปลี่ยนข้อเสนอ D14 จาก default `true` เป็น default `false`** และเพิ่มคำเตือนของ D15
+**อัปเดต 2 (2026-09-21, §4.4–§4.6):** วัดเพิ่ม → **D14 กลับไปเป็น default `true`** (เหตุผลใน §4.4: ทางเลือก `no_speech_prob` ใช้ไม่ได้ และ input ที่ไม่ใช่เสียงพูดทุกชนิดให้ "ประโยคไทยที่ดูเหมือนจริง") · **D8 ตัด `asr-th-en-01-medium` ออก** (§4.5)
+**อัปเดต 1 (2026-09-21, §4.1–§4.3):** วัด A/B แล้ว → เคยเปลี่ยน D14 เป็น default `false` และเพิ่มคำเตือนของ D15
 **หลักที่ยึด:** worker ไม่ตัดสินใจแทน caller (LVP-REQ-005), data minimization (LVP-REQ-026), ไม่มี hidden reference-ASR (LVP-REQ-017), contract เปลี่ยนได้เฉพาะเมื่อ PRP อนุมัติ (D12: pydantic = source → regenerate schema/TS)
 
 ## 0. สรุปให้ตัดสิน
 
 | ID | เรื่อง | ข้อเสนอ (default) | ทางเลือก | ผลถ้าไม่ทำ |
 |---|---|---|---|---|
-| **D14** | VAD ระดับ manifest | เพิ่ม `engine_options.vad_filter: bool` (**default `false`**) + `vad_min_silence_ms` (default 700) ใน profile; **ไม่มี** per-request override. ประโยชน์ที่พิสูจน์ได้คือ **กัน hallucination ในไฟล์ที่เงียบ** ไม่ใช่ทำให้เสียงรบกวนดีขึ้น (§4.3) | (b) per-request flag · (c) ไม่เพิ่ม | input ที่เป็นความเงียบล้วนได้ข้อความปลอม ("ขอบคุณภาษาส") แทนที่จะเป็น `NO_SPEECH` |
+| **D14** | VAD ระดับ manifest | เพิ่ม `engine_options.vad_filter: bool` + `vad_min_silence_ms` (default 700); **ตั้ง `true` สำหรับ profile ที่รับเสียงจาก caller ทั่วไป** (กลับคำจากอัปเดต 1 — เหตุผลใน §4.4) · **ไม่มี** per-request override | (b) default `false` แล้วยอมรับว่า input ที่ไม่ใช่เสียงพูดจะได้ข้อความแต่งขึ้น · (c) per-request flag · (d) ไม่เพิ่ม | input ที่ไม่ใช่เสียงพูด (เงียบ, noise, โทน, ฮัม 50 Hz) ได้ **ประโยคไทยที่ดูเหมือนจริง** เช่น "ขอบคุณครับ" ซึ่ง caller แยกไม่ออกว่าปลอม |
 | **D15** | Glossary / initial prompt | เพิ่ม `AsrInput.glossary: list[str]` (optional, ≤ 64 รายการ, ≤ 400 code points รวม) ส่งเข้า whisper `initial_prompt`; **ไม่เก็บ**ใน receipt/log; **ไม่ใช่ default** — caller เป็นคนตัดสินเพราะผลขึ้นกับคุณภาพเสียง (§4.2) | (b) glossary ระดับ profile (คงที่ต่อ deployment) · (c) ทั้งสอง · (d) ไม่เพิ่ม | ชื่อเฉพาะ/ชื่อระบบเพี้ยนเป็นหลายแบบ ("Smart Clip" → "สามารถกิบ"/"สามารถกลิป") ต้องแก้ทีหลังด้วย LLM ซึ่งแพงกว่าและเสี่ยงแต่งเรื่อง |
+| **D8** *(ปิดคำถามได้แล้ว)* | Phase 1 ASR profiles | **เปิด `asr-th-en-01` (turbo) ตัวเดียว · ตัด `asr-th-en-01-medium` ออก** — medium ไม่ใช่ CPU fallback ที่ใช้ได้ (§4.5) | (b) เก็บทั้งสองไว้ | เพิ่มภาระ qualification เท่าตัวโดยไม่ได้อะไร |
 | **D16** *(ใหม่)* | ผลถอดความ **ไม่ reproducible** | ระบุในสัญญา/เอกสารว่า attempt ต่างกันบนไฟล์เดียวกันให้ข้อความต่างกันได้ (receipt ยังคืนผลเดิมเมื่อ retry ตาม idempotency เดิม) | (b) บังคับ deterministic (ต้องเปลี่ยน compute_type → ช้าลง, ยังไม่ยืนยันว่าพอ) | PRP อาจสมมติว่า retry/สอบทานได้ผลเดิม แล้วสรุปผิดเมื่อข้อความต่าง (§4.1) |
 
 D14/D15 เป็น **ASR เท่านั้น**; D16 เป็นการบันทึกข้อเท็จจริง ไม่ใช่การเปลี่ยนพฤติกรรม; ไม่กระทบ TTS, admission, receipts, cancel
@@ -128,9 +130,62 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 | `min_silence` 200 / 700 / 1500 ms | — | foreign 1 / 0 / 3 | 700 ms เหมาะสุด |
 
 - **เปลี่ยนข้อเสนอ:** เดิมเสนอ `asr-th-en-01: vad_filter = true` → **เปลี่ยนเป็น default `false`** เพราะประโยชน์ที่ซ้ำได้มีเฉพาะกรณี input เงียบ ส่วนเสียงประชุมที่มีเสียงรบกวนไม่ได้ดีขึ้นอย่างมีนัย
-- ทางเลือกที่ถูกกว่าสำหรับกรณีเงียบ: ตรวจ `no_speech_prob` ที่ engine แล้วคืน `NO_SPEECH` โดยไม่ต้องใช้ VAD — **เสนอให้พิจารณาคู่กัน**
+- ~~ทางเลือกที่ถูกกว่า: ตรวจ `no_speech_prob` แทน VAD~~ **วัดแล้วใช้ไม่ได้ (§4.4)** — turbo คืน 0.0 เสมอ และ medium แยกเงียบกับเสียงพูดไม่ออก
 
-### 4.4 ข้อค้นพบเชิงปฏิบัติการ
+### 4.4 `no_speech_prob` ใช้แทน VAD **ไม่ได้** (วัด 2026-09-21 — ล้มข้อเสนอของ LALIN เอง)
+
+ใน §4.3 ผมเสนอทางที่ถูกกว่า VAD คือให้ engine อ่าน `no_speech_prob` ที่โมเดลคืนมาแล้วตอบ `NO_SPEECH` เอง **วัดแล้วใช้ไม่ได้**
+
+| Model / device / compute | ความเงียบ 10 s | เสียงพูดจริง | สรุป |
+|---|---|---|---|
+| turbo cuda int8_float16 | 1 segment, `nsp=0.0`, ข้อความปลอม | 4 segment, `nsp=0.0` | ค่าเป็น 0.0 เสมอ **แยกอะไรไม่ได้เลย** |
+| turbo cuda float16 | 1 segment, `nsp=0.0` | `nsp=0.0` | เหมือนกัน ไม่ใช่เรื่อง compute type |
+| turbo cpu int8 | 1 segment, `nsp=0.0` | `nsp=0.0` | เหมือนกัน ไม่ใช่เรื่องอุปกรณ์ |
+| medium cuda int8_float16 | 1 segment, `nsp=0.863` | `nsp=0.839` | มีค่าจริง แต่ **ต่างกันแค่ 0.02** แยกไม่ได้ |
+| medium cpu int8 | **0 segment** | `nsp=0.854` | ตรงนี้ทำถูก แต่มาจาก logic ภายในของ library ไม่ใช่เกณฑ์ที่เราตั้ง |
+
+ข้อเท็จจริงสองชั้น:
+1. **turbo (โมเดลหลักของเรา) ไม่คืนค่า `no_speech_prob` เลย** — เป็น 0.0 ทุก segment ทุกอุปกรณ์ ทุก compute type และทั้งไฟล์ 1,437 segment ของประชุมจริงก็เป็น 0.0 ทั้งหมด
+   faster-whisper ขอค่านี้จาก CTranslate2 ด้วย `return_no_speech_prob=True` แต่ conversion ของ `mobiuslabsgmbh/faster-whisper-large-v3-turbo` ไม่ส่งกลับมา
+2. **ต่อให้มีค่า (medium) ก็แยกไม่ออก** — 0.863 (เงียบ) กับ 0.839 (เสียงพูด) ห่างกัน 0.024 ตั้ง threshold ไม่ได้
+
+ผลต่อ D14: **VAD คือกลไกเดียวที่พิสูจน์แล้วว่าใช้ได้** สำหรับเปลี่ยนความเงียบเป็น `NO_SPEECH` ทางเลือกที่ผมเสนอว่าถูกกว่านั้นใช้ไม่ได้จริง
+
+**VAD กัน input ที่ไม่ใช่เสียงพูดได้ทุกชนิดที่ทดสอบ และไม่กินเสียงพูดจริง** (2 รอบต่อช่อง):
+
+| Input 10 s | vad=false | vad=true |
+|---|---|---|
+| ความเงียบดิจิทัล | 1 segment · `"ข้างคำสัญญา ได้สwheel ช่วยที่…"` | **0 segment** |
+| dither (−80 dB) | 1 segment · `"เกิดที่ตรงนั้น ต้องมีกลับกัน"` | **0 segment** |
+| white noise | 1 segment · `"นะครับ"` | **0 segment** |
+| โทน 440 Hz | 1–4 segment · `"ที่นี่สำหรับ กับภัยที่สำหรับ…"` | **0 segment** |
+| ฮัม 50 Hz | 1–10 segment · `"จริงที่หรือ แปลกสิ ไม่มีเธอ…"` | **0 segment** |
+| **เสียงพูดจริง** clean-short | 4 segment · 141 ตัวอักษร | 4 segment · **141 ตัวอักษร (เท่ากัน)** |
+| **เสียงพูดจริง** farfield-noisy | 15 segment · 660 ตัวอักษร | 21 segment · **683 ตัวอักษร (ไม่น้อยลง)** |
+
+นี่คือเหตุผลที่ **กลับคำ** จากอัปเดต 1: ตอนแรกผมลด D14 เป็น default `false` เพราะคิดว่า VAD ช่วยแค่กรณีเงียบและมีทางถูกกว่า
+แต่ (ก) ทางที่ถูกกว่านั้นใช้ไม่ได้ และ (ข) ขอบเขตปัญหากว้างกว่าที่ประเมิน — ไม่ใช่แค่ความเงียบ แต่คือ **input ที่ไม่ใช่เสียงพูดทุกชนิด** ให้ประโยคไทยที่ดูน่าเชื่อ
+สำหรับ supplier ที่ต้อง fail-closed การแต่งประโยคขึ้นมาจากสัญญาณที่ไม่มีคำพูดคือโหมดพังที่แย่ที่สุด เพราะ caller ตรวจไม่ได้
+
+เพิ่มเติม: ความเงียบไม่ได้ให้ข้อความปลอมแบบเดิมทุกครั้ง แต่ให้ **ข้อความไทยที่อ่านดูเหมือนจริง**หลายแบบ เช่น `"สวัสดีที่สวัสดี"`, `"ขอบคุณครับ"`, `"เจ้า ข้า ข็งสวัสดี"` และ white noise / โทน 440 Hz ก็ให้ข้อความไทยเช่นกัน — อันตรายกว่าการได้อักขระต่างภาษาเพราะ caller แยกไม่ออกว่าเป็นของปลอม
+
+### 4.5 D8 — CPU benchmark: turbo ชนะ medium บน CPU ด้วย จึงไม่มีเหตุผลเก็บ medium
+
+`compute_type=int8` (อย่างเดียวที่ใช้ได้บน CPU) · CPU 28 threads · 2 รอบต่อค่า · median RTF (ต่ำ = เร็ว)
+
+| Config | clean-short 15 s | clean-long 60 s | โหลดโมเดล |
+|---|---|---|---|
+| turbo · cpu · int8 | 0.666 | **0.724** | 4.3 s |
+| medium · cpu · int8 | 0.551 | **2.971** (178 s / 144 s) | 4.6 s |
+| turbo · cuda · int8_float16 *(อ้างอิง)* | 0.032 | 0.062 | 1.9 s |
+
+- บนคลิปสั้น medium เร็วกว่าเล็กน้อย แต่บนคลิป 60 s **medium ช้ากว่า realtime เกือบ 3 เท่า** และช้ากว่า turbo 4 เท่า
+- เหตุผลเดียวที่เคยเขียนไว้ว่าเก็บ medium ไว้คือ "CPU fallback" — หลักฐานบอกว่า**ไม่จริง** turbo บน CPU ที่ RTF 0.72 ยังอยู่ในงบ 60 s ได้ ส่วน medium ไม่ได้
+- **สรุป D8: เปิด `asr-th-en-01` ตัวเดียว** ถ้าต้อง deploy บน CPU ให้ใช้ manifest เดียวกันเปลี่ยนเป็น `device: cpu`, `compute_type: int8`
+- ข้อแม้ที่ยังเปิด: เครื่องนี้ CPU 28 threads — host ที่เล็กกว่าจะช้ากว่านี้ ต้องวัดบน host จริงก่อนอนุมัติ CPU deployment
+- หมายเหตุ: การวัด RAM รอบนี้ **ไม่สำเร็จ** (helper คืน 0) จึงไม่มีตัวเลขหน่วยความจำ — แก้ helper แล้ว รอบหน้าจะมี
+
+### 4.6 ข้อค้นพบเชิงปฏิบัติการ
 `MemoryError: bad allocation` หลังเรียก `transcribe` ราว 60 ครั้งใน process เดียว (ขณะ VRAM ถูกแอป desktop ใช้อยู่ 10.3 GB จาก 16 GB)
 → engine child ของ worker ที่รันยาวอาจเจอเหมือนกัน; supervisor restart ครอบคลุมอยู่แล้ว (engine ตาย → epoch ใหม่) แต่ควรมี soak test ใน Slice C
 
@@ -144,5 +199,6 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.0c | 2026-09-21 | candidate | VAD blocks all five non-speech classes while preserving speech, and no_speech_prob is unusable (turbo returns 0.0) → D14 back to default true; CPU benchmark closes D8 (turbo beats medium on CPU too, drop the medium profile) | based on b0a9e81 | LALIN |
 | 0.2.0c | 2026-09-21 | candidate | A/B measured over 3 repeats: engine is non-deterministic (new D16); glossary helps clean audio but truncates degraded audio; VAD's proven benefit is silence-hallucination suppression only → D14 default changed to false | based on fd814d9 | LALIN |
 | 0.1.0c | 2026-09-21 | candidate | Initial proposal: D14 manifest-level VAD (default), D15 per-request glossary with draft contract diff; evidence from real-work clips; no code change | based on 16b3daa | LALIN |
