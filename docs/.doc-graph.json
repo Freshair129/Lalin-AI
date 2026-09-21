@@ -1,22 +1,22 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T07:15:25+07:00",
+  "generated_at": "2026-09-21T07:34:58+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 413,
-    "total_edges": 540,
+    "total_nodes": 414,
+    "total_edges": 541,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (29/42)",
       "requirements_with_tests": "23% (10/42)",
-      "code_files_referenced_by_docs": "2% (3/102)",
-      "code_files_with_tests": "15% (16/102)",
+      "code_files_referenced_by_docs": "3% (4/103)",
+      "code_files_with_tests": "15% (16/103)",
       "structured_annotations_found": 202,
       "unstructured_req_refs_found": 124
     }
@@ -1145,6 +1145,14 @@
       "last_verified": "2026-08-23T17:45:40+07:00"
     },
     {
+      "id": "code:tools/verify/asr_prompt_vad_ab.py",
+      "type": "code_file",
+      "path": "tools/verify/asr_prompt_vad_ab.py",
+      "hash": "0b66b2aa5053",
+      "status": "current",
+      "last_verified": "2026-09-21T07:34:29+07:00"
+    },
+    {
       "id": "code:tools/verify/diarize_transcript.py",
       "type": "code_file",
       "path": "tools/verify/diarize_transcript.py",
@@ -1255,10 +1263,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md",
       "title": "2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
-      "hash": "8e4794a80761",
-      "prev_hash": "8e4794a80761",
+      "hash": "b882b2b2f862",
+      "prev_hash": "b882b2b2f862",
       "status": "current",
-      "last_verified": "2026-09-21T07:15:25+07:00"
+      "last_verified": "2026-09-21T07:34:58+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -5059,6 +5067,13 @@
     {
       "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
       "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "to": "code:tools/verify/asr_prompt_vad_ab.py",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
