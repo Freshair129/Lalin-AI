@@ -8,7 +8,7 @@ reference client (contract จริง: envelope/admission/erase) → เขี
 
 ตัวอย่าง (PowerShell, จาก apps/api):
   ..\..\apps\api\.venv-speech\Scripts\python.exe ..\..\tools\verify\voice_worker_eval_clips.py `
-      --clips runtime\eval\asr-th --language th --manifest asr-th-en-01 --manifest asr-th-en-01-medium
+      --clips runtime\eval\asr-th --language th --manifest asr-th-en-01
 """
 from __future__ import annotations
 

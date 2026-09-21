@@ -1,13 +1,13 @@
 ---
-version: "0.2.1b"
+version: "0.2.3b"
 created_at: "2026-09-21T00:40:00+07:00,LALIN,7d6235d"
-last_update: "2026-09-21T03:20:00+07:00,LALIN"
+last_update: "2026-09-21T10:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "speech-runtime-integration"
   doc_type: "validation"
-  scope: "Slice B (ASR half) — faster-whisper engine behind the headless voice worker; D8 profiles asr-th-en-01 / asr-th-en-01-medium (CR-005 candidate / ADR-005)"
+  scope: "Slice B (ASR half) — faster-whisper engine behind the headless voice worker; D8 profile asr-th-en-01 (CR-005 candidate / ADR-005)"
 ---
 
 # Headless Voice Worker — Slice B evidence (ASR: faster-whisper)
@@ -26,7 +26,8 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 | ชุดเต็ม `apps/api` (Studio regression, venv หลัก) | **171 passed, 1 skipped** |
 | `compileall apps/api/app` · `schema --check` | PASS · in sync (contract ไม่เปลี่ยน) |
 | Headless smoke `asr-th-en-01` (large-v3-turbo, **cuda:0 int8_float16**, RTX 5060 Ti) | **PASS** — boot → describe (`labeled_stub:false`, effective `cuda:0`) → readiness รอ `warm:true` → 401/403 → ASR SUCCEEDED บน `en-short.wav` (3.82 s เสียง, processing 0.78 s) → erase → Studio `DATA_DIR` ไม่ถูกสร้าง |
-| Headless smoke `asr-th-en-01-medium` (medium, cuda:0 int8_float16) | **PASS** เงื่อนไขเดียวกัน |
+| **แก้ไขหลักฐาน 2026-09-21** | smoke ข้างบนวัด**ก่อน** commit 79335cd ที่ถอด `auto` ออกจาก manifest — script ส่ง `language: auto` เมื่อให้ `-Audio` จึง**ล้มตั้งแต่ commit นั้นจนถึง 0.2.3b** (worker ตอบ `LANGUAGE_UNSUPPORTED` ถูกต้องตาม fail-closed) ไม่ได้รันซ้ำหลังเปลี่ยน manifest · แก้แล้ว: เพิ่ม `-Language` (default `th`, ห้าม auto) + ลบ control bytes ที่ค้างในหัวไฟล์ · รันใหม่ **PASS** ทั้ง `asr-th-en-01 -Language en` และ stub asr/tts |
+| Headless smoke `asr-th-en-01-medium` (medium, cuda:0 int8_float16) | **PASS** เงื่อนไขเดียวกัน — *profile นี้ถูกตัดออกแล้ว 2026-09-21 ตาม D8 (ดู [proposal §4.5](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md))* |
 | RTX 3060 | **NOT_RUN** — เครื่องนี้เป็น RTX 5060 Ti; เส้นทางนี้ไม่ใช้ torch (CTranslate2 + cuBLAS/cuDNN 12 จาก pip wheel) จึงคาดว่าใช้ได้บน Ampere แต่ยังไม่มีหลักฐาน |
 | Thai transcription quality (LVP-AT-014–016) | **RUN (qualitative)** บนงานจริง 4 คลิปจากบันทึกประชุมของผู้ใช้ (§5) — turbo ใช้ได้, medium ไม่ผ่าน; ยังไม่มี WER เพราะไม่มี reference transcript |
 | TTS Slice B | **BLOCKED** (D9/R-010) |
@@ -38,12 +39,12 @@ Baseline `7d6235d` บน `main` · ต่อจาก [Slice A](2026-09-20-HEAD
 |---|---|---|
 | Speech venv | `apps/api/.venv-speech` (gitignored) + [`requirements-speech-asr.lock.txt`](../../apps/api/requirements-speech-asr.lock.txt) | requirements.txt + faster-whisper 1.2.1 + ctranslate2 4.8.2 + nvidia-cublas/cudnn cu12 wheels; **ไม่มี torch** |
 | Pinned weights | `apps/api/models/faster-whisper/{large-v3-turbo,medium}` + `PINS.json` (gitignored) | `mobiuslabsgmbh/faster-whisper-large-v3-turbo`, `Systran/faster-whisper-medium` — MIT; sha256 ทุกไฟล์อยู่ใน manifest |
-| Manifests (D8) | [`asr-th-en-01.json`](../../apps/api/profiles/voice-worker/asr-th-en-01.json) (primary) · [`asr-th-en-01-medium.json`](../../apps/api/profiles/voice-worker/asr-th-en-01-medium.json) (fallback) | `device: cuda:0`, `compute_type: int8_float16`, assets pinned; CPU host = แก้เป็น `cpu` + `int8` |
+| Manifests (D8) | [`asr-th-en-01.json`](../../apps/api/profiles/voice-worker/asr-th-en-01.json) — **profile เดียว** (medium ถูกตัดออก 2026-09-21) | `device: cuda:0`, `compute_type: int8_float16`, assets pinned; CPU host = แก้ manifest เดิมเป็น `cpu` + `int8` (turbo RTF 0.72 บน CPU 28 threads) |
 | Engine adapter | `app/voice_worker/engine_faster_whisper.py` | child process เดียวกับ stub protocol; `local_files_only`; job ใน thread + heartbeat/cancel ใน main loop; warm-up หลัง hello; fail-closed exit 3/4/5 (import/model/device) โดยไม่ส่ง hello |
 | Profile gate | `profile.py` | allowlist `{stub, faster-whisper}`; faster-whisper ต้อง `kind=asr`, `compute_type` ใน `{int8,int8_float16,float16,float32}` (ห้าม float16 บน cpu), `beam_size` 1–10, pin `model.bin`+`config.json` ใน directory เดียว |
 | Supervisor | `supervisor.py` | ส่ง `device` + `assets{role:path}` ให้ engine; readiness เพิ่มเหตุผล `warming_up` เมื่อ `residency.warm == false` |
 | Runtime | `runtime.py` | ส่ง `max_audio_seconds` ให้ engine ตรวจหลัง decode (AUDIO_TOO_LARGE); qualification note ของ engine จริง |
-| Tests | `tests/voice_worker/test_engine_faster_whisper.py` + fixture `fixtures/en-short.wav` (SAPI, 16 kHz) | importorskip + skip ถ้าไม่มี weights; describe ไม่ใช่ stub, ถอดเสียงอังกฤษถูก, auto-detect en, garbage → FAILED ไม่ hallucinate, `cuda:9` → EngineStartError, manifest validation ×4 |
+| Tests | `tests/voice_worker/test_engine_faster_whisper.py` + fixture `fixtures/en-short.wav` (SAPI, 16 kHz) | รันด้วย **large-v3-turbo บน cpu int8** (โมเดลเดียวกับที่ ship); importorskip + skip ถ้าไม่มี weights; describe ไม่ใช่ stub, ถอดเสียงอังกฤษถูก, auto-detect en, garbage → FAILED ไม่ hallucinate, `cuda:9` → EngineStartError, manifest validation ×4 |
 | Smoke | `tools/verify/smoke_voice_worker_control.ps1 -Manifest … -Audio …` | ASCII-only; รอ readiness ได้ถึง 120 s; ถ้าให้ `-Audio` ต้อง SUCCEEDED จึง PASS |
 
 ## 2. Benchmark (RTX 5060 Ti 16 GB, driver 616.92, English 15.5 s, beam 5, warm)
@@ -106,6 +107,8 @@ turbo ทั้ง 4 คลิปรวม 180 s เสียง ใช้เว
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-21 | beta | Correct the record: the GPU smoke claimed in PR #21 broke at 79335cd (script sent auto after it was removed); smoke fixed with -Language and re-run PASS x3 | based on e5ce2d3 | LALIN |
+| 0.2.2b | 2026-09-21 | beta | D8 applied: asr-th-en-01-medium removed; engine test switched to the shipped turbo weights | based on e5ce2d3 | LALIN |
 | 0.2.1b | 2026-09-21 | beta | Add offline diarization eval helper (pyannote 3.1, .venv-diar lock); full-file speaker-labelled Thai transcript produced locally, not committed | based on 79335cd | LALIN |
 | 0.2.0b | 2026-09-21 | beta | Real-work Thai meeting evidence (§5): 4 clips through the contract on both manifests; auto language removed from D8 manifests; medium demoted to CPU-only fallback; eval tool added | based on 13fee6c | LALIN |
 | 0.1.0b | 2026-09-21 | beta | Slice B ASR: speech venv + pinned turbo/medium weights, two D8 manifests, faster-whisper engine adapter; 94/94 in speech venv, 171/171+1 skip in main venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED | based on 7d6235d | LALIN |

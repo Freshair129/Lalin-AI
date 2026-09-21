@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T09:10:14+07:00",
+  "generated_at": "2026-09-21T09:25:30+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 414,
-    "total_edges": 541,
+    "total_edges": 542,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1164,9 +1164,9 @@
       "id": "code:tools/verify/voice_worker_eval_clips.py",
       "type": "code_file",
       "path": "tools/verify/voice_worker_eval_clips.py",
-      "hash": "4d5f776bdc96",
+      "hash": "02ea41d63b64",
       "status": "current",
-      "last_verified": "2026-09-21T00:35:30+07:00"
+      "last_verified": "2026-09-21T09:25:29+07:00"
     },
     {
       "id": "doc:2026-08-19-render-portability-sidecar",
@@ -1233,10 +1233,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "55e69237279b",
-      "prev_hash": "55e69237279b",
+      "hash": "1718ae833f2f",
+      "prev_hash": "1718ae833f2f",
       "status": "current",
-      "last_verified": "2026-09-21T07:15:25+07:00"
+      "last_verified": "2026-09-21T09:25:30+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1253,10 +1253,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
       "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
-      "hash": "3a2ec195ec71",
-      "prev_hash": "3a2ec195ec71",
+      "hash": "bf865729cffe",
+      "prev_hash": "bf865729cffe",
       "status": "current",
-      "last_verified": "2026-09-21T01:01:20+07:00"
+      "last_verified": "2026-09-21T09:25:30+07:00"
     },
     {
       "id": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
@@ -5067,6 +5067,13 @@
     {
       "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
       "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "to": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

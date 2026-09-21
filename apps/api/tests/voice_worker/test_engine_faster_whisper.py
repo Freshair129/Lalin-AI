@@ -1,4 +1,4 @@
-# @req FR-19.3 (candidate, CR-005) — Slice B ASR: faster-whisper engine ผ่าน supervisor/runtime จริง (cpu int8, medium)
+# @req FR-19.3 (candidate, CR-005) — Slice B ASR: faster-whisper engine ผ่าน supervisor/runtime จริง (cpu int8, large-v3-turbo)
 """ต้องรันใน venv ที่มี speech stack (apps/api/.venv-speech) และมี weights ที่ pin ไว้ใน apps/api/models/faster-whisper/
 ถ้าไม่มีอย่างใดอย่างหนึ่ง → SKIP (ไม่ใช่ PASS): venv หลักไม่ลง faster-whisper โดยเจตนา
 
@@ -19,16 +19,16 @@ from app.voice_worker.supervisor import EngineStartError, EngineSupervisor
 faster_whisper = pytest.importorskip("faster_whisper", reason="speech stack not installed in this venv (use .venv-speech)")
 
 API_ROOT = Path(__file__).resolve().parents[2]
-MODEL_DIR = API_ROOT / "models" / "faster-whisper" / "medium"
+MODEL_DIR = API_ROOT / "models" / "faster-whisper" / "large-v3-turbo"
 PINS = API_ROOT / "models" / "faster-whisper" / "PINS.json"
 FIXTURE = Path(__file__).parent / "fixtures" / "en-short.wav"
 
 pytestmark = pytest.mark.skipif(not (MODEL_DIR / "model.bin").is_file() or not PINS.is_file(),
-                                reason="pinned faster-whisper medium weights not present (models/ is gitignored)")
+                                reason="pinned faster-whisper large-v3-turbo weights not present (models/ is gitignored)")
 
 
 def _assets() -> list[dict]:
-    pins = json.loads(PINS.read_text(encoding="utf-8"))["medium"]["files"]
+    pins = json.loads(PINS.read_text(encoding="utf-8"))["large-v3-turbo"]["files"]
     return [{"role": name, "path": str(MODEL_DIR / name), "sha256": meta["sha256"]} for name, meta in pins.items()]
 
 

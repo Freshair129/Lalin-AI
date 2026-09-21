@@ -4,11 +4,12 @@ param(
     [int]$Port = 8790,
     [string]$WorkDir,
     [string]$Manifest,
-    [string]$Audio
+    [string]$Audio,
+    [string]$Language
 )
 
 # Slice A/B smoke (LVP-AT-001/002/005): boot `python -m app.voice_worker` headless with a manifest (stub by default;
-# pass -Manifest profilesoice-workersr-th-en-01.json -PythonPath appspi\.venv-speech\Scripts\python.exe -Audio <speech.wav>
+# pass -Manifest profiles\voice-worker\asr-th-en-01.json -PythonPath apps\api\.venv-speech\Scripts\python.exe -Audio <speech.wav> -Language <th|en>
 # for the Slice B faster-whisper engine),
 # check liveness/describe/readiness, negative auth, one operation via the reference client, output + erase,
 # then stop the process. No torch/model/GPU involved. PASS = control plane boots and honours the contract;
@@ -143,7 +144,9 @@ try {
             $lang = "th"
         } else {
             $clip = $Audio
-            $lang = "auto"
+            # Must be a language the manifest qualifies. D8 manifests accept th/en only ("auto" was
+            # removed after real-work evidence), so never default to auto here.
+            if ([string]::IsNullOrWhiteSpace($Language)) { $lang = "th" } else { $lang = $Language }
         }
         [void](Invoke-Client -Label "asr operation $attempt" -ClientArgs @("asr", "--attempt", $attempt, "--audio", $clip, "--language", $lang, "--wait"))
         $final = (& $PythonPath $client status --attempt $attempt 2>$null) -join "`n"
