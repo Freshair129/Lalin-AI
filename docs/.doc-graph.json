@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T01:48:58+07:00",
+  "generated_at": "2026-09-21T07:15:25+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 412,
-    "total_edges": 536,
+    "total_nodes": 413,
+    "total_edges": 540,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1225,10 +1225,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "a0a244f0f091",
-      "prev_hash": "a0a244f0f091",
+      "hash": "55e69237279b",
+      "prev_hash": "55e69237279b",
       "status": "current",
-      "last_verified": "2026-09-20T23:03:56+07:00"
+      "last_verified": "2026-09-21T07:15:25+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1249,6 +1249,16 @@
       "prev_hash": "3a2ec195ec71",
       "status": "current",
       "last_verified": "2026-09-21T01:01:20+07:00"
+    },
+    {
+      "id": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "type": "document",
+      "path": "docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md",
+      "title": "2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "hash": "8e4794a80761",
+      "prev_hash": "8e4794a80761",
+      "status": "current",
+      "last_verified": "2026-09-21T07:15:25+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1475,10 +1485,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "b4d2e39e9df9",
-      "prev_hash": "b4d2e39e9df9",
+      "hash": "6eba450850fd",
+      "prev_hash": "6eba450850fd",
       "status": "current",
-      "last_verified": "2026-09-21T01:22:03+07:00"
+      "last_verified": "2026-09-21T07:15:25+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -4957,6 +4967,20 @@
     },
     {
       "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
       "to": "doc:JAITTS_EASY_COMPARISON",
       "type": "references",
       "status": "current",
@@ -5035,6 +5059,20 @@
     {
       "from": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
       "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "to": "doc:2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "to": "doc:MEETING_TRANSCRIPT_PIPELINE",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
