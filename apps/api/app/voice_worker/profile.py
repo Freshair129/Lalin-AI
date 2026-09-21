@@ -3,6 +3,7 @@
 worker เริ่มได้เฉพาะเมื่อ manifest ผ่านทุกข้อ:
   • ``device`` explicit (``cpu`` หรือ ``cuda:N``) — ห้าม ``auto``
   • ``engine`` อยู่ใน allowlist (``stub``, ``faster-whisper``) — faster-whisper ต้อง kind=asr, compute_type ที่รู้จัก และ pin model.bin/config.json
+  • faster-whisper ``vad_filter=true`` ต้อง pin ``vad_model_sha256`` ด้วย (D14)
   • assets ทุกชิ้นมี path + sha256 และตรวจตรง (ไม่มี network fetch)
   • TTS preset ทุกตัวมี ``ref_text`` ไม่ว่าง (กัน hidden reference-ASR) และ ``rights_status`` ที่รู้จัก
 """
@@ -310,6 +311,17 @@ def _check_faster_whisper(kind: str, device: str, options: dict[str, Any], asset
     threads = options.get("cpu_threads", 0)
     if not isinstance(threads, int) or isinstance(threads, bool) or threads < 0:
         raise ProfileError("engine_options.cpu_threads ต้องเป็นจำนวนเต็ม ≥ 0")
+    # D14: VAD ระดับ profile (ไม่มี per-request override) — กัน engine แต่งประโยคจาก input ที่ไม่มีคำพูด
+    vad = options.get("vad_filter", False)
+    if not isinstance(vad, bool):
+        raise ProfileError("engine_options.vad_filter ต้องเป็น true/false")
+    silence_ms = options.get("vad_min_silence_ms", 700)
+    if not isinstance(silence_ms, int) or isinstance(silence_ms, bool) or not (100 <= silence_ms <= 3000):
+        raise ProfileError("engine_options.vad_min_silence_ms ต้องเป็นจำนวนเต็ม 100–3000")
+    if vad:
+        vad_sha = options.get("vad_model_sha256")
+        if not isinstance(vad_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", vad_sha.lower()):
+            raise ProfileError("vad_filter=true ต้อง pin engine_options.vad_model_sha256 (โมเดล VAD ใน wheel ที่ pin ไว้; ไม่ดาวน์โหลดเอง)")
     roles = {asset.role for asset in assets}
     missing = [role for role in FASTER_WHISPER_REQUIRED_ASSETS if role not in roles]
     if missing:

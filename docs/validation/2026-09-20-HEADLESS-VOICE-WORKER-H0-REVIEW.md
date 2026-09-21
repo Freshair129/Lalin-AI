@@ -1,5 +1,5 @@
 ---
-version: "0.1.2c"
+version: "0.1.3c"
 created_at: "2026-09-20T21:45:00+07:00,LALIN,8429010"
 last_update: "2026-09-21T10:00:00+07:00,LALIN"
 status: "candidate"
@@ -234,7 +234,7 @@ No Must is silently narrowed: DEFER rows stay **BLOCKED** until their owner deci
 | D11 | Dependency/OS matrix | Python 3.11 baseline; Windows dev host now; Linux container target **if** PRP hosts are Linux (**confirm**) | Lalin build owner + PRP | C |
 | D12 | Contract schema owner | **APPLIED 2026-09-20 (user instruction):** pydantic = source; `packages/contracts/schemas/lalin-voice-worker.schema.json` + `src/voiceWorker.ts` generated/mirrored; `test_contract_schema.py` asserts sync (see Slice A evidence §5) | Lalin maintainer | done |
 | D13 | Windows sandbox limits | accept timeout + output cap + no-network as **partial**; OS mem/CPU cap only in Linux container | security + Lalin | B |
-| D14 | VAD at manifest level (ASR) | `engine_options.vad_filter` per profile, no per-request override; evidence: far-field/overlap clips hallucinate foreign script without VAD — [proposal](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) §1 | PRP owner | B.1 (**proposed 2026-09-21**) |
+| D14 | VAD at manifest level (ASR) | `engine_options.vad_filter` per profile, no per-request override; evidence: far-field/overlap clips hallucinate foreign script without VAD — [proposal](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) §1 | PRP owner → owner instruction | B.1 (**APPLIED 2026-09-21**: VAD on in `asr-th-en-01`, VAD hash pinned, revision bumped — [proposal §6](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md)) |
 | D15 | Per-request glossary → `initial_prompt` (ASR) | `AsrInput.glossary` (optional, bounded, in digest, not stored); contract change → D12 regenerate; A/B evidence still to collect — [proposal](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) §2 | PRP owner | B.2 (**proposed 2026-09-21**) |
 
 ## 6. Implementation slices (proposed; nothing implemented)
@@ -313,6 +313,7 @@ No mock PASS is reported as GPU/quality evidence.
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
 | 0.1.1c | 2026-09-20 | candidate | Link Slice A stub implementation evidence after user approval of D1–D7 defaults | based on 8429010 | LALIN |
+| 0.1.3c | 2026-09-21 | candidate | D14 applied | based on 877a121 | LALIN |
 | 0.1.2c | 2026-09-21 | candidate | D8 resolved and applied: single ASR profile, medium dropped | based on e5ce2d3 | LALIN |
 | 0.1.1c | 2026-09-21 | candidate | Add D14/D15 rows (proposed, link to proposal doc); D8 row notes Slice B manifests and pending PRP confirmation | based on 16b3daa | LALIN |
 | 0.1.0c | 2026-09-20 | candidate | H0 source/contract review, fit-gap 32, decisions D1–D13, slices A/B/C, evidence; no code change, GPU/quality NOT_RUN, joint BLOCKED | based on 8429010 | LALIN |

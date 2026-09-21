@@ -7,7 +7,7 @@
     "downloaded_by": "huggingface_hub.snapshot_download; worker itself never fetches"
   },
   "profile_id": "asr-th-en-01",
-  "profile_revision": "rev-2026-09-20-large-v3-turbo",
+  "profile_revision": "rev-2026-09-21-large-v3-turbo-vad",
   "kind": "asr",
   "runtime_id": "speech-asr-fw",
   "physical_resource_id": "gpu0-local-host",
@@ -17,7 +17,10 @@
     "compute_type": "int8_float16",
     "beam_size": 5,
     "heartbeat_seconds": 0.25,
-    "warmup": true
+    "warmup": true,
+    "vad_filter": true,
+    "vad_min_silence_ms": 700,
+    "vad_model_sha256": "4cbf549b8326f60f80f2536d9eefeb450a9abe83365a098031c89719f1be17d2"
   },
   "languages": [
     "th",
@@ -72,5 +75,6 @@
       "bytes": 1068114
     }
   ],
-  "_language_note": "auto removed 2026-09-21: Whisper language detection returned 'en' (p~0.8) on every window of a real Thai meeting recording and then emitted English 'translation' hallucinations; the caller must state th/en explicitly (real-work evidence, Slice B doc §5)"
+  "_language_note": "auto removed 2026-09-21: Whisper language detection returned 'en' (p~0.8) on every window of a real Thai meeting recording and then emitted English 'translation' hallucinations; the caller must state th/en explicitly (real-work evidence, Slice B doc §5)",
+  "_vad_note": "D14 applied 2026-09-21: VAD on. Without it, silence, dither, white noise, a 440 Hz tone and 50 Hz hum were each transcribed as plausible Thai sentences and returned SUCCEEDED; with it all five return NO_SPEECH and real speech is unchanged. vad_model_sha256 pins silero_vad_v6.onnx shipped inside faster-whisper 1.2.1 (loaded locally via onnxruntime, no network). profile_revision bumped from rev-2026-09-20-large-v3-turbo so callers pinned to the old behaviour get 409."
 }

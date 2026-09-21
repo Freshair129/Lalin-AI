@@ -7,7 +7,12 @@ fixture เสียง: tests/voice_worker/fixtures/en-short.wav (Windows SAPI 
 """
 from __future__ import annotations
 
+import hashlib
+import io
 import json
+import math
+import random
+import wave
 from pathlib import Path
 
 import pytest
@@ -32,15 +37,48 @@ def _assets() -> list[dict]:
     return [{"role": name, "path": str(MODEL_DIR / name), "sha256": meta["sha256"]} for name, meta in pins.items()]
 
 
-def _manifest_overrides() -> dict:
+def _installed_vad_sha256() -> str:
+    from faster_whisper.utils import get_assets_path
+
+    return hashlib.sha256((Path(get_assets_path()) / "silero_vad_v6.onnx").read_bytes()).hexdigest()
+
+
+def _manifest_overrides(*, vad: bool = True) -> dict:
+    # ตรงกับ asr-th-en-01 ที่ ship จริง: VAD เปิด (D14)
+    options = {"compute_type": "int8", "beam_size": 1, "heartbeat_seconds": 0.2, "warmup": False}
+    if vad:
+        options.update({"vad_filter": True, "vad_min_silence_ms": 700, "vad_model_sha256": _installed_vad_sha256()})
     return {
         "profile_id": "asr-fw-test",
         "runtime_id": "speech-asr-fw-test",
         "engine": "faster-whisper",
         "device": "cpu",
-        "engine_options": {"compute_type": "int8", "beam_size": 1, "heartbeat_seconds": 0.2, "warmup": False},
+        "engine_options": options,
         "assets": _assets(),
     }
+
+
+def _wav(samples: list[float], rate: int = 16000) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(rate)
+        handle.writeframes(b"".join(int(max(-1.0, min(1.0, x)) * 32767).to_bytes(2, "little", signed=True) for x in samples))
+    return buf.getvalue()
+
+
+def _silence(seconds: float = 6.0) -> bytes:
+    return _wav([0.0] * int(16000 * seconds))
+
+
+def _white_noise(seconds: float = 6.0) -> bytes:
+    rng = random.Random(7)
+    return _wav([rng.gauss(0.0, 0.05) for _ in range(int(16000 * seconds))])
+
+
+def _hum(seconds: float = 6.0, hz: float = 50.0) -> bytes:
+    return _wav([0.2 * math.sin(2 * math.pi * hz * i / 16000) for i in range(int(16000 * seconds))])
 
 
 @pytest.fixture(scope="module")
@@ -122,4 +160,65 @@ def test_faster_whisper_manifest_validation(tmp_path, overrides, message_part):
     path = write_manifest(tmp_path, "asr", **merged)
     with pytest.raises(ProfileError) as exc:
         load_manifest(path)
+    assert message_part in str(exc.value)
+
+
+# ── D14: input ที่ไม่มีคำพูดต้องได้ NO_SPEECH ไม่ใช่ประโยคที่แต่งขึ้น ─────────────────────────
+# ก่อน D14 (VAD ปิด) ทั้งสามกรณีนี้ตอบ SUCCEEDED พร้อมประโยคไทยที่ดูเหมือนจริง เช่น "ขอบคุณครับ"
+@pytest.mark.parametrize("name, make", [("silence", _silence), ("white-noise", _white_noise), ("hum-50hz", _hum)])
+def test_non_speech_returns_no_speech_not_fabricated_text(fw_worker, name, make):
+    attempt = f"fw-nonspeech-{name}"
+    env = fw_worker.envelope(attempt)
+    env["input"]["language"] = "th"
+    assert fw_worker.post_asr(env, audio=make()).status_code == 202
+    final = fw_worker.wait_terminal(attempt, timeout=120.0)
+    assert final["execution_status"] == "FINISHED"
+    assert final["operation_outcome"] == "FAILED", f"{name} was transcribed as speech: {final.get('result')}"
+    assert final["error"]["code"] == "NO_SPEECH"
+    assert final["result"] is None
+
+
+def test_vad_keeps_real_speech(fw_worker):
+    """VAD ต้องไม่กินเสียงพูดจริง — fixture อังกฤษยังถอดได้ครบ"""
+    env = fw_worker.envelope("fw-vad-speech")
+    env["input"]["language"] = "en"
+    assert fw_worker.post_asr(env, audio=FIXTURE.read_bytes()).status_code == 202
+    final = fw_worker.wait_terminal("fw-vad-speech", timeout=120.0)
+    assert final["operation_outcome"] == "SUCCEEDED", final
+    assert "testing" in final["result"]["text"].lower()
+
+
+def test_vad_model_hash_mismatch_fails_closed(tmp_path):
+    """sha256 ของ VAD ไม่ตรง → engine ไม่ส่ง hello → worker ไม่ขึ้น (ไม่ fallback เป็น VAD ปิด)"""
+    overrides = _manifest_overrides()
+    overrides["engine_options"]["vad_model_sha256"] = "0" * 64
+    manifest = load_manifest(write_manifest(tmp_path, "asr", **overrides))
+    supervisor = EngineSupervisor(manifest, hello_timeout_seconds=60.0)
+    with pytest.raises(EngineStartError):
+        supervisor.start()
+    assert supervisor.alive is False
+
+
+def test_shipped_manifest_pins_the_installed_vad_model():
+    """กันการอัปเกรด faster-whisper ที่เปลี่ยน VAD เงียบ ๆ: hash ใน manifest ที่ ship ต้องตรงกับไฟล์ใน wheel"""
+    shipped = json.loads((API_ROOT / "profiles" / "voice-worker" / "asr-th-en-01.json").read_text(encoding="utf-8"))
+    assert shipped["engine_options"]["vad_filter"] is True
+    assert shipped["engine_options"]["vad_model_sha256"] == _installed_vad_sha256()
+
+
+@pytest.mark.parametrize(
+    "options, message_part",
+    [
+        ({"vad_filter": "yes"}, "vad_filter"),
+        ({"vad_filter": True, "vad_model_sha256": None}, "vad_model_sha256"),
+        ({"vad_filter": True, "vad_model_sha256": "abc"}, "vad_model_sha256"),
+        ({"vad_min_silence_ms": 50}, "vad_min_silence_ms"),
+        ({"vad_min_silence_ms": True}, "vad_min_silence_ms"),
+    ],
+)
+def test_vad_manifest_validation(tmp_path, options, message_part):
+    overrides = _manifest_overrides(vad=False)
+    overrides["engine_options"] = {**overrides["engine_options"], **options}
+    with pytest.raises(ProfileError) as exc:
+        load_manifest(write_manifest(tmp_path, "asr", **overrides))
     assert message_part in str(exc.value)

@@ -1,7 +1,7 @@
 ---
-version: "0.3.0c"
+version: "0.4.0c"
 created_at: "2026-09-21T06:00:00+07:00,LALIN,16b3daa"
-last_update: "2026-09-21T09:15:00+07:00,LALIN"
+last_update: "2026-09-21T11:30:00+07:00,LALIN"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -14,6 +14,7 @@ attributes:
 
 **สำหรับ:** PRP owner (ผู้ตัดสิน) · **จาก:** LALIN · **สถานะ:** ข้อเสนอ ยังไม่แตะ contract/โค้ด
 **ที่มา:** หลักฐานงานจริงจาก [Slice B §5](2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md) และการทดลอง [pipeline](../architecture/MEETING_TRANSCRIPT_PIPELINE.md) บนบันทึกประชุมไทย 1 h 54 min
+**อัปเดต 3 (2026-09-21): D14 APPLIED** ตามคำสั่งเจ้าของงาน — ดู §6
 **อัปเดต 2 (2026-09-21, §4.4–§4.6):** วัดเพิ่ม → **D14 กลับไปเป็น default `true`** (เหตุผลใน §4.4: ทางเลือก `no_speech_prob` ใช้ไม่ได้ และ input ที่ไม่ใช่เสียงพูดทุกชนิดให้ "ประโยคไทยที่ดูเหมือนจริง") · **D8 ตัด `asr-th-en-01-medium` ออก** (§4.5)
 **อัปเดต 1 (2026-09-21, §4.1–§4.3):** วัด A/B แล้ว → เคยเปลี่ยน D14 เป็น default `false` และเพิ่มคำเตือนของ D15
 **หลักที่ยึด:** worker ไม่ตัดสินใจแทน caller (LVP-REQ-005), data minimization (LVP-REQ-026), ไม่มี hidden reference-ASR (LVP-REQ-017), contract เปลี่ยนได้เฉพาะเมื่อ PRP อนุมัติ (D12: pydantic = source → regenerate schema/TS)
@@ -46,7 +47,7 @@ D14/D15 เป็น **ASR เท่านั้น**; D16 เป็นการ
 |---|---|
 | `profile.py` | validate `vad_filter: bool`, `vad_min_silence_ms: int 100–3000` (default 700) เฉพาะ engine faster-whisper |
 | `engine_faster_whisper.py` | ส่งค่าเข้า `model.transcribe(vad_filter=…, vad_parameters={...})` |
-| `describe()` | `engine_options` ที่เปิดเผยอยู่แล้วจะมี key นี้ (ไม่มี field ใหม่ใน schema) |
+| `describe()` | ~~`engine_options` ที่เปิดเผยอยู่แล้วจะมี key นี้~~ **ข้อความนี้ผิด** — `ProfileDescribe` ไม่เปิดเผย `engine_options` เลย และการเพิ่มจะเป็น schema change ซึ่ง D14 สัญญาว่าจะไม่ทำ · ทางที่ใช้จริง: **bump `profile_revision`** ทำให้ caller ที่ pin revision เดิมได้ 409 `TARGET_MISMATCH` (รับรู้การเปลี่ยนพฤติกรรมผ่านกลไกที่สัญญามีอยู่แล้ว) และ `manifest_sha256` ใน describe เปลี่ยน |
 | manifests | `asr-th-en-01`: **คง `vad_filter: false`** (แก้จากข้อเสนอแรกหลังวัดจริง §4.3); เปิดเฉพาะ profile ที่รับไฟล์ซึ่งอาจมีช่วงเงียบยาว |
 | tests | manifest validation ×2, engine test ที่ยืนยันว่า silence-only input → `NO_SPEECH` แทน hallucination |
 | docs | ADR-005 หมายเหตุ, Slice B evidence, D-traceability |
@@ -189,6 +190,21 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 `MemoryError: bad allocation` หลังเรียก `transcribe` ราว 60 ครั้งใน process เดียว (ขณะ VRAM ถูกแอป desktop ใช้อยู่ 10.3 GB จาก 16 GB)
 → engine child ของ worker ที่รันยาวอาจเจอเหมือนกัน; supervisor restart ครอบคลุมอยู่แล้ว (engine ตาย → epoch ใหม่) แต่ควรมี soak test ใน Slice C
 
+## 6. D14 — applied (2026-09-21)
+
+| ที่ | สิ่งที่ทำ |
+|---|---|
+| `profile.py` | validate `vad_filter` (bool), `vad_min_silence_ms` (100–3000), และ **บังคับ `vad_model_sha256` เมื่อเปิด VAD** |
+| `engine_faster_whisper.py` | เปิด VAD ต่อ job ตาม manifest · **ตรวจ sha256 ของ `silero_vad_v6.onnx` ใน wheel และโหลดล่วงหน้าตอนบูต** — ไม่ตรง/โหลดไม่ได้ → exit ไม่ส่ง hello (fail-closed ตอนบูต ไม่ใช่ตอน request แรก) · warm-up คง VAD ปิด**โดยเจตนา** (ถ้าเปิด ความเงียบของ warm-up ถูกตัดทิ้ง decoder ไม่ได้ JIT) |
+| `asr-th-en-01.json` | `vad_filter: true`, `vad_min_silence_ms: 700`, pin hash VAD · **`profile_revision` → `rev-2026-09-21-large-v3-turbo-vad`** |
+| contract / schema | **ไม่เปลี่ยน** — `schema --check` in sync |
+
+**หลักฐาน**
+- เทสต์ใหม่ 11 ข้อ: silence / white noise / ฮัม 50 Hz → `NO_SPEECH`; เสียงพูดจริงยังถอดได้; hash VAD ผิด → `EngineStartError`; manifest ที่ ship pin hash ตรงกับ wheel ที่ติดตั้ง (กันอัปเกรด faster-whisper แล้ว VAD เปลี่ยนเงียบ ๆ); validation ×5
+- **mutation check:** ปิด VAD ใน fixture แล้วรันเทสต์ non-speech → **ล้มจริง** (silence ได้ `"เยี่ยมเกรี่ยม ทุกอย่าง…"` SUCCEEDED, white noise ได้ `"ที่นี่จะต้องกลับกลับกลับ…"` SUCCEEDED) → เทสต์จับข้อบกพร่องได้จริง ไม่ใช่ผ่านเพราะบังเอิญ
+- ผ่าน worker จริงบน GPU ด้วย manifest ที่ ship: 4 คลิปประชุมไทย SUCCEEDED ทั้งหมด (ความยาวอยู่ในช่วงความแปรปรวนเดิม) · **ความเงียบ 6 s → `FAILED NO_SPEECH`**
+- speech venv 105 passed · apps/api ทั้งชุด 171 passed 1 skipped · smoke GPU PASS
+
 ## 5. ขั้นถัดไป
 1. ~~A/B `initial_prompt`~~ **ทำแล้ว** → §4.2
 2. ~~VAD บนคลิปสั้น + silence-only~~ **ทำแล้ว** → §4.3
@@ -199,6 +215,7 @@ input เดิม เงื่อนไขเดิม รัน 3 รอบต
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.0c | 2026-09-21 | candidate | D14 applied (VAD on, pinned VAD hash, revision bump); corrected the false claim that describe() exposes engine_options | based on 877a121 | LALIN |
 | 0.3.0c | 2026-09-21 | candidate | VAD blocks all five non-speech classes while preserving speech, and no_speech_prob is unusable (turbo returns 0.0) → D14 back to default true; CPU benchmark closes D8 (turbo beats medium on CPU too, drop the medium profile) | based on b0a9e81 | LALIN |
 | 0.2.0c | 2026-09-21 | candidate | A/B measured over 3 repeats: engine is non-deterministic (new D16); glossary helps clean audio but truncates degraded audio; VAD's proven benefit is silence-hallucination suppression only → D14 default changed to false | based on fd814d9 | LALIN |
 | 0.1.0c | 2026-09-21 | candidate | Initial proposal: D14 manifest-level VAD (default), D15 per-request glossary with draft contract diff; evidence from real-work clips; no code change | based on 16b3daa | LALIN |

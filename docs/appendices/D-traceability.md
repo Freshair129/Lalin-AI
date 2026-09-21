@@ -1,5 +1,5 @@
 ---
-version: "1.4.3b"
+version: "1.4.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-09-21T00:45:00+07:00,LALIN"
 status: "beta"
@@ -43,7 +43,7 @@ attributes:
 | FR-13 | Batch Queue | SWARM_PLAN W3.5 · SPEC §4 | `useBatchQueue.ts` + `BatchQueue.tsx` | `useBatchQueue.test.tsx` | ✅ persist/re-attach/interrupted/queued |
 | FR-14 | Workspace Agent + Mix Copilot | ai-system/agent-architecture (AI-AGT-001) · SWARM_PLAN W4.1-4.3 | `routers/agent.py` + `MixCopilot.tsx` | ✏️ TODO | ✅ done |
 | FR-15 | File Manager | UI_SITEMAP§3 (files) | `routers/fs.py` + `FileManager.tsx` | ✏️ TODO | ✅ done |
-| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub + faster-whisper engines; `profiles/voice-worker/asr-th-en-01*.json`) | `tests/voice_worker/*` (94 ใน speech venv / 85+1 skip ใน venv หลัก) · `tools/verify/smoke_voice_worker_control.ps1 -Manifest` | 🟡 Slice A stub + Slice B ASR (turbo/medium, cuda int8_float16) ผ่านในเครื่อง 5060 Ti / Thai quality, RTX 3060, joint PRP = NOT_RUN; TTS BLOCKED (D9) |
+| FR-19 (candidate, CR-005) | Headless Voice Worker (PRP supplier) | ADR-005 · API_SEMANTICS §voice_worker · BLUEPRINT§api (voice-worker) | `app/voice_worker/*` (แยกจาก `app.main`; stub + faster-whisper engines; `profiles/voice-worker/asr-th-en-01*.json`) | `tests/voice_worker/*` (105 ใน speech venv / 85+1 skip ใน venv หลัก) · `tools/verify/smoke_voice_worker_control.ps1 -Manifest` | 🟡 Slice A stub + Slice B ASR (turbo เท่านั้น, cuda int8_float16, VAD on — D8/D14 applied) ผ่านในเครื่อง 5060 Ti / Thai quality, RTX 3060, joint PRP = NOT_RUN; TTS BLOCKED (D9) |
 
 ## Lalin Play — separate Studio baseline and standalone evidence
 
@@ -161,6 +161,7 @@ date and historical scan sections remain unchanged.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.4b | 2026-09-21 | beta | FR-19 row: D8 (single turbo profile) and D14 (VAD on) applied | based on 877a121 | LALIN |
 | 1.4.3b | 2026-09-21 | beta | Update FR-19 row with Slice B ASR engine/manifests/tests | based on 7d6235d | LALIN |
 | 1.4.2b | 2026-09-20 | beta | Resolve merge of main (PR #19, 8a36a60) into codex/lalin-play-split; keep FR-19 voice-worker row and Play sections from both sides | merge of 8a36a60 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Clarify isolated review scope without introducing unrelated worker changes | based on 2e1eb73 | LALIN |

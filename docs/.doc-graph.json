@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T09:25:30+07:00",
+  "generated_at": "2026-09-21T09:46:05+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1233,10 +1233,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "1718ae833f2f",
-      "prev_hash": "1718ae833f2f",
+      "hash": "4fda1ecab657",
+      "prev_hash": "4fda1ecab657",
       "status": "current",
-      "last_verified": "2026-09-21T09:25:30+07:00"
+      "last_verified": "2026-09-21T09:46:05+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1253,20 +1253,20 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
       "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
-      "hash": "bf865729cffe",
-      "prev_hash": "bf865729cffe",
+      "hash": "dce098182653",
+      "prev_hash": "dce098182653",
       "status": "current",
-      "last_verified": "2026-09-21T09:25:30+07:00"
+      "last_verified": "2026-09-21T09:46:05+07:00"
     },
     {
       "id": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
       "type": "document",
       "path": "docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md",
       "title": "2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
-      "hash": "ab05e9249a1c",
-      "prev_hash": "ab05e9249a1c",
+      "hash": "da809cfd77b8",
+      "prev_hash": "da809cfd77b8",
       "status": "current",
-      "last_verified": "2026-09-21T09:10:14+07:00"
+      "last_verified": "2026-09-21T09:46:05+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1473,10 +1473,10 @@
       "type": "document",
       "path": "docs/appendices/D-traceability.md",
       "title": "D-traceability",
-      "hash": "dd531316ede9",
-      "prev_hash": "dd531316ede9",
+      "hash": "a19fed1f9297",
+      "prev_hash": "a19fed1f9297",
       "status": "current",
-      "last_verified": "2026-09-21T00:12:02+07:00"
+      "last_verified": "2026-09-21T09:46:05+07:00"
     },
     {
       "id": "doc:DESIGN_SYSTEM",

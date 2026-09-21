@@ -9,6 +9,9 @@ options ที่ supervisor ส่งมา = manifest.engine_options + ที�
   compute_type            int8 | int8_float16 | float16 | float32 (ตรวจใน profile.py)
   beam_size (5)           cpu_threads (0 = ctranslate2 default)
   heartbeat_seconds (0.25)  warmup (True) — ถอดเสียงเงียบ 1 s หลัง hello เพื่อให้ CUDA kernel JIT เสร็จก่อนรับงานจริง
+  vad_filter (False) · vad_min_silence_ms (700) · vad_model_sha256 — D14: ตัดช่วงที่ไม่มีคำพูดก่อนเข้า decoder
+      ถ้าเปิด engine ตรวจ sha256 ของ silero VAD ที่มากับ wheel และโหลดล่วงหน้าตอนบูต (ไม่ตรง/โหลดไม่ได้ → exit ไม่ส่ง hello)
+      เหตุผล: ไม่เปิด VAD → ความเงียบ/noise/โทน/ฮัม ถูกถอดเป็น "ประโยคไทยที่ดูเหมือนจริง" แล้วตอบ SUCCEEDED
 
 fail-closed: import/โหลดโมเดล/อุปกรณ์ไม่ตรง → child exit non-zero โดยไม่ส่ง hello → supervisor รายงาน EngineStartError
 Windows: ลงทะเบียน ``<venv>/Lib/site-packages/nvidia/*/bin`` ด้วย ``os.add_dll_directory`` ก่อนแตะ CUDA
@@ -38,7 +41,11 @@ _DEFAULTS: dict[str, Any] = {
     "cpu_threads": 0,
     "heartbeat_seconds": 0.25,
     "warmup": True,
+    "vad_filter": False,
+    "vad_min_silence_ms": 700,
+    "vad_model_sha256": None,
 }
+VAD_ASSET_NAME = "silero_vad_v6.onnx"
 
 
 def _now_iso() -> str:
@@ -84,6 +91,7 @@ class _Engine:
         self.model_dir: Path | None = None
         self.version: str | None = None
         self.warm = not bool(opts.get("warmup", True))  # ปิด warm-up = ถือว่าพร้อมทันที (เทส/CPU)
+        self.vad_sha256: str | None = None
 
     # ── load ───────────────────────────────────────────────
     def load(self) -> int:
@@ -115,7 +123,33 @@ class _Engine:
             )
         except Exception:  # noqa: BLE001 — ckpt เสีย / compute_type ไม่รองรับบนอุปกรณ์ / VRAM ไม่พอ
             return EXIT_MODEL
+        if self.opts.get("vad_filter"):
+            if not self._load_vad():
+                return EXIT_MODEL
         return 0
+
+    def _load_vad(self) -> bool:
+        """D14: ตรวจ sha256 ของ VAD ที่มากับ wheel แล้วโหลดตอนบูต — fail-closed ก่อนรับงาน ไม่ใช่ตอน request แรก"""
+        import hashlib
+
+        from faster_whisper.utils import get_assets_path
+
+        expected = str(self.opts.get("vad_model_sha256") or "").lower()
+        path = Path(get_assets_path()) / VAD_ASSET_NAME
+        try:
+            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            return False
+        if not expected or actual != expected:
+            return False
+        try:
+            from faster_whisper.vad import get_vad_model
+
+            get_vad_model()  # ต้องมี onnxruntime; cache ไว้ให้ transcribe ใช้
+        except Exception:  # noqa: BLE001
+            return False
+        self.vad_sha256 = actual
+        return True
 
     def residency(self, *, busy: bool = False) -> dict[str, Any]:
         return {
@@ -133,6 +167,8 @@ class _Engine:
 
         silence = np.zeros(16000, dtype=np.float32)
         try:
+            # vad_filter=False โดยเจตนา: warm-up ป้อนความเงียบ ถ้าเปิด VAD ช่วงนี้จะถูกตัดทิ้งหมด
+            # decoder ไม่ได้รัน CUDA kernel ไม่ถูก JIT และ request แรกจะช้า 20 s เหมือนไม่มี warm-up
             segments, _ = self.model.transcribe(silence, language="en", beam_size=1, vad_filter=False)
             for _ in segments:
                 pass
@@ -149,9 +185,11 @@ class _Engine:
         if not input_path or not Path(input_path).is_file():
             return {"outcome": "FAILED", "error": {"code": "RUNTIME_FAILED", "message": "input payload missing at dispatch"}}
         try:
-            segments_iter, info = self.model.transcribe(
-                input_path, language=lang_arg, beam_size=int(self.opts.get("beam_size") or 5), vad_filter=False,
-            )
+            vad = bool(self.opts.get("vad_filter"))
+            kwargs: dict[str, Any] = {"language": lang_arg, "beam_size": int(self.opts.get("beam_size") or 5), "vad_filter": vad}
+            if vad:
+                kwargs["vad_parameters"] = {"min_silence_duration_ms": int(self.opts.get("vad_min_silence_ms") or 700)}
+            segments_iter, info = self.model.transcribe(input_path, **kwargs)
         except Exception as exc:  # noqa: BLE001
             code = "AUDIO_FORMAT_UNSUPPORTED" if "av" in type(exc).__module__ or "decode" in str(exc).lower() else "RUNTIME_FAILED"
             return {"outcome": "FAILED", "error": {"code": code, "message": f"decode/transcribe failed: {type(exc).__name__}"}}
