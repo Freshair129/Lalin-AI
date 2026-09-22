@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-21T10:25:01+07:00",
+  "generated_at": "2026-09-22T07:00:38+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1249,10 +1249,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "4fda1ecab657",
-      "prev_hash": "4fda1ecab657",
+      "hash": "d5641e83ccfe",
+      "prev_hash": "d5641e83ccfe",
       "status": "current",
-      "last_verified": "2026-09-21T09:46:05+07:00"
+      "last_verified": "2026-09-22T07:00:38+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",

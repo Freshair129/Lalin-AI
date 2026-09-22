@@ -1,5 +1,5 @@
 ---
-version: "0.1.3c"
+version: "0.1.4c"
 created_at: "2026-09-20T21:45:00+07:00,LALIN,8429010"
 last_update: "2026-09-21T10:00:00+07:00,LALIN"
 status: "candidate"
@@ -230,7 +230,7 @@ No Must is silently narrowed: DEFER rows stay **BLOCKED** until their owner deci
 | D7 | Identity vocabulary | `runtime_id` from config, `runtime_epoch` per engine start, `physical_resource_id` = operator mapping to GPU UUID | PRP | A |
 | D8 | Phase 1 profiles | `asr-th-en-01` (faster-whisper large-v3; int8 CPU / float16 CUDA) and `tts-th-preset-01` (F5-TTS-THAI + **one approved preset**) — candidates, not approvals. **Slice B update 2026-09-21:** `asr-th-en-01` = large-v3-turbo `cuda:0 int8_float16`, **profile เดียว** — `asr-th-en-01-medium` ถูกตัดออกหลัง CPU benchmark ([proposal §4.5](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md)); `auto` language removed ([Slice B §5](2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md)) — **applied on the owner's instruction 2026-09-21** | product + rights + technical | B |
 | D9 | Preset voice + model rights | who records/licenses the preset; consent record. **Model facts verified 2026-09-20** ([JaiTTS comparison §2.2](../architecture/JAITTS_EASY_COMPARISON.md)): `SWivid/F5-TTS` base weights CC BY-NC-4.0 per authors; `VIZINTZOR/F5-TTS-THAI` tag CC-BY-4.0 on CC BY-SA-4.0 Thai data; `JTS-AI/JaiTTS-F5TTS` not public (404) → rights owner must rule on commercial/PRP use before any TTS profile is approved | rights owner | B (**BLOCKED**) |
-| D10 | Residency policy | CPU-first trial until GPU envelope measured; no LLM eviction | PRP admission + ops | B/C |
+| D10 | Residency policy | CPU-first trial until GPU envelope measured; no LLM eviction. **Measured 2026-09-22 on the dev box (RTX 5060 Ti 16 GB):** the PRP LLM runs on the same GPU — Docker container `prp-mvp-vllm` (`typhoon2.5-qwen3-4b`, unquantized bf16, `--gpu-memory-utilization 0.70`) holds ~11.9 GB; its own log gives a floor of 9.84 GiB (8.59 weights + 1.09 activation + 0.16 CUDA graphs) plus ~1.15 GiB KV for one 8192-token request, so lowering its utilization frees only ~0.3 GiB · **16 GB: ASR coexists** (~2.7 GB free vs ~1.3 GB needed; the 200-request soak ran with vLLM up) · **12 GB RTX 3060 (computed from vLLM's accounting, not measured): cannot coexist** — vLLM alone needs ~11 GiB of ~11.6 usable, so it would not even start at 0.70 · options for the PRP owner: quantize the LLM (weights 8.6 → ~2.5–4.5 GB), shorten `max-model-len`, or run ASR on CPU (turbo int8 RTF 0.72) · dev-box workaround for heavy GPU jobs only: `tools/dev/gpu_exclusive.ps1` (stops vLLM, always restarts it) | PRP admission + ops | B/C |
 | D11 | Dependency/OS matrix | Python 3.11 baseline; Windows dev host now; Linux container target **if** PRP hosts are Linux (**confirm**) | Lalin build owner + PRP | C |
 | D12 | Contract schema owner | **APPLIED 2026-09-20 (user instruction):** pydantic = source; `packages/contracts/schemas/lalin-voice-worker.schema.json` + `src/voiceWorker.ts` generated/mirrored; `test_contract_schema.py` asserts sync (see Slice A evidence §5) | Lalin maintainer | done |
 | D13 | Windows sandbox limits | accept timeout + output cap + no-network as **partial**; OS mem/CPU cap only in Linux container | security + Lalin | B |
@@ -313,6 +313,7 @@ No mock PASS is reported as GPU/quality evidence.
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
 | 0.1.1c | 2026-09-20 | candidate | Link Slice A stub implementation evidence after user approval of D1–D7 defaults | based on 8429010 | LALIN |
+| 0.1.4c | 2026-09-22 | candidate | D10: measured GPU envelope with the PRP vLLM on the same card; ASR coexists on 16 GB, not on a 12 GB RTX 3060 with the current LLM | based on 9b090bd | LALIN |
 | 0.1.3c | 2026-09-21 | candidate | D14 applied | based on 877a121 | LALIN |
 | 0.1.2c | 2026-09-21 | candidate | D8 resolved and applied: single ASR profile, medium dropped | based on e5ce2d3 | LALIN |
 | 0.1.1c | 2026-09-21 | candidate | Add D14/D15 rows (proposed, link to proposal doc); D8 row notes Slice B manifests and pending PRP confirmation | based on 16b3daa | LALIN |
