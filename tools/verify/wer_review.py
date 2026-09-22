@@ -172,6 +172,9 @@ const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 // ฉบับร่างจาก LLM (อ่านแค่ข้อความ ไม่ได้ฟังเสียง) — เป็นตัวช่วยเท่านั้น: กด "ใช้ข้อความนี้" แล้วยังต้องฟังและติ๊ก "ตรวจแล้ว" เอง
 // ความไม่นิ่ง = ถอดซ้ำหลายแบบแล้วผลต่างกันแค่ไหน (สูง = โมเดลไม่มั่นใจ = ควรฟังก่อน)
 function riskHtml(r){if(typeof r!=="number")return "";return `<span class="risk${r>=0.2?" hi":""}" title="ความไม่นิ่งของการถอดเสียงช่วงนี้">${r.toFixed(2)}</span>`}
+// โมเดลที่สอง (whisper ไทย) — ถอดจากเสียงเดียวกันคนละ weights: ต่างกันมาก = ต้องฟัง, ตรงกัน = โอกาสถูกสูงขึ้น (ไม่ใช่เฉลย)
+function secondHtml(s){if(!s.second_model)return "";const d=s.disagreement;
+ return `<div class="draft${d>=0.4?" chg":""}">โมเดล 2: ${esc(s.second_model)} <span class="risk${d>=0.4?" hi":""}">ต่าง ${d.toFixed(2)}</span></div>`}
 function draftHtml(d){if(!d)return "";const flag=d.listen_first?'<span class="flag"> · ควรฟังก่อน</span>':"";
  if(!d.changed)return `<div class="draft">ร่าง LLM: ไม่แก้ (${esc(d.confidence||"")})${flag}</div>`;
  return `<div class="draft chg">ร่าง LLM: ${esc(d.text)} <button class="use" type="button">ใช้ข้อความนี้</button><br><span class="asr">${esc(d.confidence||"")} · ${esc(d.reason||"")}</span>${flag}</div>`}
@@ -186,9 +189,9 @@ function render(){const app=$("#app");app.innerHTML="";
   audio.addEventListener("timeupdate",()=>{if(stopAt!==null&&audio.currentTime>=stopAt){audio.pause();stopAt=null;if(playingRow)playingRow.classList.remove("playing")}});
   for(const s of clip.segments){const row=document.createElement("div");row.className="seg"+(s.reviewed?" done":"");
    row.innerHTML=`<button title="ฟังช่วงนี้">▶</button><div class="t">${fmt(s.start)}–${fmt(s.end)}${riskHtml(s.instability)}</div>
-   <div><textarea rows="2"></textarea><div class="asr">ASR เดิม: ${esc(s.asr)}</div>${draftHtml(s.draft)}</div>
+   <div><textarea rows="2"></textarea><div class="asr">ASR เดิม: ${esc(s.asr)}</div>${secondHtml(s)}${draftHtml(s.draft)}</div>
    <div class="opts"><label><input type="checkbox" class="rv"> ตรวจแล้ว</label><label><input type="checkbox" class="na"> ไม่ได้ยิน</label></div>`;
-   if((s.draft&&s.draft.listen_first)||s.instability>=0.2)row.classList.add("listen");
+   if((s.draft&&s.draft.listen_first)||s.instability>=0.2||s.disagreement>=0.4)row.classList.add("listen");
    const ta=row.querySelector("textarea"),rv=row.querySelector(".rv"),na=row.querySelector(".na");
    const use=row.querySelector(".use");if(use)use.onclick=()=>{ta.value=s.draft.text;s.ref=ta.value;save(clip)};
    ta.value=s.ref;rv.checked=!!s.reviewed;na.checked=!!s.inaudible;
@@ -230,6 +233,8 @@ def make_handler(clips_dir: Path, data_dir: Path):
                 scored = risk.get(name, {}).get(str(s["i"]))
                 if scored is not None:
                     rows[-1]["instability"] = scored.get("instability")
+                    rows[-1]["second_model"] = scored.get("second_model")
+                    rows[-1]["disagreement"] = scored.get("disagreement")
                 d = drafts.get(name, {}).get(str(s["i"]))
                 if d:
                     rows[-1]["draft"] = {"text": d.get("draft", s["asr"]), "changed": bool(d.get("changed")),
