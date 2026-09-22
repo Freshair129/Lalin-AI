@@ -1,5 +1,5 @@
 ---
-version: "0.1.5c"
+version: "0.1.6c"
 created_at: "2026-09-20T21:45:00+07:00,LALIN,8429010"
 last_update: "2026-09-21T10:00:00+07:00,LALIN"
 status: "candidate"
@@ -236,6 +236,7 @@ No Must is silently narrowed: DEFER rows stay **BLOCKED** until their owner deci
 | D13 | Windows sandbox limits | accept timeout + output cap + no-network as **partial**; OS mem/CPU cap only in Linux container | security + Lalin | B · **2026-09-22: with D11 = Linux the OS-level memory/CPU caps become available (cgroups via the container runtime), so the Windows "partial" applies to the dev box only** |
 | D14 | VAD at manifest level (ASR) | `engine_options.vad_filter` per profile, no per-request override; evidence: far-field/overlap clips hallucinate foreign script without VAD — [proposal](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) §1 | PRP owner → owner instruction | B.1 (**APPLIED 2026-09-21**: VAD on in `asr-th-en-01`, VAD hash pinned, revision bumped — [proposal §6](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md)) |
 | D15 | Per-request glossary → `initial_prompt` (ASR) | `AsrInput.glossary` (optional, bounded, in digest, not stored); contract change → D12 regenerate; A/B evidence still to collect — [proposal](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md) §2 | PRP owner | B.2 (**proposed 2026-09-21**) |
+| D17 | Coordinator ↔ containerized worker connectivity | Worker binds loopback or a Unix socket only (`0.0.0.0` → exit 2, verified in the container), so it cannot be reached over a plain Docker network. Options: **(a) Unix socket on a shared volume** `unix:/run/voice-worker/worker.sock` (dir 0750, shared group) — **tested, recommended**; (b) shared network namespace — untested; (c) TLS reverse-proxy sidecar — new surface, needs review; (d) relax loopback rule — not recommended. [Slice C §3](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md) | PRP owner | C (**proposed 2026-09-22**) |
 
 ## 6. Implementation slices (proposed; nothing implemented)
 
@@ -313,6 +314,7 @@ No mock PASS is reported as GPU/quality evidence.
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
 | 0.1.1c | 2026-09-20 | candidate | Link Slice A stub implementation evidence after user approval of D1–D7 defaults | based on 8429010 | LALIN |
+| 0.1.6c | 2026-09-22 | candidate | D17 raised (coordinator ↔ containerized worker); Slice C Linux evidence linked | based on 6508cec | LALIN |
 | 0.1.5c | 2026-09-22 | candidate | D10 decided (ASR on CPU, applied to the production manifest) and D11 decided (Linux host); D13 caps become available on Linux | based on fdc427d | LALIN |
 | 0.1.4c | 2026-09-22 | candidate | D10: measured GPU envelope with the PRP vLLM on the same card; ASR coexists on 16 GB, not on a 12 GB RTX 3060 with the current LLM | based on 9b090bd | LALIN |
 | 0.1.3c | 2026-09-21 | candidate | D14 applied | based on 877a121 | LALIN |

@@ -203,6 +203,20 @@ def _voices(raw: Any, languages: frozenset[str]) -> tuple[VoicePreset, ...]:
     return tuple(voices)
 
 
+HASH_CHUNK_BYTES = 1024 * 1024
+
+
+def sha256_file(path: Path) -> str:
+    """sha256 แบบอ่านทีละ 1 MiB — เดิมใช้ ``read_bytes()`` ซึ่งโหลด model.bin 1.6 GB ทั้งก้อนเข้า RAM
+    ทุกครั้งที่ worker บูต (เจอ 2026-09-22 ตอนย้ายขึ้น container Linux) — ใน container ที่มีเพดาน memory (D13)
+    ขั้นนี้ขั้นเดียวอาจทำให้บูตไม่ขึ้น"""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(HASH_CHUNK_BYTES), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _assets(raw: Any, base_dir: Path | None, verify: bool) -> tuple[AssetPin, ...]:
     if raw is None:
         return ()
@@ -223,7 +237,10 @@ def _assets(raw: Any, base_dir: Path | None, verify: bool) -> tuple[AssetPin, ..
                 resolved = base_dir / resolved
             if not resolved.is_file():
                 raise ProfileError(f"asset {role} ไม่พบที่ {resolved} (MODEL_UNAVAILABLE — ไม่ดาวน์โหลดเอง)")
-            actual = hashlib.sha256(resolved.read_bytes()).hexdigest()
+            try:
+                actual = sha256_file(resolved)
+            except OSError as exc:
+                raise ProfileError(f"asset {role} อ่านไม่ได้ที่ {resolved} ({exc.__class__.__name__}: {exc.strerror or exc}) — fail-closed") from None
             if actual != digest:
                 raise ProfileError(f"asset {role} checksum ไม่ตรง manifest (PROFILE_MISMATCH)")
             path = str(resolved)

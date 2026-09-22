@@ -151,3 +151,48 @@ def test_non_loopback_host_is_rejected_in_phase_1(tmp_path):
     settings = WorkerSettings(host="0.0.0.0", data_dir=tmp_path / "wd", inference_credentials={ISSUER: INFERENCE_TOKEN})
     with pytest.raises(ConfigError, match="loopback"):
         settings.validate_runtime()
+
+
+# ── Unix domain socket (Linux deployment, D11) ─────────────────────────────────────────────
+# เดิม settings ยอมรับ host "unix:/..." แต่ entrypoint ส่งค่านั้นเป็น host= ให้ uvicorn → uvicorn ไป resolve
+# เป็นชื่อเครื่องแล้วล้ม "Name or service not known" (exit 1) หลัง engine สตาร์ทไปแล้ว (พบใน container 2026-09-22)
+def _worker_env(tmp_path, monkeypatch, host: str) -> None:
+    _clear_worker_env(monkeypatch)
+    monkeypatch.setenv("LALIN_VOICE_WORKER_PROFILE_PATH", str(write_manifest(tmp_path, "asr")))
+    monkeypatch.setenv("LALIN_VOICE_WORKER_DATA_DIR", str(tmp_path / "wd"))
+    monkeypatch.setenv("LALIN_VOICE_WORKER_INFERENCE_CREDENTIALS", json.dumps({ISSUER: INFERENCE_TOKEN}))
+    monkeypatch.setenv("LALIN_VOICE_WORKER_HOST", host)
+
+
+def test_unix_socket_host_is_passed_to_uvicorn_as_uds(tmp_path, monkeypatch):
+    from app.voice_worker.__main__ import main
+
+    sock_dir = tmp_path / "run"
+    sock_dir.mkdir()
+    sock = sock_dir / "worker.sock"
+    _worker_env(tmp_path, monkeypatch, f"unix:{sock}")
+    captured: dict = {}
+    assert main(run_server=lambda app, **kw: captured.update(kw)) == 0
+    assert captured["uds"] == str(sock)
+    assert "host" not in captured and "port" not in captured  # ห้ามส่ง "unix:..." เป็นชื่อเครื่อง
+    assert captured["workers"] == 1
+
+
+@pytest.mark.parametrize("host, message_part", [("unix:", "absolute path"), ("unix:relative/worker.sock", "absolute path")])
+def test_unix_socket_path_must_be_absolute(tmp_path, monkeypatch, host, message_part):
+    from app.voice_worker.__main__ import EXIT_CONFIG_ERROR, main
+
+    _worker_env(tmp_path, monkeypatch, host)
+    calls: list = []
+    assert main(run_server=lambda *a, **kw: calls.append(kw)) == EXIT_CONFIG_ERROR
+    assert calls == []  # ล้มตอน validate — ก่อนสร้าง app และก่อน engine สตาร์ท
+
+
+def test_unix_socket_parent_directory_must_exist(tmp_path, monkeypatch, capsys):
+    from app.voice_worker.__main__ import EXIT_CONFIG_ERROR, main
+
+    _worker_env(tmp_path, monkeypatch, f"unix:{tmp_path / 'missing-dir' / 'worker.sock'}")
+    calls: list = []
+    assert main(run_server=lambda *a, **kw: calls.append(kw)) == EXIT_CONFIG_ERROR
+    assert calls == []
+    assert "ไม่มีอยู่" in capsys.readouterr().err

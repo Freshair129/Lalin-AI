@@ -35,7 +35,14 @@ def main(argv: list[str] | None = None, *, run_server: Callable[..., None] | Non
 
         run_server = uvicorn.run
     # ส่ง app object (ไม่ใช่ import string) → uvicorn ไม่สามารถ fork หลาย workers ได้ = บังคับ workers=1 (LVP-REQ-006)
-    run_server(app, host=settings.host, port=settings.port, workers=1, log_level=settings.log_level, access_log=False)
+    common = {"workers": 1, "log_level": settings.log_level, "access_log": False}
+    socket_path = settings.unix_socket_path
+    if socket_path is not None:
+        # Unix domain socket (Linux, D11): uvicorn รับผ่าน uds= ไม่ใช่ host= — เดิมส่ง "unix:/..." เป็น host
+        # ทำให้ uvicorn ไป resolve เป็นชื่อเครื่องแล้วล้ม (Name or service not known) หลัง engine สตาร์ทไปแล้ว
+        run_server(app, uds=str(socket_path), **common)
+    else:
+        run_server(app, host=settings.host, port=settings.port, **common)
     return 0
 
 

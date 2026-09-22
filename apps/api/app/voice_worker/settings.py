@@ -78,6 +78,24 @@ class WorkerSettings(BaseSettings):
         if self.host not in {"127.0.0.1", "::1", "localhost"} and not self.host.startswith("unix:"):
             # D2 default: private bind; การเปิด interface อื่นต้องอยู่หลัง TLS/tunnel ที่ review แล้ว
             raise ConfigError("host ต้องเป็น loopback ใน Phase 1 (ใช้ tunnel/reverse proxy สำหรับ private network)")
+        if self.host.startswith("unix:"):
+            # ตรวจตอน validate เพื่อให้ล้มก่อน engine สตาร์ท (เดิมผ่าน validate แล้วไปพังตอน bind ด้วย exit 1)
+            socket_path = self.unix_socket_path
+            if socket_path is None or not socket_path.is_absolute():
+                raise ConfigError("host unix: ต้องตามด้วย absolute path เช่น unix:/run/voice-worker/worker.sock")
+            if not socket_path.parent.is_dir():
+                raise ConfigError(f"โฟลเดอร์ของ unix socket ไม่มีอยู่: {socket_path.parent} (สร้างและตั้งสิทธิ์ 0750 ก่อน)")
+
+    @property
+    def unix_socket_path(self) -> Path | None:
+        """path ของ Unix domain socket เมื่อ host = ``unix:/abs/path`` (Linux deployment, D11) มิฉะนั้น None
+
+        uvicorn ตั้งสิทธิ์ไฟล์ socket เป็น 0666 เองหลัง bind (ทับ umask) → การคุมการเข้าถึงต้องทำที่โฟลเดอร์แม่ (0750)
+        ทุก route นอกจาก /health/live ยังต้องใช้ bearer token อยู่ดี"""
+        if not self.host.startswith("unix:"):
+            return None
+        raw = self.host[len("unix:"):]
+        return Path(raw) if raw else None
 
     @property
     def receipts_path(self) -> Path:

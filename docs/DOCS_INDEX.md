@@ -1,5 +1,5 @@
 ---
-version: "0.10.3b"
+version: "0.10.4b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
 last_update: "2026-09-21T06:05:00+07:00,LALIN"
 status: "beta"
@@ -121,6 +121,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A.md`: Slice A stub-engine evidence — 171 backend tests, headless smoke, D12 schema export; speech/GPU/quality NOT_RUN.
 - `docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md`: Slice B ASR evidence — faster-whisper engine adapter, D8 manifests asr-th-en-01 (turbo) / -medium, speech venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED (D9).
 - `docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md`: proposal for the PRP owner — D14 manifest-level VAD and D15 per-request glossary (draft contract diff), evidence-backed, no code change until approved.
+- `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md`: Slice C step 1 — the worker in a Linux CPU-only container (D10/D11); 124 tests and the smoke pass inside it; three bugs fixed; D17 raised; sizing, D13 caps and the soak verdict still open.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
@@ -149,6 +150,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.4b | 2026-09-22 | beta | Index Slice C Linux evidence | based on 6508cec | LALIN |
 | 0.10.3b | 2026-09-21 | beta | Index the D14/D15 proposal; H0 review 0.1.1c | based on 16b3daa | LALIN |
 | 0.10.2b | 2026-09-21 | beta | Index the draft meeting-transcript pipeline design | based on b5acf61 | LALIN |
 | 0.10.1b | 2026-09-21 | beta | Index Slice B ASR evidence (faster-whisper engine, asr-th-en-01 manifests) | based on 7d6235d | LALIN |

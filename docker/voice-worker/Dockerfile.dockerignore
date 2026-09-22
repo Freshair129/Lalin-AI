@@ -1,0 +1,13 @@
+# Allowlist: ignore everything, then re-include only what the image needs.
+**
+!apps/api/app/**
+!apps/api/profiles/**
+!apps/api/tests/__init__.py
+!apps/api/tests/voice_worker/**
+!apps/api/pytest.ini
+!apps/api/requirements-speech-asr-linux-cpu.lock.txt
+!packages/contracts/schemas/**
+!tools/verify/voice_worker_client.py
+!tools/verify/smoke_voice_worker.py
+**/__pycache__/**
+**/*.pyc
