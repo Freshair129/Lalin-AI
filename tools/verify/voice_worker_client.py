@@ -17,6 +17,8 @@
 
 target (runtime_id/physical_resource_id/profile_id/profile_revision) อ่านจาก describe อัตโนมัติถ้าไม่ระบุ;
 runtime_epoch ต้องเป็นค่าปัจจุบันจาก readiness (stale → 409 TARGET_MISMATCH ตามสัญญา)
+
+Unix socket (D17, Linux container): --base-url unix:/run/voice-worker/worker.sock
 """
 from __future__ import annotations
 
@@ -36,18 +38,22 @@ import httpx
 DEFAULT_BASE = "http://127.0.0.1:8790"
 
 
+def http_client(base_url: str, **kwargs: Any) -> httpx.Client:
+    """httpx client สำหรับ ``http://host:port`` หรือ ``unix:/abs/path`` (D17: coordinator ↔ worker ผ่าน Unix socket บน volume ที่แชร์)
+    ไม่ retry อัตโนมัติเสมอ (LVP-REQ-023)"""
+    if base_url.startswith("unix:"):
+        transport = httpx.HTTPTransport(uds=base_url[len("unix:"):], retries=0)
+        return httpx.Client(base_url="http://voice-worker", transport=transport, **kwargs)
+    return httpx.Client(base_url=base_url.rstrip("/"), transport=httpx.HTTPTransport(retries=0), **kwargs)
+
+
 def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat(timespec="microseconds")
 
 
 class WorkerClient:
     def __init__(self, base_url: str, token: str, timeout: float = 30.0) -> None:
-        self._client = httpx.Client(
-            base_url=base_url.rstrip("/"),
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=timeout,
-            transport=httpx.HTTPTransport(retries=0),  # ห้าม retry อัตโนมัติ
-        )
+        self._client = http_client(base_url, headers={"Authorization": f"Bearer {token}"}, timeout=timeout)  # ห้าม retry อัตโนมัติ
 
     def close(self) -> None:
         self._client.close()

@@ -1,7 +1,7 @@
 ---
-version: "0.1.2c"
+version: "0.1.3c"
 created_at: "2026-09-20T21:40:00+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:15:00+07:00,LALIN"
+last_update: "2026-09-22T22:00:00+07:00,LALIN"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -116,6 +116,15 @@ attributes:
 | NFR-06.3 config hot-reload ผ่าน API | Studio | worker config immutable ต่อ epoch; เปลี่ยนได้เฉพาะ management + requalify | admission-bound profiles |
 | `auto` device default (NFR-02.4) | Studio | worker ใช้ explicit device จาก profile เท่านั้น | exact target binding |
 
+### 3.5 Decisions recorded 2026-09-22 (by Fable 5.1 on the owner's delegation; see H0 review)
+
+- **D16: non-determinism is a contract fact.** A new attempt on the same audio may return different text; one
+  attempt's receipt never changes (idempotency unchanged). Decoding is not forced deterministic.
+- **D17: transport is a Unix socket on a shared volume** (`unix:/run/voice-worker/worker.sock`, directory 0750, the
+  coordinator joins gid 10001). The worker container has no network. The loopback-only bind rule of §3.1 is unchanged.
+  Cost: coordinator and worker share one host. Verified in [the runbook](../operations/VOICE_WORKER_LINUX_RUNBOOK.md) §3.
+- **D15** per-request glossary and **D18** repeated-OOM lockout are implemented (API_SEMANTICS, voice_worker section).
+
 ## 4. Alternatives considered
 
 - **ตั้ง `GMUSIC_BACKEND_PROFILE=voice-worker` ใน `create_app()`** — ปฏิเสธ: fail-open,
@@ -157,6 +166,7 @@ schema ใน `packages/contracts/schemas/`), Windows sandbox partial acceptance
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.3c | 2026-09-22 | candidate | §3.5: D16 (non-determinism as contract fact) and D17 (Unix socket transport) recorded | based on b4ffe94 | LALIN |
 | 0.1.2c | 2026-09-20 | candidate | Slice A of §3.1/3.2/3.4 implemented locally with a labeled stub engine (see validation 2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A); §3.3 speech-core seams remain for Slice B | based on 8429010 | LALIN |
 | 0.1.1c | 2026-09-20 | candidate | Point trigger at CR-005 after the working-tree CR-004 collision | based on 8429010 | LALIN |
 | 0.1.0c | 2026-09-20 | candidate | Propose fail-closed worker entrypoint, control/engine split, speech-core seams, receipts and profile-scoped exceptions; no code change | based on 8429010 | LALIN |

@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T13:27:32+07:00",
+  "generated_at": "2026-09-22T15:34:49+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 420,
-    "total_edges": 549,
+    "total_nodes": 421,
+    "total_edges": 554,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1172,17 +1172,17 @@
       "id": "code:tools/verify/smoke_voice_worker.py",
       "type": "code_file",
       "path": "tools/verify/smoke_voice_worker.py",
-      "hash": "4d0249cf08b2",
+      "hash": "4dc7033499bc",
       "status": "current",
-      "last_verified": "2026-09-22T11:48:50+07:00"
+      "last_verified": "2026-09-22T15:34:48+07:00"
     },
     {
       "id": "code:tools/verify/voice_worker_capcheck.py",
       "type": "code_file",
       "path": "tools/verify/voice_worker_capcheck.py",
-      "hash": "e055ca69c51d",
+      "hash": "7ab657807a74",
       "status": "current",
-      "last_verified": "2026-09-22T13:27:32+07:00"
+      "last_verified": "2026-09-22T15:34:48+07:00"
     },
     {
       "id": "code:tools/verify/voice_worker_eval_clips.py",
@@ -1273,10 +1273,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "f32d2a9bdc24",
-      "prev_hash": "f32d2a9bdc24",
+      "hash": "a0e389ba8c05",
+      "prev_hash": "a0e389ba8c05",
       "status": "current",
-      "last_verified": "2026-09-22T13:27:32+07:00"
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1313,10 +1313,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
-      "hash": "04c1e6f9d673",
-      "prev_hash": "04c1e6f9d673",
+      "hash": "5fbfb88a60d6",
+      "prev_hash": "5fbfb88a60d6",
       "status": "current",
-      "last_verified": "2026-09-22T13:27:32+07:00"
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1373,20 +1373,20 @@
       "type": "document",
       "path": "docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md",
       "title": "ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
-      "hash": "12451b1a4935",
-      "prev_hash": "12451b1a4935",
+      "hash": "543798c822b0",
+      "prev_hash": "543798c822b0",
       "status": "current",
-      "last_verified": "2026-09-20T23:03:56+07:00"
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:API_SEMANTICS",
       "type": "document",
       "path": "docs/architecture/API_SEMANTICS.md",
       "title": "API_SEMANTICS",
-      "hash": "cfd32efa8794",
-      "prev_hash": "cfd32efa8794",
+      "hash": "da62ec6013f6",
+      "prev_hash": "da62ec6013f6",
       "status": "current",
-      "last_verified": "2026-09-20T23:03:56+07:00"
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
@@ -1543,10 +1543,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "cd9415f3bec1",
-      "prev_hash": "cd9415f3bec1",
+      "hash": "837578df63f3",
+      "prev_hash": "837578df63f3",
       "status": "current",
-      "last_verified": "2026-09-22T11:49:03+07:00"
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -2487,6 +2487,16 @@
       "prev_hash": "08d8a6e6a65d",
       "status": "current",
       "last_verified": "2026-08-23T04:11:47+07:00"
+    },
+    {
+      "id": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "type": "document",
+      "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
+      "title": "VOICE_WORKER_LINUX_RUNBOOK",
+      "hash": "5812a37b5546",
+      "prev_hash": "5812a37b5546",
+      "status": "current",
+      "last_verified": "2026-09-22T15:34:49+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -5053,6 +5063,13 @@
     },
     {
       "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "to": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
       "to": "req:FR-02",
       "type": "references",
       "status": "current",
@@ -5403,6 +5420,13 @@
     },
     {
       "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
+      "to": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:ADR-005-HEADLESS-VOICE-WORKER-PROFILE",
       "to": "req:FR-02",
       "type": "references",
       "status": "current",
@@ -5460,6 +5484,13 @@
     {
       "from": "doc:API_SEMANTICS",
       "to": "doc:SRS",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:API_SEMANTICS",
+      "to": "doc:VOICE_WORKER_LINUX_RUNBOOK",
       "type": "references",
       "status": "current",
       "source": "doc-scan"
@@ -7175,6 +7206,20 @@
     {
       "from": "doc:UI_SITEMAP",
       "to": "doc:LALIN_UI_SOT",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "to": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

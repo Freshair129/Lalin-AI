@@ -121,6 +121,15 @@ profile ไม่รู้จัก/ไม่ valid → process exit code `2` **
 - **output:** `GET …/output` มีเฉพาะ tts (asr → `422`), ต้อง `FINISHED/SUCCEEDED` (`409 OUTPUT_NOT_READY`) และ payload ยังอยู่ (`410 PAYLOAD_ERASED`); header `X-Content-SHA256` = `result.sha256`; ไฟล์ที่ header/duration ไม่ผ่านไม่ถูก publish (`OUTPUT_INVALID|OUTPUT_LIMIT`)
 - **stub ที่ติดป้าย:** Slice A engine = `stub` — `describe.engine.labeled_stub=true`, `profiles[].state.qualified=false`, ASR คืน `text="[stub] …"`, `duration_seconds=null`, `segments=[]`; **ไม่ใช่หลักฐาน speech/GPU**
 - รหัส error worker-local ที่เพิ่มจากตาราง handoff (ต้องให้ PRP map): `NOT_FOUND`, `OUTPUT_NOT_READY`, `PAYLOAD_ERASED`; สถานะ payload เพิ่ม `NONE`
+- **ผลไม่ deterministic (D16):** envelope เดิมแต่ `attempt_id` ใหม่บนเสียงเดิม อาจได้ข้อความต่างกัน (วัดแล้ว 3 ใน 4 คลิป) — ส่วน `attempt_id` เดิมได้ receipt เดิมเสมอ
+  (ไม่ถอดใหม่) · coordinator **ห้าม**ใช้ "ถอดซ้ำแล้วเทียบ" เป็นการตรวจสอบผล
+- **glossary (D15):** `input.glossary` optional ต่อ request (≤ 64 คำ, คำละ 1–40 code point, รวม ≤ 400 หลัง norm-v1) → เข้า whisper `initial_prompt`
+  เป็น bias ไม่ใช่คำสั่ง; อยู่ใน digest (เปลี่ยน glossary = `409 IDEMPOTENCY_CONFLICT`); ไม่เขียนลงดิสก์ · `result.glossary_applied` มีเฉพาะเมื่อส่งมา
+  (stub = `false`) · `capabilities.asr_glossary` บอกว่า profile ใช้จริงไหม · **ใช้กับเสียงชัดเท่านั้น** — บนเสียงไกล/มีเสียงรบกวนทำให้เนื้อหาหาย
+- **OOM ซ้ำ (D18):** engine ถูก OOM killer ฆ่า (ยืนยันจาก cgroup) ติดกัน `oom_lockout_after` ครั้ง (default 2, ไม่มีงานจบคั่น) → ไม่ restart engine อีก,
+  readiness `ready=false` reason `repeated_oom` + `oom_lockout`, request ใหม่ `503 MODEL_UNAVAILABLE` จน operator ขยายเพดานแล้ว restart worker · ครั้งเดียว = `RUNTIME_OOM` + epoch ใหม่
+- **transport (D17):** Linux deployment ใช้ `LALIN_VOICE_WORKER_HOST=unix:/run/voice-worker/worker.sock` บน volume ที่แชร์กับ coordinator
+  (dir 0750, coordinator เข้ากลุ่ม 10001) — ไม่มี TCP เลย · ดู [runbook](../operations/VOICE_WORKER_LINUX_RUNBOOK.md)
 - **machine-readable contract:** `packages/contracts/schemas/lalin-voice-worker.schema.json` (สร้างจาก pydantic ใน `app/voice_worker/contract.py` ด้วย
   `python -m app.voice_worker.schema --write`; `--check`/`test_contract_schema.py` บังคับ sync) และ TS types ใน `packages/contracts/src/voiceWorker.ts` — แก้ที่ pydantic ก่อนเสมอ
 

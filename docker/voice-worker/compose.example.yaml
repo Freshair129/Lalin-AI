@@ -1,0 +1,66 @@
+# Lalin voice worker next to a PRP coordinator on one Linux host — D17 (a): Unix socket on a shared volume.
+# Runbook: docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md
+#
+#   export LALIN_MODELS_DIR=/srv/lalin/models          # holds faster-whisper/large-v3-turbo and vad/silero_vad_v6.onnx
+#   export VOICE_WORKER_ENV_FILE=/srv/lalin/voice-worker.env   # tokens, chmod 600, never committed
+#   docker compose -f docker/voice-worker/compose.example.yaml up -d voice-worker
+#   docker compose -f docker/voice-worker/compose.example.yaml run --rm coordinator-probe   # proves the coordinator side
+#
+# Access control, in order: the worker has no network at all; the socket directory is 0750 worker:worker (gid 10001),
+# so only containers that join group 10001 can reach the socket; every route except /health/live needs a bearer token.
+
+name: lalin-voice
+
+services:
+  voice-worker:
+    build:
+      context: ../..
+      dockerfile: docker/voice-worker/Dockerfile
+      target: runtime
+    image: lalin-voice-worker:dev
+    network_mode: none                      # no TCP at all; the socket is the only way in
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 3g                           # D13: 3 GiB minimum for asr-th-en-01 (Slice C §8)
+    memswap_limit: 3g                       # no swap: an overrun is an OOM kill the worker can report (D18), not thrashing
+    cpus: 8                                 # set cpu_threads in the manifest to the same number (Slice C §7)
+    env_file:
+      - ${VOICE_WORKER_ENV_FILE:?set VOICE_WORKER_ENV_FILE to the token file}
+    environment:
+      LALIN_VOICE_WORKER_PROFILE_PATH: profiles/voice-worker/asr-th-en-01.json
+      LALIN_VOICE_WORKER_HOST: unix:/run/voice-worker/worker.sock
+    volumes:
+      - ${LALIN_MODELS_DIR:?set LALIN_MODELS_DIR}:/repo/apps/api/models:ro
+      - voice-data:/data
+      - voice-socket:/run/voice-worker
+    # exit 2 = fail-closed config error: retrying cannot fix it, so stop after a few tries.
+    # A D18 lockout keeps the process running and not-ready on purpose: it does not trigger a restart.
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.Client(transport=httpx.HTTPTransport(uds='/run/voice-worker/worker.sock')).get('http://w/health/live').status_code == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+
+  # Stand-in for the PRP coordinator: shows the two things it needs, the shared volume and group 10001.
+  coordinator-probe:
+    profiles: ["probe"]
+    image: lalin-voice-worker:dev
+    user: "20000:20000"
+    group_add: ["10001"]
+    network_mode: none
+    env_file:
+      - ${VOICE_WORKER_ENV_FILE:?set VOICE_WORKER_ENV_FILE to the token file}
+    volumes:
+      - voice-socket:/run/voice-worker
+    entrypoint: ["python", "/repo/tools/verify/voice_worker_client.py", "--base-url", "unix:/run/voice-worker/worker.sock"]
+    command: ["readiness"]
+    depends_on:
+      voice-worker:
+        condition: service_healthy
+
+volumes:
+  voice-data:
+  voice-socket:

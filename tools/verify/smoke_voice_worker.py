@@ -32,7 +32,7 @@ from pathlib import Path
 import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from voice_worker_client import WorkerClient  # noqa: E402
+from voice_worker_client import WorkerClient, http_client  # noqa: E402
 
 
 def silence_wav(seconds: float = 6.0, rate: int = 16000) -> bytes:
@@ -53,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--language", default="th", help="must be one the manifest qualifies (D8 manifests: th, en)")
     parser.add_argument("--silence", action="store_true", help="also send 6 s of silence and require NO_SPEECH (D14)")
     parser.add_argument("--port", type=int, default=8790)
+    parser.add_argument("--unix-socket", help="serve on this absolute socket path instead of TCP (D17, Linux only)")
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--ready-timeout", type=float, default=180.0)
     args = parser.parse_args(argv)
@@ -62,6 +63,9 @@ def main(argv: list[str] | None = None) -> int:
         manifest = api_dir / manifest
     if not manifest.is_file():
         print(f"FAIL: missing manifest {manifest}")
+        return 1
+    if args.unix_socket and (os.name == "nt" or not os.path.isabs(args.unix_socket)):
+        print("FAIL: --unix-socket needs Linux and an absolute path")
         return 1
 
     work = Path(tempfile.mkdtemp(prefix="lalin-voice-smoke-"))
@@ -75,11 +79,14 @@ def main(argv: list[str] | None = None) -> int:
            "LALIN_VOICE_WORKER_MANAGEMENT_TOKEN": mgmt,
            "DATA_DIR": str(studio_data),
            "PYTHONIOENCODING": "utf-8"}
+    if args.unix_socket:
+        env["LALIN_VOICE_WORKER_HOST"] = "unix:" + args.unix_socket
     log = open(work / "worker.log", "w", encoding="utf-8")
     proc = subprocess.Popen([args.python, "-m", "app.voice_worker"], cwd=str(api_dir), env=env,
                             stdout=log, stderr=subprocess.STDOUT)
-    base = f"http://127.0.0.1:{args.port}"
+    base = ("unix:" + args.unix_socket) if args.unix_socket else f"http://127.0.0.1:{args.port}"
     client = WorkerClient(base, token)
+    raw = http_client(base, timeout=5)  # ไม่มี Authorization ติดมา — ใช้เช็ค 401/403
     failures: list[str] = []
 
     def check(label: str, ok: bool, detail: str = "") -> None:
@@ -92,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         live = False
         while time.time() - started < 60 and proc.poll() is None:
             try:
-                live = httpx.get(f"{base}/health/live", timeout=2).status_code == 200
+                live = raw.get("/health/live", timeout=2).status_code == 200
                 if live:
                     break
             except httpx.HTTPError:
@@ -118,9 +125,9 @@ def main(argv: list[str] | None = None) -> int:
             time.sleep(0.5)
         check("readiness true (after warm-up)", ready, f"reason={reason}" if not ready else f"{time.time() - started:.1f}s")
 
-        wrong = httpx.get(f"{base}/worker/v1/describe", headers={"Authorization": "Bearer wrong-token-xxxxxxxxxxxxxxxx"}, timeout=5)
+        wrong = raw.get("/worker/v1/describe", headers={"Authorization": "Bearer wrong-token-xxxxxxxxxxxxxxxx"})
         check("wrong token rejected with 401", wrong.status_code == 401, f"got {wrong.status_code}")
-        scoped = httpx.get(f"{base}/worker/v1/operations/does-not-exist", headers={"Authorization": f"Bearer {mgmt}"}, timeout=5)
+        scoped = raw.get("/worker/v1/operations/does-not-exist", headers={"Authorization": f"Bearer {mgmt}"})
         check("management token refused on operations with 403", scoped.status_code == 403, f"got {scoped.status_code}")
 
         body = client.describe().json()
@@ -162,8 +169,20 @@ def main(argv: list[str] | None = None) -> int:
             check(f"erase {attempt}", erased.status_code == 200, f"got {erased.status_code}")
 
         check("Studio DATA_DIR never created (isolation)", not studio_data.exists())
+        if args.unix_socket:
+            import socket
+            import stat
+            sock = Path(args.unix_socket)
+            check("unix socket exists", sock.exists() and stat.S_ISSOCK(sock.stat().st_mode),
+                  f"dir mode {oct(sock.parent.stat().st_mode & 0o777)}")
+            probe = socket.socket()
+            probe.settimeout(1)
+            tcp_open = probe.connect_ex(("127.0.0.1", args.port)) == 0
+            probe.close()
+            check("no TCP listener on the worker port (socket only)", not tcp_open)
     finally:
         client.close()
+        raw.close()
         proc.terminate()
         try:
             proc.wait(15)

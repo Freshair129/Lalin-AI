@@ -1,5 +1,5 @@
 ---
-version: "0.10.5b"
+version: "0.10.6b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
 last_update: "2026-09-22T19:00:00+07:00,LALIN"
 status: "beta"
@@ -102,6 +102,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/operations/PACKAGING_SIDECAR.md`
 - `docs/operations/WORKSTATION_DISTRIBUTION.md`
 - `docs/operations/CPU_GPU_DISTRIBUTION_STRATEGY.md`
+- `docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md`: deploy/operate the headless voice worker beside the PRP coordinator on Linux — Unix socket on a shared volume (D17), 3 GiB cap, OOM lockout, non-determinism.
 
 ## Tooling Layout
 
@@ -150,6 +151,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.6b | 2026-09-22 | beta | Index the voice worker Linux runbook | based on b4ffe94 | LALIN |
 | 0.10.5b | 2026-09-22 | beta | Refresh the Slice C entry (leak, sizing, D13, slim image) | based on 46eeb0a | LALIN |
 | 0.10.4b | 2026-09-22 | beta | Index Slice C Linux evidence | based on 6508cec | LALIN |
 | 0.10.3b | 2026-09-21 | beta | Index the D14/D15 proposal; H0 review 0.1.1c | based on 16b3daa | LALIN |
