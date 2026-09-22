@@ -9,5 +9,7 @@
 !packages/contracts/schemas/**
 !tools/verify/voice_worker_client.py
 !tools/verify/smoke_voice_worker.py
+!tools/verify/voice_worker_sizing.py
+!tools/verify/voice_worker_capcheck.py
 **/__pycache__/**
 **/*.pyc

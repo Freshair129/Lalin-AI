@@ -1,7 +1,7 @@
 ---
-version: "0.2.0b"
+version: "0.3.0b"
 created_at: "2026-09-22T12:30:00+07:00,LALIN,6508cec"
-last_update: "2026-09-22T14:30:00+07:00,LALIN"
+last_update: "2026-09-22T17:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -29,7 +29,8 @@ for `python:3.11-slim` (Docker Hub) and the Linux wheels (PyPI). Baseline `6508c
 | Worker over a Unix domain socket (§3) | **PASS** — `/health/live` 200, describe without token 401, with token 200, **no TCP listener** |
 | Windows regression (same commit) | speech venv **124 passed** · full `apps/api` **190 passed, 1 skipped** · `schema --check` in sync |
 | **Engine memory leak** (§6) | **FOUND AND FIXED** — the engine spawned a thread per job and CUDA-backed CTranslate2 kept ~0.12 MiB of host memory per thread. Robust growth (median per 50-request window, requests 50–299): **+0.106 → +0.014 MiB/request** on the same GPU config. The production CPU path shows no per-thread leak |
-| CPU sizing on the Linux host · D13 memory/CPU caps | **NOT_RUN** (§5) — needs a quiet machine |
+| **CPU sizing** (§7, container `--cpus`, dev box) | **RUN** — 60 s clip: 4 CPUs RTF 0.48–0.67, **8 CPUs 0.38–0.50 (best)**, 16 CPUs 1.16–1.88 (worse, hybrid P/E cores); container peak memory ~2.3 GB. Indicative only: the real host must be re-measured with the same tool |
+| **D13 memory caps** (§8, container `--memory`, no swap) | **PASS — fails safely** at every level: 1.5 GB boot refused with the cause named; 2.1 GB each 60 s request OOM-killed → `RUNTIME_OOM` confirmed from cgroup, engine back under a new epoch; 3 GB all pass. **Recommended limit ≥ 3 GiB** |
 
 ## 1. What was built
 
@@ -85,10 +86,9 @@ Docker network.
 
 ## 5. Open (next steps of Slice C)
 
-1. **CPU sizing on the Linux host** — measure RTF with real core limits (`--cpus 4 / 8 / 16`) once the running soak
-   finishes, so the numbers are not skewed by it; this replaces the 28-thread dev-box figure behind D10.
-2. **D13 OS caps** — run with `--memory` / `--cpus` limits and confirm the worker fails safely at the cap
-   (engine death → attempt reported with evidence → new epoch), now that Linux makes these caps available.
+1. ~~CPU sizing~~ **done on the dev box (§7)**; still to repeat on the real PRP Linux host with `voice_worker_sizing.py`.
+2. ~~D13 OS caps~~ **done (§8)**; confirm the chosen limit on the real host with `voice_worker_capcheck.py`.
+6. **D18** — what the worker should do after repeated OOM kills (§8), owner decision.
 3. ~~Long soak verdict~~ **resolved in §6**: a real leak, found and fixed; no restart policy needed for it.
 4. **D17** — owner decision (§3).
 5. Worker-only requirements to cut the image size (§4).
@@ -136,9 +136,51 @@ the heap releasing and regrowing) tilt a regression line that starts on one. The
 - The engine holds **~4.0 GB of RAM on CPU** (weights live in host memory) versus ~3.1 GB on GPU; this is an input to the
   Linux host sizing still to be done.
 
+## 7. CPU sizing (container `--cpus`, 2026-09-22)
+
+Tool: [`voice_worker_sizing.py`](../../tools/verify/voice_worker_sizing.py), run inside the container under a real cgroup CPU
+quota, shipped CPU manifest with `cpu_threads` set. Machine quiet (no game, soak stopped). Clips are real Thai meeting audio.
+
+| CPUs (`cpu_threads` = quota) | RTF, 60 s clip | Time for the 60 s maximum | Notes |
+|---|---|---|---|
+| 2 | 0.86 (1 run) | ~52 s | fits a 120 s deadline |
+| 4 | 0.48 · 0.49 · 0.67 | ~29–40 s | |
+| **8** | **0.38 · 0.41 · 0.50** | **~23–30 s** | **best on this box** |
+| 16 | 1.81 · 1.16 · 1.88 | ~70–113 s | slower, all 3 runs |
+
+- **16 threads is slower than 4, consistently.** The dev CPU is an i7-14700KF: 8 performance cores (16 threads) plus 12
+  efficiency cores. At 16 threads some work lands on the slower cores and CTranslate2 waits for the slowest one. A server with
+  uniform cores should scale further, so **these numbers are indicative, not a sizing for the PRP host**.
+- **The container sees all 28 host cores** (`os.cpu_count()`), whatever `--cpus` says. With `cpu_threads: 0` at 4 CPUs the 60 s
+  clip took RTF 0.547 against 0.447 with 4 threads (one run each). **Rule for the real manifest: set `cpu_threads` to the CPUs
+  allocated**, and on hybrid CPUs no higher than the performance-core count.
+- Peak container memory **~2.3–2.4 GB**, independent of thread count. (Windows reported ~4.0 GB of private bytes for the same
+  engine; that is a different measure, committed rather than resident memory.)
+
+## 8. D13 memory caps (container `--memory` = `--memory-swap`, no swap, 2026-09-22)
+
+Tool: [`voice_worker_capcheck.py`](../../tools/verify/voice_worker_capcheck.py). 8 CPUs, 60 s clip.
+
+| Limit | What happened | Verdict |
+|---|---|---|
+| 1.5 GB | Model load cannot fit. The engine thrashes (the kernel keeps evicting the model file's pages) instead of being killed; the worker exits code 3 after the hello timeout, nothing served | safe. The message was "did not report hello within the configured timeout"; it now adds **"the container hit its memory limit while loading (raise the memory limit)"** from the cgroup `max` counter |
+| 2.1 GB | Boots (peak 2,074 MiB); every 60 s request drives the engine over the limit and the kernel kills it (exitcode −9). The attempt ends FAILED with process-exit evidence; the engine restarts under a new epoch and the worker is ready again; the control plane survives | safe. It was reported `RUNTIME_FAILED`; now **`RUNTIME_OOM` with `oom_killed: true`**, confirmed from the cgroup `oom_kill` counter rather than guessed from −9 |
+| 3 GB | Two 60 s requests succeed, peak 2,224–2,312 MiB | **recommended minimum: 3 GiB** |
+
+**Fixed (with tests and a mutation check):** OOM kills reported as a generic failure, and a boot that died or stalled on
+memory reported only as a timeout. `StopEvidence` already allows extra fields, so `oom_killed` is not a contract change. Where
+no cgroup exists (the Windows dev box) the value is `null` and the code stays `RUNTIME_FAILED`: unknown is never reported as OOM.
+
+**Open — D18 (owner decision):** at 2.1 GB *every* request is killed and the engine reloads (~14 s) each time, while the
+worker keeps reporting ready, so a coordinator keeps sending work that will fail. Options: (a) after N consecutive OOM kills
+with no success in between, report not-ready with a reason until an operator restarts it; (b) the same, but retry on its own
+after a back-off; (c) leave it to the coordinator, which sees `RUNTIME_OOM`. Recommendation: (a) with N = 2 — fail closed,
+since a memory limit does not fix itself.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.0b | 2026-09-22 | beta | CPU sizing under real CPU quotas (8 CPUs best; hybrid cores make 16 slower); D13 memory caps pass with a 3 GiB minimum; OOM now reported as RUNTIME_OOM from cgroup and a memory-bound boot names its cause; D18 raised | based on ed156d4 | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Engine memory leak found (thread per job, CUDA-specific) and fixed with one runner thread: +0.106 -> +0.014 MiB/request; soak tool gains median-window growth after least-squares nearly misread the fixed run | based on 53d77fb | LALIN |
 | 0.1.0b | 2026-09-22 | beta | Slice C step 1: Linux CPU container, 124 tests and smoke pass inside it; fixed whole-file asset hashing, the broken Unix-socket route and a world-readable data dir; D17 raised | based on 6508cec | LALIN |

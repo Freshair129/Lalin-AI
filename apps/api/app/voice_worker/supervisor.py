@@ -11,6 +11,7 @@ import multiprocessing
 import threading
 import time
 import uuid
+from pathlib import Path
 from concurrent.futures import Future
 from typing import Any
 
@@ -19,6 +20,43 @@ from .profile import ProfileManifest
 from .timeutil import iso, utc_now
 
 ENGINE_TARGETS = {"stub": engine_stub.serve, "faster-whisper": engine_faster_whisper.serve}
+
+
+CGROUP_MEMORY_EVENTS = Path("/sys/fs/cgroup/memory.events")
+
+
+def cgroup_memory_events(path: Path = CGROUP_MEMORY_EVENTS) -> dict[str, int] | None:
+    """ตัวนับใน ``memory.events`` ของ cgroup v2 (Linux container, D11/D13) — None เมื่ออ่านไม่ได้ เช่นบน Windows
+    ``oom_kill`` = kernel OOM killer ฆ่า process · ``max`` = จำนวนครั้งที่ชนเพดาน memory (thrash ได้โดยไม่ถูกฆ่า)"""
+    try:
+        events: dict[str, int] = {}
+        for line in path.read_text().splitlines():
+            key, _, value = line.partition(" ")
+            events[key] = int(value)
+        return events
+    except (OSError, ValueError):
+        return None
+
+
+def cgroup_oom_kills(path: Path = CGROUP_MEMORY_EVENTS) -> int | None:
+    """ใช้ยืนยันว่า engine ตายเพราะ kernel OOM killer จริง แทนการเดาจาก exitcode −9 (SIGKILL มาจากที่อื่นได้)"""
+    events = cgroup_memory_events(path)
+    return None if events is None else events.get("oom_kill")
+
+
+def memory_limit_hit_since(baseline: dict[str, int] | None, path: Path = CGROUP_MEMORY_EVENTS) -> bool | None:
+    now = cgroup_memory_events(path)
+    if baseline is None or now is None or "max" not in baseline or "max" not in now:
+        return None
+    return now["max"] > baseline["max"]
+
+
+def oom_killed_since(baseline: int | None, path: Path = CGROUP_MEMORY_EVENTS) -> bool | None:
+    """True/False เมื่อวัดได้ทั้งสองจุด · None = ไม่รู้ (ไม่มี cgroup) — ห้ามเดาเป็น True"""
+    now = cgroup_oom_kills(path)
+    if baseline is None or now is None:
+        return None
+    return now > baseline
 
 
 class EngineStartError(RuntimeError):
@@ -54,6 +92,7 @@ class EngineSupervisor:
         self.last_heartbeat_monotonic: float | None = None
         self.last_observed_at: str | None = None
         self.exit_evidence: dict[str, Any] | None = None
+        self._oom_baseline: int | None = None  # cgroup oom_kill ตอน engine เริ่ม (Linux เท่านั้น)
 
     # ── observations ─────────────────────────────────────────
     def _bump(self) -> int:
@@ -135,6 +174,8 @@ class EngineSupervisor:
             name="lalin-voice-worker-engine",
             daemon=True,
         )
+        events_baseline = cgroup_memory_events()
+        oom_baseline = None if events_baseline is None else events_baseline.get("oom_kill")
         proc.start()
         child_conn.close()
         deadline = time.monotonic() + self.hello_timeout_seconds
@@ -151,11 +192,22 @@ class EngineSupervisor:
             if not proc.is_alive():
                 break
         if hello is None:
-            if proc.is_alive():
+            died = not proc.is_alive()
+            if not died:
                 proc.terminate()
             proc.join(2.0)
             parent_conn.close()
-            raise EngineStartError("engine process did not report hello within the configured timeout")
+            if died:
+                # เดิมรายงานว่า "did not report hello within the configured timeout" แม้ engine ถูก kill ไปแล้ว
+                # (เจอใต้เพดาน memory 1.5 GB: engine โดน OOM killer ระหว่างโหลดโมเดล, exitcode −9)
+                oom = oom_killed_since(oom_baseline)
+                cause = " — killed by the out-of-memory killer (raise the memory limit)" if oom else ""
+                raise EngineStartError(f"engine process exited before hello (exitcode {proc.exitcode}){cause}")
+            # ยังไม่ตายแต่ไม่ทัน: ใต้เพดาน memory ที่ไม่มี swap engine อาจ thrash (kernel ไล่ page cache ของไฟล์โมเดลซ้ำ ๆ)
+            # แทนที่จะถูกฆ่า — เจอที่ --memory 1500m · ตัวนับ ``max`` บอกว่าชนเพดานระหว่างโหลดหรือไม่
+            hit = memory_limit_hit_since(events_baseline)
+            cause = " — the container hit its memory limit while loading (raise the memory limit)" if hit else ""
+            raise EngineStartError(f"engine process did not report hello within the configured timeout{cause}")
         epoch = f"ep-{uuid.uuid4().hex[:12]}-{(self.manifest.manifest_sha256 or '0' * 8)[:8]}"
         with self._lock:
             self._proc = proc
@@ -174,6 +226,7 @@ class EngineSupervisor:
             self.residency = hello.get("residency")
             self.last_heartbeat_monotonic = time.monotonic()
             self.exit_evidence = None
+            self._oom_baseline = oom_baseline
             self._bump()
         reader = threading.Thread(target=self._reader_loop, args=(parent_conn, proc, epoch), name="voice-worker-engine-reader", daemon=True)
         self._reader = reader
@@ -235,6 +288,8 @@ class EngineSupervisor:
                 "intentional": intentional,
                 "runtime_epoch": epoch,
                 "vram_reclaimed": None,
+                # D13: True = kernel OOM killer ยืนยันจาก cgroup · None = วัดไม่ได้ (ไม่ใช่ Linux cgroup v2)
+                "oom_killed": None if intentional else oom_killed_since(self._oom_baseline),
                 "observed_at": iso(utc_now()),
             }
             if self.epoch == epoch:
@@ -329,4 +384,4 @@ class EngineSupervisor:
             reader.join(5.0)
 
 
-__all__ = ["EngineDied", "EngineStartError", "EngineSupervisor"]
+__all__ = ["EngineDied", "EngineStartError", "EngineSupervisor", "cgroup_memory_events", "cgroup_oom_kills", "memory_limit_hit_since", "oom_killed_since"]

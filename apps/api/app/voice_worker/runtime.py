@@ -334,6 +334,9 @@ class WorkerRuntime:
             self.capacity.release()
 
     async def _engine_lost(self, issuer: str, attempt_id: str, epoch: str | None, evidence: dict[str, Any], *, code: str, message: str) -> None:
+        if evidence.get("oom_killed") is True:
+            # D13: cgroup ยืนยันว่า kernel OOM killer ฆ่า engine → รายงานเป็น OOM (PRP ต้องขยายเพดาน ไม่ใช่ไล่หาบั๊ก)
+            code, message = "RUNTIME_OOM", f"{message}: killed by the out-of-memory killer"
         exited = bool(evidence.get("exited"))
         self._finish_failed(issuer, attempt_id, code, message, evidence, compute_stopped=True if exited else None, safe_to_retry=exited)
         await self._restart_engine(epoch, evidence, exclude=(issuer, attempt_id))

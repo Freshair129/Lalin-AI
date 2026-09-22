@@ -1,22 +1,22 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T12:58:08+07:00",
+  "generated_at": "2026-09-22T13:27:32+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 418,
-    "total_edges": 547,
+    "total_nodes": 420,
+    "total_edges": 549,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
     "coverage": {
       "requirements_with_code_annotations": "69% (29/42)",
       "requirements_with_tests": "23% (10/42)",
-      "code_files_referenced_by_docs": "6% (7/106)",
-      "code_files_with_tests": "15% (16/106)",
+      "code_files_referenced_by_docs": "8% (9/108)",
+      "code_files_with_tests": "14% (16/108)",
       "structured_annotations_found": 202,
       "unstructured_req_refs_found": 124
     }
@@ -1177,12 +1177,28 @@
       "last_verified": "2026-09-22T11:48:50+07:00"
     },
     {
+      "id": "code:tools/verify/voice_worker_capcheck.py",
+      "type": "code_file",
+      "path": "tools/verify/voice_worker_capcheck.py",
+      "hash": "e055ca69c51d",
+      "status": "current",
+      "last_verified": "2026-09-22T13:27:32+07:00"
+    },
+    {
       "id": "code:tools/verify/voice_worker_eval_clips.py",
       "type": "code_file",
       "path": "tools/verify/voice_worker_eval_clips.py",
       "hash": "02ea41d63b64",
       "status": "current",
       "last_verified": "2026-09-21T09:25:29+07:00"
+    },
+    {
+      "id": "code:tools/verify/voice_worker_sizing.py",
+      "type": "code_file",
+      "path": "tools/verify/voice_worker_sizing.py",
+      "hash": "a255d7a1f68a",
+      "status": "current",
+      "last_verified": "2026-09-22T13:27:32+07:00"
     },
     {
       "id": "code:tools/verify/voice_worker_soak.py",
@@ -1257,10 +1273,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "78bdacee89de",
-      "prev_hash": "78bdacee89de",
+      "hash": "f32d2a9bdc24",
+      "prev_hash": "f32d2a9bdc24",
       "status": "current",
-      "last_verified": "2026-09-22T11:49:03+07:00"
+      "last_verified": "2026-09-22T13:27:32+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1297,10 +1313,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
-      "hash": "e7dec66aef21",
-      "prev_hash": "e7dec66aef21",
+      "hash": "04c1e6f9d673",
+      "prev_hash": "04c1e6f9d673",
       "status": "current",
-      "last_verified": "2026-09-22T12:58:08+07:00"
+      "last_verified": "2026-09-22T13:27:32+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -5164,6 +5180,20 @@
     {
       "from": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
       "to": "code:tools/verify/smoke_voice_worker.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
+      "to": "code:tools/verify/voice_worker_capcheck.py",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
+      "to": "code:tools/verify/voice_worker_sizing.py",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

@@ -35,7 +35,7 @@ RUN pip install --only-binary=:all: -r requirements-speech-asr-linux-cpu.lock.tx
 COPY apps/api/app ./app
 COPY apps/api/profiles ./profiles
 COPY packages/contracts/schemas /repo/packages/contracts/schemas
-COPY tools/verify/voice_worker_client.py tools/verify/smoke_voice_worker.py /repo/tools/verify/
+COPY tools/verify/voice_worker_client.py tools/verify/smoke_voice_worker.py tools/verify/voice_worker_sizing.py tools/verify/voice_worker_capcheck.py /repo/tools/verify/
 
 FROM base AS test
 COPY apps/api/tests/__init__.py ./tests/__init__.py
