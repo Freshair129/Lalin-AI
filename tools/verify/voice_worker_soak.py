@@ -249,10 +249,33 @@ def summarize(rows: list[dict], started: float) -> dict:
         "engine_private_mib_last": rows[-1]["engine_private_mib"] if rows else None,
         "engine_private_mib_max": max((r["engine_private_mib"] or 0) for r in rows) if rows else None,
         "second_half_slope_mib_per_iter": round(slope([x for x, _ in series], [y for _, y in series]), 3),
+        # least-squares ถูกจุดตกชั่วคราวหลอกได้ (Windows trim working set / heap คืนแล้วโตใหม่) — เคยให้ +0.113 กับชุดที่แบนจริง
+        # จึงรายงาน median ต่อหน้าต่างด้วย และใช้ค่านี้ตัดสินเรื่อง leak
+        "window_median_mib": window_medians(rows),
+        "robust_growth_mib_per_iter": robust_growth(rows),
         "gpu_used_mib_first": rows[0]["gpu_used_mib"] if rows else None,
         "gpu_used_mib_last": rows[-1]["gpu_used_mib"] if rows else None,
         "wall_seconds": round(time.time() - started, 1),
     }
+
+
+def window_medians(rows: list[dict], width: int = 50) -> list[float]:
+    values = [(r["i"], r["engine_private_mib"]) for r in rows if r["engine_private_mib"] is not None]
+    out = []
+    for start in range(0, len(values), width):
+        chunk = sorted(v for _, v in values[start:start + width])
+        if len(chunk) >= width // 2:
+            out.append(round(chunk[len(chunk) // 2], 1))
+    return out
+
+
+def robust_growth(rows: list[dict], width: int = 50) -> float | None:
+    """(median ของหน้าต่างสุดท้าย − median ของหน้าต่างที่ 2) / จำนวน request ระหว่างนั้น
+    ข้ามหน้าต่างแรกเพราะมีการจองครั้งเดียวตอนเริ่ม · None ถ้าข้อมูลไม่พอ 3 หน้าต่าง"""
+    medians = window_medians(rows, width)
+    if len(medians) < 3:
+        return None
+    return round((medians[-1] - medians[1]) / (width * (len(medians) - 2)), 4)
 
 
 def write_results(out: Path, summary: dict, rows: list[dict], *, final: bool) -> None:

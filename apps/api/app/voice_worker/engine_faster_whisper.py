@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import glob
 import os
+import queue
 import sys
 import threading
 import time
@@ -252,7 +253,49 @@ class _Engine:
         }
 
 
-def _execute(conn: Any, engine: _Engine, message: dict[str, Any], opts: dict[str, Any]) -> bool:
+class _JobRunner:
+    """thread เดียวที่อยู่ตลอดอายุ engine — การเรียก CTranslate2 ทุกครั้ง (warm-up และทุก job) วิ่งบน thread นี้
+
+    เหตุผล (วัด 2026-09-22): เดิมสร้าง thread ใหม่ทุก job และ CTranslate2 จอง host memory ต่อ thread ที่เรียกมัน
+    แล้วไม่คืนเมื่อ thread จบ → +0.122 MiB/call เมื่อสร้าง thread ใหม่ทุกครั้ง เทียบกับ +0.006 MiB/call บน thread เดิม
+    ซึ่งตรงกับ soak ผ่าน worker (+0.135 MiB/request, 1,700 request, ไม่นิ่งลง) · อีกเหตุผล: warm-up ต้องอุ่น thread เดียวกับ
+    ที่รับงานจริง ถ้า workspace ของ CTranslate2 แยกตาม thread การอุ่นอีก thread จะไม่มีผล
+    max_concurrency = 1 อยู่แล้ว จึงไม่เสีย parallelism
+    """
+
+    def __init__(self) -> None:
+        self._jobs: queue.Queue = queue.Queue()
+        self._thread = threading.Thread(target=self._loop, name="faster-whisper-runner", daemon=True)
+        self._thread.start()
+
+    def _loop(self) -> None:
+        while True:
+            fn, done, box = self._jobs.get()
+            if fn is None:
+                return
+            try:
+                box["value"] = fn()
+            except BaseException as exc:  # noqa: BLE001 — ส่งกลับให้ caller จัดการ ไม่ให้ runner ตาย
+                box["error"] = exc
+            finally:
+                done.set()
+
+    def submit(self, fn: Any) -> tuple[threading.Event, dict[str, Any]]:
+        done: threading.Event = threading.Event()
+        box: dict[str, Any] = {}
+        self._jobs.put((fn, done, box))
+        return done, box
+
+    @property
+    def ident(self) -> int | None:
+        return self._thread.ident
+
+    def stop(self, timeout: float = 5.0) -> None:
+        self._jobs.put((None, None, None))
+        self._thread.join(timeout)
+
+
+def _execute(conn: Any, engine: _Engine, message: dict[str, Any], opts: dict[str, Any], runner: _JobRunner) -> bool:
     """ทำงานหนึ่งชิ้นใน thread; main loop ส่ง heartbeat + รับ cancel/shutdown; คืน False เมื่อ shutdown."""
     request_id = message["request_id"]
     budget = float(message.get("budget_seconds") or 0.0)
@@ -268,19 +311,11 @@ def _execute(conn: Any, engine: _Engine, message: dict[str, Any], opts: dict[str
                      "usage": None, "stop_evidence": {"kind": "engine_returned", "observed_at": _now_iso()}})
         return True
 
-    def run() -> None:
-        try:
-            box.update(engine.transcribe(payload, cancel, deadline))
-        except Exception as exc:  # noqa: BLE001 — กัน thread ตายเงียบ
-            box.update({"outcome": "FAILED", "error": {"code": classify_engine_error(exc, stage="thread"),
-                                                       "message": f"engine thread crashed: {type(exc).__name__}"}})
-
-    worker = threading.Thread(target=run, name="faster-whisper-job", daemon=True)
     _send(conn, {"op": "started", "request_id": request_id, "observed_at": _now_iso()})
-    worker.start()
+    done, job = runner.submit(lambda: engine.transcribe(payload, cancel, deadline))
     heartbeat = float(opts["heartbeat_seconds"])
     shutdown = False
-    while worker.is_alive():
+    while not done.is_set():
         try:
             if conn.poll(heartbeat):
                 incoming = conn.recv()
@@ -292,10 +327,16 @@ def _execute(conn: Any, engine: _Engine, message: dict[str, Any], opts: dict[str
                 continue
         except (EOFError, OSError):
             cancel.set()
-            worker.join(5.0)
+            done.wait(5.0)
             return False
         _send(conn, {"op": "heartbeat", "busy": True, "observed_at": _now_iso(), "residency": engine.residency(busy=True)})
-    worker.join()
+
+    if "error" in job:  # exception ที่หลุดจาก transcribe — จัดการเหมือนเดิม (เดิมอยู่ใน run() ของ thread ต่อ job)
+        exc = job["error"]
+        box.update({"outcome": "FAILED", "error": {"code": classify_engine_error(exc, stage="thread"),
+                                                   "message": f"engine thread crashed: {type(exc).__name__}"}})
+    else:
+        box.update(job.get("value") or {})
 
     outcome = box.get("outcome", "FAILED")
     if shutdown and outcome != "SUCCEEDED":
@@ -335,12 +376,11 @@ def serve(conn: Any, options: dict[str, Any] | None = None) -> None:
     }):
         return
     heartbeat = float(opts["heartbeat_seconds"])
+    runner = _JobRunner()  # thread เดียวตลอดอายุ engine: warm-up + ทุก job (กัน per-thread leak ของ CTranslate2)
     if opts.get("warmup", True):
-        # warm-up ใน thread; main loop ส่ง heartbeat busy=True ต่อเนื่อง (CUDA JIT รอบแรกอาจนาน ~20 s)
-        warm = threading.Thread(target=engine.warmup, name="faster-whisper-warmup", daemon=True)
-        warm.start()
-        while warm.is_alive():
-            warm.join(heartbeat)
+        # warm-up บน runner; main loop ส่ง heartbeat busy=True ต่อเนื่อง (CUDA JIT รอบแรกอาจนาน ~20 s)
+        warm_done, _ = runner.submit(engine.warmup)  # อุ่นบน thread เดียวกับที่รับงานจริง
+        while not warm_done.wait(heartbeat):
             if not _send(conn, {"op": "heartbeat", "busy": True, "observed_at": _now_iso(), "residency": engine.residency(busy=True)}):
                 return
     while True:
@@ -357,7 +397,7 @@ def serve(conn: Any, options: dict[str, Any] | None = None) -> None:
         if op == "shutdown":
             return
         if op == "execute":
-            if not _execute(conn, engine, message, opts):
+            if not _execute(conn, engine, message, opts, runner):
                 return
 
 

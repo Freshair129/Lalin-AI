@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-09-22T12:30:00+07:00,LALIN,6508cec"
-last_update: "2026-09-22T12:30:00+07:00,LALIN"
+last_update: "2026-09-22T14:30:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -28,7 +28,8 @@ for `python:3.11-slim` (Docker Hub) and the Linux wheels (PyPI). Baseline `6508c
 | Runtime image user | **uid 10001 (`worker`)**, not root |
 | Worker over a Unix domain socket (§3) | **PASS** — `/health/live` 200, describe without token 401, with token 200, **no TCP listener** |
 | Windows regression (same commit) | speech venv **124 passed** · full `apps/api` **190 passed, 1 skipped** · `schema --check` in sync |
-| CPU sizing on the Linux host · D13 memory/CPU caps · long soak verdict | **NOT_RUN in this step** (§5) |
+| **Engine memory leak** (§6) | **FOUND AND FIXED** — the engine spawned a thread per job and CUDA-backed CTranslate2 kept ~0.12 MiB of host memory per thread. Robust growth (median per 50-request window, requests 50–299): **+0.106 → +0.014 MiB/request** on the same GPU config. The production CPU path shows no per-thread leak |
+| CPU sizing on the Linux host · D13 memory/CPU caps | **NOT_RUN** (§5) — needs a quiet machine |
 
 ## 1. What was built
 
@@ -88,13 +89,56 @@ Docker network.
    finishes, so the numbers are not skewed by it; this replaces the 28-thread dev-box figure behind D10.
 2. **D13 OS caps** — run with `--memory` / `--cpus` limits and confirm the worker fails safely at the cap
    (engine death → attempt reported with evidence → new epoch), now that Linux makes these caps available.
-3. **Long soak verdict** — 2,000 requests in progress; at 1,139 the engine had grown +146 MiB (~0.13 MiB/request,
-   not yet flattening). Decides whether a restart policy is needed.
+3. ~~Long soak verdict~~ **resolved in §6**: a real leak, found and fixed; no restart policy needed for it.
 4. **D17** — owner decision (§3).
 5. Worker-only requirements to cut the image size (§4).
+
+## 6. Engine memory leak — found and fixed (2026-09-22)
+
+**Symptom.** The 2,000-request soak through the real worker (GPU dev config) grew the engine's private memory in a
+straight line: every 250-request window added 0.11–0.17 MiB/request, +230 MiB over 1,700 requests, one engine PID, no
+restarts. An earlier in-process test calling `transcribe` from one thread had shown only ~0.02 MiB/call.
+
+**Cause.** `_execute` started a new `threading.Thread` for every job. Measured in isolation (turbo, `cuda int8_float16`,
+150 calls per mode):
+
+| Mode | Growth per call | Released afterwards? |
+|---|---|---|
+| same thread | +0.006 MiB | — |
+| **new thread every call** | **+0.122 MiB** | **no** (stayed after returning to one thread) |
+| same thread again | −0.002 MiB | — |
+
+On the production **CPU** path (`int8`, 60 calls per mode) a new thread per call grew −0.003 MiB/call, so the per-thread
+leak is CUDA-specific and D10's CPU deployment was not affected.
+
+**Fix.** `_JobRunner`: one thread for the engine's whole life. Warm-up and every job run on it, which also makes warm-up
+warm the thread that actually serves requests. `max_concurrency` is 1, so nothing is lost. A structural test drives the
+real `_execute` over a real pipe and requires one thread across warm-up and 8 jobs with no thread growth;
+**mutation check:** a thread-per-job version fails it ("called from 9 threads").
+
+**Verified end to end** with a 300-request soak on the same GPU config, compared request-for-request with the first
+300 of the leaking run. Median private memory per 50-request window:
+
+| Run | Windows (0–49 … 250–299) | Growth, requests 50–299 |
+|---|---|---|
+| before (thread per job) | 3085 · 3094 · 3097 · 3103 · 3111 · 3115 | **+0.106 MiB/request** |
+| after (one runner thread) | 3078 · 3087 · 3088 · 3088 · 3089 · 3089 | **+0.014 MiB/request** |
+
+**A measurement trap worth recording.** The least-squares slope for the fixed run came out at +0.113 MiB/request, the
+same as before, because transient dips (2985 MiB at request 1, 3053 at request 50: Windows trimming the working set or
+the heap releasing and regrowing) tilt a regression line that starts on one. The series is flat from request 100 to
+299. The soak tool now also reports median per window and `robust_growth_mib_per_iter`, which is what decides a leak.
+
+**Other notes from the same runs**
+- The first long soak was stopped at 1,750 requests once its verdict was clear (it ran the old code; its checkpoint is kept).
+- Its latency figures are **not usable**: processing time rose from 4.7 s to 16.4 s for a 60 s clip, but the machine was
+  shared with container builds and test runs and, near the end, a game using the GPU. Memory is per-process and unaffected.
+- The engine holds **~4.0 GB of RAM on CPU** (weights live in host memory) versus ~3.1 GB on GPU; this is an input to the
+  Linux host sizing still to be done.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-09-22 | beta | Engine memory leak found (thread per job, CUDA-specific) and fixed with one runner thread: +0.106 -> +0.014 MiB/request; soak tool gains median-window growth after least-squares nearly misread the fixed run | based on 53d77fb | LALIN |
 | 0.1.0b | 2026-09-22 | beta | Slice C step 1: Linux CPU container, 124 tests and smoke pass inside it; fixed whole-file asset hashing, the broken Unix-socket route and a world-readable data dir; D17 raised | based on 6508cec | LALIN |
