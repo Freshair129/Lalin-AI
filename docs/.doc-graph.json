@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T21:54:32+07:00",
+  "generated_at": "2026-09-22T22:06:40+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -628,9 +628,9 @@
       "id": "code:apps/api/app/voice_worker/engine_f5.py",
       "type": "code_file",
       "path": "apps/api/app/voice_worker/engine_f5.py",
-      "hash": "940fbe6322a1",
+      "hash": "ff4fc49e8965",
       "status": "current",
-      "last_verified": "2026-09-22T21:54:29+07:00"
+      "last_verified": "2026-09-22T22:06:39+07:00"
     },
     {
       "id": "code:apps/api/app/voice_worker/profile.py",
@@ -1329,10 +1329,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS",
-      "hash": "e5427871318b",
-      "prev_hash": "e5427871318b",
+      "hash": "c79412e107d1",
+      "prev_hash": "c79412e107d1",
       "status": "current",
-      "last_verified": "2026-09-22T21:54:32+07:00"
+      "last_verified": "2026-09-22T22:06:40+07:00"
     },
     {
       "id": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",

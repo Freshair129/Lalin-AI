@@ -1,5 +1,5 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-09-22T23:59:00+07:00,LALIN,90971c8"
 last_update: "2026-09-22T23:59:00+07:00,LALIN"
 status: "beta"
@@ -25,7 +25,8 @@ sample for now" for the preset. Baseline `90971c8`.
 | Tests | `.venv-tts` **168 passed** (real engine included) · `.venv-speech` **166 passed, 2 skipped** (no torch there) · `apps/api` 231 passed, 3 skipped · schema in sync; mutation checks on the voice-asset pin and the Thai chunker |
 | Intelligibility (ASR round trip with large-v3-turbo, CER includes ASR error) | GPU: 0.098 (short), 0.106 (long), 0.147 (worker smoke sentence); CPU: 0.098, 0.194 |
 | **D19 TTS device** | **measured, owner decision open** (§3) |
-| Linux container for TTS | **NOT_RUN** (§5) |
+| Reference preparation (§4.1) | **FIXED**: pooled round-trip CER 0.137 → **0.097** (4 texts × 3 seeds), clipped first syllables gone |
+| Linux container for TTS | **BLOCKED** on host disk (§5) |
 | Production voice preset | **BLOCKED on a recording**: the shipped preset is the model repo's sample, `rights_status: dev-only` |
 
 ## 1. What was built
@@ -61,11 +62,29 @@ On CPU the 60 s maximum output would take roughly 7 minutes; on GPU about 12 s. 
 when vLLM runs, and the Linux container needs GPU passthrough (§5). The shipped manifest uses `cuda:0` pending the
 decision.
 
-## 4. Known quality limits (not blocking the slice)
+## 4. Quality
 
-- The first syllable can be clipped ("สวัสดี" heard as "วัสดี").
-- The tail of the reference text can leak into the start of the output: the CPU long run began with "สบาย", from the end
-  of "…เย็นสบาย". A known F5 artifact.
+### 4.1 Reference preparation — fixed (2026-09-22)
+
+The first engine skipped f5-tts's `preprocess_ref_audio_text`. Restored without pydub: the reference text must end
+with ". " (a sentence boundary between the reference and the new text), silence is trimmed from both edges of the
+reference audio (−42 dBFS, 10 ms steps) and 50 ms of silence appended, and a reference over 12 s is **refused at boot**
+instead of being clipped silently.
+
+A/B, same GPU, seeds 1–3, 4 texts, ASR round trip ([`ab.py`/`ab_score.py`](../../apps/api/runtime/eval/tts/), not committed):
+
+| | Pooled CER | First syllable |
+|---|---|---|
+| before | 0.137 | lost in all 3 runs of "สวัสดี…", "กรุณา…" and "ขอบคุณครับ" |
+| **after** | **0.097** | intact in all 9 of those runs |
+
+The meeting sentence got slightly worse in 2 of 3 runs; part of it is the ASR writing "สิบห้า" as "15", which the
+character comparison counts as errors. Mutation check: removing the ". " boundary fails its test.
+
+### 4.2 Remaining limits
+
+- The reference text leak ("สบาย" from "…เย็นสบาย") was seen before the fix; not seen in the 12 runs after it, but not
+  proven gone.
 - Names and loanwords are weaker ("ลลิน" → "ลิน", "เวิร์กเกอร์" → "เวอร์เกอร์"); the model card advises writing
   English in Thai spelling.
 - Output differs between runs unless `engine_options.seed` is set (D16 applies to TTS as well).
@@ -74,12 +93,16 @@ decision.
 
 1. **D19** owner decision (§3).
 2. **Production voice** (§2).
-3. **Linux container for TTS**: GPU passthrough on the PRP host, a CUDA torch in the image (large), and `encodec` has no
-   wheel (the image builds with `--only-binary`). Not attempted in this step.
+3. **Linux container for TTS — BLOCKED on the host disk.** Docker Desktop keeps its data in `docker_data.vhdx` (142 GB)
+   on **C:, which has ~1.7 GB free**. A CUDA torch image adds several GB to that file, and filling C: can take Docker and
+   WSL down together with the running PRP/Zuri stacks. Needs the owner to move Docker's disk image to F: (Docker Desktop →
+   Settings → Resources → Advanced → Disk image location) or to free space on C:. The `encodec` problem is solved: it is
+   no longer installed (stubbed), so the image can build with `--only-binary`.
 4. Studio quality comparison (MOS/listening), mp3 output, `remove_silence` post-processing: not in scope.
 
 ## CHANGELOG
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-09-22 | beta | Reference preparation restored (CER 0.137 → 0.097); encodec dropped; container blocked on C: disk | based on 6b6b54a | LALIN |
 | 0.1.0b | 2026-09-22 | beta | F5-TTS engine, manifest, smoke and tests; D19 measured; dev-only voice | based on 90971c8 | LALIN |

@@ -8,7 +8,7 @@
 - ``f5_tts.model`` import ``Trainer`` ตอน import package (→ wandb, accelerate, datasets) และ ``utils_infer`` import
   matplotlib, transformers, pydub ที่ top level — worker ห้ามพก stack ฝึกโมเดล/ASR/network client ที่ไม่ได้ใช้
 - ``load_vocoder``/``F5TTS`` จะดาวน์โหลดจาก HF ถ้าไม่ได้ส่ง path — worker ต้องโหลดจาก asset ที่ pin เท่านั้น
-จึงใส่ stub ของ ``f5_tts.model.trainer`` (และ ``librosa`` ถ้าไม่ได้ติดตั้ง — ใช้เฉพาะ mel แบบ bigvgan ซึ่งเราไม่ใช้)
+จึงใส่ stub ของ ``f5_tts.model.trainer`` (และ ``librosa``/``encodec`` ถ้าไม่ได้ติดตั้ง — ใช้เฉพาะ mel แบบ bigvgan / feature แบบ encodec ซึ่งเราไม่ใช้)
 แล้วทำ loop เดียวกับ ``infer_batch_process`` ของ f5-tts 1.1.22 (non-streaming) เอง: แบ่งข้อความ → sample → vocos → cross-fade
 ข้อดีเพิ่ม: เช็ก cancel/deadline ได้ระหว่างก้อนข้อความ
 
@@ -48,6 +48,9 @@ WIN = 1024
 N_FFT = 1024
 TARGET_RMS = 0.1
 MAX_CHUNK_SECONDS = 22.0  # ตามสูตรเดิมของ infer_process: ref + gen ต่อก้อน ≤ ~22 s
+MAX_REF_SECONDS = 12.0  # preprocess_ref_audio_text ตัดเสียงต้นแบบที่ 12 s — worker ปฏิเสธแทนการตัดเงียบ ๆ (preset ต้องแก้ที่ต้นทาง)
+REF_SILENCE_DBFS = -42.0  # remove_silence_edges ของ f5-tts (pydub, ช่วง 10 ms)
+REF_TAIL_PAD_SECONDS = 0.05
 
 _DEFAULTS: dict[str, Any] = {
     "device": "cpu",
@@ -69,6 +72,14 @@ def _install_import_stubs() -> None:
         trainer = types.ModuleType("f5_tts.model.trainer")
         trainer.Trainer = None  # type: ignore[attr-defined]
         sys.modules["f5_tts.model.trainer"] = trainer
+    try:
+        import encodec  # noqa: F401
+    except ImportError:
+        # vocos import EncodecModel ที่ top level แต่ใช้เฉพาะ feature extractor แบบ encodec — เราใช้ mel
+        # encodec 0.1.1 ไม่มี wheel (build จาก sdist) จึงไม่ติดตั้งใน worker
+        encodec = types.ModuleType("encodec")
+        encodec.EncodecModel = None  # type: ignore[attr-defined]
+        sys.modules["encodec"] = encodec
     try:
         import librosa  # noqa: F401
     except ImportError:
@@ -105,6 +116,31 @@ def chunk_text(text: str, max_chars: int) -> list[str]:
     if current.strip():
         chunks.append(current.strip())
     return chunks
+
+
+def prepare_ref_text(ref_text: str) -> str:
+    """เหมือน ``preprocess_ref_audio_text`` (1.1.22): ข้อความต้นแบบต้องจบด้วย ". " — เป็นเส้นแบ่งประโยคระหว่างเสียงต้นแบบ
+    กับข้อความใหม่ (วัด 2026-09-22: ไม่มีเส้นแบ่งนี้ ท้ายข้อความต้นแบบหลุดมาต้นเสียงใหม่ และพยางค์แรกหาย)"""
+    text = ref_text.strip()
+    if text.endswith("。"):
+        return text
+    return text + " " if text.endswith(".") else text + ". "
+
+
+def trim_silence_edges(samples: Any, sample_rate: int, threshold_dbfs: float = REF_SILENCE_DBFS) -> Any:
+    """``remove_silence_edges`` ของ f5-tts โดยไม่ใช้ pydub: ตัดช่วงต้น/ท้ายที่ทุกช่วง 10 ms เบากว่า ``threshold_dbfs``"""
+    import numpy as np
+
+    step = max(1, int(sample_rate * 0.01))
+    frames = len(samples) // step
+    if frames == 0:
+        return samples
+    blocks = samples[: frames * step].reshape(frames, step)
+    rms = np.sqrt(np.mean(np.square(blocks, dtype=np.float64), axis=1))
+    loud = np.nonzero(20 * np.log10(np.maximum(rms, 1e-12)) >= threshold_dbfs)[0]
+    if loud.size == 0:
+        return samples
+    return samples[loud[0] * step: (loud[-1] + 1) * step]
 
 
 def classify_engine_error(exc: BaseException) -> str:
@@ -197,7 +233,12 @@ class _Engine:
 
         torch = self.torch
         data, sr = sf.read(path, dtype="float32", always_2d=True)
-        audio = torch.from_numpy(np.ascontiguousarray(data.T)).mean(dim=0, keepdim=True)
+        mono = data.mean(axis=1)
+        if len(mono) / sr > MAX_REF_SECONDS:
+            raise ValueError(f"reference audio longer than {MAX_REF_SECONDS:.0f} s")
+        mono = trim_silence_edges(mono, sr)
+        mono = np.concatenate([mono, np.zeros(int(sr * REF_TAIL_PAD_SECONDS), dtype=mono.dtype)])
+        audio = torch.from_numpy(np.ascontiguousarray(mono)).unsqueeze(0)
         rms = float(torch.sqrt(torch.mean(torch.square(audio))))
         if rms < TARGET_RMS:
             audio = audio * TARGET_RMS / max(rms, 1e-8)
@@ -272,8 +313,7 @@ class _Engine:
             ref_audio, ref_rms = self._ref(str(ref_path))
         except Exception as exc:  # noqa: BLE001
             return {"outcome": "FAILED", "error": {"code": classify_engine_error(exc), "message": f"reference audio failed: {type(exc).__name__}"}}
-        if len(ref_text[-1].encode("utf-8")) == 1:
-            ref_text = ref_text + " "
+        ref_text = prepare_ref_text(ref_text)
         ref_seconds = ref_audio.shape[-1] / SAMPLE_RATE
         max_chars = int(len(ref_text.encode("utf-8")) / ref_seconds * (MAX_CHUNK_SECONDS - ref_seconds) * speed)
         chunks = chunk_text(text, max(max_chars, 16))
@@ -409,4 +449,4 @@ def serve(conn: Any, options: dict[str, Any] | None = None) -> None:
                 return
 
 
-__all__ = ["ENGINE_NAME", "F5TTS_BASE_ARCH", "chunk_text", "classify_engine_error", "serve"]
+__all__ = ["ENGINE_NAME", "F5TTS_BASE_ARCH", "chunk_text", "classify_engine_error", "prepare_ref_text", "serve", "trim_silence_edges"]

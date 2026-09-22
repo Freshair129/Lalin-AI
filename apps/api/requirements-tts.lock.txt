@@ -7,7 +7,7 @@
 #   uv pip install --python .venv-tts/Scripts/python.exe --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu128 -r requirements-tts.lock.txt
 # f5-tts is installed WITHOUT its declared deps (gradio, wandb, datasets, accelerate, transformers, bitsandbytes, ...):
 # the engine imports only the model/sampler and stubs the training module (app/voice_worker/engine_f5.py).
-# encodec 0.1.1 has no wheel (built from sdist); vocos needs it at import.
+# encodec (no wheel, sdist only) is NOT installed: vocos imports it at top level, the engine stubs it (mel features only).
 
 annotated-types==0.8.0
 anyio==4.15.1
@@ -19,7 +19,6 @@ colorama==0.4.6
 ctranslate2==4.8.2
 einops==0.8.2
 einx==0.4.3
-encodec==0.1.1
 fastapi==0.115.6
 faster-whisper==1.2.1
 filelock==4.0.1

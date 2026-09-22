@@ -121,3 +121,39 @@ def test_synthesizes_thai_to_a_valid_wav(f5_worker):
     assert got.status_code == 200 and hashlib.sha256(got.content).hexdigest() == result["sha256"]
     with wave.open(__import__("io").BytesIO(got.content)) as handle:
         assert handle.getsampwidth() == 2 and handle.getnframes() > 0
+
+
+# ── reference preparation (A/B 2026-09-22: pooled round-trip CER 0.137 → 0.097, first syllables no longer clipped) ──
+@pytest.mark.parametrize("raw, expected", [
+    ("ฉันไปเชียงใหม่", "ฉันไปเชียงใหม่. "),
+    ("Hello there.", "Hello there. "),
+    ("  ข้อความ  ", "ข้อความ. "),
+    ("中文。", "中文。"),
+])
+def test_reference_text_gets_a_sentence_boundary(raw, expected):
+    from app.voice_worker.engine_f5 import prepare_ref_text
+
+    assert prepare_ref_text(raw) == expected
+
+
+def test_reference_silence_is_trimmed_from_both_edges():
+    import numpy as np
+
+    from app.voice_worker.engine_f5 import trim_silence_edges
+
+    sr = 24000
+    tone = 0.3 * np.sin(np.linspace(0, 2 * np.pi * 440, sr // 2)).astype(np.float32)
+    padded = np.concatenate([np.zeros(sr, np.float32), tone, np.zeros(sr, np.float32)])
+    trimmed = trim_silence_edges(padded, sr)
+    assert abs(len(trimmed) - len(tone)) <= sr // 100 * 2  # ภายในสองช่วง 10 ms
+    assert len(trim_silence_edges(np.zeros(sr, np.float32), sr)) == sr, "all-silent input is returned unchanged"
+
+
+def test_worker_does_not_need_encodec():
+    """encodec ไม่มี wheel — engine ต้อง import vocos ได้ด้วย stub (ติดตั้งแบบ --only-binary ได้)"""
+    import sys
+
+    from app.voice_worker.engine_f5 import _install_import_stubs
+
+    _install_import_stubs()
+    assert "encodec" in sys.modules
