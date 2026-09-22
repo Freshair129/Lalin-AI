@@ -1,5 +1,5 @@
 {
-  "_comment": "Slice B TTS profile: F5-TTS-THAI (VIZINTZOR, commit af023c7) + vocos-mel-24khz, loaded offline from pinned assets. D9 approved by the owner 2026-09-22. device cuda:0 follows the D19 measurement (GPU RTF 0.19-0.44 vs CPU 7-14 on the dev box); D19 itself is still the owner's decision.",
+  "_comment": "Slice B TTS profile: F5-TTS-THAI (VIZINTZOR, commit af023c7) + vocos-mel-24khz, loaded offline from pinned assets. D9 approved by the owner 2026-09-22. device cuda:0 per D19, decided by the owner 2026-09-22 (GPU RTF 0.19-0.44 vs CPU 7-14 on the dev box).",
   "profile_id": "tts-th-preset-01",
   "profile_revision": "rev-2026-09-22-f5-thai-1m-dev-voice",
   "kind": "tts",

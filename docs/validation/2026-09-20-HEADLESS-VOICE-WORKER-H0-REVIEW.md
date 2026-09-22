@@ -1,5 +1,5 @@
 ---
-version: "0.1.12c"
+version: "0.1.13c"
 created_at: "2026-09-20T21:45:00+07:00,LALIN,8429010"
 last_update: "2026-09-22T20:00:00+07:00,LALIN"
 status: "candidate"
@@ -239,7 +239,7 @@ No Must is silently narrowed: DEFER rows stay **BLOCKED** until their owner deci
 | D17 | Coordinator ↔ containerized worker connectivity | Worker binds loopback or a Unix socket only (`0.0.0.0` → exit 2, verified in the container), so it cannot be reached over a plain Docker network. Options: **(a) Unix socket on a shared volume** `unix:/run/voice-worker/worker.sock` (dir 0750, shared group) — **tested, recommended**; (b) shared network namespace — untested; (c) TLS reverse-proxy sidecar — new surface, needs review; (d) relax loopback rule — not recommended. [Slice C §3](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md) | PRP owner | C · **DECIDED 2026-09-22 by Fable 5.1 on the owner's delegation**: option (a) Unix socket on a shared volume (`/run/voice-worker`, 0750, shared group). Coordinator and worker share one host; cross-host (c) only as a separately reviewed change. **APPLIED 2026-09-22**: [runbook](../operations/VOICE_WORKER_LINUX_RUNBOOK.md) + `docker/voice-worker/compose.example.yaml`, verified with a group-gated coordinator stand-in (real ASR over the socket; no group → permission denied); client and smoke speak `unix:` |
 | D16 | Run-to-run output non-determinism (ASR) | Identical requests can return different text (3 of 4 clips, [proposal §4.1](2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md)). Options: (a) document it as a contract fact; (b) force deterministic decoding at a speed cost | PRP owner | C · **DECIDED 2026-09-22 by Fable 5.1 on the owner's delegation**: option (a) — same `attempt_id` returns the same receipt; a new attempt on the same audio may differ, so PRP must not use re-run-and-compare as verification. **APPLIED 2026-09-22**: API_SEMANTICS, ADR-005 §3.5, runbook §4–5 |
 | D18 | Repeated OOM kills | Under a too-small memory limit every request is OOM-killed and the engine reloads each time, while the worker keeps reporting ready. Options: (a) after N consecutive OOM kills with no success, report not-ready until an operator restarts; (b) the same with automatic back-off retry; (c) leave it to the coordinator (it sees `RUNTIME_OOM`). **Recommended: (a), N = 2.** [Slice C §8](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md) | PRP owner | C · **DECIDED 2026-09-22 by Fable 5.1 on the owner's delegation**: option (a), N = 2 — after 2 consecutive cgroup-confirmed OOM kills with no success between, report not-ready (`repeated_oom`) and stop respawning until an operator restarts. **APPLIED 2026-09-22**, proven against a real container OOM ([Slice C §9](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md)) |
-| D19 | TTS device (F5-TTS) | Measured 2026-09-22, same engine and texts: GPU fp16 RTF 0.19–0.44, ~0.86 GB VRAM; CPU 8 threads RTF 7.2–13.8 (a 60 s output ≈ 7 min). Options: (a) GPU `cuda:0`; (b) CPU as with ASR (D10). **Recommended: (a)**; TTS on CPU is not usable, the VRAM cost is under 1 GB. Trade-off: shares the GPU with the PRP LLM when vLLM runs; the Linux container needs GPU passthrough. [Slice B TTS §3](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md) | PRP owner | B (**proposed 2026-09-22**; manifest ships `cuda:0` pending) |
+| D19 | TTS device (F5-TTS) | Measured 2026-09-22, same engine and texts: GPU fp16 RTF 0.19–0.44, ~0.86 GB VRAM; CPU 8 threads RTF 7.2–13.8 (a 60 s output ≈ 7 min). Options: (a) GPU `cuda:0`; (b) CPU as with ASR (D10). **Recommended: (a)**; TTS on CPU is not usable, the VRAM cost is under 1 GB. Trade-off: shares the GPU with the PRP LLM when vLLM runs; the Linux container needs GPU passthrough. [Slice B TTS §3](2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md) | PRP owner | B · **DECIDED 2026-09-22 by the owner: (a) GPU** ("D19 ใช้ GPU"); `tts-th-preset-01` runs on `cuda:0` |
 
 ## 6. Implementation slices (proposed; nothing implemented)
 
@@ -317,6 +317,7 @@ No mock PASS is reported as GPU/quality evidence.
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
 | 0.1.1c | 2026-09-20 | candidate | Link Slice A stub implementation evidence after user approval of D1–D7 defaults | based on 8429010 | LALIN |
+| 0.1.13c | 2026-09-22 | candidate | D19 decided by the owner: TTS on GPU | based on f09fb2d | LALIN |
 | 0.1.12c | 2026-09-22 | candidate | TTS profile built (F5-TTS, dev-only voice); D19 raised with measurements | based on 90971c8 | LALIN |
 | 0.1.11c | 2026-09-22 | candidate | D9 approved by the owner (rights); TTS work unblocked, not started | based on e6b7be2 | LALIN |
 | 0.1.10c | 2026-09-22 | candidate | D16 and D17 applied | based on b4ffe94 | LALIN |

@@ -1,5 +1,5 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-09-22T23:59:00+07:00,LALIN,90971c8"
 last_update: "2026-09-22T23:59:00+07:00,LALIN"
 status: "beta"
@@ -24,7 +24,7 @@ sample for now" for the preset. Baseline `90971c8`.
 | Cross-platform smoke on `tts-th-preset-01` (Windows, GPU) | **PASS 12/12**: synthesis SUCCEEDED, output downloads with a sha256 matching the receipt, plausible duration, unknown voice refused before compute (`VOICE_NOT_APPROVED`), over-long text 422, erase, Studio isolation |
 | Tests | `.venv-tts` **168 passed** (real engine included) · `.venv-speech` **166 passed, 2 skipped** (no torch there) · `apps/api` 231 passed, 3 skipped · schema in sync; mutation checks on the voice-asset pin and the Thai chunker |
 | Intelligibility (ASR round trip with large-v3-turbo, CER includes ASR error) | GPU: 0.098 (short), 0.106 (long), 0.147 (worker smoke sentence); CPU: 0.098, 0.194 |
-| **D19 TTS device** | **measured, owner decision open** (§3) |
+| **D19 TTS device** | **DECIDED 2026-09-22 by the owner: GPU** (§3) |
 | Reference preparation (§4.1) | **FIXED**: pooled round-trip CER 0.137 → **0.097** (4 texts × 3 seeds), clipped first syllables gone |
 | Linux container for TTS | **BLOCKED** on host disk (§5) |
 | Production voice preset | **BLOCKED on a recording**: the shipped preset is the model repo's sample, `rights_status: dev-only` |
@@ -48,7 +48,7 @@ are unknown, so it is labelled **`dev-only`** and published as such in `describe
 does not make this recording a production voice. Before PRP use: a consented recording of 2–8 s (the model card's
 advice) with its exact transcript, pinned as a `voice.*` asset with `rights_status: approved`.
 
-## 3. D19 — TTS device (measured; owner decision)
+## 3. D19 — TTS device: **GPU** (owner decision 2026-09-22, "D19 ใช้ GPU")
 
 Same engine, same two texts, sample voice, dev box (RTX 5060 Ti, i7-14700KF), NFE 32:
 
@@ -59,8 +59,7 @@ Same engine, same two texts, sample voice, dev box (RTX 5060 Ti, i7-14700KF), NF
 
 On CPU the 60 s maximum output would take roughly 7 minutes; on GPU about 12 s. **Recommendation: GPU.** Unlike ASR
 (D10), TTS on CPU is not usable, and the VRAM cost is under 1 GB. Trade-off: TTS then shares the GPU with the PRP LLM
-when vLLM runs, and the Linux container needs GPU passthrough (§5). The shipped manifest uses `cuda:0` pending the
-decision.
+when vLLM runs, and the Linux container needs GPU passthrough (§5). The owner chose GPU; the shipped manifest uses `cuda:0`.
 
 ## 4. Quality
 
@@ -91,7 +90,7 @@ character comparison counts as errors. Mutation check: removing the ". " boundar
 
 ## 5. Open
 
-1. **D19** owner decision (§3).
+1. ~~D19~~ **decided: GPU** (§3).
 2. **Production voice** (§2).
 3. **Linux container for TTS — BLOCKED on the host disk.** Docker Desktop keeps its data in `docker_data.vhdx` (142 GB)
    on **C:, which has ~1.7 GB free**. A CUDA torch image adds several GB to that file, and filling C: can take Docker and
@@ -104,5 +103,6 @@ character comparison counts as errors. Mutation check: removing the ". " boundar
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-22 | beta | D19 decided by the owner: GPU | based on f09fb2d | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Reference preparation restored (CER 0.137 → 0.097); encodec dropped; container blocked on C: disk | based on 6b6b54a | LALIN |
 | 0.1.0b | 2026-09-22 | beta | F5-TTS engine, manifest, smoke and tests; D19 measured; dev-only voice | based on 90971c8 | LALIN |
