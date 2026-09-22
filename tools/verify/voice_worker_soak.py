@@ -146,6 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=8810)
     parser.add_argument("--python", default=str(api_dir / ".venv-speech" / "Scripts" / "python.exe"))
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--checkpoint-every", type=int, default=50, help="write partial results every N requests")
     args = parser.parse_args(argv)
     clips = sorted(args.clips.glob("*.wav"))
     if not clips:
@@ -215,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
                    "tree_private_mib": round(sum(m["private"] for m in mems.values()), 1),
                    "gpu_used_mib": gpu_used_mib(), "t": round(time.time() - started, 1)}
             rows.append(row)
+            if args.checkpoint_every > 0 and (i + 1) % args.checkpoint_every == 0:
+                write_results(args.out, summarize(rows, started), rows, final=False)
             print(f"{i:4d} {name:16s} {str(outcome):10s} {str(code or ''):14s} "
                   f"engine_pid={engine_pid} private={row['engine_private_mib']} ws={row['engine_working_set_mib']} "
                   f"gpu={row['gpu_used_mib']}", flush=True)
@@ -227,10 +230,17 @@ def main(argv: list[str] | None = None) -> int:
             proc.kill()
         log.close()
 
+    summary = summarize(rows, started)
+    write_results(args.out, summary, rows, final=True)
+    print("\nSUMMARY", json.dumps(summary, ensure_ascii=False, indent=1), flush=True)
+    return 0
+
+
+def summarize(rows: list[dict], started: float) -> dict:
     half = rows[len(rows) // 2:]
     series = [(r["i"], r["engine_private_mib"]) for r in half if r["engine_private_mib"] is not None]
     epochs = [r["epoch"] for r in rows]
-    summary = {
+    return {
         "iterations": len(rows),
         "outcomes": {k: sum(1 for r in rows if r["outcome"] == k) for k in sorted({str(r["outcome"]) for r in rows})},
         "engine_restarts": sum(1 for a, b in zip(epochs, epochs[1:]) if a != b),
@@ -243,10 +253,14 @@ def main(argv: list[str] | None = None) -> int:
         "gpu_used_mib_last": rows[-1]["gpu_used_mib"] if rows else None,
         "wall_seconds": round(time.time() - started, 1),
     }
-    (args.out / "soak-results.json").write_text(json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=1),
-                                               encoding="utf-8")
-    print("\nSUMMARY", json.dumps(summary, ensure_ascii=False, indent=1), flush=True)
-    return 0
+
+
+def write_results(out: Path, summary: dict, rows: list[dict], *, final: bool) -> None:
+    """เขียนแบบ atomic (tmp แล้ว replace) — ถ้า soak ถูกตัดกลางทาง ไฟล์ล่าสุดยังอ่านได้เสมอ"""
+    tmp = out / "soak-results.json.tmp"
+    tmp.write_text(json.dumps({"final": final, "summary": summary, "rows": rows}, ensure_ascii=False, indent=1),
+                   encoding="utf-8")
+    os.replace(tmp, out / "soak-results.json")
 
 
 if __name__ == "__main__":
