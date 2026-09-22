@@ -1,0 +1,6 @@
+# Test-stage additions for the voice worker container, on top of requirements-voice-worker-linux-cpu.lock.txt.
+# Same pins as requirements-speech-asr.lock.txt. Not installed in the runtime image.
+
+iniconfig==2.3.0
+pluggy==1.6.0
+pytest==8.3.4

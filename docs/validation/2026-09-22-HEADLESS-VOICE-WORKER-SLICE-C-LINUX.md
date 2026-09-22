@@ -1,7 +1,7 @@
 ---
-version: "0.3.0b"
+version: "0.3.1b"
 created_at: "2026-09-22T12:30:00+07:00,LALIN,6508cec"
-last_update: "2026-09-22T17:00:00+07:00,LALIN"
+last_update: "2026-09-22T19:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -30,6 +30,7 @@ for `python:3.11-slim` (Docker Hub) and the Linux wheels (PyPI). Baseline `6508c
 | Windows regression (same commit) | speech venv **124 passed** · full `apps/api` **190 passed, 1 skipped** · `schema --check` in sync |
 | **Engine memory leak** (§6) | **FOUND AND FIXED** — the engine spawned a thread per job and CUDA-backed CTranslate2 kept ~0.12 MiB of host memory per thread. Robust growth (median per 50-request window, requests 50–299): **+0.106 → +0.014 MiB/request** on the same GPU config. The production CPU path shows no per-thread leak |
 | **CPU sizing** (§7, container `--cpus`, dev box) | **RUN** — 60 s clip: 4 CPUs RTF 0.48–0.67, **8 CPUs 0.38–0.50 (best)**, 16 CPUs 1.16–1.88 (worse, hybrid P/E cores); container peak memory ~2.3 GB. Indicative only: the real host must be re-measured with the same tool |
+| **Worker-only image** (§4) | **PASS** — 1.12 GB → **786 MB** (site-packages 690 → 454 MB), 32 runtime wheels, same pins; suite **135 passed** in the container, smoke **PASS 10/10**, Unix socket PASS (401/200, no TCP listener), no-manifest boot exit 2, uid 10001 |
 | **D13 memory caps** (§8, container `--memory`, no swap) | **PASS — fails safely** at every level: 1.5 GB boot refused with the cause named; 2.1 GB each 60 s request OOM-killed → `RUNTIME_OOM` confirmed from cgroup, engine back under a new epoch; 3 GB all pass. **Recommended limit ≥ 3 GiB** |
 
 ## 1. What was built
@@ -38,7 +39,8 @@ for `python:3.11-slim` (Docker Hub) and the Linux wheels (PyPI). Baseline `6508c
 |---|---|---|
 | Dockerfile (multi-stage: `base`, `test`, `runtime`) | [`docker/voice-worker/Dockerfile`](../../docker/voice-worker/Dockerfile) | base pinned by digest `python@sha256:da047cb8…` (= `python:3.11-slim`, Python 3.11.16, Debian 13, glibc 2.41) · keeps the repo layout under `/repo` because `schema.py` finds the contracts package by walking up from its own file · weights **not baked in**, mounted read-only |
 | Build-context allowlist | `docker/voice-worker/Dockerfile.dockerignore` | ignore everything, re-include only what the image needs |
-| Linux CPU lock | [`requirements-speech-asr-linux-cpu.lock.txt`](../../apps/api/requirements-speech-asr-linux-cpu.lock.txt) | the Windows lock minus the three `nvidia-*` CUDA wheels a CPU engine never loads; every other pin identical |
+| Linux CPU lock (runtime) | [`requirements-voice-worker-linux-cpu.lock.txt`](../../apps/api/requirements-voice-worker-linux-cpu.lock.txt) | only what the worker imports, resolved with the Windows lock as constraints, so every pin is the version behind the Windows evidence (§4) |
+| Test-stage lock | [`requirements-voice-worker-test.lock.txt`](../../apps/api/requirements-voice-worker-test.lock.txt) | pytest and its two deps; `test` stage only, not in the runtime image |
 | Cross-platform smoke | [`tools/verify/smoke_voice_worker.py`](../../tools/verify/smoke_voice_worker.py) | Python twin of the Windows-only `.ps1`; adds the D14 silence check |
 
 ## 2. Bugs found by moving to Linux (all fixed, all with tests)
@@ -78,9 +80,15 @@ Docker network.
 
 ## 4. Measurements worth knowing
 
-- **Image size 1.12 GB.** `requirements.txt` belongs to Studio and pulls packages the worker never imports
-  (anthropic, openai, scipy, pyloudnorm, pydub, imageio-ffmpeg). A worker-only requirements file would shrink it; not
-  done here because it changes the pinned set and needs its own evidence run.
+- **Image size: 1.12 GB → 786 MB (2026-09-22).** The first lock was the Studio set minus CUDA, so it carried packages the
+  worker never imports. The worker-only lock was resolved by pip from the worker's direct imports (faster-whisper,
+  fastapi, python-multipart, uvicorn, pydantic-settings, httpx) with the Windows lock as constraints; `pip check` clean.
+  Dropped: scipy (143 MB with its libs), imageio-ffmpeg (77 MB), soundfile, pydub, pyloudnorm, openai, anthropic,
+  aiofiles, the uvicorn `[standard]` extras, and pytest (moved to the `test` stage).
+  **One behaviour change:** without `httptools` installed, uvicorn serves HTTP with its pure-Python `h11` parser. The
+  worker's traffic is a few requests per job, so parsing speed is not a factor; the whole suite, the smoke and the Unix
+  socket check were re-run on the new image and pass. Largest remaining items: ctranslate2 (134 MB), av (104 MB),
+  onnxruntime (67 MB), numpy (71 MB), all required.
 - **Short-clip CPU timing in the container:** 3.76 s for a 3.82 s clip, while a soak was running on the same box.
   This is not a sizing number (§5).
 
@@ -91,7 +99,7 @@ Docker network.
 6. **D18** — what the worker should do after repeated OOM kills (§8), owner decision.
 3. ~~Long soak verdict~~ **resolved in §6**: a real leak, found and fixed; no restart policy needed for it.
 4. **D17** — owner decision (§3).
-5. Worker-only requirements to cut the image size (§4).
+5. ~~Worker-only requirements~~ **done (§4)**: 786 MB.
 
 ## 6. Engine memory leak — found and fixed (2026-09-22)
 
@@ -181,6 +189,7 @@ since a memory limit does not fix itself.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.1b | 2026-09-22 | beta | Worker-only runtime lock and test-stage lock: image 1.12 GB → 786 MB; suite, smoke and Unix socket re-run on the new image | based on 46eeb0a | LALIN |
 | 0.3.0b | 2026-09-22 | beta | CPU sizing under real CPU quotas (8 CPUs best; hybrid cores make 16 slower); D13 memory caps pass with a 3 GiB minimum; OOM now reported as RUNTIME_OOM from cgroup and a memory-bound boot names its cause; D18 raised | based on ed156d4 | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Engine memory leak found (thread per job, CUDA-specific) and fixed with one runner thread: +0.106 -> +0.014 MiB/request; soak tool gains median-window growth after least-squares nearly misread the fixed run | based on 53d77fb | LALIN |
 | 0.1.0b | 2026-09-22 | beta | Slice C step 1: Linux CPU container, 124 tests and smoke pass inside it; fixed whole-file asset hashing, the broken Unix-socket route and a world-readable data dir; D17 raised | based on 6508cec | LALIN |

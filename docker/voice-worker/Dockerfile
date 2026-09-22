@@ -29,8 +29,8 @@ RUN useradd --uid 10001 --create-home --shell /usr/sbin/nologin worker \
  && chmod 0750 /run/voice-worker
 
 WORKDIR /repo/apps/api
-COPY apps/api/requirements-speech-asr-linux-cpu.lock.txt ./
-RUN pip install --only-binary=:all: -r requirements-speech-asr-linux-cpu.lock.txt
+COPY apps/api/requirements-voice-worker-linux-cpu.lock.txt ./
+RUN pip install --only-binary=:all: -r requirements-voice-worker-linux-cpu.lock.txt
 
 COPY apps/api/app ./app
 COPY apps/api/profiles ./profiles
@@ -38,6 +38,8 @@ COPY packages/contracts/schemas /repo/packages/contracts/schemas
 COPY tools/verify/voice_worker_client.py tools/verify/smoke_voice_worker.py tools/verify/voice_worker_sizing.py tools/verify/voice_worker_capcheck.py /repo/tools/verify/
 
 FROM base AS test
+COPY apps/api/requirements-voice-worker-test.lock.txt ./
+RUN pip install --only-binary=:all: -r requirements-voice-worker-test.lock.txt
 COPY apps/api/tests/__init__.py ./tests/__init__.py
 COPY apps/api/tests/voice_worker ./tests/voice_worker
 COPY apps/api/pytest.ini ./pytest.ini

@@ -5,7 +5,8 @@
 !apps/api/tests/__init__.py
 !apps/api/tests/voice_worker/**
 !apps/api/pytest.ini
-!apps/api/requirements-speech-asr-linux-cpu.lock.txt
+!apps/api/requirements-voice-worker-linux-cpu.lock.txt
+!apps/api/requirements-voice-worker-test.lock.txt
 !packages/contracts/schemas/**
 !tools/verify/voice_worker_client.py
 !tools/verify/smoke_voice_worker.py
