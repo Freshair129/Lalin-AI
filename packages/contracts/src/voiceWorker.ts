@@ -61,6 +61,9 @@ export interface AsrInput {
   audio_sha256: string;
   audio_bytes: number;
   declared_mime_type: string;
+  /** D15: ASR bias terms for this job only (<= 64 terms, 1-40 code points each, <= 400 in total after norm-v1).
+   *  Not echoed or stored. Measured to help clean audio and to truncate far-field/noisy audio: send it for clean audio only. */
+  glossary?: string[] | null;
 }
 
 export interface TtsInput {
@@ -123,6 +126,8 @@ export interface AsrResult {
   duration_seconds?: number | null;
   segments: unknown[];
   provenance?: string | null;
+  /** D15: present only when the request sent a glossary; false = this engine does not use it (e.g. stub). */
+  glossary_applied?: boolean | null;
 }
 
 export interface TtsResult {
@@ -275,6 +280,8 @@ export interface Capabilities {
   output_fetch: boolean;
   erase_payload: boolean;
   text_policy_revision?: string | null;
+  /** D15: true = this profile's engine applies AsrInput.glossary. */
+  asr_glossary?: boolean;
 }
 
 export interface CapacityInfo {
@@ -322,6 +329,16 @@ export interface ReconcileReport {
   unknown: number;
 }
 
+/** D18: the engine was OOM-killed `threshold` times in a row; the worker stopped restarting it and stays not-ready
+ *  (reason "repeated_oom") until an operator raises the memory limit and restarts the worker. */
+export interface OomLockout {
+  reason: "repeated_oom";
+  consecutive_oom_kills: number;
+  threshold: number;
+  since: string;
+  action: string;
+}
+
 /** apps/api/app/voice_worker/runtime.py:WorkerRuntime.readiness() */
 export interface ReadinessResponse {
   ready: boolean;
@@ -333,6 +350,7 @@ export interface ReadinessResponse {
   device: DeviceInfo;
   residency: Residency;
   draining: boolean;
+  oom_lockout?: OomLockout | null;
   last_reconcile: ReconcileReport | null;
   observed_at: string;
   observation_seq: number;

@@ -20,7 +20,7 @@ from .. import __version__ as studio_api_version
 from . import WORKER_CONTRACT_VERSION, WORKER_NAME
 from .admission import check_asr_input, check_target, check_tts_input, check_window
 from .auth import Principal
-from .contract import TEXT_POLICY_REVISION, AsrEnvelope, TtsEnvelope, envelope_digest
+from .contract import TEXT_POLICY_REVISION, AsrEnvelope, TtsEnvelope, envelope_digest, glossary_prompt
 from .errors import WorkerError
 from .profile import ALLOWED_ENGINES, ProfileManifest
 from .receipts import Receipt, ReceiptStore
@@ -28,6 +28,9 @@ from .settings import WorkerSettings
 from .storage import PayloadStore, validate_wav_output
 from .supervisor import EngineDied, EngineSupervisor
 from .timeutil import iso, utc_now
+
+# D15: engine ที่ส่ง glossary เข้า initial_prompt จริง (stub รับ request ได้แต่ไม่ใช้ → glossary_applied: false)
+GLOSSARY_ENGINES = frozenset({"faster-whisper"})
 
 logger = logging.getLogger("lalin.voice_worker")
 
@@ -74,6 +77,9 @@ class WorkerRuntime:
         self.last_reconcile: dict[str, Any] | None = None
         self._tasks: set[asyncio.Task[Any]] = set()
         self._restart_lock = asyncio.Lock()
+        # D18: นับ OOM ที่ยืนยันแล้วติดกัน · reset เมื่อ engine ส่งผลงานกลับมา (รอดจากงานได้ = memory พอสำหรับงานนั้น)
+        self.consecutive_oom_kills = 0
+        self.oom_lockout: dict[str, Any] | None = None
 
     # ── lifecycle ────────────────────────────────────────────
     async def startup(self) -> None:
@@ -129,8 +135,8 @@ class WorkerRuntime:
             "configured": True,
             "supported": self.manifest.engine in ALLOWED_ENGINES,
             "loaded": snap["alive"],
-            "ready": snap["ready"],
-            "ready_reason": snap["reason"],
+            "ready": bool(snap["ready"]) and self.oom_lockout is None,
+            "ready_reason": snap["reason"] if self.oom_lockout is None else "repeated_oom",
             "qualified": False,
             "qualification_note": "stub engine — not qualified for speech; no quality or GPU evidence"
             if self.manifest.engine == "stub" else "Slice B engine — real speech path; Thai quality/GPU qualification evidence pending",
@@ -150,6 +156,7 @@ class WorkerRuntime:
                 "output_fetch": self.manifest.kind == "tts",
                 "erase_payload": True,
                 "text_policy_revision": TEXT_POLICY_REVISION if self.manifest.kind == "tts" else None,
+                "asr_glossary": self.manifest.kind == "asr" and self.manifest.engine in GLOSSARY_ENGINES,
             },
             "capacity": {"max_concurrency": self.manifest.max_concurrency, "in_use": self.capacity.in_use},
             "residency": snap["residency"],
@@ -158,10 +165,17 @@ class WorkerRuntime:
             "observation_seq": snap["observation_seq"],
         }
 
+    def _not_ready_reason(self, snap_reason: str | None) -> str | None:
+        if self.draining:
+            return "draining"
+        if self.oom_lockout is not None:
+            return "repeated_oom"
+        return snap_reason
+
     def readiness(self) -> dict[str, Any]:
         snap = self.supervisor.snapshot()
-        ready = bool(snap["ready"]) and not self.draining
-        reason = "draining" if self.draining else snap["reason"]
+        ready = bool(snap["ready"]) and not self.draining and self.oom_lockout is None
+        reason = self._not_ready_reason(snap["reason"])
         return {
             "ready": ready,
             "runtime_id": self.manifest.runtime_id,
@@ -172,6 +186,7 @@ class WorkerRuntime:
             "device": snap["device"],
             "residency": snap["residency"],
             "draining": self.draining,
+            "oom_lockout": self.oom_lockout,
             "last_reconcile": self.last_reconcile,
             "observed_at": snap["observed_at"] or iso(utc_now()),
             "observation_seq": snap["observation_seq"],
@@ -199,9 +214,9 @@ class WorkerRuntime:
             raise WorkerError("TARGET_MISMATCH", "runtime effective device does not match the bound profile device", attempt_id=attempt_id,
                               started=False, details={"reason": "device_mismatch", "configured": snap["device"]["configured"],
                                                       "effective": snap["device"]["effective"]})
-        if self.draining or not ready:
+        if self.draining or self.oom_lockout is not None or not ready:
             raise WorkerError("MODEL_UNAVAILABLE", "worker is not ready for inference", attempt_id=attempt_id, started=False,
-                              details={"reason": "draining" if self.draining else reason})
+                              details={"reason": self._not_ready_reason(reason)})
         if not self.capacity.try_acquire():
             raise WorkerError("WORKER_BUSY", "local capacity exhausted; not queued", attempt_id=attempt_id, started=False,
                               details={"max_concurrency": self.manifest.max_concurrency})
@@ -259,7 +274,8 @@ class WorkerRuntime:
                 raise WorkerError("INVALID_REQUEST", "audio bytes do not match declared audio_bytes/audio_sha256", attempt_id=envelope.attempt_id,
                                   started=False)
             return {"language": envelope.input.language, "declared_mime_type": envelope.input.declared_mime_type,
-                    "max_audio_seconds": self.manifest.limits.max_audio_seconds}
+                    "max_audio_seconds": self.manifest.limits.max_audio_seconds,
+                    "initial_prompt": glossary_prompt(envelope.input.glossary)}
         if audio is not None:
             raise WorkerError("INVALID_REQUEST", "tts uses application/json without an audio part", attempt_id=envelope.attempt_id, started=False)
         return check_tts_input(envelope, self.manifest)
@@ -339,6 +355,17 @@ class WorkerRuntime:
             code, message = "RUNTIME_OOM", f"{message}: killed by the out-of-memory killer"
         exited = bool(evidence.get("exited"))
         self._finish_failed(issuer, attempt_id, code, message, evidence, compute_stopped=True if exited else None, safe_to_retry=exited)
+        if evidence.get("oom_killed") is True:
+            self.consecutive_oom_kills += 1
+            if self.consecutive_oom_kills >= self.settings.oom_lockout_after:
+                # D18 (a): fail closed — ไม่ restart engine อีก จนกว่า operator จะขยายเพดานแล้ว restart worker
+                self.oom_lockout = {"reason": "repeated_oom", "consecutive_oom_kills": self.consecutive_oom_kills,
+                                    "threshold": self.settings.oom_lockout_after, "since": iso(utc_now()),
+                                    "action": "raise the container memory limit (>= 3 GiB for asr-th-en-01), then restart the worker"}
+                logger.error("engine OOM-killed %d times in a row; not restarting (D18)", self.consecutive_oom_kills)
+                if epoch is not None:
+                    self.store.mark_engine_lost(epoch, evidence=evidence, compute_stopped=exited, now=utc_now(), exclude=(issuer, attempt_id))
+                return
         await self._restart_engine(epoch, evidence, exclude=(issuer, attempt_id))
 
     def _finish_failed(self, issuer: str, attempt_id: str, code: str, message: str, evidence: dict[str, Any], *,
@@ -353,6 +380,7 @@ class WorkerRuntime:
     def _finish_from_engine(self, issuer: str, attempt_id: str, envelope: AsrEnvelope | TtsEnvelope, engine_input: dict[str, Any],
                             message: dict[str, Any], output_path: Path | None) -> None:
         outcome = message.get("outcome")
+        self.consecutive_oom_kills = 0  # D18: engine รอดจากงานนี้และส่งผลกลับมา
         result = message.get("result")
         error = message.get("error")
         usage = message.get("usage") or {"processing_seconds": None, "provenance": "unavailable"}
@@ -377,6 +405,12 @@ class WorkerRuntime:
                 output_path.unlink(missing_ok=True)
         if outcome == "SUCCEEDED" and envelope.kind == "asr":
             self.payloads.delete_input(issuer, attempt_id)
+            if isinstance(result, dict):
+                # D15: บอก caller ว่า glossary ถูกใช้จริงหรือไม่ · ไม่ส่ง glossary → ไม่มี field นี้
+                if engine_input.get("initial_prompt"):
+                    result = {**result, "glossary_applied": bool(result.get("glossary_applied"))}
+                else:
+                    result = {k: v for k, v in result.items() if k != "glossary_applied"}
         if outcome != "SUCCEEDED":
             self.payloads.erase(issuer, attempt_id)
             if outcome not in {"FAILED", "CANCELLED"}:

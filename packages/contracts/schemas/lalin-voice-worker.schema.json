@@ -105,6 +105,23 @@
           "title": "Declared Mime Type",
           "type": "string"
         },
+        "glossary": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Glossary"
+        },
         "language": {
           "default": "auto",
           "maxLength": 8,
@@ -147,6 +164,18 @@
           ],
           "default": null,
           "title": "Engine"
+        },
+        "glossary_applied": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Glossary Applied"
         },
         "kind": {
           "const": "asr",
@@ -456,6 +485,11 @@
     "Capabilities": {
       "additionalProperties": false,
       "properties": {
+        "asr_glossary": {
+          "default": false,
+          "title": "Asr Glossary",
+          "type": "boolean"
+        },
         "async_status": {
           "title": "Async Status",
           "type": "boolean"
@@ -859,6 +893,42 @@
           "$ref": "#/$defs/TtsEnvelope"
         }
       ]
+    },
+    "OomLockout": {
+      "additionalProperties": false,
+      "description": "D18: engine ถูก OOM killer ฆ่าติดกันครบเกณฑ์ → worker หยุด restart engine และไม่ ready จนกว่า operator จะ restart",
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "consecutive_oom_kills": {
+          "title": "Consecutive Oom Kills",
+          "type": "integer"
+        },
+        "reason": {
+          "const": "repeated_oom",
+          "title": "Reason",
+          "type": "string"
+        },
+        "since": {
+          "title": "Since",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reason",
+        "consecutive_oom_kills",
+        "threshold",
+        "since",
+        "action"
+      ],
+      "title": "OomLockout",
+      "type": "object"
     },
     "OperationError": {
       "additionalProperties": false,
@@ -1406,6 +1476,17 @@
         "observed_at": {
           "title": "Observed At",
           "type": "string"
+        },
+        "oom_lockout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OomLockout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "profiles": {
           "items": {

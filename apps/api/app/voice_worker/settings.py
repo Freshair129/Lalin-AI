@@ -50,6 +50,10 @@ class WorkerSettings(BaseSettings):
     terminate_grace_seconds: float = 3.0
     clock_skew_tolerance_seconds: float = 2.0
 
+    # D18: OOM ที่ cgroup ยืนยันติดกันครบกี่ครั้ง (ไม่มีงานไหนจบระหว่างนั้น) แล้วหยุด restart engine + ประกาศ not-ready
+    # เพดาน memory ไม่แก้ตัวเอง — restart ต่อไปมีแต่เสียเวลาโหลดโมเดลและทำให้ทุก request ล้ม
+    oom_lockout_after: int = 2
+
     payload_ttl_hours: float = 24.0
     receipt_horizon_hours: float = 48.0
 
@@ -68,6 +72,8 @@ class WorkerSettings(BaseSettings):
             raise ConfigError("management token ต้องไม่ซ้ำกับ inference token (แยกสิทธิ์ control)")
         if self.credentials_expire_at is not None and self.credentials_expire_at.tzinfo is None:
             raise ConfigError("credentials_expire_at ต้องมี timezone")
+        if self.oom_lockout_after < 1:
+            raise ConfigError("oom_lockout_after ต้องมีค่าอย่างน้อย 1 (D18)")
         if not (0 < self.payload_ttl_hours <= 24):
             raise ConfigError("payload_ttl_hours ต้องอยู่ใน (0, 24] ตาม LVP-REQ-026")
         if self.receipt_horizon_hours < self.payload_ttl_hours:

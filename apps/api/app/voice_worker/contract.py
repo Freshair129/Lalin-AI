@@ -23,6 +23,9 @@ CONTRACT_VERSION = "1.0"
 ID_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"  # path-safe: ไม่มี / \ : หรือ ".."
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 TEXT_POLICY_REVISION = "norm-v1"  # NFC + collapse whitespace เท่านั้น — ไม่แปลง ตัวเลข/วันที่/ชื่อ
+GLOSSARY_MAX_ITEMS = 64
+GLOSSARY_MAX_TERM_CODE_POINTS = 40
+GLOSSARY_MAX_TOTAL_CODE_POINTS = 400
 
 IdStr = Annotated[str, Field(pattern=ID_PATTERN)]
 
@@ -58,6 +61,30 @@ class AsrInput(StrictModel):
     audio_sha256: str = Field(pattern=SHA256_PATTERN)
     audio_bytes: int = Field(gt=0)
     declared_mime_type: str = Field(min_length=3, max_length=64)
+    # D15 (a): ศัพท์ของงานนี้ (ชื่อคน/ชื่อสินค้า) → whisper ``initial_prompt`` เป็นแค่ bias ของ decoder ไม่ใช่คำสั่ง
+    # optional เสมอ ไม่มี default ระดับ profile · ไม่ echo กลับ ไม่เก็บใน receipt/log (อาจมีชื่อลูกค้า) · อยู่ใน envelope_digest
+    # วัดแล้ว: ช่วยเสียงสะอาด แต่ตัดเนื้อหาบนเสียงไกล/มีเสียงรบกวน — caller เลือกใช้เฉพาะเสียงสะอาด
+    glossary: list[str] | None = Field(default=None, min_length=1, max_length=GLOSSARY_MAX_ITEMS)
+
+    @field_validator("glossary")
+    @classmethod
+    def _bounded_glossary(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        terms = [normalize_text(term) for term in value]
+        for term in terms:
+            if not 1 <= len(term) <= GLOSSARY_MAX_TERM_CODE_POINTS:
+                raise ValueError(f"each glossary term must be 1-{GLOSSARY_MAX_TERM_CODE_POINTS} code points after norm-v1")
+            if any(unicodedata.category(ch) in {"Cc", "Cf"} for ch in term):
+                raise ValueError("glossary terms must not contain control or format characters")
+        if sum(len(term) for term in terms) > GLOSSARY_MAX_TOTAL_CODE_POINTS:
+            raise ValueError(f"glossary exceeds {GLOSSARY_MAX_TOTAL_CODE_POINTS} code points in total")
+        return terms
+
+
+def glossary_prompt(terms: list[str] | None) -> str | None:
+    """glossary → ``initial_prompt`` ของ whisper: คั่นด้วยจุลภาค (รูปเดียวกับที่ใช้วัด A/B ใน D15 proposal §4.2)"""
+    return ", ".join(terms) if terms else None
 
 
 class TtsInput(StrictModel):
@@ -184,6 +211,8 @@ class AsrResult(StrictModel):
     duration_seconds: float | None = None
     segments: list[Any] = Field(default_factory=list)
     provenance: str | None = None
+    # D15: มีเฉพาะเมื่อ request ส่ง glossary — true = engine ใช้เป็น initial_prompt จริง, false = engine นี้ไม่รองรับ (เช่น stub)
+    glossary_applied: bool | None = None
 
 
 class TtsResult(StrictModel):
@@ -339,6 +368,7 @@ class Capabilities(StrictModel):
     output_fetch: bool
     erase_payload: bool
     text_policy_revision: str | None = None
+    asr_glossary: bool = False  # D15: true = engine ของ profile นี้ใช้ AsrInput.glossary จริง
 
 
 class CapacityInfo(StrictModel):
@@ -386,6 +416,15 @@ class ReconcileReport(StrictModel):
     unknown: int
 
 
+class OomLockout(StrictModel):
+    """D18: engine ถูก OOM killer ฆ่าติดกันครบเกณฑ์ → worker หยุด restart engine และไม่ ready จนกว่า operator จะ restart"""
+    reason: Literal["repeated_oom"]
+    consecutive_oom_kills: int
+    threshold: int
+    since: str
+    action: str
+
+
 class ReadinessResponse(StrictModel):
     ready: bool
     runtime_id: IdStr
@@ -396,6 +435,7 @@ class ReadinessResponse(StrictModel):
     device: DeviceInfo
     residency: Residency
     draining: bool
+    oom_lockout: OomLockout | None = None
     last_reconcile: ReconcileReport | None = None
     observed_at: str
     observation_seq: int
@@ -427,6 +467,7 @@ __all__ = [
     "OperationOutcome",
     "OperationResult",
     "OperationStatus",
+    "OomLockout",
     "PayloadState",
     "ProfileDescribe",
     "ProfileLimits",
@@ -445,6 +486,7 @@ __all__ = [
     "WorkerInfo",
     "classify_validation_error",
     "envelope_digest",
+    "glossary_prompt",
     "normalize_text",
     "parse_envelope",
 ]

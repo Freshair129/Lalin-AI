@@ -1,7 +1,7 @@
 ---
-version: "0.3.1b"
+version: "0.4.0b"
 created_at: "2026-09-22T12:30:00+07:00,LALIN,6508cec"
-last_update: "2026-09-22T19:00:00+07:00,LALIN"
+last_update: "2026-09-22T21:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -96,9 +96,9 @@ Docker network.
 
 1. ~~CPU sizing~~ **done on the dev box (§7)**; still to repeat on the real PRP Linux host with `voice_worker_sizing.py`.
 2. ~~D13 OS caps~~ **done (§8)**; confirm the chosen limit on the real host with `voice_worker_capcheck.py`.
-6. **D18** — what the worker should do after repeated OOM kills (§8), owner decision.
+6. ~~D18~~ **decided (a), N = 2 and applied (§9)**.
 3. ~~Long soak verdict~~ **resolved in §6**: a real leak, found and fixed; no restart policy needed for it.
-4. **D17** — owner decision (§3).
+4. ~~D17~~ **decided (a)** Unix socket (H0 review); runbook/compose example still to write.
 5. ~~Worker-only requirements~~ **done (§4)**: 786 MB.
 
 ## 6. Engine memory leak — found and fixed (2026-09-22)
@@ -185,10 +185,27 @@ with no success in between, report not-ready with a reason until an operator res
 after a back-off; (c) leave it to the coordinator, which sees `RUNTIME_OOM`. Recommendation: (a) with N = 2 — fail closed,
 since a memory limit does not fix itself.
 
+## 9. D18 applied — repeated OOM locks the worker out (2026-09-22)
+
+**Decision:** (a), N = 2, made by Fable 5.1 on the owner's delegation (H0 review D18).
+**Behaviour:** after `oom_lockout_after` (default 2, setting `LALIN_VOICE_WORKER_OOM_LOCKOUT_AFTER`, must be ≥ 1)
+cgroup-confirmed OOM kills in a row, the worker stops restarting the engine. Readiness and describe report
+`ready: false`, reason `repeated_oom`; readiness carries `oom_lockout` (count, threshold, since, action). New requests get
+`503 MODEL_UNAVAILABLE` with reason `repeated_oom`. The count resets when the engine returns any result, because it
+survived that job. Kills that the cgroup does not confirm (`oom_killed: null`, e.g. Windows) never count. There is no
+unlock endpoint: raise the memory limit and restart the worker.
+
+| Evidence | Result |
+|---|---|
+| Unit tests (`test_repeated_oom_lockout.py`, 5) | pass; **mutation checks:** disabling the lockout fails the lockout test, removing the reset fails the reset test |
+| **Real OOM in the container**, `--memory 2100m`, 60 s clip (`voice_worker_capcheck.py`) | 3 runs: request 1 `RUNTIME_OOM` → engine back under a new epoch, ready; request 2 `RUNTIME_OOM` → **NOT READY, `repeated_oom`, 2/2**, engine not restarted |
+| Unexplained, not reproduced | the first run of the same image ended with the client's `httpx.RemoteProtocolError` (server disconnected) after both requests had printed; the following 3 runs were clean. Left open, not claimed as fixed |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.0b | 2026-09-22 | beta | D18 applied: repeated OOM lockout, proven against a real OOM in the container; D17 decided | based on a42cec0 | LALIN |
 | 0.3.1b | 2026-09-22 | beta | Worker-only runtime lock and test-stage lock: image 1.12 GB → 786 MB; suite, smoke and Unix socket re-run on the new image | based on 46eeb0a | LALIN |
 | 0.3.0b | 2026-09-22 | beta | CPU sizing under real CPU quotas (8 CPUs best; hybrid cores make 16 slower); D13 memory caps pass with a 3 GiB minimum; OOM now reported as RUNTIME_OOM from cgroup and a memory-bound boot names its cause; D18 raised | based on ed156d4 | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Engine memory leak found (thread per job, CUDA-specific) and fixed with one runner thread: +0.106 -> +0.014 MiB/request; soak tool gains median-window growth after least-squares nearly misread the fixed run | based on 53d77fb | LALIN |

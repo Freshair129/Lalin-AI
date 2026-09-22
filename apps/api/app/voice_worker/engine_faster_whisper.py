@@ -212,6 +212,9 @@ class _Engine:
             kwargs: dict[str, Any] = {"language": lang_arg, "beam_size": int(self.opts.get("beam_size") or 5), "vad_filter": vad}
             if vad:
                 kwargs["vad_parameters"] = {"min_silence_duration_ms": int(self.opts.get("vad_min_silence_ms") or 700)}
+            prompt = payload.get("initial_prompt")
+            if prompt:
+                kwargs["initial_prompt"] = str(prompt)  # D15: glossary ของ request นี้ — bias ของ decoder เท่านั้น
             segments_iter, info = self.model.transcribe(input_path, **kwargs)
         except Exception as exc:  # noqa: BLE001 — MemoryError เป็น subclass ของ Exception จึงถูกจับที่นี่
             code = classify_engine_error(exc, stage="decode")
@@ -249,6 +252,7 @@ class _Engine:
                 "duration_seconds": round(float(info.duration), 3),
                 "segments": segments,
                 "provenance": "measured",
+                "glossary_applied": bool(payload.get("initial_prompt")),
             },
         }
 

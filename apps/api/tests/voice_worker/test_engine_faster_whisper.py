@@ -222,3 +222,18 @@ def test_vad_manifest_validation(tmp_path, options, message_part):
     with pytest.raises(ProfileError) as exc:
         load_manifest(write_manifest(tmp_path, "asr", **overrides))
     assert message_part in str(exc.value)
+
+
+def test_glossary_reaches_the_real_engine(fw_worker):
+    """D15: faster-whisper ใช้ glossary เป็น initial_prompt จริง และ describe บอกว่ารองรับ"""
+    describe = fw_worker.client.get("/worker/v1/describe", headers=auth()).json()
+    assert describe["capabilities"]["asr_glossary"] is True
+    audio = FIXTURE.read_bytes()
+    env = fw_worker.envelope("fw-glossary")
+    env["input"]["language"] = "en"
+    env["input"]["glossary"] = ["voice worker", "testing"]
+    assert fw_worker.post_asr(env, audio=audio).status_code == 202
+    final = fw_worker.wait_terminal("fw-glossary", timeout=120.0)
+    assert final["operation_outcome"] == "SUCCEEDED", final
+    assert final["result"]["glossary_applied"] is True
+    assert "testing" in final["result"]["text"].lower()

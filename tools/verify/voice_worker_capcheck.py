@@ -35,9 +35,11 @@ def ready(limit=240):
         try:
             r = c.readiness().json()
             if r.get("ready"): return "ready epoch " + str(r.get("runtime_epoch"))
+            if r.get("oom_lockout"): return "NOT READY (D18 lockout) " + json.dumps(r["oom_lockout"])
         except Exception: pass
         time.sleep(0.5)
-    return "not ready after %ss (reason %s)" % (limit, (c.readiness().json() if p.poll() is None else {}).get("reason"))
+    last = c.readiness().json() if p.poll() is None else {}
+    return "not ready after %ss (reason %s)" % (limit, ((last.get("profiles") or [{}])[0]).get("reason"))
 print("boot:", ready(), "| peak", peak(), "MiB", flush=True)
 if p.poll() is None:
     audio = Path(os.environ.get("CAPCHECK_CLIP", "/clips/clean-long.wav")).read_bytes()
