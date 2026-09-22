@@ -9,6 +9,9 @@ because the PRP host is Linux (D11). Checks, in order:
   must SUCCEED (``--audio``) → optional silence that must return NO_SPEECH (``--silence``, D14) → erase
   → the Studio DATA_DIR was never created → stop the worker
 
+TTS manifests (kind=tts): ``--tts-text`` must synthesize and the output must download with a matching sha256 and a
+plausible duration; an unknown voice must be refused (VOICE_NOT_APPROVED) and over-long text rejected before compute.
+
 PASS = the control plane and the engine honour the contract on this OS. It is not a Thai-quality check.
 
   python tools/verify/smoke_voice_worker.py --manifest profiles/voice-worker/asr-th-en-01.json \\
@@ -45,6 +48,45 @@ def silence_wav(seconds: float = 6.0, rate: int = 16000) -> bytes:
     return buf.getvalue()
 
 
+def tts_checks(client: WorkerClient, profile: dict, target: dict, args: argparse.Namespace, check) -> list[str]:
+    voice = profile["voices"][0]
+
+    def submit(attempt: str, text: str, voice_id: str) -> httpx.Response:
+        payload = {"text": text, "voice_preset_id": voice_id, "voice_revision": voice["voice_revision"], "response_format": "wav"}
+        envelope = client.envelope(kind="tts", attempt_id=attempt, target=target, input_payload=payload,
+                                   start_before_s=30, deadline_s=600, lease_id=None, content_fence=None)
+        return client.submit_tts(envelope)
+
+    attempts: list[str] = []
+    if args.tts_text:
+        attempt = "smoke-tts-" + uuid.uuid4().hex[:8]
+        attempts.append(attempt)
+        submitted = submit(attempt, args.tts_text, voice["voice_preset_id"])
+        final = client.wait_terminal(attempt, timeout_s=620) if submitted.status_code == 202 else {"submit": submitted.status_code}
+        result = final.get("result") or {}
+        usage = final.get("usage") or {}
+        check("tts SUCCEEDED", final.get("operation_outcome") == "SUCCEEDED",
+              f"voice={voice['voice_preset_id']} ({voice.get('rights_status')}) duration={result.get('duration_seconds')}s "
+              f"processing={usage.get('processing_seconds')}s" if final.get("operation_outcome") == "SUCCEEDED"
+              else json.dumps(final, ensure_ascii=False)[:300])
+        if final.get("operation_outcome") == "SUCCEEDED":
+            got = client.output(attempt)
+            body = got.content
+            same = got.status_code == 200 and hashlib.sha256(body).hexdigest() == result.get("sha256") == got.headers.get("X-Content-SHA256")
+            check("output downloads and its sha256 matches the receipt", same, f"{len(body)} bytes")
+            duration = float(result.get("duration_seconds") or 0)
+            check("output duration is plausible for the text", 0.5 <= duration <= 0.3 * len(args.tts_text) + 3,
+                  f"{duration:.2f}s for {len(args.tts_text)} code points, {result.get('sample_rate')} Hz")
+            if args.save_output:
+                args.save_output.write_bytes(body)
+    refused = submit("smoke-tts-novoice-" + uuid.uuid4().hex[:6], "ทดสอบ", "voice-that-does-not-exist")
+    check("unknown voice refused before compute", refused.status_code in (409, 422) and
+          refused.json().get("error", {}).get("code") == "VOICE_NOT_APPROVED", f"got {refused.status_code}")
+    too_long = submit("smoke-tts-long-" + uuid.uuid4().hex[:6], "ก" * (profile["limits"]["max_text_code_points"] + 1), voice["voice_preset_id"])
+    check("text over the profile limit rejected (422)", too_long.status_code == 422, f"got {too_long.status_code}")
+    return attempts
+
+
 def main(argv: list[str] | None = None) -> int:
     api_dir = Path(__file__).resolve().parents[2] / "apps" / "api"
     parser = argparse.ArgumentParser(description="voice worker headless smoke (cross-platform)")
@@ -52,6 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--audio", type=Path, help="speech clip that must be transcribed successfully")
     parser.add_argument("--language", default="th", help="must be one the manifest qualifies (D8 manifests: th, en)")
     parser.add_argument("--silence", action="store_true", help="also send 6 s of silence and require NO_SPEECH (D14)")
+    parser.add_argument("--tts-text", help="TTS manifests: text to synthesize with the manifest's first voice")
+    parser.add_argument("--save-output", type=Path, help="TTS: keep the synthesized WAV here")
     parser.add_argument("--port", type=int, default=8790)
     parser.add_argument("--unix-socket", help="serve on this absolute socket path instead of TCP (D17, Linux only)")
     parser.add_argument("--python", default=sys.executable)
@@ -147,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
             return client.wait_terminal(attempt, timeout_s=130)
 
         attempts: list[str] = []
+        if profile.get("kind") == "tts":
+            attempts += tts_checks(client, profile, target, args, check)
         if args.audio:
             attempt = "smoke-" + uuid.uuid4().hex[:10]
             attempts.append(attempt)

@@ -6,6 +6,7 @@ worker เริ่มได้เฉพาะเมื่อ manifest ผ่า
   • faster-whisper ``vad_filter=true`` ต้อง pin ``vad_model_sha256`` ด้วย (D14)
   • assets ทุกชิ้นมี path + sha256 และตรวจตรง (ไม่มี network fetch)
   • TTS preset ทุกตัวมี ``ref_text`` ไม่ว่าง (กัน hidden reference-ASR) และ ``rights_status`` ที่รู้จัก
+  • ``f5-tts`` ต้อง kind=tts, pin ckpt/vocab/vocoder และ ``ref_audio`` ของทุก preset ต้องเป็น role ของ asset ที่ pin sha256 แล้ว
 """
 from __future__ import annotations
 
@@ -18,14 +19,16 @@ from typing import Any
 
 from .contract import ID_PATTERN
 
-ALLOWED_ENGINES = frozenset({"stub", "faster-whisper"})  # Slice B TTS จะเพิ่ม "f5" หลัง D9
+ALLOWED_ENGINES = frozenset({"stub", "faster-whisper", "f5-tts"})  # f5-tts: Slice B TTS หลัง D9 approve (2026-09-22)
 FASTER_WHISPER_COMPUTE_TYPES = frozenset({"int8", "int8_float16", "float16", "float32"})
 FASTER_WHISPER_REQUIRED_ASSETS = ("model.bin", "config.json")
 DEVICE_RE = re.compile(r"^(cpu|cuda:\d+)$")
 ID_RE = re.compile(ID_PATTERN)
 ASR_LANGUAGES = frozenset({"th", "en", "auto"})
 TTS_LANGUAGES = frozenset({"th", "en"})
-RIGHTS_STATUSES = frozenset({"approved", "stub-synthetic"})
+# dev-only = เสียงตัวอย่างสำหรับพัฒนา/ทดสอบ (เช่น sample ของ model repo) — ไม่ใช่ preset ที่ขึ้น production ได้
+RIGHTS_STATUSES = frozenset({"approved", "stub-synthetic", "dev-only"})
+F5_REQUIRED_ASSETS = ("f5.ckpt", "f5.vocab", "vocos.config", "vocos.weights")
 DEFAULT_ASR_FORMATS = ("audio/wav", "audio/x-wav", "audio/mpeg", "audio/ogg", "audio/flac", "audio/mp4")
 DEFAULT_TTS_OUTPUT_FORMATS = ("wav",)
 
@@ -289,6 +292,9 @@ def manifest_from_dict(
     assets = _assets(data.get("assets"), base_dir, verify_assets)
     if engine == "faster-whisper":
         _check_faster_whisper(kind, device, engine_options, assets)
+    if engine == "f5-tts":
+        _check_f5(kind, engine_options, assets)
+        voices = _pin_voice_audio(voices, assets)
     return ProfileManifest(
         profile_id=_id(data, "profile_id"),
         profile_revision=_require(data, "profile_revision", str) or _fail("profile_revision ว่าง"),
@@ -346,6 +352,47 @@ def _check_faster_whisper(kind: str, device: str, options: dict[str, Any], asset
     parents = {str(Path(asset.path).parent) for asset in assets}
     if len(parents) != 1:
         raise ProfileError("assets ของ faster-whisper ต้องอยู่ใน directory เดียวกัน (CTranslate2 โหลดทั้งโฟลเดอร์)")
+
+
+def _number(options: dict[str, Any], key: str, default: float, low: float, high: float, *, integer: bool = False) -> None:
+    value = options.get(key, default)
+    ok_type = isinstance(value, int) if integer else isinstance(value, (int, float))
+    if not ok_type or isinstance(value, bool) or not (low <= value <= high):
+        kind = "จำนวนเต็ม" if integer else "ตัวเลข"
+        raise ProfileError(f"engine_options.{key} ต้องเป็น{kind} {low}–{high}")
+
+
+def _check_f5(kind: str, options: dict[str, Any], assets: tuple[AssetPin, ...]) -> None:
+    if kind != "tts":
+        raise ProfileError("engine f5-tts รองรับเฉพาะ kind=tts")
+    _number(options, "nfe_step", 32, 4, 64, integer=True)
+    _number(options, "cfg_strength", 2.0, 0.0, 5.0)
+    _number(options, "sway_sampling_coef", -1.0, -1.0, 1.0)
+    _number(options, "cross_fade_seconds", 0.15, 0.0, 1.0)
+    _number(options, "cpu_threads", 0, 0, 256, integer=True)
+    seed = options.get("seed")
+    if seed is not None and (not isinstance(seed, int) or isinstance(seed, bool) or seed < 0):
+        raise ProfileError("engine_options.seed ต้องเป็นจำนวนเต็ม ≥ 0 หรือ null")
+    roles = {asset.role for asset in assets}
+    missing = [role for role in F5_REQUIRED_ASSETS if role not in roles]
+    if missing:
+        raise ProfileError(f"engine f5-tts ต้อง pin assets {missing} (MODEL_UNAVAILABLE — ไม่ดาวน์โหลดเอง)")
+    vocos_dirs = {str(Path(a.path).parent) for a in assets if a.role.startswith("vocos.")}
+    if len(vocos_dirs) != 1:
+        raise ProfileError("vocos.config และ vocos.weights ต้องอยู่ใน directory เดียวกัน (vocos โหลดทั้งโฟลเดอร์)")
+
+
+def _pin_voice_audio(voices: tuple[VoicePreset, ...], assets: tuple[AssetPin, ...]) -> tuple[VoicePreset, ...]:
+    """f5-tts: ``ref_audio`` ของ preset = ชื่อ role ของ asset ที่ pin แล้ว → แทนด้วย path ที่ตรวจ hash แล้ว
+    เสียงที่ใช้โคลนต้องตรวจย้อนได้ด้วย sha256 (D9: สิทธิ์ผูกกับไฟล์นั้นไฟล์เดียว)"""
+    by_role = {asset.role: asset for asset in assets}
+    pinned: list[VoicePreset] = []
+    for voice in voices:
+        asset = by_role.get(voice.ref_audio or "")
+        if asset is None or not asset.role.startswith("voice."):
+            raise ProfileError(f"preset {voice.preset_id}: ref_audio ต้องเป็น role ของ asset 'voice.*' ที่ pin sha256 แล้ว")
+        pinned.append(VoicePreset(voice.preset_id, voice.revision, voice.language, voice.ref_text, voice.rights_status, asset.path))
+    return tuple(pinned)
 
 
 def load_manifest(path: Path | str | None, *, verify_assets: bool = True) -> ProfileManifest:

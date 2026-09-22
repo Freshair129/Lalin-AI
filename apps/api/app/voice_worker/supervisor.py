@@ -15,11 +15,11 @@ from pathlib import Path
 from concurrent.futures import Future
 from typing import Any
 
-from . import engine_faster_whisper, engine_stub
+from . import engine_f5, engine_faster_whisper, engine_stub
 from .profile import ProfileManifest
 from .timeutil import iso, utc_now
 
-ENGINE_TARGETS = {"stub": engine_stub.serve, "faster-whisper": engine_faster_whisper.serve}
+ENGINE_TARGETS = {"stub": engine_stub.serve, "faster-whisper": engine_faster_whisper.serve, "f5-tts": engine_f5.serve}
 
 
 CGROUP_MEMORY_EVENTS = Path("/sys/fs/cgroup/memory.events")

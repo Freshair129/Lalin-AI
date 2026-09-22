@@ -1,0 +1,73 @@
+{
+  "_comment": "Slice B TTS profile: F5-TTS-THAI (VIZINTZOR, commit af023c7) + vocos-mel-24khz, loaded offline from pinned assets. D9 approved by the owner 2026-09-22. device cuda:0 follows the D19 measurement (GPU RTF 0.19-0.44 vs CPU 7-14 on the dev box); D19 itself is still the owner's decision.",
+  "profile_id": "tts-th-preset-01",
+  "profile_revision": "rev-2026-09-22-f5-thai-1m-dev-voice",
+  "kind": "tts",
+  "runtime_id": "speech-tts-f5",
+  "physical_resource_id": "gpu0-local-host",
+  "device": "cuda:0",
+  "engine": "f5-tts",
+  "engine_options": {
+    "nfe_step": 32,
+    "cfg_strength": 2.0,
+    "sway_sampling_coef": -1.0,
+    "cross_fade_seconds": 0.15,
+    "seed": null,
+    "cpu_threads": 0,
+    "heartbeat_seconds": 0.25,
+    "warmup": true
+  },
+  "languages": [
+    "th"
+  ],
+  "output_formats": [
+    "wav"
+  ],
+  "max_concurrency": 1,
+  "limits": {
+    "max_audio_bytes": 10485760,
+    "max_audio_seconds": 60,
+    "max_text_code_points": 800,
+    "max_output_seconds": 60,
+    "speed_min": 0.8,
+    "speed_max": 1.2
+  },
+  "voices": [
+    {
+      "voice_preset_id": "sample-th-dev",
+      "voice_revision": "vizintzor-af023c7",
+      "language": "th",
+      "ref_text": "ฉันเดินทางไปเที่ยวที่จังหวัดเชียงใหม่ในช่วงฤดูหนาวเพื่อสัมผัสอากาศเย็นสบาย",
+      "rights_status": "dev-only",
+      "ref_audio": "voice.sample-th-dev"
+    }
+  ],
+  "assets": [
+    {
+      "role": "f5.ckpt",
+      "path": "../../models/f5-tts-thai/model_1000000.pt",
+      "sha256": "304db1ac0ff1d0a92f3cc14951ee053e52e25ae13abfdb5dc339cdb9b3bebc62"
+    },
+    {
+      "role": "f5.vocab",
+      "path": "../../models/f5-tts-thai/vocab.txt",
+      "sha256": "88200c1e2121226fb9b7a12f5d8bab399b856bb7538b1e6b39a220ee9475187c"
+    },
+    {
+      "role": "vocos.config",
+      "path": "../../models/vocos-mel-24khz/config.yaml",
+      "sha256": "da9033922f969a47f0c160010226919e59f27761fd5066f3828d46de6650b0fc"
+    },
+    {
+      "role": "vocos.weights",
+      "path": "../../models/vocos-mel-24khz/pytorch_model.bin",
+      "sha256": "97ec976ad1fd67a33ab2682d29c0ac7df85234fae875aefcc5fb215681a91b2a"
+    },
+    {
+      "role": "voice.sample-th-dev",
+      "path": "../../models/f5-tts-thai/sample/ref_audio.wav",
+      "sha256": "f2786aa1c286b572a046a8cc69e6fc5657e0367c69c2c02912b54803fa369f08"
+    }
+  ],
+  "_voice_note": "sample-th-dev is the model repo's own sample (ref text from its README). Speaker identity and consent are unknown, so it is rights_status dev-only: for development and tests, never a production preset. Replace with a consented recording (2-8 s per the model card) before PRP use."
+}

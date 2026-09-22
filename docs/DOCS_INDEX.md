@@ -125,6 +125,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A.md`: Slice A stub-engine evidence — 171 backend tests, headless smoke, D12 schema export; speech/GPU/quality NOT_RUN.
 - `docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md`: Slice B ASR evidence — faster-whisper engine adapter, D8 manifests asr-th-en-01 (turbo) / -medium, speech venv, GPU smoke PASS ×2; Thai quality and RTX 3060 NOT_RUN, TTS BLOCKED (D9).
 - `docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md`: proposal for the PRP owner — D14 manifest-level VAD and D15 per-request glossary (draft contract diff), evidence-backed, no code change until approved.
+- `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md`: Slice B TTS — F5-TTS-THAI engine in the worker (`tts-th-preset-01`), smoke PASS on GPU, dev-only sample voice, D19 (TTS device) measured: GPU RTF 0.19–0.44 vs CPU 7–14.
 - `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md`: Slice C step 1 — the worker in a Linux CPU-only container (D10/D11); 135 tests and the smoke pass inside it; bugs fixed (incl. the engine memory leak); D17/D18 raised; dev-box CPU sizing; D13 minimum 3 GiB; worker-only image 786 MB.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
@@ -155,6 +156,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
 | 0.10.7b | 2026-09-22 | beta | Index the YouTube channel transcript pipeline feature doc, workflow runbook and SOP | based on e6b7be2 | LALIN |
+| 0.10.7b | 2026-09-22 | beta | Index Slice B TTS evidence | based on 90971c8 | LALIN |
 | 0.10.6b | 2026-09-22 | beta | Index the voice worker Linux runbook | based on b4ffe94 | LALIN |
 | 0.10.5b | 2026-09-22 | beta | Refresh the Slice C entry (leak, sizing, D13, slim image) | based on 46eeb0a | LALIN |
 | 0.10.4b | 2026-09-22 | beta | Index Slice C Linux evidence | based on 6508cec | LALIN |
