@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T15:34:49+07:00",
+  "generated_at": "2026-09-22T21:13:15+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 421,
-    "total_edges": 554,
+    "total_nodes": 424,
+    "total_edges": 560,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1273,10 +1273,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "a0e389ba8c05",
-      "prev_hash": "a0e389ba8c05",
+      "hash": "dc270070771a",
+      "prev_hash": "dc270070771a",
       "status": "current",
-      "last_verified": "2026-09-22T15:34:49+07:00"
+      "last_verified": "2026-09-22T21:13:04+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1313,10 +1313,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
-      "hash": "5fbfb88a60d6",
-      "prev_hash": "5fbfb88a60d6",
+      "hash": "dc220e562796",
+      "prev_hash": "dc220e562796",
       "status": "current",
-      "last_verified": "2026-09-22T15:34:49+07:00"
+      "last_verified": "2026-09-22T21:13:04+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -1543,10 +1543,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "837578df63f3",
-      "prev_hash": "837578df63f3",
+      "hash": "4ddecd2073a7",
+      "prev_hash": "4ddecd2073a7",
       "status": "current",
-      "last_verified": "2026-09-22T15:34:49+07:00"
+      "last_verified": "2026-09-22T21:13:04+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -2493,10 +2493,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "5812a37b5546",
-      "prev_hash": "5812a37b5546",
+      "hash": "c7e94e42260d",
+      "prev_hash": "c7e94e42260d",
       "status": "current",
-      "last_verified": "2026-09-22T15:34:49+07:00"
+      "last_verified": "2026-09-22T21:13:15+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -2507,6 +2507,36 @@
       "prev_hash": "ea77ec777b3a",
       "status": "current",
       "last_verified": "2026-08-09T08:31:25+07:00"
+    },
+    {
+      "id": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "type": "document",
+      "path": "docs/architecture/YT_CHANNEL_TRANSCRIPT_PIPELINE.md",
+      "title": "YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "hash": "ea4e30de6e84",
+      "prev_hash": "ea4e30de6e84",
+      "status": "current",
+      "last_verified": "2026-09-22T21:13:04+07:00"
+    },
+    {
+      "id": "doc:YT_CHANNEL_TRANSCRIPT_SOP",
+      "type": "document",
+      "path": "docs/operations/YT_CHANNEL_TRANSCRIPT_SOP.md",
+      "title": "YT_CHANNEL_TRANSCRIPT_SOP",
+      "hash": "a4d224827595",
+      "prev_hash": "a4d224827595",
+      "status": "current",
+      "last_verified": "2026-09-22T21:13:04+07:00"
+    },
+    {
+      "id": "doc:YT_CHANNEL_TRANSCRIPT_WORKFLOW",
+      "type": "document",
+      "path": "docs/operations/YT_CHANNEL_TRANSCRIPT_WORKFLOW.md",
+      "title": "YT_CHANNEL_TRANSCRIPT_WORKFLOW",
+      "hash": "fc6451849c87",
+      "prev_hash": "fc6451849c87",
+      "status": "current",
+      "last_verified": "2026-09-22T21:13:04+07:00"
     },
     {
       "id": "doc:agent-architecture",
@@ -7220,6 +7250,48 @@
     {
       "from": "doc:VOICE_WORKER_LINUX_RUNBOOK",
       "to": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "to": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "to": "doc:MEETING_TRANSCRIPT_PIPELINE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "to": "doc:YT_CHANNEL_TRANSCRIPT_SOP",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "to": "doc:YT_CHANNEL_TRANSCRIPT_WORKFLOW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_SOP",
+      "to": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:YT_CHANNEL_TRANSCRIPT_WORKFLOW",
+      "to": "doc:YT_CHANNEL_TRANSCRIPT_PIPELINE",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

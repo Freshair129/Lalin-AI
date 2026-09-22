@@ -1,7 +1,7 @@
 ---
-version: "0.4.0b"
+version: "0.5.0b"
 created_at: "2026-09-22T12:30:00+07:00,LALIN,6508cec"
-last_update: "2026-09-22T21:00:00+07:00,LALIN"
+last_update: "2026-09-22T23:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -94,8 +94,8 @@ Docker network.
 
 ## 5. Open (next steps of Slice C)
 
-1. ~~CPU sizing~~ **done on the dev box (§7)**; still to repeat on the real PRP Linux host with `voice_worker_sizing.py`.
-2. ~~D13 OS caps~~ **done (§8)**; confirm the chosen limit on the real host with `voice_worker_capcheck.py`.
+1. ~~CPU sizing~~ **done (§7), re-measured on the PRP host with the stack running (§10)**: 8 CPUs, `cpu_threads: 8` now shipped.
+2. ~~D13 OS caps~~ **done (§8), confirmed on the PRP host (§10)**: 3 GiB; 2.5 GB is not safe.
 6. ~~D18~~ **decided (a), N = 2 and applied (§9)**.
 3. ~~Long soak verdict~~ **resolved in §6**: a real leak, found and fixed; no restart policy needed for it.
 4. ~~D17~~ **decided (a)** Unix socket (H0 review); runbook/compose example still to write.
@@ -201,10 +201,38 @@ unlock endpoint: raise the memory limit and restart the worker.
 | **Real OOM in the container**, `--memory 2100m`, 60 s clip (`voice_worker_capcheck.py`) | 3 runs: request 1 `RUNTIME_OOM` → engine back under a new epoch, ready; request 2 `RUNTIME_OOM` → **NOT READY, `repeated_oom`, 2/2**, engine not restarted |
 | Unexplained, not reproduced | the first run of the same image ended with the client's `httpx.RemoteProtocolError` (server disconnected) after both requests had printed; the following 3 runs were clean. Left open, not claimed as fixed |
 
+## 10. Re-measured on the PRP host (2026-09-22)
+
+**Which host.** The PRP stack (`prp-mvp-*`: litellm, postgres, nginx, blind; vLLM stopped by the owner, single-host mode)
+runs in Docker Desktop on the PRP workstation, so the PRP Linux host **is** that Docker engine: WSL2 VM, kernel
+6.18.33.2-microsoft-standard-WSL2, cgroup v2, 28 visible CPUs (i7-14700KF, 8 P-cores + 12 E-cores), 15.5 GiB RAM, of
+which ~9.7 GiB was available with the PRP and Zuri stacks up. The second PRP host (DESKTOP-8UR61U8, RTX 3060) runs only
+Ollama and is not a Linux host. §7–§8 had run on the same engine with the stacks idle; this run keeps them up and
+repeats the tools unchanged.
+
+| CPUs (`cpu_threads` = quota) | RTF, 60 s clip, 3 runs | Peak memory |
+|---|---|---|
+| 4 | 0.44 · 0.59 · 0.61 | 2,576 MiB |
+| **8** | **0.26 · 0.44 · 0.51** | 2,319 MiB |
+| 12 | 0.61 · 0.59 · 0.45 | 2,339 MiB |
+
+| Memory cap (no swap), 8 CPUs | Clip ×2 | Result |
+|---|---|---|
+| 3 GB | clean-long, farfield-noisy, mid-meeting | all SUCCEEDED, peak 2,215–2,267 MiB, no restart |
+| 2.5 GB | clean-long | SUCCEEDED, peak 2,350 MiB, **but** the 4-CPU sizing run peaked at 2,576 MiB, above 2.5 GB: not safe |
+
+**Conclusions, applied:** 8 CPUs (12 buys nothing on this hybrid CPU); `asr-th-en-01` now ships `cpu_threads: 8`
+(revision `rev-2026-09-22-large-v3-turbo-vad-cpu8`, bumped because thread count changes numerics, D16) to match the
+compose example's `cpus: 8`; memory cap **3 GiB**. The worker fits beside the stacks (3 GiB of ~9.7 GiB available).
+**Watch:** if the owner starts vLLM again it takes host RAM as well; re-check `MemAvailable` before relying on the cap.
+**Not measured:** a busy PRP (concurrent LLM traffic) and more than one ASR job at a time (`max_concurrency` is 1).
+After the change: suite 153 passed on Windows and in the container, socket smoke PASS under `--memory 3g`.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.5.0b | 2026-09-22 | beta | §10 sizing and memory cap re-measured on the PRP host with the stack up; cpu_threads 8 shipped; 3 GiB confirmed, 2.5 GB rejected | based on e6b7be2 | LALIN |
 | 0.4.0b | 2026-09-22 | beta | D18 applied: repeated OOM lockout, proven against a real OOM in the container; D17 decided | based on a42cec0 | LALIN |
 | 0.3.1b | 2026-09-22 | beta | Worker-only runtime lock and test-stage lock: image 1.12 GB → 786 MB; suite, smoke and Unix socket re-run on the new image | based on 46eeb0a | LALIN |
 | 0.3.0b | 2026-09-22 | beta | CPU sizing under real CPU quotas (8 CPUs best; hybrid cores make 16 slower); D13 memory caps pass with a 3 GiB minimum; OOM now reported as RUNTIME_OOM from cgroup and a memory-bound boot names its cause; D18 raised | based on ed156d4 | LALIN |

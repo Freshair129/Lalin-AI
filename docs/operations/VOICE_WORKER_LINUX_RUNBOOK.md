@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
-last_update: "2026-09-22T22:00:00+07:00,LALIN"
+last_update: "2026-09-22T23:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -43,10 +43,13 @@ TLS proxy that needs its own security review.
    ```
    The coordinator gets the inference token through its own secret store. (The example's `coordinator-probe` reads
    `LALIN_VOICE_WORKER_CLIENT_TOKEN` from the same file only to prove the path.)
-3. **CPU threads.** Set `engine_options.cpu_threads` in the manifest to the `cpus` you give the container. The container
-   sees every host core, so `0` over-subscribes. On hybrid CPUs, stay at or below the performance-core count
-   (Slice C §7). Re-measure on this host with `tools/verify/voice_worker_sizing.py`. Changing the manifest changes its
-   hash, so `profile_revision` should change too.
+3. **CPU threads.** `asr-th-en-01` ships `cpu_threads: 8`, matching `cpus: 8` in the compose example; both were sized
+   on the PRP host (Slice C §10). If you change one, change the other: the container sees every host core, so a
+   mismatch over- or under-subscribes. On hybrid CPUs, stay at or below the performance-core count. Re-measure with
+   `tools/verify/voice_worker_sizing.py`, and bump `profile_revision` whenever the manifest changes.
+4. **Memory.** The cap is 3 GiB (peak seen 2.58 GiB). Check that the host has it to spare:
+   `docker run --rm lalin-voice-worker:dev sh -c 'grep MemAvailable /proc/meminfo'` (≈ 9.7 GiB on the PRP host with
+   vLLM stopped; starting vLLM lowers it).
 
 ## 3. Start and verify
 
@@ -91,4 +94,5 @@ Verified on the dev box (2026-09-22) with [`compose.example.yaml`](../../docker/
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-22 | beta | cpu_threads 8 shipped and memory check, from the PRP-host re-measurement (Slice C §10) | based on e6b7be2 | LALIN |
 | 0.1.0b | 2026-09-22 | beta | First runbook: compose example for D17 (a), verified with a group-gated coordinator stand-in; D13/D16/D18 operations | based on b4ffe94 | LALIN |
