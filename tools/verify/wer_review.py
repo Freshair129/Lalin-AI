@@ -155,9 +155,11 @@ textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px
 .draft{font-size:12.5px;margin-top:4px;padding:4px 8px;border-left:3px solid var(--line)}.draft.chg{border-color:var(--accent)}
 .draft button{font-size:12px;padding:1px 8px;margin-left:6px}.seg.listen{box-shadow:inset 3px 0 0 var(--warn)}
 .flag{color:var(--warn);font-size:12px}
+.risk{font:11px ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:0 6px;margin-left:6px}
+.risk.hi{border-color:var(--warn);color:var(--warn)}
 </style></head><body>
 <header><h1>ตรวจ transcript ภาษาไทย</h1>
-<div class="sub">ถ้ามี "ร่าง LLM" เป็นแค่ข้อเสนอจากการอ่านข้อความ ไม่ได้ฟังเสียง ต้องฟังเองก่อนติ๊กเสมอ ·
+<div class="sub">ช่วงที่ขีดส้ม = ควรฟังก่อน (ถอดไม่นิ่ง หรือ LLM สงสัย) · ถ้ามี "ร่าง LLM" เป็นแค่ข้อเสนอจากการอ่านข้อความ ไม่ได้ฟังเสียง ต้องฟังเองก่อนติ๊กเสมอ ·
 กด ▶ เพื่อฟังทีละช่วง แก้ข้อความให้ตรงกับที่ได้ยินจริง แล้วติ๊ก "ตรวจแล้ว" · ช่วงที่ฟังไม่ออกให้ติ๊ก "ไม่ได้ยิน" · บันทึกอัตโนมัติ
 · <span id="prog"></span> · <span class="status" id="st"></span></div></header>
 <main id="app">กำลังโหลด…</main>
@@ -168,6 +170,8 @@ function progress(){let d=0,a=0;for(const c of DATA.clips)for(const s of c.segme
 let timers={};
 const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 // ฉบับร่างจาก LLM (อ่านแค่ข้อความ ไม่ได้ฟังเสียง) — เป็นตัวช่วยเท่านั้น: กด "ใช้ข้อความนี้" แล้วยังต้องฟังและติ๊ก "ตรวจแล้ว" เอง
+// ความไม่นิ่ง = ถอดซ้ำหลายแบบแล้วผลต่างกันแค่ไหน (สูง = โมเดลไม่มั่นใจ = ควรฟังก่อน)
+function riskHtml(r){if(typeof r!=="number")return "";return `<span class="risk${r>=0.2?" hi":""}" title="ความไม่นิ่งของการถอดเสียงช่วงนี้">${r.toFixed(2)}</span>`}
 function draftHtml(d){if(!d)return "";const flag=d.listen_first?'<span class="flag"> · ควรฟังก่อน</span>':"";
  if(!d.changed)return `<div class="draft">ร่าง LLM: ไม่แก้ (${esc(d.confidence||"")})${flag}</div>`;
  return `<div class="draft chg">ร่าง LLM: ${esc(d.text)} <button class="use" type="button">ใช้ข้อความนี้</button><br><span class="asr">${esc(d.confidence||"")} · ${esc(d.reason||"")}</span>${flag}</div>`}
@@ -181,10 +185,10 @@ function render(){const app=$("#app");app.innerHTML="";
   const audio=box.querySelector("audio");
   audio.addEventListener("timeupdate",()=>{if(stopAt!==null&&audio.currentTime>=stopAt){audio.pause();stopAt=null;if(playingRow)playingRow.classList.remove("playing")}});
   for(const s of clip.segments){const row=document.createElement("div");row.className="seg"+(s.reviewed?" done":"");
-   row.innerHTML=`<button title="ฟังช่วงนี้">▶</button><div class="t">${fmt(s.start)}–${fmt(s.end)}</div>
+   row.innerHTML=`<button title="ฟังช่วงนี้">▶</button><div class="t">${fmt(s.start)}–${fmt(s.end)}${riskHtml(s.instability)}</div>
    <div><textarea rows="2"></textarea><div class="asr">ASR เดิม: ${esc(s.asr)}</div>${draftHtml(s.draft)}</div>
    <div class="opts"><label><input type="checkbox" class="rv"> ตรวจแล้ว</label><label><input type="checkbox" class="na"> ไม่ได้ยิน</label></div>`;
-   if(s.draft&&s.draft.listen_first)row.classList.add("listen");
+   if((s.draft&&s.draft.listen_first)||s.instability>=0.2)row.classList.add("listen");
    const ta=row.querySelector("textarea"),rv=row.querySelector(".rv"),na=row.querySelector(".na");
    const use=row.querySelector(".use");if(use)use.onclick=()=>{ta.value=s.draft.text;s.ref=ta.value;save(clip)};
    ta.value=s.ref;rv.checked=!!s.reviewed;na.checked=!!s.inaudible;
@@ -204,13 +208,15 @@ fetch("/api/data").then(r=>r.json()).then(d=>{DATA=d;render()}).catch(e=>{$("#ap
 
 def make_handler(clips_dir: Path, data_dir: Path):
     segments_path, ref_path = data_dir / "segments.json", data_dir / "reference.json"
-    draft_path = data_dir / "reference.fable-draft.json"  # ร่างจาก LLM (ถ้ามี) — แสดงเป็นข้อเสนอ ไม่เคยเขียนลง reference.json เอง
+    draft_path = data_dir / "reference.fable-draft.json"
+    priority_path = data_dir / "reference.priority.json"  # คะแนนความไม่นิ่งจาก priority.py (ถ้ามี)  # ร่างจาก LLM (ถ้ามี) — แสดงเป็นข้อเสนอ ไม่เคยเขียนลง reference.json เอง
     allowed = {p.stem: p for p in clips_dir.glob("*.wav")}
 
     def load_payload() -> dict:
         seg = json.loads(segments_path.read_text(encoding="utf-8"))
         ref = json.loads(ref_path.read_text(encoding="utf-8")) if ref_path.is_file() else {}
         drafts = json.loads(draft_path.read_text(encoding="utf-8")).get("clips", {}) if draft_path.is_file() else {}
+        risk = json.loads(priority_path.read_text(encoding="utf-8")).get("clips", {}) if priority_path.is_file() else {}
         clips = []
         for name, clip in seg["clips"].items():
             if name not in allowed:
@@ -221,6 +227,9 @@ def make_handler(clips_dir: Path, data_dir: Path):
                 got = saved.get(str(s["i"]), {})
                 rows.append({**s, "ref": got.get("ref", s["asr"]), "inaudible": bool(got.get("inaudible")),
                              "reviewed": bool(got.get("reviewed"))})
+                scored = risk.get(name, {}).get(str(s["i"]))
+                if scored is not None:
+                    rows[-1]["instability"] = scored.get("instability")
                 d = drafts.get(name, {}).get(str(s["i"]))
                 if d:
                     rows[-1]["draft"] = {"text": d.get("draft", s["asr"]), "changed": bool(d.get("changed")),
