@@ -7,6 +7,7 @@
 !apps/api/pytest.ini
 !apps/api/requirements-voice-worker-linux-cpu.lock.txt
 !apps/api/requirements-voice-worker-test.lock.txt
+!apps/api/requirements-tts-linux-gpu.lock.txt
 !packages/contracts/schemas/**
 !tools/verify/voice_worker_client.py
 !tools/verify/smoke_voice_worker.py

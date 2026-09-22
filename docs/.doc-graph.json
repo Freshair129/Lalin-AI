@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T22:28:20+07:00",
+  "generated_at": "2026-09-23T02:02:32+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 427,
-    "total_edges": 565,
+    "total_edges": 566,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1329,10 +1329,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS",
-      "hash": "1a6e2478c067",
-      "prev_hash": "1a6e2478c067",
+      "hash": "4bb2b70d3c5c",
+      "prev_hash": "4bb2b70d3c5c",
       "status": "current",
-      "last_verified": "2026-09-22T22:28:20+07:00"
+      "last_verified": "2026-09-23T02:02:32+07:00"
     },
     {
       "id": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
@@ -2519,10 +2519,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "c7e94e42260d",
-      "prev_hash": "c7e94e42260d",
+      "hash": "50f66432e96d",
+      "prev_hash": "50f66432e96d",
       "status": "current",
-      "last_verified": "2026-09-22T21:13:15+07:00"
+      "last_verified": "2026-09-23T02:02:32+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -7304,6 +7304,13 @@
     {
       "from": "doc:VOICE_WORKER_LINUX_RUNBOOK",
       "to": "doc:2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
+      "type": "references",
+      "status": "current",
+      "source": "doc-scan"
+    },
+    {
+      "from": "doc:VOICE_WORKER_LINUX_RUNBOOK",
+      "to": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS",
       "type": "references",
       "status": "current",
       "source": "doc-scan"

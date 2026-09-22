@@ -61,6 +61,43 @@ services:
       voice-worker:
         condition: service_healthy
 
+  # TTS (D19 = GPU). Separate container, own socket and data: a GPU-less host can run the ASR worker alone.
+  # Start it with:  docker compose -f docker/voice-worker/compose.example.yaml --profile tts up -d --wait voice-worker-tts
+  voice-worker-tts:
+    profiles: ["tts"]
+    build:
+      context: ../..
+      dockerfile: docker/voice-worker/Dockerfile
+      target: tts-runtime
+    image: lalin-voice-worker-tts:dev
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 6g
+    memswap_limit: 6g
+    cpus: 4
+    gpus: all                               # needs the NVIDIA container runtime; the worker pins cuda:0 in its manifest
+    env_file:
+      - ${VOICE_WORKER_ENV_FILE:?set VOICE_WORKER_ENV_FILE to the token file}
+    environment:
+      LALIN_VOICE_WORKER_PROFILE_PATH: profiles/voice-worker/tts-th-preset-01.json
+      LALIN_VOICE_WORKER_HOST: unix:/run/voice-worker/worker.sock
+      LALIN_VOICE_WORKER_DATA_DIR: /data
+    volumes:
+      - ${LALIN_MODELS_DIR:?set LALIN_MODELS_DIR}:/repo/apps/api/models:ro
+      - voice-data-tts:/data
+      - voice-socket-tts:/run/voice-worker
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.Client(transport=httpx.HTTPTransport(uds='/run/voice-worker/worker.sock')).get('http://w/health/live').status_code == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 180s
+      retries: 3
+
 volumes:
   voice-data:
   voice-socket:
+  voice-data-tts:
+  voice-socket-tts:

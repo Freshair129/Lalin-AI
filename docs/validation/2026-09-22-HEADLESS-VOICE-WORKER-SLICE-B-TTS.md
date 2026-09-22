@@ -1,5 +1,5 @@
 ---
-version: "0.2.1b"
+version: "0.3.0b"
 created_at: "2026-09-22T23:59:00+07:00,LALIN,90971c8"
 last_update: "2026-09-22T23:59:00+07:00,LALIN"
 status: "beta"
@@ -26,7 +26,7 @@ sample for now" for the preset. Baseline `90971c8`.
 | Intelligibility (ASR round trip with large-v3-turbo, CER includes ASR error) | GPU: 0.098 (short), 0.106 (long), 0.147 (worker smoke sentence); CPU: 0.098, 0.194 |
 | **D19 TTS device** | **DECIDED 2026-09-22 by the owner: GPU** (§3) |
 | Reference preparation (§4.1) | **FIXED**: pooled round-trip CER 0.137 → **0.097** (4 texts × 3 seeds), clipped first syllables gone |
-| Linux container for TTS | **BLOCKED** on host disk (§5) |
+| **Linux container for TTS on the GPU** (§6) | **PASS** — image 11.6 GB, suite **153 passed, 1 skipped** (the ASR module skips: no faster-whisper in this image), smoke over a Unix socket **PASS 14/14** |
 | Production voice preset | **BLOCKED on a recording**: the shipped preset is the model repo's sample, `rights_status: dev-only` |
 
 ## 1. What was built
@@ -88,21 +88,35 @@ character comparison counts as errors. Mutation check: removing the ". " boundar
   English in Thai spelling.
 - Output differs between runs unless `engine_options.seed` is set (D16 applies to TTS as well).
 
+## 6. Linux container (2026-09-23)
+
+The owner freed space on C: (Docker's `docker_data.vhdx` lives there), so the image could be built.
+
+| Item | Note |
+|---|---|
+| Stages | `tts-base` / `tts-test` / `tts-runtime` in the same [Dockerfile](../../docker/voice-worker/Dockerfile); the ASR stages are unchanged. The worker's files are copied from one `scratch` stage into both images, so ASR and TTS cannot drift |
+| Lock | [`requirements-tts-linux-gpu.lock.txt`](../../apps/api/requirements-tts-linux-gpu.lock.txt) — torch 2.11.0+cu128 plus the exact `nvidia-*`/triton versions it resolved, recorded from the built image |
+| `--no-deps` twice | f5-tts (training/UI stack) **and vocos**: vocos declares `encodec==0.1.1`, which ships no wheel at all, so `--only-binary` refused the first build. The engine stubs encodec; vocos's real deps are pinned instead (huggingface-hub is imported by `vocos.pretrained` at module level) |
+| Size | **11.6 GB** (ASR image is 786 MB). Almost all of it is the CUDA stack |
+| Run | `--gpus all`; the compose example gained a `voice-worker-tts` service under profile `tts` (own socket and data volumes, `mem_limit 6g`, read-only root, no network) |
+
+Evidence: suite in-container **153 passed, 1 skipped** (real-engine tests confirmed running, not skipped); TTS smoke over the
+Unix socket **PASS 14/14** — `cuda:0` effective, synthesis SUCCEEDED (2.81 s audio in 1.76 s), sha256 matches the receipt,
+unknown voice and over-long text refused, no TCP listener.
+
 ## 5. Open
 
 1. ~~D19~~ **decided: GPU** (§3).
 2. **Production voice** (§2).
-3. **Linux container for TTS — BLOCKED on the host disk.** Docker Desktop keeps its data in `docker_data.vhdx` (142 GB)
-   on **C:, which has ~1.7 GB free**. A CUDA torch image adds several GB to that file, and filling C: can take Docker and
-   WSL down together with the running PRP/Zuri stacks. Needs the owner to move Docker's disk image to F: (Docker Desktop →
-   Settings → Resources → Advanced → Disk image location) or to free space on C:. The `encodec` problem is solved: it is
-   no longer installed (stubbed), so the image can build with `--only-binary`.
+3. ~~Linux container for TTS~~ **done (§6)**. Still open: the image is 11.6 GB, and the GPU is shared with the PRP LLM
+   (no VRAM cap is enforced by the worker); a second TTS job or vLLM growth can still exhaust the GPU.
 4. Studio quality comparison (MOS/listening), mp3 output, `remove_silence` post-processing: not in scope.
 
 ## CHANGELOG
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.3.0b | 2026-09-23 | beta | Linux GPU container built and verified (§6): suite and socket smoke pass in-container; vocos also needs --no-deps | based on 861c321 | LALIN |
 | 0.2.1b | 2026-09-22 | beta | D19 decided by the owner: GPU | based on f09fb2d | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Reference preparation restored (CER 0.137 → 0.097); encodec dropped; container blocked on C: disk | based on 6b6b54a | LALIN |
 | 0.1.0b | 2026-09-22 | beta | F5-TTS engine, manifest, smoke and tests; D19 measured; dev-only voice | based on 90971c8 | LALIN |

@@ -1,5 +1,5 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
 last_update: "2026-09-22T23:00:00+07:00,LALIN"
 status: "beta"
@@ -72,6 +72,21 @@ Verified on the dev box (2026-09-22) with [`compose.example.yaml`](../../docker/
 | Same stand-in **without** group 10001 | refused, `Permission denied` |
 | Smoke in socket mode (`smoke_voice_worker.py --unix-socket …`) | PASS 12/12, including "no TCP listener" |
 
+### 3.1 TTS (D19 = GPU)
+
+```bash
+docker compose -f docker/voice-worker/compose.example.yaml --profile tts up -d --build --wait voice-worker-tts
+```
+
+Separate container from ASR, with its own socket and data volumes, so a host without a GPU can still run ASR.
+It needs `--gpus all` (NVIDIA container runtime) and the `tts-th-preset-01` weights under `$LALIN_MODELS_DIR`
+(`f5-tts-thai/`, `vocos-mel-24khz/`). The image is ~11.6 GB and warm-up takes ~35 s in-container; memory cap 6 GiB,
+VRAM ~0.9 GB. Verified 2026-09-23: suite 153 passed / 1 skipped in-container, socket smoke PASS 14/14
+([Slice B TTS §6](../validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md)).
+
+**The GPU is shared.** When vLLM runs it holds most of the VRAM; TTS needs ~1 GB free. There is no VRAM cap in the
+worker, so check `nvidia-smi` before starting TTS on a busy GPU.
+
 ## 4. Operate
 
 | Symptom | Meaning | Action |
@@ -94,5 +109,6 @@ Verified on the dev box (2026-09-22) with [`compose.example.yaml`](../../docker/
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-23 | beta | TTS container section (D19 = GPU) | based on 861c321 | LALIN |
 | 0.1.1b | 2026-09-22 | beta | cpu_threads 8 shipped and memory check, from the PRP-host re-measurement (Slice C §10) | based on e6b7be2 | LALIN |
 | 0.1.0b | 2026-09-22 | beta | First runbook: compose example for D17 (a), verified with a group-gated coordinator stand-in; D13/D16/D18 operations | based on b4ffe94 | LALIN |
