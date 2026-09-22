@@ -1,5 +1,5 @@
 ---
-version: "0.1.2b"
+version: "0.1.3b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
 last_update: "2026-09-22T23:00:00+07:00,LALIN"
 status: "beta"
@@ -87,6 +87,22 @@ VRAM ~0.9 GB. Verified 2026-09-23: suite 153 passed / 1 skipped in-container, so
 **The GPU is shared.** When vLLM runs it holds most of the VRAM; TTS needs ~1 GB free. There is no VRAM cap in the
 worker, so check `nvidia-smi` before starting TTS on a busy GPU.
 
+### 3.2 Monitoring
+
+The worker exposes `GET /worker/v1/metrics` (Prometheus text format) over the same socket, with the same scope as
+describe/readiness — the **management token** is enough, so a scraper never needs an inference credential.
+It carries numbers only: no transcript, no TTS text, no attempt_id, no issuer (a test enforces this).
+
+Because the worker has no network, a scraper has to reach the socket: give the Prometheus container the
+`voice-socket` volume and group 10001 (like the coordinator), or run a tiny sidecar that reads the socket and
+re-exposes the text over TCP. There is no dashboard in the worker on purpose; dashboards belong in the monitoring
+stack (Grafana or whatever the PRP host already runs).
+
+Worth alerting on: `lalin_voice_worker_ready == 0` for more than a few minutes, `lalin_voice_worker_oom_lockout == 1`
+(operator action required, D18), a rising `lalin_voice_worker_engine_deaths_total`, and
+`increase(lalin_voice_worker_attempts_failed_total{code="RUNTIME_OOM"}[15m]) > 0`. `lalin_voice_worker_epoch_info`
+changing often means the engine keeps restarting.
+
 ## 4. Operate
 
 | Symptom | Meaning | Action |
@@ -109,6 +125,7 @@ worker, so check `nvidia-smi` before starting TTS on a busy GPU.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.3b | 2026-09-23 | beta | /metrics section (Prometheus over the socket, what to alert on) | based on 94884f3 | LALIN |
 | 0.1.2b | 2026-09-23 | beta | TTS container section (D19 = GPU) | based on 861c321 | LALIN |
 | 0.1.1b | 2026-09-22 | beta | cpu_threads 8 shipped and memory check, from the PRP-host re-measurement (Slice C §10) | based on e6b7be2 | LALIN |
 | 0.1.0b | 2026-09-22 | beta | First runbook: compose example for D17 (a), verified with a group-gated coordinator stand-in; D13/D16/D18 operations | based on b4ffe94 | LALIN |

@@ -130,6 +130,10 @@ profile ไม่รู้จัก/ไม่ valid → process exit code `2` **
   readiness `ready=false` reason `repeated_oom` + `oom_lockout`, request ใหม่ `503 MODEL_UNAVAILABLE` จน operator ขยายเพดานแล้ว restart worker · ครั้งเดียว = `RUNTIME_OOM` + epoch ใหม่
 - **transport (D17):** Linux deployment ใช้ `LALIN_VOICE_WORKER_HOST=unix:/run/voice-worker/worker.sock` บน volume ที่แชร์กับ coordinator
   (dir 0750, coordinator เข้ากลุ่ม 10001) — ไม่มี TCP เลย · ดู [runbook](../operations/VOICE_WORKER_LINUX_RUNBOOK.md)
+- **`/worker/v1/metrics` (Prometheus):** ตัวเลขสถานะรูปแบบ exposition format · scope เดียวกับ describe/readiness (inference หรือ management token; ไม่มี token = 401)
+  · **ห้ามมีเนื้อหางาน** — ไม่มีข้อความที่ถอดได้/ข้อความ TTS/attempt_id/issuer/path (เทสต์บังคับ) · counter นับในหน่วยความจำตั้งแต่ worker เริ่ม
+  (restart แล้วรีเซ็ต ตามธรรมเนียม counter ของ Prometheus) · มี `_info`/`_epoch_info` (identity + epoch), `_ready`/`_engine_alive`/`_model_warm`,
+  `_capacity_*`, `_vram_*` (GPU), `_oom_lockout`/`_consecutive_oom_kills` (D18), `_attempts_*_total` แยกตาม outcome/รหัส error, `_processing_seconds_total`
 - **machine-readable contract:** `packages/contracts/schemas/lalin-voice-worker.schema.json` (สร้างจาก pydantic ใน `app/voice_worker/contract.py` ด้วย
   `python -m app.voice_worker.schema --write`; `--check`/`test_contract_schema.py` บังคับ sync) และ TS types ใน `packages/contracts/src/voiceWorker.ts` — แก้ที่ pydantic ก่อนเสมอ
 

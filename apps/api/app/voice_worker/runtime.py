@@ -22,6 +22,8 @@ from .admission import check_asr_input, check_target, check_tts_input, check_win
 from .auth import Principal
 from .contract import TEXT_POLICY_REVISION, AsrEnvelope, TtsEnvelope, envelope_digest, glossary_prompt
 from .errors import WorkerError
+from .metrics import Counters
+from .metrics import render as render_metrics
 from .profile import ALLOWED_ENGINES, ProfileManifest
 from .receipts import Receipt, ReceiptStore
 from .settings import WorkerSettings
@@ -77,6 +79,7 @@ class WorkerRuntime:
         self.last_reconcile: dict[str, Any] | None = None
         self._tasks: set[asyncio.Task[Any]] = set()
         self._restart_lock = asyncio.Lock()
+        self.counters = Counters()  # ตัวนับสำหรับ /metrics (ในหน่วยความจำ — ไม่แตะ receipt DB ตอน scrape)
         # D18: นับ OOM ที่ยืนยันแล้วติดกัน · reset เมื่อ engine ส่งผลงานกลับมา (รอดจากงานได้ = memory พอสำหรับงานนั้น)
         self.consecutive_oom_kills = 0
         self.oom_lockout: dict[str, Any] | None = None
@@ -85,6 +88,7 @@ class WorkerRuntime:
     async def startup(self) -> None:
         self.settings.validate_runtime()
         epoch = await asyncio.to_thread(self.supervisor.start)
+        self.counters.engine_started()
         now = utc_now()
         self.last_reconcile = {"epoch": epoch, **self.store.reconcile(epoch, now)}
         self._sweep(now)
@@ -123,6 +127,7 @@ class WorkerRuntime:
                 return
             try:
                 await asyncio.to_thread(self.supervisor.start)
+                self.counters.engine_started()
             except Exception as exc:  # noqa: BLE001 — readiness จะเป็น false; ไม่ raise เข้า request path
                 logger.error("engine restart failed: %s", exc.__class__.__name__)
 
@@ -250,6 +255,7 @@ class WorkerRuntime:
         task = asyncio.create_task(self._run_attempt(issuer, attempt_id, envelope, engine_input, budget))
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
+        self.counters.accepted()
         logger.info("attempt accepted issuer=%s attempt=%s kind=%s", issuer, attempt_id, envelope.kind)
         return 202, receipt.to_status()
 
@@ -350,6 +356,7 @@ class WorkerRuntime:
             self.capacity.release()
 
     async def _engine_lost(self, issuer: str, attempt_id: str, epoch: str | None, evidence: dict[str, Any], *, code: str, message: str) -> None:
+        self.counters.engine_died(oom=evidence.get("oom_killed") is True)
         if evidence.get("oom_killed") is True:
             # D13: cgroup ยืนยันว่า kernel OOM killer ฆ่า engine → รายงานเป็น OOM (PRP ต้องขยายเพดาน ไม่ใช่ไล่หาบั๊ก)
             code, message = "RUNTIME_OOM", f"{message}: killed by the out-of-memory killer"
@@ -371,6 +378,7 @@ class WorkerRuntime:
     def _finish_failed(self, issuer: str, attempt_id: str, code: str, message: str, evidence: dict[str, Any], *,
                        compute_stopped: bool | None, safe_to_retry: bool | None) -> None:
         self.payloads.erase(issuer, attempt_id)
+        self.counters.finished("FAILED", code, None)
         self.store.finish(
             issuer, attempt_id, outcome="FAILED", result=None, error={"code": code, "message": message},
             usage={"processing_seconds": None, "provenance": "unavailable"}, compute_stopped=compute_stopped,
@@ -415,6 +423,7 @@ class WorkerRuntime:
             self.payloads.erase(issuer, attempt_id)
             if outcome not in {"FAILED", "CANCELLED"}:
                 outcome, error = "FAILED", {"code": "RUNTIME_FAILED", "message": "engine returned an unknown outcome"}
+        self.counters.finished(outcome or "FAILED", (error or {}).get("code"), usage)
         receipt = self.store.finish(
             issuer, attempt_id, outcome=outcome, result=result if outcome == "SUCCEEDED" else None, error=error, usage=usage,
             compute_stopped=True, stop_evidence=evidence, safe_to_retry=safe_to_retry, now=utc_now(),
@@ -423,6 +432,12 @@ class WorkerRuntime:
             # erase fence ถูกตั้งระหว่างทำ → ทิ้ง bytes ที่มาช้า ไม่ publish
             self.payloads.erase(issuer, attempt_id)
             self.store.mark_erased(issuer, attempt_id, utc_now())
+
+    def metrics(self) -> str:
+        """Prometheus exposition — ตัวเลขล้วน ไม่มีเนื้อหางาน (ดู metrics.py)"""
+        return render_metrics(describe=self.describe(), readiness=self.readiness(), counters=self.counters.snapshot(),
+                              manifest_kind=self.manifest.kind, oom_lockout=self.oom_lockout,
+                              consecutive_oom_kills=self.consecutive_oom_kills)
 
     # ── queries ──────────────────────────────────────────────
     def status(self, principal: Principal, attempt_id: str) -> dict[str, Any]:

@@ -12,11 +12,12 @@ from typing import Any, AsyncIterator
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 
 from .auth import Principal, require_any_role, require_inference
 from .contract import parse_envelope
 from .errors import WorkerError
+from .metrics import CONTENT_TYPE as METRICS_CONTENT_TYPE
 from .profile import ProfileManifest
 from .runtime import WorkerRuntime
 from .settings import WorkerSettings
@@ -28,6 +29,7 @@ ROUTE_ALLOWLIST: tuple[tuple[str, str], ...] = (
     ("GET", "/health/live"),
     ("GET", "/worker/v1/describe"),
     ("GET", "/worker/v1/readiness"),
+    ("GET", "/worker/v1/metrics"),
     ("POST", "/worker/v1/operations"),
     ("GET", "/worker/v1/operations/{attempt_id}"),
     ("POST", "/worker/v1/operations/{attempt_id}/cancel"),
@@ -57,6 +59,12 @@ async def describe(request: Request, _: Principal = Depends(require_any_role)) -
 @router.get("/readiness")
 async def readiness(request: Request, _: Principal = Depends(require_any_role)) -> dict[str, Any]:
     return _runtime(request).readiness()
+
+
+@router.get("/metrics")
+async def metrics(request: Request, _: Principal = Depends(require_any_role)) -> PlainTextResponse:
+    # สถานะแบบ Prometheus — scope เดียวกับ describe/readiness (management token ดึงได้ แต่ยิงงานไม่ได้)
+    return PlainTextResponse(_runtime(request).metrics(), media_type=METRICS_CONTENT_TYPE)
 
 
 async def _read_bounded(upload: Any, limit: int) -> bytes:
