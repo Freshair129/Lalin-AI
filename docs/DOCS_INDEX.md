@@ -1,7 +1,7 @@
 ---
-version: "0.10.6b"
+version: "0.10.7b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-22T19:00:00+07:00,LALIN"
+last_update: "2026-09-22T21:15:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -30,6 +30,7 @@ attributes:
 - `docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md`: candidate fail-closed voice-worker entrypoint, control/engine process split, speech-core seams and profile-scoped exceptions to Studio jobs/WS/auth rules (CR-005).
 - `docs/architecture/JAITTS_EASY_COMPARISON.md`: source-only comparison of JaiTTS-Easy with Studio `tts.py` and the voice worker; verified F5-TTS license facts, Thai chunking gap and eval protocol proposal.
 - `docs/architecture/MEETING_TRANSCRIPT_PIPELINE.md`: draft 6-stage offline meeting-transcript pipeline (whisper + pyannote + Meet ring gate + local narrative agent); eval helper outside the voice-worker scope, D14/D15 raised.
+- `docs/architecture/YT_CHANNEL_TRANSCRIPT_PIPELINE.md`: draft YouTube-channel → verified Thai transcript + reverse-engineered content playbook; decisions D-YT-1..8 (Thai-finetuned faster-whisper, raw fetch before survey, anchored diff-only LLM correction, two-tier audit with `no_external_evidence`), evidence and open gates; pilot not run.
 - `docs/architecture/LALIN_MEDIA_PLATFORM_PLAN.md`: candidate Lalin Media vertical slice, ownership matrix, VacuumTube provenance and verification gates.
 - `docs/architecture/LALIN_MEDIA_MIGRATION_MAP.md`: candidate current-to-target migration, rollback and retention map.
 - `docs/architecture/LALIN_CAST_REPOSITORY_SPLIT_PLAN.md`: executed export inventory, history policy and staged release gates.
@@ -103,6 +104,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/operations/WORKSTATION_DISTRIBUTION.md`
 - `docs/operations/CPU_GPU_DISTRIBUTION_STRATEGY.md`
 - `docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md`: deploy/operate the headless voice worker beside the PRP coordinator on Linux — Unix socket on a shared volume (D17), 3 GiB cap, OOM lockout, non-determinism.
+- `docs/operations/YT_CHANNEL_TRANSCRIPT_WORKFLOW.md`: design/runbook for the YouTube channel transcript pipeline — instance config, stage 1-4 schemas and acceptance criteria, model evidence, pilot design, file layout.
+- `docs/operations/YT_CHANNEL_TRANSCRIPT_SOP.md`: SOP — objective, owner, procedure, outputs, checks and exit criteria per stage (0, 2R, 1, 2, pilot, 3, 4, delivery); script status ✅/🔧.
 
 ## Tooling Layout
 
@@ -151,6 +154,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.7b | 2026-09-22 | beta | Index the YouTube channel transcript pipeline feature doc, workflow runbook and SOP | based on e6b7be2 | LALIN |
 | 0.10.6b | 2026-09-22 | beta | Index the voice worker Linux runbook | based on b4ffe94 | LALIN |
 | 0.10.5b | 2026-09-22 | beta | Refresh the Slice C entry (leak, sizing, D13, slim image) | based on 46eeb0a | LALIN |
 | 0.10.4b | 2026-09-22 | beta | Index Slice C Linux evidence | based on 6508cec | LALIN |
