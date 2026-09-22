@@ -1,5 +1,5 @@
 {
-  "_comment": "D8/D10 production ASR profile: faster-whisper large-v3-turbo on CPU int8 (D10, owner decision 2026-09-22: ASR must not compete with the PRP LLM for VRAM). Measured on the 28-thread dev box: RTF 0.72 on a 60 s clip. cpu_threads 0 = CTranslate2 default; set it explicitly for the real host once sized. GPU variant for the dev box: asr-th-en-01.gpu-dev.json.",
+  "_comment": "DEV BOX ONLY — not for PRP. GPU variant of asr-th-en-01 used to produce the GPU evidence on the RTX 5060 Ti (cuda:0 int8_float16). Production uses the CPU manifest asr-th-en-01.json per D10 (2026-09-22).",
   "_model_source": {
     "repo": "mobiuslabsgmbh/faster-whisper-large-v3-turbo",
     "license": "MIT (OpenAI Whisper weights, CTranslate2 conversion)",
@@ -7,21 +7,20 @@
     "downloaded_by": "huggingface_hub.snapshot_download; worker itself never fetches"
   },
   "profile_id": "asr-th-en-01",
-  "profile_revision": "rev-2026-09-22-large-v3-turbo-vad-cpu",
+  "profile_revision": "rev-2026-09-21-large-v3-turbo-vad-gpu-dev",
   "kind": "asr",
   "runtime_id": "speech-asr-fw",
-  "physical_resource_id": "cpu-local-host",
-  "device": "cpu",
+  "physical_resource_id": "gpu0-local-host",
+  "device": "cuda:0",
   "engine": "faster-whisper",
   "engine_options": {
-    "compute_type": "int8",
+    "compute_type": "int8_float16",
     "beam_size": 5,
     "heartbeat_seconds": 0.25,
     "warmup": true,
     "vad_filter": true,
     "vad_min_silence_ms": 700,
-    "vad_model_sha256": "4cbf549b8326f60f80f2536d9eefeb450a9abe83365a098031c89719f1be17d2",
-    "cpu_threads": 0
+    "vad_model_sha256": "4cbf549b8326f60f80f2536d9eefeb450a9abe83365a098031c89719f1be17d2"
   },
   "languages": [
     "th",
@@ -77,6 +76,5 @@
     }
   ],
   "_language_note": "auto removed 2026-09-21: Whisper language detection returned 'en' (p~0.8) on every window of a real Thai meeting recording and then emitted English 'translation' hallucinations; the caller must state th/en explicitly (real-work evidence, Slice B doc §5)",
-  "_vad_note": "D14 applied 2026-09-21: VAD on. Without it, silence, dither, white noise, a 440 Hz tone and 50 Hz hum were each transcribed as plausible Thai sentences and returned SUCCEEDED; with it all five return NO_SPEECH and real speech is unchanged. vad_model_sha256 pins silero_vad_v6.onnx shipped inside faster-whisper 1.2.1 (loaded locally via onnxruntime, no network). profile_revision bumped from rev-2026-09-20-large-v3-turbo so callers pinned to the old behaviour get 409.",
-  "_d10_note": "revision bumped from rev-2026-09-21-large-v3-turbo-vad: moving from cuda int8_float16 to cpu int8 changes numerics, and output is already non-deterministic (D16), so callers pinned to the GPU revision get 409 rather than silently different text."
+  "_vad_note": "D14 applied 2026-09-21: VAD on. Without it, silence, dither, white noise, a 440 Hz tone and 50 Hz hum were each transcribed as plausible Thai sentences and returned SUCCEEDED; with it all five return NO_SPEECH and real speech is unchanged. vad_model_sha256 pins silero_vad_v6.onnx shipped inside faster-whisper 1.2.1 (loaded locally via onnxruntime, no network). profile_revision bumped from rev-2026-09-20-large-v3-turbo so callers pinned to the old behaviour get 409."
 }

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-22T07:00:38+07:00",
+  "generated_at": "2026-09-22T11:00:07+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1180,9 +1180,9 @@
       "id": "code:tools/verify/voice_worker_soak.py",
       "type": "code_file",
       "path": "tools/verify/voice_worker_soak.py",
-      "hash": "84b49dbfffdf",
+      "hash": "36f1d9a2898b",
       "status": "current",
-      "last_verified": "2026-09-21T10:25:00+07:00"
+      "last_verified": "2026-09-22T11:00:05+07:00"
     },
     {
       "id": "doc:2026-08-19-render-portability-sidecar",
@@ -1249,10 +1249,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW.md",
       "title": "2026-09-20-HEADLESS-VOICE-WORKER-H0-REVIEW",
-      "hash": "d5641e83ccfe",
-      "prev_hash": "d5641e83ccfe",
+      "hash": "c4da9be35a96",
+      "prev_hash": "c4da9be35a96",
       "status": "current",
-      "last_verified": "2026-09-22T07:00:38+07:00"
+      "last_verified": "2026-09-22T11:00:07+07:00"
     },
     {
       "id": "doc:2026-09-20-HEADLESS-VOICE-WORKER-SLICE-A",
@@ -1269,10 +1269,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR.md",
       "title": "2026-09-21-HEADLESS-VOICE-WORKER-SLICE-B-ASR",
-      "hash": "196c692a0911",
-      "prev_hash": "196c692a0911",
+      "hash": "e7778bccaddc",
+      "prev_hash": "e7778bccaddc",
       "status": "current",
-      "last_verified": "2026-09-21T10:25:01+07:00"
+      "last_verified": "2026-09-22T11:00:07+07:00"
     },
     {
       "id": "doc:2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL",
