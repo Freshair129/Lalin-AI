@@ -1,7 +1,7 @@
 ---
-version: "0.10.8b"
+version: "0.10.9b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-23T21:40:00+07:00,LALIN"
+last_update: "2026-09-24T01:40:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -128,6 +128,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md`: Slice B TTS — F5-TTS-THAI engine in the worker (`tts-th-preset-01`), smoke PASS on GPU, dev-only sample voice, D19 (TTS device) measured: GPU RTF 0.19–0.44 vs CPU 7–14.
 - `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md`: Slice C step 1 — the worker in a Linux CPU-only container (D10/D11); 135 tests and the smoke pass inside it; bugs fixed (incl. the engine memory leak); D17/D18 raised; dev-box CPU sizing; D13 minimum 3 GiB; worker-only image 786 MB.
 - `docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md`: monitoring evidence — the three layers (/metrics, status gateway, Prometheus + Grafana), 7 alert rules, a 13-panel dashboard, and a drop-in kit for an existing dashboard; a real job verified end to end (RTF 0.317); Alertmanager still missing.
+- `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
@@ -156,6 +157,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |
 | 0.10.8b | 2026-09-23 | beta | Index the voice worker monitoring evidence | based on e833a7c | LALIN |
 | 0.10.7b | 2026-09-22 | beta | Index the YouTube channel transcript pipeline feature doc, workflow runbook and SOP | based on e6b7be2 | LALIN |
 | 0.10.7b | 2026-09-22 | beta | Index Slice B TTS evidence | based on 90971c8 | LALIN |

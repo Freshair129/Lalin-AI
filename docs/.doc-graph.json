@@ -1,13 +1,13 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-24T01:15:00+07:00",
+  "generated_at": "2026-09-24T01:40:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 428,
+    "total_nodes": 429,
     "total_edges": 570,
     "stale_edges": 0,
     "stale_nodes": 0,
@@ -1355,6 +1355,16 @@
       "last_verified": "2026-09-24T01:15:00+07:00"
     },
     {
+      "id": "doc:2026-09-24-PRP-WORKER-INTEGRATION-GAP",
+      "type": "document",
+      "path": "docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md",
+      "title": "2026-09-24-PRP-WORKER-INTEGRATION-GAP",
+      "hash": "6c284104bfc3",
+      "prev_hash": "6c284104bfc3",
+      "status": "current",
+      "last_verified": "2026-09-24T01:40:00+07:00"
+    },
+    {
       "id": "doc:A-api-spec",
       "type": "document",
       "path": "docs/appendices/A-api-spec.md",
@@ -1579,10 +1589,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "d5492478ab67",
-      "prev_hash": "8f71e21e458b",
+      "hash": "dcd319dc7db8",
+      "prev_hash": "d5492478ab67",
       "status": "current",
-      "last_verified": "2026-09-23T21:40:00+07:00"
+      "last_verified": "2026-09-24T01:40:00+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
