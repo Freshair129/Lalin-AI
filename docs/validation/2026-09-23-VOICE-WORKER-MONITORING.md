@@ -1,7 +1,7 @@
 ---
-version: "0.1.3b"
+version: "0.1.4b"
 created_at: "2026-09-23T21:40:00+07:00,LALIN,e833a7c"
-last_update: "2026-09-23T22:45:00+07:00,LALIN"
+last_update: "2026-09-24T00:20:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -199,10 +199,52 @@ and `prp-mvp-litellm` (4000) are live. Those two belong to PRP and were left alo
 loopback costs nothing, and the local config is one tailnet-policy change away from making the exposure real. The
 warning stays; its severity was wrong, not its direction.
 
+## 7. Host network posture, measured (2026-09-24)
+
+§6 corrected one claim; this is the full picture for the host the worker runs on, because "who can reach what" is the
+premise every binding decision here rests on. Measured, not assumed.
+
+### 7.1 Reachable from the public internet
+
+One thing only: `https://unspirited-expostulatory-angila.ngrok-free.dev` → `zuri-ai-web:3000`, an ngrok tunnel that
+belongs to the Zuri project and has been up for two days. Unlike the `ts.net` names this is genuinely public — DNS
+resolves to `47.130.23.15`, an ngrok edge address, and it answers 200. Reported to the owner; not touched, it is
+another team's.
+
+### 7.2 Reachable from the tailnet
+
+`9109` status gateway, `9090` Prometheus, `3009` Grafana, `9093` Alertmanager — all ours, all intended.
+
+### 7.3 Ollama was open to the LAN and the tailnet — closed 2026-09-24
+
+`ollama` was listening on `[::]:11434` and answered `/api/tags` **without authentication** from both the tailnet
+address and the LAN address (`192.168.1.100`), exposing 29 models and the GPU to anyone on the same wifi or tailnet.
+The owner asked for it to be closed.
+
+The fix is not the obvious one. Setting `OLLAMA_HOST=127.0.0.1:11434` in the user environment **had no effect**: the
+Windows tray app passes its own value, and `server.log` showed the server still starting with
+`OLLAMA_HOST:http://0.0.0.0:11434`. The real switch is `settings.expose` in the app's own SQLite database at
+`%LOCALAPPDATA%\Ollama\db.sqlite`, which was `1`. With the app stopped it was set to `0` (the database was backed up
+first), and the server now reports `Listening on 127.0.0.1:11434`.
+
+Verified after: loopback 200 with all 29 models, tailnet and LAN both refused. No container references Ollama or port
+11434, so nothing depended on the old binding. The environment variable was left in place as a second layer for anyone
+running `ollama serve` by hand. To reopen it, use the toggle in the Ollama app's own settings rather than the database.
+
+### 7.4 Docker disk
+
+With the owner's approval, `vllm/vllm-openai:latest` (30.5 GB, PRP's, no container referenced it) was removed and
+unused build cache pruned (4.25 GB): images 95.1 → 64.6 GB. **`C:` free space did not change**, because
+`docker_data.vhdx` is not a sparse file and does not shrink on deletion — the space is reusable by Docker but only
+returns to the host after a compaction, which needs the WSL VM stopped and was therefore left to the owner via Docker
+Desktop. 53.7 GB is still reclaimable, almost all of it Zuri's images including one tagged `rollback-before-*`, which
+is why a blanket `docker image prune -a` was refused.
+
 ## CHANGELOG
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.4b | 2026-09-24 | beta | Host network posture (§7): the one real public route is Zuri's ngrok; Ollama closed to loopback (the app's expose flag overrides OLLAMA_HOST); Docker disk cleanup and why C: did not change | based on a3986a9 | LALIN |
 | 0.1.3b | 2026-09-23 | beta | Correction (§6): Funnel is configured but has no public ingress; the earlier "exposed to the internet" finding overstated the risk, and the test that produced it was run from inside the tailnet | based on 24147fe | LALIN |
 | 0.1.2b | 2026-09-23 | beta | Alertmanager + LINE bridge (§5); pipeline proven end to end with a real alert, last hop blocked on LINE credentials | based on 7affb29 | LALIN |
 | 0.1.1b | 2026-09-23 | beta | Cross-host reachability confirmed from worker-node-3060 (§2.2) | based on dd26c13 | LALIN |
