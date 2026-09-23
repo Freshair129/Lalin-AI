@@ -1,5 +1,5 @@
 ---
-version: "0.1.5b"
+version: "0.1.6b"
 created_at: "2026-09-23T21:40:00+07:00,LALIN,e833a7c"
 last_update: "2026-09-24T00:20:00+07:00,LALIN"
 status: "beta"
@@ -154,7 +154,10 @@ Afterwards: Alertmanager 0 active alerts, both Prometheus targets `up` again.
 payload still says something), the exact route set (only `GET /healthz` and `POST /alert`), the token being required
 before any outbound call, the LINE body, both failure modes becoming 5xx, and `main()` exiting 2 for each missing
 setting. Mutation-checked: making auth always pass, turning a LINE rejection into 200, and removing truncation each
-fail the suite. apps/api **278 passed, 2 skipped**.
+fail the suite. Counted after the broadcast work: bridge **33**, catcher **15**, apps/api **307 passed, 2 skipped**.
+
+(The commit message of `d5b2878` says 293 for that last figure. It is wrong — the number was estimated instead of
+counted. 307/2 is the measured result.)
 
 ### 5.3 Two things worth remembering
 
@@ -294,6 +297,7 @@ is why a blanket `docker image prune -a` was refused.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.6b | 2026-09-24 | beta | Correct the apps/api test count to the measured 307 passed, 2 skipped | based on d5b2878 | LALIN |
 | 0.1.5b | 2026-09-24 | beta | LINE delivery proven on the real API (§5.4); broadcast mode for a free account and quota-driven repeat_interval (§5.3); a hanging test fixed (§5.5) | based on ed41618 | LALIN |
 | 0.1.4b | 2026-09-24 | beta | Host network posture (§7): the one real public route is Zuri's ngrok; Ollama closed to loopback (the app's expose flag overrides OLLAMA_HOST); Docker disk cleanup and why C: did not change | based on a3986a9 | LALIN |
 | 0.1.3b | 2026-09-23 | beta | Correction (§6): Funnel is configured but has no public ingress; the earlier "exposed to the internet" finding overstated the risk, and the test that produced it was run from inside the tailnet | based on 24147fe | LALIN |
