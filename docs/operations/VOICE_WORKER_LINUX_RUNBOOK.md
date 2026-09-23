@@ -1,5 +1,5 @@
 ---
-version: "0.1.6b"
+version: "0.1.7b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
 last_update: "2026-09-23T22:45:00+07:00,LALIN"
 status: "beta"
@@ -181,6 +181,21 @@ worker image, which already has fastapi/uvicorn/httpx, so nothing extra is built
 - Alertmanager's UI on `${MONITORING_BIND_IP}:9093` is where silences are created before planned maintenance.
 
 
+#### 3.4.2 Finding `LALIN_ALERT_LINE_TO`
+
+A **userId** for the console owner is printed in the LINE Developers console under the channel's *Basic settings*
+("Your user ID"); that needs nothing else, as long as that account has added the bot as a friend. A **groupId** is
+never shown anywhere — it exists only inside a webhook event.
+
+[`tools/monitoring/line_userid_catcher.py`](../../tools/monitoring/line_userid_catcher.py) captures either. It
+verifies `X-Line-Signature` against the channel secret, records only the source ids (never the message text), and
+serves `GET /captured` behind its own token.
+
+It is a **setup-time tool that has to be publicly reachable over HTTPS**, because LINE's servers call it. Expose it
+deliberately, capture the id, then shut it down and close the public route again — do not leave it running. On this
+host `tailscale funnel` is the available route, and its allowed ports are already taken by other services, so freeing
+one is a decision for whoever owns them.
+
 ### 3.5 Putting the status on an existing dashboard
 
 `tools/dashboard/` has a drop-in kit (Vite proxy + a React card) for showing `/status` on a dashboard the team already
@@ -209,6 +224,7 @@ dashboard's dev server or backend holds it and proxies the request.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.7b | 2026-09-23 | beta | How to find the LINE destination id (§3.4.2), including the setup-time catcher and its exposure caveat | based on 9c4a25b | LALIN |
 | 0.1.6b | 2026-09-23 | beta | Alertmanager and the LINE bridge (§3.4.1); note that Prometheus needs a restart to pick up config/rule edits | based on 7affb29 | LALIN |
 | 0.1.5b | 2026-09-23 | beta | Prometheus + Grafana stack (§3.4) and the dashboard kit (§3.5); §3.2 now points at the gateway instead of a hypothetical sidecar | based on e833a7c | LALIN |
 | 0.1.4b | 2026-09-23 | beta | Status gateway section (tailnet-only, read-only, Funnel warning) | based on 05f869e | LALIN |
