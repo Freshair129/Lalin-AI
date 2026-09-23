@@ -1,0 +1,30 @@
+# เก็บ metric ของ voice worker ย้อนหลัง — ดึงผ่าน status gateway เท่านั้น (worker เองไม่มีเครือข่าย, D17)
+# เป้าหมายอยู่ในไฟล์แยก (targets/*.json) เพื่อให้เพิ่มเครื่องใหม่ได้โดยไม่ต้อง restart Prometheus
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    stack: lalin-voice
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  # Prometheus เฝ้าตัวเอง — ถ้าอันนี้หาย แปลว่าระบบเฝ้าระวังเองล่ม
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # voice worker ทุกเครื่องที่ใช้ token ร่วมกัน
+  # token อ่านจากไฟล์ที่ mount แบบ read-only — ไม่เขียน token ลงไฟล์ config ที่อยู่ใน git
+  # ถ้าเครื่องไหนใช้ token คนละดอก ให้ copy job นี้ทั้งบล็อกแล้วชี้ credentials_file กับ files ไปคนละชุด
+  - job_name: lalin-voice-worker
+    metrics_path: /metrics
+    scheme: http
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/secrets/gateway-token
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/voice-worker-*.json
+        refresh_interval: 30s

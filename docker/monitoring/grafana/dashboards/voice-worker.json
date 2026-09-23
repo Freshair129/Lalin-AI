@@ -1,0 +1,233 @@
+{
+  "uid": "lalin-voice-worker",
+  "title": "Lalin voice worker",
+  "description": "สถานะและงานของ headless voice worker (ASR/TTS) ดึงผ่าน status gateway",
+  "tags": ["lalin", "voice-worker"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "เครื่อง",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+        "query": "label_values(lalin_voice_worker_info, host)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "ดึงข้อมูลได้",
+      "description": "Prometheus ติดต่อ status gateway ได้หรือไม่ — 0 แปลว่า gateway หรือเครือข่ายมีปัญหา ไม่ได้แปลว่า worker ล่มเสมอไป",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "up{job=\"lalin-voice-worker\", host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "ติดต่อไม่ได้", "color": "red", "index": 0 }, "1": { "text": "ติดต่อได้", "color": "green", "index": 1 } } }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "พร้อมรับงาน",
+      "description": "lalin_voice_worker_ready — 0 แปลว่า worker ยังอยู่แต่ปฏิเสธงาน",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_ready{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "ไม่พร้อม", "color": "red", "index": 0 }, "1": { "text": "พร้อม", "color": "green", "index": 1 } } }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "engine ทำงานอยู่",
+      "description": "process ลูกที่โหลดโมเดลยังมีชีวิตอยู่หรือไม่",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_engine_alive{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "ตาย", "color": "red", "index": 0 }, "1": { "text": "อยู่", "color": "green", "index": 1 } } }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "OOM lockout (D18)",
+      "description": "ถ้าเป็น 1 worker จะไม่กลับมาเอง ต้องมีคนเพิ่มเพดาน memory แล้ว restart",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_oom_lockout{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "ปกติ", "color": "green", "index": 0 }, "1": { "text": "ล็อก", "color": "red", "index": 1 } } }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "งานที่กำลังทำ",
+      "description": "in_use เทียบกับ max_concurrency ของ profile",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_capacity_in_use{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "โมเดลอุ่นแล้ว",
+      "description": "warm-up เสร็จหรือยัง — งานแรกหลังบูตจะช้าถ้ายังไม่อุ่น",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_model_warm{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "ยัง", "color": "yellow", "index": 0 }, "1": { "text": "อุ่นแล้ว", "color": "green", "index": 1 } } }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "งานที่จบ ต่อนาที แยกตามผล",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (outcome) (rate(lalin_voice_worker_attempts_finished_total{host=~\"$host\"}[5m])) * 60", "legendFormat": "{{outcome}}" }],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "timeseries",
+      "title": "งานที่ล้มและที่ถูกปฏิเสธ แยกตามรหัส",
+      "description": "ไม่มีเนื้อหางานใน label ตามกฎของ metrics.py",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (code) (rate(lalin_voice_worker_attempts_failed_total{host=~\"$host\", code!=\"none\"}[5m])) * 60", "legendFormat": "ล้ม: {{code}}" },
+        { "refId": "B", "expr": "sum by (code) (rate(lalin_voice_worker_attempts_rejected_total{host=~\"$host\", code!=\"none\"}[5m])) * 60", "legendFormat": "ปฏิเสธ: {{code}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "timeseries",
+      "title": "RTF — เวลาประมวลผล หารด้วย ความยาวเสียง",
+      "description": "ต่ำกว่า 1 คือเร็วกว่าเวลาจริง วัดได้เฉพาะช่วงที่มีงานเข้า",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "rate(lalin_voice_worker_processing_seconds_total{host=~\"$host\"}[10m]) / rate(lalin_voice_worker_audio_input_seconds_total{host=~\"$host\"}[10m])", "legendFormat": "{{host}}" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "showPoints": "never", "thresholdsStyle": { "mode": "line" } },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "timeseries",
+      "title": "ปริมาณเสียง (นาที ต่อ ชั่วโมง)",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(lalin_voice_worker_audio_input_seconds_total{host=~\"$host\"}[15m])) * 60", "legendFormat": "เสียงเข้า (ASR)" },
+        { "refId": "B", "expr": "sum(rate(lalin_voice_worker_audio_output_seconds_total{host=~\"$host\"}[15m])) * 60", "legendFormat": "เสียงออก (TTS)" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "m", "custom": { "drawStyle": "line", "fillOpacity": 20, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "timeseries",
+      "title": "engine เริ่ม ตาย และโดน OOM kill (ต่อชั่วโมง)",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (host) (rate(lalin_voice_worker_engine_starts_total{host=~\"$host\"}[30m])) * 3600", "legendFormat": "เริ่ม {{host}}" },
+        { "refId": "B", "expr": "sum by (host) (rate(lalin_voice_worker_engine_deaths_total{host=~\"$host\"}[30m])) * 3600", "legendFormat": "ตาย {{host}}" },
+        { "refId": "C", "expr": "sum by (host) (rate(lalin_voice_worker_engine_oom_kills_total{host=~\"$host\"}[30m])) * 3600", "legendFormat": "OOM {{host}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "timeseries",
+      "title": "อายุ heartbeat ของ engine",
+      "description": "ค่าสูงแปลว่า process ยังอยู่แต่ไม่ส่งสัญญาณ",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_engine_heartbeat_age_seconds{host=~\"$host\"}", "legendFormat": "{{host}}" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "showPoints": "never", "thresholdsStyle": { "mode": "line" } },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 120 }] }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } }
+    },
+    {
+      "type": "table",
+      "title": "worker ที่กำลังเฝ้าอยู่",
+      "description": "มาจาก lalin_voice_worker_info — profile, revision, engine และ device ที่ใช้จริง",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "lalin-prometheus" },
+      "targets": [{ "refId": "A", "expr": "lalin_voice_worker_info{host=~\"$host\"}", "format": "table", "instant": true }],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Value": true, "__name__": true, "job": true, "stack": true },
+            "renameByName": {
+              "host": "เครื่อง",
+              "role": "หน้าที่",
+              "profile_id": "profile",
+              "profile_revision": "revision",
+              "engine": "engine",
+              "engine_version": "เวอร์ชัน",
+              "device_effective": "device ที่ใช้จริง",
+              "device_configured": "device ที่ตั้งไว้",
+              "labeled_stub": "เป็น stub",
+              "worker_version": "worker",
+              "contract_version": "contract",
+              "runtime_id": "runtime id",
+              "kind": "ชนิด"
+            }
+          }
+        }
+      ],
+      "options": { "showHeader": true }
+    }
+  ]
+}

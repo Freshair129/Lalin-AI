@@ -1,13 +1,13 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-23T18:57:58+07:00",
+  "generated_at": "2026-09-23T21:40:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
-    "total_nodes": 427,
+    "total_nodes": 428,
     "total_edges": 568,
     "stale_edges": 0,
     "stale_nodes": 0,
@@ -1345,6 +1345,16 @@
       "last_verified": "2026-09-22T21:13:04+07:00"
     },
     {
+      "id": "doc:2026-09-23-VOICE-WORKER-MONITORING",
+      "type": "document",
+      "path": "docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md",
+      "title": "2026-09-23-VOICE-WORKER-MONITORING",
+      "hash": "86f3dd4ab38f",
+      "prev_hash": "86f3dd4ab38f",
+      "status": "current",
+      "last_verified": "2026-09-23T21:40:00+07:00"
+    },
+    {
       "id": "doc:A-api-spec",
       "type": "document",
       "path": "docs/appendices/A-api-spec.md",
@@ -1569,10 +1579,10 @@
       "type": "document",
       "path": "docs/DOCS_INDEX.md",
       "title": "DOCS_INDEX",
-      "hash": "8f71e21e458b",
+      "hash": "d5492478ab67",
       "prev_hash": "8f71e21e458b",
       "status": "current",
-      "last_verified": "2026-09-22T21:54:32+07:00"
+      "last_verified": "2026-09-23T21:40:00+07:00"
     },
     {
       "id": "doc:DOCS_PHASE1_MOVE_MAP",
@@ -2519,10 +2529,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "90d00bbb7852",
+      "hash": "1282d05b03d1",
       "prev_hash": "90d00bbb7852",
       "status": "current",
-      "last_verified": "2026-09-23T18:57:58+07:00"
+      "last_verified": "2026-09-23T21:40:00+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",

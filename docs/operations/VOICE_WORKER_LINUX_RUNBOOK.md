@@ -1,7 +1,7 @@
 ---
-version: "0.1.4b"
+version: "0.1.5b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
-last_update: "2026-09-22T23:00:00+07:00,LALIN"
+last_update: "2026-09-23T21:30:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -93,10 +93,10 @@ The worker exposes `GET /worker/v1/metrics` (Prometheus text format) over the sa
 describe/readiness — the **management token** is enough, so a scraper never needs an inference credential.
 It carries numbers only: no transcript, no TTS text, no attempt_id, no issuer (a test enforces this).
 
-Because the worker has no network, a scraper has to reach the socket: give the Prometheus container the
-`voice-socket` volume and group 10001 (like the coordinator), or run a tiny sidecar that reads the socket and
-re-exposes the text over TCP. There is no dashboard in the worker on purpose; dashboards belong in the monitoring
-stack (Grafana or whatever the PRP host already runs).
+Because the worker has no network, a scraper has to reach the socket. The **status gateway** (§3.3) is that
+sidecar, and §3.4 is a Prometheus + Grafana stack already wired to it. Giving a Prometheus container the
+`voice-socket` volume and group 10001 (like the coordinator) also works when everything runs on one host.
+There is no dashboard in the worker on purpose; dashboards belong in the monitoring stack.
 
 Worth alerting on: `lalin_voice_worker_ready == 0` for more than a few minutes, `lalin_voice_worker_oom_lockout == 1`
 (operator action required, D18), a rising `lalin_voice_worker_engine_deaths_total`, and
@@ -128,6 +128,40 @@ passed, which is how the compose service runs it: Docker publishes the port **on
 8080, 8088, 8787, 4000). Never bind the gateway to a loopback port that Funnel exposes, and keep the published address
 pinned to the tailnet IP — verified: `http://127.0.0.1:9109/` does not answer, only the tailnet address does.
 
+### 3.4 Prometheus + Grafana
+
+`docker/monitoring/compose.example.yaml` runs both, already pointed at the gateway. Prometheus keeps the numbers
+(30 d / 4 GB, whichever comes first) and evaluates the alert rules; Grafana draws them. Neither is required for the
+worker to run — they answer questions `/metrics` alone cannot, such as *when* something started getting worse.
+
+```bash
+export MONITORING_BIND_IP=<this host's tailnet IP>          # e.g. 100.76.19.65
+export LALIN_MONITORING_SECRETS_DIR=/srv/lalin/monitoring   # contains a file named gateway-token
+export MONITORING_ENV_FILE=/srv/lalin/monitoring.env        # GF_SECURITY_ADMIN_USER/PASSWORD, chmod 600
+docker compose -f docker/monitoring/compose.example.yaml up -d
+```
+
+- **The token is a file, not a config value.** `prometheus.yml` points at `credentials_file`, so nothing secret is
+  committed. Write it with no trailing newline.
+- **Targets live in `docker/monitoring/targets/voice-worker-*.json`** and are re-read every 30 s, so adding a worker
+  host is one file, no restart. Workers with a different gateway token need their own scrape job.
+- Prometheus joins the `lalin-voice_default` network and scrapes `status-gateway:9109` directly; a worker on another
+  host is scraped over its tailnet address instead (`voice-worker-remote.json.example`).
+- Both UIs are published on the tailnet IP only, same rule as the gateway. Neither uses a port that Funnel proxies —
+  check with `tailscale funnel status` before changing a port.
+- `--web.enable-lifecycle` and `--web.enable-admin-api` are left off, so the Prometheus HTTP API cannot reload config
+  or delete series. Grafana provisions its datasource and dashboard from files and refuses UI edits to them.
+
+Alert rules (`docker/monitoring/alerts.yml`): gateway unreachable, not ready, **OOM lockout (D18)**, engine flapping,
+stale heartbeat, RTF above 1, failure rate above 20 %. **They evaluate but nothing notifies yet** — Alertmanager is not
+installed, so today they are only visible on the Prometheus Alerts page and in Grafana.
+
+### 3.5 Putting the status on an existing dashboard
+
+`tools/dashboard/` has a drop-in kit (Vite proxy + a React card) for showing `/status` on a dashboard the team already
+uses, without Prometheus. The important rule is in its README: **the browser must never hold the gateway token** — the
+dashboard's dev server or backend holds it and proxies the request.
+
 ## 4. Operate
 
 | Symptom | Meaning | Action |
@@ -150,6 +184,7 @@ pinned to the tailnet IP — verified: `http://127.0.0.1:9109/` does not answer,
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.5b | 2026-09-23 | beta | Prometheus + Grafana stack (§3.4) and the dashboard kit (§3.5); §3.2 now points at the gateway instead of a hypothetical sidecar | based on e833a7c | LALIN |
 | 0.1.4b | 2026-09-23 | beta | Status gateway section (tailnet-only, read-only, Funnel warning) | based on 05f869e | LALIN |
 | 0.1.3b | 2026-09-23 | beta | /metrics section (Prometheus over the socket, what to alert on) | based on 94884f3 | LALIN |
 | 0.1.2b | 2026-09-23 | beta | TTS container section (D19 = GPU) | based on 861c321 | LALIN |

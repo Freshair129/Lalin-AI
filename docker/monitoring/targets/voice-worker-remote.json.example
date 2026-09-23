@@ -1,0 +1,9 @@
+[
+  {
+    "targets": ["100.66.206.115:9109"],
+    "labels": {
+      "host": "worker-node-3060",
+      "role": "tts"
+    }
+  }
+]

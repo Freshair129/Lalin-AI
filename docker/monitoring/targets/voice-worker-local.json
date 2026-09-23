@@ -1,0 +1,9 @@
+[
+  {
+    "targets": ["status-gateway:9109"],
+    "labels": {
+      "host": "prp-linux-01",
+      "role": "asr"
+    }
+  }
+]

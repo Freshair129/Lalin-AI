@@ -1,0 +1,12 @@
+# Grafana ไม่เก็บข้อมูลเอง — ดึงจาก Prometheus ในสแตกเดียวกัน
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: lalin-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s

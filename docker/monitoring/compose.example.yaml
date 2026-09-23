@@ -1,0 +1,77 @@
+# ชั้นที่ 2 และ 3 ของระบบเฝ้าระวัง: Prometheus เก็บตัวเลขย้อนหลัง, Grafana วาดเป็นหน้าจอ
+# ชั้นที่ 1 คือ /metrics ของ worker เอง ซึ่งออกมาทาง status gateway (ดู docker/voice-worker/compose.example.yaml)
+# Runbook: docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md §3.4
+#
+#   export MONITORING_BIND_IP=100.76.19.65                       # ที่อยู่ tailnet ของเครื่องนี้
+#   export LALIN_MONITORING_SECRETS_DIR=/srv/lalin/monitoring    # มีไฟล์ gateway-token อยู่ข้างใน
+#   export MONITORING_ENV_FILE=/srv/lalin/monitoring.env         # รหัสผ่าน admin ของ Grafana, chmod 600
+#   docker compose -f docker/monitoring/compose.example.yaml up -d
+#
+# ทั้งสองตัวเปิดเฉพาะบน tailnet เหมือน gateway — ห้าม 0.0.0.0 และห้ามใช้พอร์ตที่ `tailscale serve` ดึงจาก
+# 127.0.0.1 ออกอินเทอร์เน็ต (เครื่องนี้ funnel 8080, 8088, 8787, 4000 อยู่ — ตรวจด้วย `tailscale funnel status`)
+
+name: lalin-monitoring
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=4GB
+      - --web.listen-address=0.0.0.0:9090
+      # ไม่เปิด --web.enable-lifecycle และ --web.enable-admin-api (ค่าตั้งต้นคือปิด)
+      # หน้านี้จึงอ่านอย่างเดียวเหมือน gateway: reload/ลบข้อมูลผ่าน HTTP ไม่ได้
+    ports:
+      - "${MONITORING_BIND_IP:?set MONITORING_BIND_IP to this host's tailnet IP}:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./targets:/etc/prometheus/targets:ro
+      # ไฟล์ token ของ gateway — อยู่นอก git, mount แบบอ่านอย่างเดียว
+      - ${LALIN_MONITORING_SECRETS_DIR:?set LALIN_MONITORING_SECRETS_DIR}:/etc/prometheus/secrets:ro
+      - prometheus-data:/prometheus
+    networks:
+      - monitoring
+      - voice          # เพื่อให้เรียก status-gateway:9109 ตรง ๆ ได้ ไม่ต้องอ้อมออก tailnet
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana-oss:11.4.0
+    env_file:
+      - ${MONITORING_ENV_FILE:?set MONITORING_ENV_FILE to the Grafana password file}
+    environment:
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      # ไม่ต้องคุยกับ grafana.com — สแตกนี้ตั้งใจให้ทำงานแบบออฟไลน์ได้
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    ports:
+      - "${MONITORING_BIND_IP:?}:${GRAFANA_PORT:-3009}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+networks:
+  monitoring:
+  voice:
+    external: true
+    name: lalin-voice_default
+
+volumes:
+  prometheus-data:
+  grafana-data:

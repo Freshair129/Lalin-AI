@@ -1,0 +1,78 @@
+# กฎแจ้งเตือน — เขียนไว้ให้เห็นบนหน้า Alerts ของ Prometheus และให้ Grafana ดึงไปแสดงได้
+# ยังไม่มี Alertmanager จึง "ยังไม่มีอะไรส่งเข้ามือถือ/Slack" — ดูหมายเหตุในรันบุ๊ก §3.4
+groups:
+  - name: lalin-voice-worker
+    rules:
+      # gateway ไม่ตอบ = อาจล่มจริง หรือแค่ token/เส้นทางผิด — ดูที่ /healthz ของ gateway ก่อน
+      - alert: VoiceWorkerGatewayDown
+        expr: up{job="lalin-voice-worker"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ดึง metric จาก {{ $labels.host }} ไม่ได้ ({{ $labels.instance }})"
+          description: "status gateway ไม่ตอบมา 2 นาที — worker อาจล่ม หรือ gateway/เครือข่าย tailnet มีปัญหา"
+
+      # worker ตอบได้แต่ปฏิเสธงาน — ดู label reason ว่าเพราะอะไร
+      - alert: VoiceWorkerNotReady
+        expr: lalin_voice_worker_ready == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.host }} ไม่รับงานมา 5 นาที"
+          description: "reason = {{ $labels.reason }}"
+
+      # D18: ล็อกตัวเองหลังโดน OOM kill ซ้ำ — ออกแบบให้ไม่ restart เอง ต้องมีคนแก้ (เพิ่ม memory หรือลดงาน)
+      - alert: VoiceWorkerOomLockout
+        expr: lalin_voice_worker_oom_lockout == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.host }} ล็อกตัวเองเพราะ OOM ซ้ำ (D18)"
+          description: "worker จะไม่กลับมาเอง ต้องมีคนเพิ่มเพดาน memory หรือแก้ต้นเหตุแล้ว restart"
+
+      - alert: VoiceWorkerEngineFlapping
+        expr: increase(lalin_voice_worker_engine_deaths_total[15m]) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "engine ของ {{ $labels.host }} ตายบ่อยผิดปกติ"
+          description: "ตาย {{ $value | printf \"%.0f\" }} ครั้งใน 15 นาที"
+
+      - alert: VoiceWorkerHeartbeatStale
+        expr: lalin_voice_worker_engine_heartbeat_age_seconds > 120
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "engine ของ {{ $labels.host }} เงียบไป {{ $value | printf \"%.0f\" }} วินาที"
+          description: "process ยังอยู่แต่ไม่ส่งสัญญาณ — อาจค้างอยู่กับงานที่ยาวผิดปกติ"
+
+      # RTF > 1 = ถอดช้ากว่าเวลาจริงของเสียง คิวจะยาวขึ้นเรื่อย ๆ
+      # ตัวส่วนต้องมีค่าจริงก่อน ไม่งั้นช่วงที่ไม่มีงานจะกลายเป็นหารศูนย์
+      - alert: VoiceWorkerSlowerThanRealtime
+        expr: |
+          rate(lalin_voice_worker_processing_seconds_total[10m])
+            / rate(lalin_voice_worker_audio_input_seconds_total[10m]) > 1
+          and rate(lalin_voice_worker_audio_input_seconds_total[10m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.host }} ถอดเสียงช้ากว่าเวลาจริง (RTF {{ $value | printf \"%.2f\" }})"
+          description: "ปกติ RTF ราว 0.2-0.6 บน CPU 8 เธรด — ถ้าค้างเกิน 1 นานคิวจะยาวขึ้นเรื่อย ๆ"
+
+      - alert: VoiceWorkerHighFailureRate
+        expr: |
+          sum by (host, instance) (rate(lalin_voice_worker_attempts_failed_total[15m]))
+            / sum by (host, instance) (rate(lalin_voice_worker_attempts_finished_total[15m])) > 0.2
+          and sum by (host, instance) (rate(lalin_voice_worker_attempts_finished_total[15m])) > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.host }} งานล้มเกิน 20% ของงานที่จบ"
+          description: "ดูกราฟ failures by code ว่าเป็น RUNTIME_OOM, NO_SPEECH หรืออย่างอื่น"
