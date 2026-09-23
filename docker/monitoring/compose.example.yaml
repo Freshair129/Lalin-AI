@@ -9,7 +9,8 @@
 #   docker compose -f docker/monitoring/compose.example.yaml up -d
 #
 # ทั้งสองตัวเปิดเฉพาะบน tailnet เหมือน gateway — ห้าม 0.0.0.0 และห้ามใช้พอร์ตที่ `tailscale serve` ดึงจาก
-# 127.0.0.1 ออกอินเทอร์เน็ต (เครื่องนี้ funnel 8080, 8088, 8787, 4000 อยู่ — ตรวจด้วย `tailscale funnel status`)
+# 127.0.0.1 ได้ (เครื่องนี้ตั้ง funnel ไว้ที่ 8080, 8088, 8787, 4000 — ตรวจด้วย `tailscale funnel status`)
+# หมายเหตุ: วัดแล้วว่า funnel ของเครื่องนี้ยังไม่ทะลุออกเน็ตจริง (ไม่มี ingress) แต่กฎนี้ถือไว้เพราะไม่เสียอะไร
 
 name: lalin-monitoring
 

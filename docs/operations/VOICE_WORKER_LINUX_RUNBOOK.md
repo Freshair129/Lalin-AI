@@ -124,9 +124,18 @@ Rules it enforces, fail-closed before it binds: the gateway token and the worker
 address must be loopback or Tailscale CGNAT (100.64.0.0/10). `0.0.0.0` is refused unless `--container-published` is
 passed, which is how the compose service runs it: Docker publishes the port **on the tailnet IP only**.
 
-**Watch out on this host:** `tailscale serve`/Funnel proxies from `127.0.0.1` to the public internet (currently ports
-8080, 8088, 8787, 4000). Never bind the gateway to a loopback port that Funnel exposes, and keep the published address
-pinned to the tailnet IP — verified: `http://127.0.0.1:9109/` does not answer, only the tailnet address does.
+**Watch out on this host:** `tailscale serve` has Funnel switched on for four loopback ports (8080, 8088, 8787, 4000),
+so the local config is one tailnet-policy change away from publishing them. Measured 2026-09-23: it is **not actually
+reachable from the internet today** — public DNS (`8.8.8.8`) returns only `A 100.76.19.65` for the node, a CGNAT
+address nothing outside the tailnet can route to, and no ingress record exists. A LINE webhook aimed at one of those
+ports failed to deliver, which is consistent.
+
+The rule stands anyway, because it costs nothing and the config already says "Funnel on": never bind the gateway to a
+loopback port listed there, and keep the published address pinned to the tailnet IP. Verified: `http://127.0.0.1:9109/`
+does not answer, only the tailnet address does.
+
+**Do not test public reachability from this host.** MagicDNS resolves the `ts.net` name to the tailnet IP, so a `curl`
+from here (or from any tailnet peer) succeeds over the tailnet and proves nothing about the internet.
 
 ### 3.4 Prometheus + Grafana
 
@@ -148,8 +157,8 @@ docker compose -f docker/monitoring/compose.example.yaml up -d
   host is one file, no restart. Workers with a different gateway token need their own scrape job.
 - Prometheus joins the `lalin-voice_default` network and scrapes `status-gateway:9109` directly; a worker on another
   host is scraped over its tailnet address instead (`voice-worker-remote.json.example`).
-- Both UIs are published on the tailnet IP only, same rule as the gateway. Neither uses a port that Funnel proxies —
-  check with `tailscale funnel status` before changing a port.
+- Both UIs are published on the tailnet IP only, same rule as the gateway. Neither uses a port listed in
+  `tailscale funnel status` — check it before changing a port, whether or not Funnel currently reaches the internet.
 - `--web.enable-lifecycle` and `--web.enable-admin-api` are left off, so the Prometheus HTTP API cannot reload config
   or delete series. Grafana provisions its datasource and dashboard from files and refuses UI edits to them.
 
@@ -192,9 +201,11 @@ verifies `X-Line-Signature` against the channel secret, records only the source 
 serves `GET /captured` behind its own token.
 
 It is a **setup-time tool that has to be publicly reachable over HTTPS**, because LINE's servers call it. Expose it
-deliberately, capture the id, then shut it down and close the public route again — do not leave it running. On this
-host `tailscale funnel` is the available route, and its allowed ports are already taken by other services, so freeing
-one is a decision for whoever owns them.
+deliberately, capture the id, then shut it down and close the public route again — do not leave it running.
+
+**Tailscale Funnel does not work on this host** (see §3.3), so it is not a route for this: an attempt on port 10000 was
+made and LINE could not deliver. Use a tunnel that terminates at a real public address (ngrok, Cloudflare Tunnel), or
+skip the tool when a plain userId is enough and read it from the console instead.
 
 ### 3.5 Putting the status on an existing dashboard
 

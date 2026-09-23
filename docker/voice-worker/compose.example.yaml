@@ -114,7 +114,7 @@ services:
       LALIN_STATUS_GATEWAY_SOCKET: /run/voice-worker/worker.sock
       LALIN_STATUS_GATEWAY_BIND: 0.0.0.0
     # Bind the PUBLISHED port to the tailnet address of this host (never 0.0.0.0, and never a port that
-    # `tailscale serve` funnels from 127.0.0.1 — Funnel would put it on the public internet).
+    # `tailscale serve` has Funnel switched on for — see the runbook 3.3 for what that does and does not mean here).
     ports:
       - "${STATUS_GATEWAY_BIND_IP:?set STATUS_GATEWAY_BIND_IP to this host's tailnet IP}:${STATUS_GATEWAY_PORT:-9109}:9109"
     volumes:

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-23T23:05:00+07:00",
+  "generated_at": "2026-09-23T23:55:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1349,10 +1349,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md",
       "title": "2026-09-23-VOICE-WORKER-MONITORING",
-      "hash": "3466e9310239",
-      "prev_hash": "8265f8d7a069",
+      "hash": "ea554bbba4df",
+      "prev_hash": "3466e9310239",
       "status": "current",
-      "last_verified": "2026-09-23T22:45:00+07:00"
+      "last_verified": "2026-09-23T23:55:00+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -2529,10 +2529,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "8ffdce8620e6",
-      "prev_hash": "a07b949e9c8e",
+      "hash": "2d70c2ff55f2",
+      "prev_hash": "8ffdce8620e6",
       "status": "current",
-      "last_verified": "2026-09-23T23:05:00+07:00"
+      "last_verified": "2026-09-23T23:55:00+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",

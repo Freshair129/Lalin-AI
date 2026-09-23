@@ -1,5 +1,5 @@
 ---
-version: "0.1.2b"
+version: "0.1.3b"
 created_at: "2026-09-23T21:40:00+07:00,LALIN,e833a7c"
 last_update: "2026-09-23T22:45:00+07:00,LALIN"
 status: "beta"
@@ -47,7 +47,7 @@ the **management** token), and the collector and the screen are replaceable with
 | Scrape | `status-gateway:9109/metrics` over the `lalin-voice_default` network; targets come from `targets/voice-worker-*.json` (file_sd, re-read every 30 s) so adding a host needs no restart |
 | Token | `credentials_file`, mounted read-only from outside the repo — no secret in any committed file |
 | Retention | 30 d or 4 GB, whichever first |
-| Exposure | published on the tailnet IP only, same rule as the gateway; ports 9090 and 3009 are not among the four that Funnel proxies from loopback (8080, 8088, 8787, 4000) |
+| Exposure | published on the tailnet IP only, same rule as the gateway; ports 9090 and 3009 are not among the four loopback ports `tailscale serve` has Funnel switched on for (8080, 8088, 8787, 4000) — see §6 for what that switch actually does here |
 | Write paths | `--web.enable-lifecycle` and `--web.enable-admin-api` left off; Grafana provisions datasource and dashboard from files with `allowUiUpdates: false` |
 | Alerts | 7 rules: gateway down, not ready, **OOM lockout (D18)**, engine flapping, stale heartbeat, RTF > 1, failure rate > 20 % |
 | Dashboard | 13 panels: 6 state tiles, finished-by-outcome, failures/rejections by code, RTF, audio minutes, engine starts/deaths/OOM, heartbeat age, and an identity table from `lalin_voice_worker_info` |
@@ -76,8 +76,8 @@ Evidence, all against the running production worker:
 
 Confirmed by the owner from the second host (worker-node-3060, 100.66.206.115): `GET /healthz` on
 `http://100.76.19.65:9109` returns **200**. Nothing in Windows Firewall blocks the published port, so a Prometheus or
-a dashboard running on that host can scrape this one. `127.0.0.1:9109` still does not answer, which is the property
-that keeps Funnel from exposing the gateway.
+a dashboard running on that host can scrape this one. `127.0.0.1:9109` still does not answer, which keeps the gateway
+off the loopback ports Funnel is configured for (§6).
 
 Note for anyone repeating this: on Windows PowerShell `curl` is an alias for `Invoke-WebRequest`, so the usual
 `curl -s -o /dev/null -w "%{http_code}"` fails with a parameter error. Use
@@ -175,10 +175,35 @@ fail the suite. apps/api **278 passed, 2 skipped**.
    one scrape job each. Fine at two hosts, worth revisiting at ten.
 5. **Retention untested** — the 30 d / 4 GB limits have never been reached.
 
+## 6. Correction — Tailscale Funnel is configured but not reachable (2026-09-23)
+
+Earlier notes in this file, in the runbook and in two compose files said this host "exposes four loopback ports to the
+public internet" through Funnel. **That overstated the exposure**, and the correction matters because it was reported
+to the owner as a security finding.
+
+What is true: `tailscale serve status` shows Funnel switched on for `:443 → 8088`, `:8443 → 8080`, `:10000 → 8787` and
+`:4000 → 4000`. What is not: those endpoints do not answer from outside the tailnet. Public DNS returns only
+`desktop-vetatmq.tail71c7d1.ts.net A 100.76.19.65` — a CGNAT address, not routable on the internet — with no AAAA and
+no ingress CNAME. Funnel ingress has never been provisioned for this tailnet, whatever the local config claims.
+
+**How the mistake happened, so it is not repeated:** reachability was checked with `curl` from this host against the
+`ts.net` name. MagicDNS resolves that name to the tailnet IP, so the request went over the tailnet and returned 200
+while proving nothing about the internet. Testing an "is it public?" question from inside the perimeter cannot answer
+it. The check that did answer it was `Resolve-DnsName … -Server 8.8.8.8`, plus one real external client: LINE's
+servers could not deliver a webhook to `:10000`.
+
+Two of the four also point at nothing at all — ports 8080 and 8787 have no listener, and only `prp-mvp-edge` (8088)
+and `prp-mvp-litellm` (4000) are live. Those two belong to PRP and were left alone.
+
+**Nothing in the design changes.** Binding the gateway, Prometheus and Grafana to the tailnet address rather than
+loopback costs nothing, and the local config is one tailnet-policy change away from making the exposure real. The
+warning stays; its severity was wrong, not its direction.
+
 ## CHANGELOG
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.3b | 2026-09-23 | beta | Correction (§6): Funnel is configured but has no public ingress; the earlier "exposed to the internet" finding overstated the risk, and the test that produced it was run from inside the tailnet | based on 24147fe | LALIN |
 | 0.1.2b | 2026-09-23 | beta | Alertmanager + LINE bridge (§5); pipeline proven end to end with a real alert, last hop blocked on LINE credentials | based on 7affb29 | LALIN |
 | 0.1.1b | 2026-09-23 | beta | Cross-host reachability confirmed from worker-node-3060 (§2.2) | based on dd26c13 | LALIN |
 | 0.1.0b | 2026-09-23 | beta | First monitoring evidence: Prometheus + Grafana stack and the dashboard kit, both verified live; end-to-end job → RTF 0.317 in Prometheus | based on e833a7c | LALIN |
