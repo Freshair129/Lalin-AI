@@ -1,7 +1,7 @@
 ---
-version: "0.10.9b"
+version: "0.10.10b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-24T01:40:00+07:00,LALIN"
+last_update: "2026-09-24T02:00:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -92,6 +92,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/LALIN_PLAY_LOCAL_VIDEO.md`: native MP4/WebM/silent-video screenshots, pause/seek/layout continuity, Compact sizing RCA, automated checks and explicit audio/device limitations.
 - `docs/product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md`: existing audio-first playback/EQ requirements; standalone Full/Compact delta is in PRD/ADR-004.
 - `docs/product/CR-005--HEADLESS_VOICE_WORKER.md`: candidate headless ASR/preset-TTS worker for PRP with FR-19/NFR-08 text; Slice A stub implemented locally, speech/GPU/quality and rights (R-010) still open.
+- `docs/product/REQ-PRP-LALIN-WORKER-ADAPTER.md`: handoff back to PRP — five decisions (PRP-DEC-01..05) that must close before the M4 RuntimeInvoker adapter can be written, each with Lalin's recommendation; plus the contract facts a coordinator must honour (D15/D16/D18, no transport retry).
 - `docs/product/SRS.md`
 - `docs/product/ROADMAP_MUSIC.md`
 - `docs/product/LOCAL_MODEL_LEDGER.md`
@@ -157,6 +158,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |
 | 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |
 | 0.10.8b | 2026-09-23 | beta | Index the voice worker monitoring evidence | based on e833a7c | LALIN |
 | 0.10.7b | 2026-09-22 | beta | Index the YouTube channel transcript pipeline feature doc, workflow runbook and SOP | based on e6b7be2 | LALIN |
