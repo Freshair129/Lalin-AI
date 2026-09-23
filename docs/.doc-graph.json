@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-24T02:00:00+07:00",
+  "generated_at": "2026-09-24T02:30:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 430,
-    "total_edges": 570,
+    "total_edges": 571,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1329,10 +1329,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md",
       "title": "2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS",
-      "hash": "4bb2b70d3c5c",
+      "hash": "700a683da4b7",
       "prev_hash": "4bb2b70d3c5c",
       "status": "current",
-      "last_verified": "2026-09-23T02:02:32+07:00"
+      "last_verified": "2026-09-24T02:30:00+07:00"
     },
     {
       "id": "doc:2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX",
@@ -7823,6 +7823,13 @@
     },
     {
       "from": "code:tools/monitoring/line_userid_catcher.py",
+      "to": "req:FR-19",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:tools/verify/tts_voice_preset.py",
       "to": "req:FR-19",
       "type": "implements",
       "status": "current",

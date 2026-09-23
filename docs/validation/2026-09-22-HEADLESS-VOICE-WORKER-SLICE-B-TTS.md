@@ -1,5 +1,5 @@
 ---
-version: "0.3.0b"
+version: "0.3.1b"
 created_at: "2026-09-22T23:59:00+07:00,LALIN,90971c8"
 last_update: "2026-09-22T23:59:00+07:00,LALIN"
 status: "beta"
@@ -47,6 +47,30 @@ sample for now" for the preset. Baseline `90971c8`.
 are unknown, so it is labelled **`dev-only`** and published as such in `describe`. D9 approves the model rights; it
 does not make this recording a production voice. Before PRP use: a consented recording of 2–8 s (the model card's
 advice) with its exact transcript, pinned as a `voice.*` asset with `rights_status: approved`.
+
+### 2.1 Checker for a candidate recording (2026-09-24)
+
+[`tts_voice_preset.py`](../../tools/verify/tts_voice_preset.py) checks a candidate against the limits the engine
+actually enforces, then emits the `voices[]` and `assets[]` blocks with the sha256 filled in. It exists because those
+limits were only in the engine source: a recording that breaks one of them fails at **worker boot**, which is a slow
+and confusing place to find out.
+
+What it measures, and why each one is not a matter of taste:
+
+| Check | Threshold | Where it comes from |
+|---|---|---|
+| length **after trimming edge silence** | ≤ 12 s hard, 2–8 s recommended | `engine_f5.MAX_REF_SECONDS`; the recommendation is the model card. A file padded with silence is judged on its speech, not its duration |
+| all-silence | −42 dBFS | `engine_f5.REF_SILENCE_DBFS`, the same threshold the engine trims with |
+| level | RMS below −34 dBFS warns | the engine has to amplify, which lifts the noise floor with it |
+| clipping | > 0.1 % of samples at full scale fails | a distorted reference clones the distortion |
+| mono / sample rate | warn only | the engine downmixes and resamples to 24 kHz itself |
+| transcript vs audio | 4–28 code points per second | catches a transcript that does not match what was said, which is the most common way a preset comes out wrong |
+
+`pin` refuses to emit anything while a check fails, and **requires `--consent`**, which is written into the manifest
+next to `rights_status: approved` — the status is worthless without a record of where the consent came from.
+
+Sanity check on the known-good dev sample: 4.38 s file / 4.23 s speech, RMS −18.2 dBFS, no clipping, 14.2 code points
+per second, one warning (it is stereo). 21 tests, including the narrow 8 dB band between "too quiet" and "silent".
 
 ## 3. D19 — TTS device: **GPU** (owner decision 2026-09-22, "D19 ใช้ GPU")
 
@@ -107,7 +131,7 @@ unknown voice and over-long text refused, no TCP listener.
 ## 5. Open
 
 1. ~~D19~~ **decided: GPU** (§3).
-2. **Production voice** (§2).
+2. **Production voice** (§2) — still blocked on a recording; the checker in §2.1 is ready for one.
 3. ~~Linux container for TTS~~ **done (§6)**. Still open: the image is 11.6 GB, and the GPU is shared with the PRP LLM
    (no VRAM cap is enforced by the worker); a second TTS job or vLLM growth can still exhaust the GPU.
 4. Studio quality comparison (MOS/listening), mp3 output, `remove_silence` post-processing: not in scope.
@@ -116,6 +140,7 @@ unknown voice and over-long text refused, no TCP listener.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.3.1b | 2026-09-24 | beta | Checker for a candidate reference recording (§2.1), validated against the dev sample | based on ae4a8ae | LALIN |
 | 0.3.0b | 2026-09-23 | beta | Linux GPU container built and verified (§6): suite and socket smoke pass in-container; vocos also needs --no-deps | based on 861c321 | LALIN |
 | 0.2.1b | 2026-09-22 | beta | D19 decided by the owner: GPU | based on f09fb2d | LALIN |
 | 0.2.0b | 2026-09-22 | beta | Reference preparation restored (CER 0.137 → 0.097); encodec dropped; container blocked on C: disk | based on 6b6b54a | LALIN |
