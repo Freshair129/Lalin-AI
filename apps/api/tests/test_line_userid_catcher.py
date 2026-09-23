@@ -10,6 +10,8 @@ import base64
 import hashlib
 import hmac
 import importlib.util
+import sys
+import types
 import json
 from pathlib import Path
 
@@ -147,8 +149,22 @@ def test_valid_signature_helper_rejects_an_empty_header():
     assert not catcher.valid_signature(SECRET, b"{}", "")
 
 
+@pytest.fixture()
+def no_server(monkeypatch):
+    """กัน main() ไปเปิดเซิร์ฟเวอร์จริงระหว่างเทสต์
+
+    ถ้าการตรวจค่าแบบ fail-closed พัง main() จะเดินต่อไปถึง uvicorn.run แล้ว **ค้างไปเลย**
+    แทนที่จะฟ้อง — เทสต์ที่ค้างบอกอะไรไม่ได้เลยว่าพังตรงไหน ตัวนี้ทำให้มันล้มทันทีแทน
+    """
+    stub = types.ModuleType("uvicorn")
+    def run(*args, **kwargs):  # noqa: ARG001
+        raise AssertionError("main() ไปถึงขั้นเปิดเซิร์ฟเวอร์ ทั้งที่ควรหยุดตั้งแต่ตรวจค่า")
+    stub.run = run
+    monkeypatch.setitem(sys.modules, "uvicorn", stub)
+
+
 @pytest.mark.parametrize("missing", ["LALIN_LINE_CHANNEL_SECRET", "LALIN_LINE_CATCHER_TOKEN"])
-def test_main_exits_2_when_configuration_is_incomplete(monkeypatch, missing):
+def test_main_exits_2_when_configuration_is_incomplete(monkeypatch, missing, no_server):
     monkeypatch.setenv("LALIN_LINE_CHANNEL_SECRET", SECRET)
     monkeypatch.setenv("LALIN_LINE_CATCHER_TOKEN", READ_TOKEN)
     monkeypatch.delenv(missing, raising=False)

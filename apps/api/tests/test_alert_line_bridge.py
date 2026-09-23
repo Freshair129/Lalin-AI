@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
+import types
 import json
 from pathlib import Path
 
@@ -103,7 +105,7 @@ def test_missing_host_label_does_not_break_formatting():
 
 # --- แอปและการยิงเข้า LINE --------------------------------------------------
 
-def make_app(handler):
+def make_app(handler, line_to="Uabc123"):
     calls: list[httpx.Request] = []
 
     def transport_handler(request: httpx.Request) -> httpx.Response:
@@ -113,7 +115,7 @@ def make_app(handler):
     client = httpx.AsyncClient(transport=httpx.MockTransport(transport_handler),
                                base_url="https://api.line.test",
                                headers={"Authorization": "Bearer line-token"})
-    app = bridge.create_bridge_app(line_token="line-token", line_to="Uabc123",
+    app = bridge.create_bridge_app(line_token="line-token", line_to=line_to,
                                    bridge_token=TOKEN, client=client)
     return app, calls
 
@@ -189,10 +191,24 @@ def test_there_is_no_way_to_read_back_what_was_sent():
             assert client.get(path).status_code in (404, 405)
 
 
+@pytest.fixture()
+def no_server(monkeypatch):
+    """กัน main() ไปเปิดเซิร์ฟเวอร์จริงระหว่างเทสต์
+
+    ถ้าการตรวจค่าแบบ fail-closed พัง main() จะเดินต่อไปถึง uvicorn.run แล้ว **ค้างไปเลย**
+    แทนที่จะฟ้อง — เทสต์ที่ค้างบอกอะไรไม่ได้เลยว่าพังตรงไหน ตัวนี้ทำให้มันล้มทันทีแทน
+    """
+    stub = types.ModuleType("uvicorn")
+    def run(*args, **kwargs):  # noqa: ARG001
+        raise AssertionError("main() ไปถึงขั้นเปิดเซิร์ฟเวอร์ ทั้งที่ควรหยุดตั้งแต่ตรวจค่า")
+    stub.run = run
+    monkeypatch.setitem(sys.modules, "uvicorn", stub)
+
+
 # --- fail-closed ------------------------------------------------------------
 
 @pytest.mark.parametrize("missing", ["LALIN_ALERT_LINE_TOKEN", "LALIN_ALERT_LINE_TO", "LALIN_ALERT_BRIDGE_TOKEN"])
-def test_main_exits_2_when_configuration_is_incomplete(monkeypatch, missing):
+def test_main_exits_2_when_configuration_is_incomplete(monkeypatch, missing, no_server):
     for name, value in (("LALIN_ALERT_LINE_TOKEN", "t"), ("LALIN_ALERT_LINE_TO", "U1"),
                         ("LALIN_ALERT_BRIDGE_TOKEN", TOKEN)):
         monkeypatch.setenv(name, value)
@@ -205,3 +221,44 @@ def test_constant_time_match_rejects_empty_expected():
     assert not bridge.constant_time_match("", "")
     assert not bridge.constant_time_match("", "anything")
     assert bridge.constant_time_match(TOKEN, TOKEN)
+
+
+# --- broadcast (บัญชีฟรีดึง user id ไม่ได้ จึงส่งหาทุกคนที่เพิ่มบอทเป็นเพื่อนแทน) ---
+
+def test_broadcast_uses_the_broadcast_endpoint_and_sends_no_to_field():
+    app, calls = make_app(lambda r: httpx.Response(200, json={}), line_to=bridge.BROADCAST)
+    with TestClient(app) as client:
+        response = client.post("/alert", json=payload(), headers={"Authorization": f"Bearer {TOKEN}"})
+    assert response.status_code == 200
+    assert calls[0].url.path == "/v2/bot/message/broadcast"
+    body = json.loads(calls[0].content)
+    # ส่ง ``to`` ไปด้วยกับ broadcast จะถูก LINE ปฏิเสธ
+    assert "to" not in body
+    assert "VoiceWorkerOomLockout" in body["messages"][0]["text"]
+
+
+def test_a_real_id_still_uses_push():
+    app, calls = make_app(lambda r: httpx.Response(200, json={}), line_to="U" + "a" * 32)
+    with TestClient(app) as client:
+        client.post("/alert", json=payload(), headers={"Authorization": f"Bearer {TOKEN}"})
+    assert calls[0].url.path == "/v2/bot/message/push"
+    assert json.loads(calls[0].content)["to"] == "U" + "a" * 32
+
+
+@pytest.mark.parametrize("value", ["broadcast", "U" + "0" * 32, "C" + "f" * 32, "R" + "1" * 32])
+def test_valid_destinations_are_accepted(value):
+    assert bridge.valid_destination(value)
+
+
+@pytest.mark.parametrize("value", ["", "REPLACE_ME_destination_id", "U123", "Broadcast",
+                                   "U" + "A" * 32, "X" + "a" * 32, "U" + "a" * 33])
+def test_invalid_destinations_are_rejected(value):
+    # ที่สำคัญที่สุดคือ REPLACE_ME: ถ้าหลุดไปได้ จะไปล้มตอนมี alert จริงซึ่งสายเกินไป
+    assert not bridge.valid_destination(value)
+
+
+def test_main_exits_2_when_the_destination_is_still_a_placeholder(monkeypatch, no_server):
+    monkeypatch.setenv("LALIN_ALERT_LINE_TOKEN", "t")
+    monkeypatch.setenv("LALIN_ALERT_BRIDGE_TOKEN", TOKEN)
+    monkeypatch.setenv("LALIN_ALERT_LINE_TO", "REPLACE_ME_destination_id")
+    assert bridge.main([]) == bridge.EXIT_CONFIG

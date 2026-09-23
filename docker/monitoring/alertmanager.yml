@@ -1,5 +1,9 @@
 # Alertmanager: รับ alert จาก Prometheus → จัดกลุ่ม → ส่งเข้า LINE ผ่านสะพาน (tools/monitoring/line_bridge.py)
 # กฎของ alert เองอยู่ที่ alerts.yml — ไฟล์นี้ตัดสินแค่ว่า "ส่งเมื่อไหร่ ส่งไปไหน ส่งซ้ำบ่อยแค่ไหน"
+#
+# repeat_interval ตั้งตามโควตาของ LINE ไม่ใช่ตามความรู้สึก: บัญชีฟรีได้ 300 ข้อความ/เดือน
+# ถ้าย้ำทุกชั่วโมงแล้วมีอะไรพังค้างไว้ = 24 ข้อความ/วัน โควตาหมดใน 12 วันแล้วเงียบสนิท
+# ทุก 6 ชม. = 4 ข้อความ/วัน ยังทันการณ์และเหลือโควตาให้เรื่องอื่น
 
 global:
   # ถ้า Prometheus หยุดส่งต่ออายุ alert เกินเวลานี้ ถือว่าหายแล้ว
@@ -11,13 +15,13 @@ route:
   group_by: ["alertname", "host"]
   group_wait: 30s        # รอสักครู่เผื่อ alert อื่นของกลุ่มเดียวกันตามมา จะได้ไม่เด้งรัว
   group_interval: 5m     # มีสมาชิกใหม่ในกลุ่มเดิม เว้นอย่างน้อยเท่านี้
-  repeat_interval: 4h    # ยังไม่หาย เตือนซ้ำทุก 4 ชม.
+  repeat_interval: 12h   # ยังไม่หาย เตือนซ้ำทุก 12 ชม.
   routes:
     # critical รอสั้นกว่าและย้ำถี่กว่า
     - matchers: ['severity="critical"']
       receiver: line
       group_wait: 10s
-      repeat_interval: 1h
+      repeat_interval: 6h
 
 inhibit_rules:
   # ดึงข้อมูลไม่ได้เลย → metric อื่นของเครื่องนั้นหายตามไปด้วย ไม่ต้องเด้งซ้ำหลายใบ

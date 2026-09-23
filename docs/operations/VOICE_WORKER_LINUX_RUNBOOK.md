@@ -1,5 +1,5 @@
 ---
-version: "0.1.7b"
+version: "0.1.8b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
 last_update: "2026-09-23T22:45:00+07:00,LALIN"
 status: "beta"
@@ -183,7 +183,17 @@ worker image, which already has fastapi/uvicorn/httpx, so nothing extra is built
 - Inhibition: `VoiceWorkerGatewayDown` silences the other alerts for the same host (if metrics cannot be read, they
   would all fire together), and `VoiceWorkerOomLockout` silences `VoiceWorkerNotReady` — cause, not effect.
 - Secrets in `/srv/lalin/alert-line.env`: `LALIN_ALERT_LINE_TOKEN` (channel access token), `LALIN_ALERT_LINE_TO`
-  (userId or groupId) and `LALIN_ALERT_BRIDGE_TOKEN` (must equal the `bridge-token` file Alertmanager reads).
+  and `LALIN_ALERT_BRIDGE_TOKEN` (must equal the `bridge-token` file Alertmanager reads).
+- **`LALIN_ALERT_LINE_TO` takes an id or the word `broadcast`.** A free LINE account cannot read its own follower
+  list (`/v2/bot/followers/ids` returns 403 — verified or premium only) and shows a userId in the console only when
+  the Business ID is linked to a LINE account, so `broadcast` is usually the practical choice: it sends to everyone
+  who added the bot. Use it only with an account dedicated to alerts, and remember **a bot with zero friends
+  delivers nothing**, whichever mode is set. A placeholder or malformed value stops the bridge at boot rather than
+  at the first real alert.
+- **`repeat_interval` is set from the LINE quota, not from taste.** A free account gets 300 messages a month;
+  repeating a critical alert hourly is 24 a day, which exhausts the quota in 12 days and then goes silent — worse
+  than no alerting, because it looks like it is still working. Shipped: 6 h for critical, 12 h otherwise.
+  `GET /v2/bot/message/quota/consumption` shows the usage.
 - A delivery failure returns 5xx on purpose, so Alertmanager retries rather than the bridge dropping the message.
   Check with `docker logs lalin-monitoring-alert-line-bridge-1`; `line_rejected` carries LINE's own reason (expired
   token, wrong destination, quota).
@@ -235,6 +245,7 @@ dashboard's dev server or backend holds it and proxies the request.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.8b | 2026-09-24 | beta | broadcast destination mode and the quota-driven repeat_interval (§3.4.1) | based on ed41618 | LALIN |
 | 0.1.7b | 2026-09-23 | beta | How to find the LINE destination id (§3.4.2), including the setup-time catcher and its exposure caveat | based on 9c4a25b | LALIN |
 | 0.1.6b | 2026-09-23 | beta | Alertmanager and the LINE bridge (§3.4.1); note that Prometheus needs a restart to pick up config/rule edits | based on 7affb29 | LALIN |
 | 0.1.5b | 2026-09-23 | beta | Prometheus + Grafana stack (§3.4) and the dashboard kit (§3.5); §3.2 now points at the gateway instead of a hypothetical sidecar | based on e833a7c | LALIN |

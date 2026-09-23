@@ -10,13 +10,19 @@
   GET  /healthz  บอกแค่ว่าตัวเองยังอยู่ (ไม่ต้องมี token — ใช้เป็น health check ของ container)
 ไม่มี route อื่น และ **ไม่เปิดพอร์ตออกนอก host เลย** — มีแต่ Alertmanager ในเครือข่ายเดียวกันที่เรียกได้
 
+ปลายทางมีสองแบบ:
+  • ``LALIN_ALERT_LINE_TO=U…`` (หรือ C…/R…) ส่งแบบ push หาคนหรือกลุ่มนั้นเจาะจง
+  • ``LALIN_ALERT_LINE_TO=broadcast`` ส่งหา **ทุกคนที่เพิ่มบอทเป็นเพื่อน** — ใช้กับบัญชีฟรีที่ดึง user id
+    ไม่ได้ (``/followers/ids`` ต้องเป็นบัญชี verified) แลกกับว่าใครมาเพิ่มบอททีหลังก็จะได้รับด้วย
+    จึงควรใช้กับบัญชีที่ตั้งไว้สำหรับแจ้งเตือนระบบโดยเฉพาะเท่านั้น
+
 เนื้อหาที่ส่งออกมาจาก label/annotation ของ metric ล้วน ซึ่งไม่มีเนื้อหางานอยู่แล้ว (ดู metrics.py)
 สะพานนี้ไม่เคยแตะ payload ของงาน และไม่ log ค่า token
 
 fail-closed ก่อน bind: ขาด token ของ LINE, ปลายทาง หรือ token ของสะพานเอง → exit 2
 
 รัน (ปกติเรียกผ่าน docker/monitoring/compose.example.yaml):
-  LALIN_ALERT_LINE_TOKEN=<channel access token>  LALIN_ALERT_LINE_TO=<user/group id> \\
+  LALIN_ALERT_LINE_TOKEN=<channel access token>  LALIN_ALERT_LINE_TO=<user/group id หรือ broadcast> \\
   LALIN_ALERT_BRIDGE_TOKEN=<token ที่ Alertmanager ต้องแนบมา> \\
   python tools/monitoring/line_bridge.py --port 9110
 """
@@ -25,6 +31,7 @@ from __future__ import annotations
 import argparse
 import hmac
 import os
+import re
 import sys
 from typing import Any
 
@@ -40,6 +47,17 @@ MAX_TEXT_CHARS = 4500           # LINE จำกัด 5000 เผื่อไ�
 _UNAUTHORIZED = JSONResponse({"error": "bearer token required"}, status_code=401)
 
 SEVERITY_MARK = {"critical": "🔴", "warning": "🟡"}
+BROADCAST = "broadcast"
+_ID_RE = re.compile(r"^[UCR][0-9a-f]{32}$")
+
+
+def valid_destination(value: str) -> bool:
+    """``broadcast`` หรือ id ตามรูปแบบของ LINE เท่านั้น — กันค่า placeholder หลุดขึ้น production
+
+    ถ้าไม่ตรวจ ค่าอย่าง ``REPLACE_ME_destination_id`` จะผ่านไปจนถึงตอนมี alert จริงแล้วค่อยล้ม
+    ซึ่งเป็นเวลาที่แย่ที่สุดที่จะเพิ่งรู้ว่าตั้งค่าไม่ครบ
+    """
+    return value == BROADCAST or bool(_ID_RE.match(value))
 
 
 def constant_time_match(expected: str, presented: str) -> bool:
@@ -112,10 +130,15 @@ def create_bridge_app(*, line_token: str, line_to: str, bridge_token: str,
         if not isinstance(payload, dict):
             return JSONResponse({"error": "payload ต้องเป็น object"}, status_code=400)
 
-        body = {"to": line_to, "messages": [{"type": "text", "text": format_alerts(payload)}]}
+        messages = [{"type": "text", "text": format_alerts(payload)}]
+        # broadcast ไม่มีฟิลด์ ``to`` และใช้คนละ endpoint
+        if line_to == BROADCAST:
+            path, body = "/v2/bot/message/broadcast", {"messages": messages}
+        else:
+            path, body = "/v2/bot/message/push", {"to": line_to, "messages": messages}
         conn = app.state.upstream_factory()
         try:
-            response = await conn.post("/v2/bot/message/push", json=body)
+            response = await conn.post(path, json=body)
         except httpx.HTTPError as exc:
             # 500 เพื่อให้ Alertmanager ลองซ้ำเอง — สะพานไม่ retry เองจะได้ไม่ส่งซ้ำซ้อน
             return JSONResponse({"error": "line_unreachable", "detail": type(exc).__name__}, status_code=500)
@@ -148,6 +171,12 @@ def main(argv: list[str] | None = None) -> int:
     if missing:
         print(f"[line-bridge] fail-closed: ต้องตั้ง {', '.join(missing)}", file=sys.stderr)
         return EXIT_CONFIG
+    if not valid_destination(line_to):
+        print(f"[line-bridge] fail-closed: LALIN_ALERT_LINE_TO ต้องเป็น '{BROADCAST}' หรือ id ของ LINE "
+              "(U/C/R ตามด้วย hex 32 ตัว)", file=sys.stderr)
+        return EXIT_CONFIG
+    print(f"[line-bridge] ปลายทาง: {'ทุกคนที่เพิ่มบอทเป็นเพื่อน (broadcast)' if line_to == BROADCAST else 'เจาะจง id'}",
+          flush=True)
 
     import uvicorn
 

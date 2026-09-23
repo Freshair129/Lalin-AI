@@ -1,5 +1,5 @@
 ---
-version: "0.1.4b"
+version: "0.1.5b"
 created_at: "2026-09-23T21:40:00+07:00,LALIN,e833a7c"
 last_update: "2026-09-24T00:20:00+07:00,LALIN"
 status: "beta"
@@ -24,7 +24,7 @@ dashboard question, having been told the two options were Prometheus/Grafana and
 | Layer 3a — collector and dashboard: Prometheus + Grafana | **PASS** — both running, scrape healthy, 7 alert rules loaded, dashboard provisioned |
 | Layer 3b — an existing dashboard shows `/status` (kit for GoVibe) | **PASS** — proxy and card verified live against the production worker |
 | End to end: a real job moves the numbers | **PASS** — one 15.0 s ASR job → `processing_seconds_total` 4.762, RTF **0.317** in Prometheus |
-| Layer 4 — notifications reach a person (Alertmanager → LINE) | **PASS for the pipeline** (§5): a real alert fired, was delivered and was resolved. **BLOCKED on credentials** for the last hop — the LINE channel token and destination are placeholders |
+| Layer 4 — notifications reach a person (Alertmanager → LINE) | **PASS, end to end on the real LINE API** (§5.4): three messages delivered to the owner's phone, quota counter confirms it |
 | Long-term retention verified | **NOT DONE** — configured 30 d / 4 GB, only minutes of data exist so far |
 
 ## 1. The three layers
@@ -166,14 +166,64 @@ fail the suite. apps/api **278 passed, 2 skipped**.
 
 ## 4. Open
 
-1. **LINE credentials** — everything up to the LINE API is proven (§5), but `LALIN_ALERT_LINE_TOKEN` and
-   `LALIN_ALERT_LINE_TO` in `/srv/lalin/alert-line.env` are still `REPLACE_ME`. Until they are real, a firing alert
-   produces a `line_rejected` entry in the bridge log and no message. **Nothing notifies anyone yet.**
+1. **Quota, not credentials, is now the limit.** 300 messages a month on the free account. `repeat_interval` was
+   set from that (§5.3), but a long incident plus a chatty month can still run it out, and an exhausted quota fails
+   *silently*. Worth a check on `/v2/bot/message/quota/consumption` if alerting ever goes quiet.
 2. **GoVibe integration** — waiting on a decision about who applies the kit to that repository.
 3. **Grafana admin password** lives in `/srv/lalin/monitoring.env` (icacls-restricted on this host). No SSO.
 4. **One token for all hosts.** Every worker scraped by the same job shares one gateway token; per-host tokens need
    one scrape job each. Fine at two hosts, worth revisiting at ten.
 5. **Retention untested** — the 30 d / 4 GB limits have never been reached.
+
+### 5.3 Destination: broadcast, because the account is free (2026-09-24)
+
+The owner chose LINE, and the bot is a dedicated account (`Lalin`, `@546nxdmm`) with no other purpose. Getting a
+destination for it turned out to be the hard part:
+
+| Route to a destination | Result |
+|---|---|
+| `Your user ID` in the console | not shown — it requires the Business ID to be linked to a LINE account |
+| `GET /v2/bot/followers/ids` | **403** — verified or premium accounts only, this one is free |
+| Webhook event | needs a public HTTPS endpoint, and Funnel on this host does not reach the internet (§6) |
+| **`/v2/bot/message/broadcast`** | **works on a free account and needs no id at all** |
+
+So the bridge gained a `broadcast` mode: `LALIN_ALERT_LINE_TO=broadcast` sends to everyone who added the bot, with no
+`to` field. The trade-off is real — anyone who later adds this bot receives the alerts — and it is acceptable only
+because this account exists for alerting and nothing else. A destination that is neither `broadcast` nor a
+well-formed `[UCR][0-9a-f]{32}` id now stops the bridge at boot, so a leftover `REPLACE_ME` cannot survive until the
+first real incident.
+
+Also learned the hard way: **the account showed 0 friends**, and a LINE bot with no friends delivers nothing in
+either mode. Adding the bot as a friend is a prerequisite, not a detail.
+
+`repeat_interval` was then set from the quota rather than from instinct: 300 messages/month, so hourly repeats on a
+stuck critical alert (24/day) would exhaust it in 12 days and then go silent — a failure mode worse than having no
+alerting, because the dashboard still looks healthy. Shipped: 6 h for critical, 12 h for the rest.
+
+### 5.4 Delivered, on the real API (2026-09-24)
+
+Three messages reached the owner's phone through `api.line.me`, confirmed by screenshot and by the quota counter
+moving from 0 to 1 on the first one (proof of an actual send, not just a 200):
+
+1. a firing test alert injected into Alertmanager,
+2. a second one after an encoding fix (below),
+3. the `✅ หายแล้ว` resolution after both test alerts were expired with `endsAt`.
+
+The bridge logged `200 OK` for all three and no `line_rejected`. Alertmanager was left with zero active alerts — a
+test alert that is never expired keeps re-notifying on the repeat interval, which is its own small trap.
+
+**The Thai text in the first message arrived as mojibake, and that was my test command, not the pipeline.** The
+message header, which comes from the bridge's own source, rendered correctly in the same message; only the
+annotations I passed through a shell `curl` were mangled. Re-sent from Python with
+`json.dumps(..., ensure_ascii=False).encode("utf-8")` and it rendered correctly. Annotations in `alerts.yml` are read
+as UTF-8 by Prometheus and were already proven intact in the §5.1 run, so no production path was affected.
+
+### 5.5 A test that hung instead of failing
+
+While mutation-checking the destination validator (`valid_destination` forced to return `True`), the suite **hung**
+instead of failing: with validation defeated, `main()` ran on to `uvicorn.run` and served forever inside pytest. A
+hanging test says nothing about what broke. Both `main()` tests now take a `no_server` fixture that stubs `uvicorn`
+so reaching that line raises. Re-running the same mutation now fails in seconds with a message naming the cause.
 
 ## 6. Correction — Tailscale Funnel is configured but not reachable (2026-09-23)
 
@@ -244,6 +294,7 @@ is why a blanket `docker image prune -a` was refused.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.5b | 2026-09-24 | beta | LINE delivery proven on the real API (§5.4); broadcast mode for a free account and quota-driven repeat_interval (§5.3); a hanging test fixed (§5.5) | based on ed41618 | LALIN |
 | 0.1.4b | 2026-09-24 | beta | Host network posture (§7): the one real public route is Zuri's ngrok; Ollama closed to loopback (the app's expose flag overrides OLLAMA_HOST); Docker disk cleanup and why C: did not change | based on a3986a9 | LALIN |
 | 0.1.3b | 2026-09-23 | beta | Correction (§6): Funnel is configured but has no public ingress; the earlier "exposed to the internet" finding overstated the risk, and the test that produced it was run from inside the tailnet | based on 24147fe | LALIN |
 | 0.1.2b | 2026-09-23 | beta | Alertmanager + LINE bridge (§5); pipeline proven end to end with a real alert, last hop blocked on LINE credentials | based on 7affb29 | LALIN |
