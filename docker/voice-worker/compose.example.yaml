@@ -96,6 +96,35 @@ services:
       start_period: 180s
       retries: 3
 
+  # Read-only status gateway: the only thing that accepts TCP. It reads the worker's socket with the MANAGEMENT
+  # token and serves /metrics + /status to Prometheus or a dashboard on another host.
+  # Start it with:  docker compose -f docker/voice-worker/compose.example.yaml --profile monitor up -d status-gateway
+  status-gateway:
+    profiles: ["monitor"]
+    image: lalin-voice-worker:dev
+    user: "20000:20000"
+    group_add: ["10001"]
+    read_only: true
+    mem_limit: 256m
+    env_file:
+      - ${VOICE_WORKER_ENV_FILE:?set VOICE_WORKER_ENV_FILE to the token file}
+    environment:
+      # the worker side uses the management token: the gateway can read status but can never submit work
+      LALIN_STATUS_GATEWAY_WORKER_TOKEN: ${LALIN_VOICE_WORKER_MANAGEMENT_TOKEN:?}
+      LALIN_STATUS_GATEWAY_SOCKET: /run/voice-worker/worker.sock
+      LALIN_STATUS_GATEWAY_BIND: 0.0.0.0
+    # Bind the PUBLISHED port to the tailnet address of this host (never 0.0.0.0, and never a port that
+    # `tailscale serve` funnels from 127.0.0.1 — Funnel would put it on the public internet).
+    ports:
+      - "${STATUS_GATEWAY_BIND_IP:?set STATUS_GATEWAY_BIND_IP to this host's tailnet IP}:${STATUS_GATEWAY_PORT:-9109}:9109"
+    volumes:
+      - voice-socket:/run/voice-worker
+    entrypoint: ["python", "-m", "app.voice_worker.status_gateway", "--bind", "0.0.0.0", "--port", "9109", "--container-published"]
+    restart: on-failure:3
+    depends_on:
+      voice-worker:
+        condition: service_healthy
+
 volumes:
   voice-data:
   voice-socket:

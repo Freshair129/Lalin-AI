@@ -19,6 +19,13 @@ from .timeutil import utc_now
 Role = Literal["inference", "management"]
 
 
+def constant_time_token_match(expected: str, presented: str | None) -> bool:
+    """เทียบ token แบบเวลาไม่ขึ้นกับเนื้อหา (hmac.compare_digest) — ใช้ทั้ง worker และ status gateway"""
+    if not expected or not presented:
+        return False
+    return hmac.compare_digest(expected.encode("utf-8"), presented.encode("utf-8"))
+
+
 @dataclass(frozen=True)
 class Principal:
     role: Role
@@ -45,9 +52,9 @@ def authenticate(request: Request, settings: WorkerSettings) -> Principal:
     matched: Principal | None = None
     # เทียบทุก credential เสมอ (ไม่ early-return) เพื่อไม่ให้เวลาตอบบอกว่า issuer ไหนมีอยู่
     for issuer, expected in settings.inference_credentials.items():
-        if hmac.compare_digest(expected.encode("utf-8"), token.encode("utf-8")):
+        if constant_time_token_match(expected, token):
             matched = Principal("inference", issuer)
-    if settings.management_token is not None and hmac.compare_digest(settings.management_token.encode("utf-8"), token.encode("utf-8")):
+    if settings.management_token is not None and constant_time_token_match(settings.management_token, token):
         matched = Principal("management", "management")
     if matched is None:
         raise WorkerError("UNAUTHORIZED", "credential not recognized")
@@ -72,4 +79,4 @@ def require_any_role(principal: Principal = Depends(current_principal)) -> Princ
     return principal
 
 
-__all__ = ["Principal", "authenticate", "current_principal", "require_any_role", "require_inference"]
+__all__ = ["Principal", "authenticate", "constant_time_token_match", "current_principal", "require_any_role", "require_inference"]

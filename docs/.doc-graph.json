@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-23T04:50:59+07:00",
+  "generated_at": "2026-09-23T18:57:58+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 427,
-    "total_edges": 567,
+    "total_edges": 568,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -17,8 +17,8 @@
       "requirements_with_tests": "23% (10/42)",
       "code_files_referenced_by_docs": "10% (11/110)",
       "code_files_with_tests": "14% (16/110)",
-      "structured_annotations_found": 204,
-      "unstructured_req_refs_found": 126
+      "structured_annotations_found": 205,
+      "unstructured_req_refs_found": 127
     }
   },
   "nodes": [
@@ -1409,10 +1409,10 @@
       "type": "document",
       "path": "docs/architecture/API_SEMANTICS.md",
       "title": "API_SEMANTICS",
-      "hash": "90c8bab68d2b",
-      "prev_hash": "90c8bab68d2b",
+      "hash": "ea6e65ab9eed",
+      "prev_hash": "ea6e65ab9eed",
       "status": "current",
-      "last_verified": "2026-09-23T04:50:59+07:00"
+      "last_verified": "2026-09-23T18:57:58+07:00"
     },
     {
       "id": "doc:ARCHITECTURE_CHANGE_REQUEST_RWANG_GATE_SEMANTICS",
@@ -2519,10 +2519,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "9fa9719498d5",
-      "prev_hash": "9fa9719498d5",
+      "hash": "90d00bbb7852",
+      "prev_hash": "90d00bbb7852",
       "status": "current",
-      "last_verified": "2026-09-23T04:50:59+07:00"
+      "last_verified": "2026-09-23T18:57:58+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -4476,6 +4476,13 @@
     {
       "from": "code:apps/api/app/voice_worker/profile.py",
       "to": "req:FR-02",
+      "type": "implements",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:apps/api/app/voice_worker/status_gateway.py",
+      "to": "req:FR-19",
       "type": "implements",
       "status": "current",
       "source": "code-scan"

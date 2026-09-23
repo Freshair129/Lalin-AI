@@ -134,6 +134,10 @@ profile ไม่รู้จัก/ไม่ valid → process exit code `2` **
   · **ห้ามมีเนื้อหางาน** — ไม่มีข้อความที่ถอดได้/ข้อความ TTS/attempt_id/issuer/path (เทสต์บังคับ) · counter นับในหน่วยความจำตั้งแต่ worker เริ่ม
   (restart แล้วรีเซ็ต ตามธรรมเนียม counter ของ Prometheus) · มี `_info`/`_epoch_info` (identity + epoch), `_ready`/`_engine_alive`/`_model_warm`,
   `_capacity_*`, `_vram_*` (GPU), `_oom_lockout`/`_consecutive_oom_kills` (D18), `_attempts_*_total` แยกตาม outcome/รหัส error, `_processing_seconds_total`
+- **status gateway (คนละ process, อ่านอย่างเดียว):** `app.voice_worker.status_gateway` เป็นตัวเดียวที่รับ TCP — อ่าน socket ของ worker ด้วย
+  **management token** แล้วเปิดแค่ `GET /healthz` (ไม่ต้องมี token), `GET /metrics` และ `GET /status` (ต้องมี token ของ gateway เอง คนละดอกกับของ worker)
+  · ไม่มี route ของงานและไม่รับ POST เลย · bind ได้เฉพาะ loopback หรือ Tailscale CGNAT (0.0.0.0 ต้องใส่ `--container-published` ให้ Docker publish คุม IP)
+  · `/status` คัดเฉพาะฟิลด์ปลอดภัย (ไม่มี voices/ref_text/asset path) — worker เองไม่เปลี่ยน ยังไม่มีเครือข่ายเหมือนเดิม
 - **machine-readable contract:** `packages/contracts/schemas/lalin-voice-worker.schema.json` (สร้างจาก pydantic ใน `app/voice_worker/contract.py` ด้วย
   `python -m app.voice_worker.schema --write`; `--check`/`test_contract_schema.py` บังคับ sync) และ TS types ใน `packages/contracts/src/voiceWorker.ts` — แก้ที่ pydantic ก่อนเสมอ
 

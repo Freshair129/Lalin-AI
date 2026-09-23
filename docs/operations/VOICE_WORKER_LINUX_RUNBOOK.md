@@ -1,5 +1,5 @@
 ---
-version: "0.1.3b"
+version: "0.1.4b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
 last_update: "2026-09-22T23:00:00+07:00,LALIN"
 status: "beta"
@@ -103,6 +103,31 @@ Worth alerting on: `lalin_voice_worker_ready == 0` for more than a few minutes, 
 `increase(lalin_voice_worker_attempts_failed_total{code="RUNTIME_OOM"}[15m]) > 0`. `lalin_voice_worker_epoch_info`
 changing often means the engine keeps restarting.
 
+### 3.3 Status gateway (monitoring from another host)
+
+The worker has no network, so nothing outside the host can scrape it. The **status gateway** is a separate
+read-only process (`app.voice_worker.status_gateway`) that accepts TCP and reads the worker's socket with the
+**management token** — it can see status and can never submit work.
+
+```bash
+export STATUS_GATEWAY_BIND_IP=<this host's tailnet IP>     # e.g. 100.76.19.65
+docker compose -f docker/voice-worker/compose.example.yaml --profile monitor up -d status-gateway
+```
+
+| Route | Auth | For |
+|---|---|---|
+| `GET /healthz` | none | the container health check; says only that the gateway itself is alive |
+| `GET /metrics` | gateway token | Prometheus (passthrough of the worker's metrics) |
+| `GET /status` | gateway token | a dashboard: ready/reason, epoch, profile and revision, device, warm, VRAM, capacity, OOM lockout |
+
+Rules it enforces, fail-closed before it binds: the gateway token and the worker token must both be set, and the bind
+address must be loopback or Tailscale CGNAT (100.64.0.0/10). `0.0.0.0` is refused unless `--container-published` is
+passed, which is how the compose service runs it: Docker publishes the port **on the tailnet IP only**.
+
+**Watch out on this host:** `tailscale serve`/Funnel proxies from `127.0.0.1` to the public internet (currently ports
+8080, 8088, 8787, 4000). Never bind the gateway to a loopback port that Funnel exposes, and keep the published address
+pinned to the tailnet IP — verified: `http://127.0.0.1:9109/` does not answer, only the tailnet address does.
+
 ## 4. Operate
 
 | Symptom | Meaning | Action |
@@ -125,6 +150,7 @@ changing often means the engine keeps restarting.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.4b | 2026-09-23 | beta | Status gateway section (tailnet-only, read-only, Funnel warning) | based on 05f869e | LALIN |
 | 0.1.3b | 2026-09-23 | beta | /metrics section (Prometheus over the socket, what to alert on) | based on 94884f3 | LALIN |
 | 0.1.2b | 2026-09-23 | beta | TTS container section (D19 = GPU) | based on 861c321 | LALIN |
 | 0.1.1b | 2026-09-22 | beta | cpu_threads 8 shipped and memory check, from the PRP-host re-measurement (Slice C §10) | based on e6b7be2 | LALIN |
