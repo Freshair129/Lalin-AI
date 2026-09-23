@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-23T21:40:00+07:00,LALIN,e833a7c"
-last_update: "2026-09-23T21:40:00+07:00,LALIN"
+last_update: "2026-09-23T22:10:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -20,7 +20,7 @@ dashboard question, having been told the two options were Prometheus/Grafana and
 | Gate | Result |
 |---|---|
 | Layer 1 — the worker exposes numbers (`/metrics`) | **PASS** (commit `05f869e`; no job content, enforced by a test) |
-| Layer 2 — something outside the host can read them (status gateway) | **PASS** (commit `e833a7c`) |
+| Layer 2 — something outside the host can read them (status gateway) | **PASS** (commit `e833a7c`); reachable from the other host over the tailnet (§2.2) |
 | Layer 3a — collector and dashboard: Prometheus + Grafana | **PASS** — both running, scrape healthy, 7 alert rules loaded, dashboard provisioned |
 | Layer 3b — an existing dashboard shows `/status` (kit for GoVibe) | **PASS** — proxy and card verified live against the production worker |
 | End to end: a real job moves the numbers | **PASS** — one 15.0 s ASR job → `processing_seconds_total` 4.762, RTF **0.317** in Prometheus |
@@ -72,6 +72,17 @@ Evidence, all against the running production worker:
 - `--web.enable-lifecycle=false` is not valid: Prometheus's boolean flags take no value and the container
   crash-looped with `unexpected false`. The flags are simply left off, which is the same result.
 
+### 2.2 Cross-host reachability (2026-09-23)
+
+Confirmed by the owner from the second host (worker-node-3060, 100.66.206.115): `GET /healthz` on
+`http://100.76.19.65:9109` returns **200**. Nothing in Windows Firewall blocks the published port, so a Prometheus or
+a dashboard running on that host can scrape this one. `127.0.0.1:9109` still does not answer, which is the property
+that keeps Funnel from exposing the gateway.
+
+Note for anyone repeating this: on Windows PowerShell `curl` is an alias for `Invoke-WebRequest`, so the usual
+`curl -s -o /dev/null -w "%{http_code}"` fails with a parameter error. Use
+`(Invoke-WebRequest -Uri <url> -UseBasicParsing).StatusCode`.
+
 ## 3. Kit for an existing dashboard (`tools/dashboard/`)
 
 For a team that already has a dashboard and does not want Prometheus. The finding that shapes it: **a browser cannot
@@ -118,4 +129,5 @@ do unasked. Its own `node_modules` was used read-only for the Vite check and lef
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-23 | beta | Cross-host reachability confirmed from worker-node-3060 (§2.2) | based on dd26c13 | LALIN |
 | 0.1.0b | 2026-09-23 | beta | First monitoring evidence: Prometheus + Grafana stack and the dashboard kit, both verified live; end-to-end job → RTF 0.317 in Prometheus | based on e833a7c | LALIN |

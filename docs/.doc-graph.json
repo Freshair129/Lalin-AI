@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-23T21:40:00+07:00",
+  "generated_at": "2026-09-23T22:10:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
@@ -1349,10 +1349,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md",
       "title": "2026-09-23-VOICE-WORKER-MONITORING",
-      "hash": "86f3dd4ab38f",
+      "hash": "8265f8d7a069",
       "prev_hash": "86f3dd4ab38f",
       "status": "current",
-      "last_verified": "2026-09-23T21:40:00+07:00"
+      "last_verified": "2026-09-23T22:10:00+07:00"
     },
     {
       "id": "doc:A-api-spec",
