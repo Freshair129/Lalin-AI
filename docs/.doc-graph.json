@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "generated_by": "rwang:doc-graph",
-  "generated_at": "2026-09-23T22:10:00+07:00",
+  "generated_at": "2026-09-23T22:45:00+07:00",
   "timestamp_policy": "last_verified/generated_at อัปเดตเฉพาะตอนเนื้อหาเปลี่ยนจริง ไม่ใช่ทุกการสแกน — สแกนซ้ำโดยไม่มี drift จะไม่แตะไฟล์เลย",
   "template": null,
   "id_scheme": null,
   "standards": null,
   "stats": {
     "total_nodes": 428,
-    "total_edges": 568,
+    "total_edges": 569,
     "stale_edges": 0,
     "stale_nodes": 0,
     "contradiction_edges": 0,
@@ -1349,10 +1349,10 @@
       "type": "document",
       "path": "docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md",
       "title": "2026-09-23-VOICE-WORKER-MONITORING",
-      "hash": "8265f8d7a069",
-      "prev_hash": "86f3dd4ab38f",
+      "hash": "3466e9310239",
+      "prev_hash": "8265f8d7a069",
       "status": "current",
-      "last_verified": "2026-09-23T22:10:00+07:00"
+      "last_verified": "2026-09-23T22:45:00+07:00"
     },
     {
       "id": "doc:A-api-spec",
@@ -2529,10 +2529,10 @@
       "type": "document",
       "path": "docs/operations/VOICE_WORKER_LINUX_RUNBOOK.md",
       "title": "VOICE_WORKER_LINUX_RUNBOOK",
-      "hash": "1282d05b03d1",
-      "prev_hash": "90d00bbb7852",
+      "hash": "a07b949e9c8e",
+      "prev_hash": "1282d05b03d1",
       "status": "current",
-      "last_verified": "2026-09-23T21:40:00+07:00"
+      "last_verified": "2026-09-23T22:45:00+07:00"
     },
     {
       "id": "doc:WORKSTATION_DISTRIBUTION",
@@ -7791,6 +7791,13 @@
       "from": "test:apps/desktop/src/useJob.test.tsx",
       "to": "req:FR-06",
       "type": "verifies",
+      "status": "current",
+      "source": "code-scan"
+    },
+    {
+      "from": "code:tools/monitoring/line_bridge.py",
+      "to": "req:FR-19",
+      "type": "implements",
       "status": "current",
       "source": "code-scan"
     }

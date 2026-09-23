@@ -1,0 +1,43 @@
+# Alertmanager: รับ alert จาก Prometheus → จัดกลุ่ม → ส่งเข้า LINE ผ่านสะพาน (tools/monitoring/line_bridge.py)
+# กฎของ alert เองอยู่ที่ alerts.yml — ไฟล์นี้ตัดสินแค่ว่า "ส่งเมื่อไหร่ ส่งไปไหน ส่งซ้ำบ่อยแค่ไหน"
+
+global:
+  # ถ้า Prometheus หยุดส่งต่ออายุ alert เกินเวลานี้ ถือว่าหายแล้ว
+  resolve_timeout: 5m
+
+route:
+  receiver: line
+  # จัดกลุ่มตามชนิด alert และเครื่อง — ปัญหาเดียวกันบนเครื่องเดียวกันรวมเป็นข้อความเดียว
+  group_by: ["alertname", "host"]
+  group_wait: 30s        # รอสักครู่เผื่อ alert อื่นของกลุ่มเดียวกันตามมา จะได้ไม่เด้งรัว
+  group_interval: 5m     # มีสมาชิกใหม่ในกลุ่มเดิม เว้นอย่างน้อยเท่านี้
+  repeat_interval: 4h    # ยังไม่หาย เตือนซ้ำทุก 4 ชม.
+  routes:
+    # critical รอสั้นกว่าและย้ำถี่กว่า
+    - matchers: ['severity="critical"']
+      receiver: line
+      group_wait: 10s
+      repeat_interval: 1h
+
+inhibit_rules:
+  # ดึงข้อมูลไม่ได้เลย → metric อื่นของเครื่องนั้นหายตามไปด้วย ไม่ต้องเด้งซ้ำหลายใบ
+  # ต้องกัน alertname ตัวเองออก ไม่งั้นมันจะ inhibit ตัวเอง
+  - source_matchers: ['alertname="VoiceWorkerGatewayDown"']
+    target_matchers: ['alertname!="VoiceWorkerGatewayDown"']
+    equal: ["host"]
+  # ล็อกเพราะ OOM (D18) เป็นต้นเหตุ ส่วน "ไม่พร้อมรับงาน" เป็นผลตามมา ส่งแค่ต้นเหตุพอ
+  - source_matchers: ['alertname="VoiceWorkerOomLockout"']
+    target_matchers: ['alertname="VoiceWorkerNotReady"']
+    equal: ["host"]
+
+receivers:
+  - name: line
+    webhook_configs:
+      - url: http://alert-line-bridge:9110/alert
+        send_resolved: true
+        max_alerts: 20      # กันข้อความยาวเกินโควตาของ LINE
+        http_config:
+          authorization:
+            type: Bearer
+            # token ของสะพาน อ่านจากไฟล์ที่ mount เข้ามา ไม่เขียนไว้ในไฟล์ที่อยู่ใน git
+            credentials_file: /etc/alertmanager/secrets/bridge-token

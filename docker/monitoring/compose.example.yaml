@@ -5,6 +5,7 @@
 #   export MONITORING_BIND_IP=100.76.19.65                       # ที่อยู่ tailnet ของเครื่องนี้
 #   export LALIN_MONITORING_SECRETS_DIR=/srv/lalin/monitoring    # มีไฟล์ gateway-token อยู่ข้างใน
 #   export MONITORING_ENV_FILE=/srv/lalin/monitoring.env         # รหัสผ่าน admin ของ Grafana, chmod 600
+#   export MONITORING_ALERT_ENV_FILE=/srv/lalin/alert-line.env   # token/ปลายทางของ LINE, chmod 600
 #   docker compose -f docker/monitoring/compose.example.yaml up -d
 #
 # ทั้งสองตัวเปิดเฉพาะบน tailnet เหมือน gateway — ห้าม 0.0.0.0 และห้ามใช้พอร์ตที่ `tailscale serve` ดึงจาก
@@ -66,6 +67,50 @@ services:
     depends_on:
       - prometheus
 
+  # รับ alert จาก Prometheus จัดกลุ่ม แล้วส่งต่อให้สะพาน LINE
+  alertmanager:
+    image: prom/alertmanager:v0.28.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.listen-address=0.0.0.0:9093
+    ports:
+      - "${MONITORING_BIND_IP:?}:${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ${LALIN_MONITORING_SECRETS_DIR:?}:/etc/alertmanager/secrets:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Alertmanager ไม่มีตัวส่ง LINE ในตัว สะพานนี้แปลง webhook เป็น push ของ LINE Messaging API
+  # **ไม่มี ports:** โดยตั้งใจ — มีแต่ Alertmanager ในเครือข่ายเดียวกันที่เรียกได้ ไม่เปิดออก host
+  # ใช้ image ของ worker เพราะมี fastapi/uvicorn/httpx ครบอยู่แล้ว ไม่ต้อง build image เพิ่ม
+  alert-line-bridge:
+    image: lalin-voice-worker:dev
+    user: "20000:20000"
+    read_only: true
+    mem_limit: 128m
+    env_file:
+      - ${MONITORING_ALERT_ENV_FILE:?set MONITORING_ALERT_ENV_FILE to the LINE token file}
+    volumes:
+      - ../../tools/monitoring/line_bridge.py:/opt/line_bridge.py:ro
+    entrypoint: ["python", "/opt/line_bridge.py", "--bind", "0.0.0.0", "--port", "9110"]
+    networks:
+      - monitoring
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://localhost:9110/healthz').status_code == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 networks:
   monitoring:
   voice:
@@ -75,3 +120,4 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
+  alertmanager-data:

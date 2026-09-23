@@ -9,6 +9,13 @@ global:
 rule_files:
   - /etc/prometheus/alerts.yml
 
+# alert ที่ "firing" ถูกส่งต่อให้ Alertmanager เป็นคนจัดกลุ่มและส่งออก
+# Prometheus เองไม่ส่งแจ้งเตือนไปไหนทั้งนั้น มันแค่ประเมินกฎ
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs:
   # Prometheus เฝ้าตัวเอง — ถ้าอันนี้หาย แปลว่าระบบเฝ้าระวังเองล่ม
   - job_name: prometheus

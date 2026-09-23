@@ -1,7 +1,7 @@
 ---
-version: "0.1.5b"
+version: "0.1.6b"
 created_at: "2026-09-22T22:00:00+07:00,LALIN,b4ffe94"
-last_update: "2026-09-23T21:30:00+07:00,LALIN"
+last_update: "2026-09-23T22:45:00+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -138,6 +138,7 @@ worker to run — they answer questions `/metrics` alone cannot, such as *when* 
 export MONITORING_BIND_IP=<this host's tailnet IP>          # e.g. 100.76.19.65
 export LALIN_MONITORING_SECRETS_DIR=/srv/lalin/monitoring   # contains a file named gateway-token
 export MONITORING_ENV_FILE=/srv/lalin/monitoring.env        # GF_SECURITY_ADMIN_USER/PASSWORD, chmod 600
+export MONITORING_ALERT_ENV_FILE=/srv/lalin/alert-line.env  # LINE token + destination, chmod 600
 docker compose -f docker/monitoring/compose.example.yaml up -d
 ```
 
@@ -153,8 +154,32 @@ docker compose -f docker/monitoring/compose.example.yaml up -d
   or delete series. Grafana provisions its datasource and dashboard from files and refuses UI edits to them.
 
 Alert rules (`docker/monitoring/alerts.yml`): gateway unreachable, not ready, **OOM lockout (D18)**, engine flapping,
-stale heartbeat, RTF above 1, failure rate above 20 %. **They evaluate but nothing notifies yet** — Alertmanager is not
-installed, so today they are only visible on the Prometheus Alerts page and in Grafana.
+stale heartbeat, RTF above 1, failure rate above 20 %. Prometheus only evaluates them; Alertmanager decides when and
+where they go (§3.4.1).
+
+Prometheus reloads neither config nor rules over HTTP by design, so **editing `prometheus.yml` or `alerts.yml` needs
+`docker restart lalin-monitoring-prometheus-1`**. Target files are the exception — those reload on their own.
+
+#### 3.4.1 Notifications: Alertmanager → LINE
+
+Alertmanager groups and de-duplicates, then posts to a small bridge (`tools/monitoring/line_bridge.py`) that turns the
+webhook into a LINE push. Alertmanager has no LINE integration of its own; the bridge is ~150 lines and runs from the
+worker image, which already has fastapi/uvicorn/httpx, so nothing extra is built.
+
+- **The bridge publishes no port at all.** Only Alertmanager, on the same compose network, can reach it. It still
+  requires a bearer token (`credentials_file`, like the scrape token) so a stray container on that network cannot
+  make it send messages.
+- Routing: grouped by `alertname` + `host`; `critical` waits 10 s and repeats hourly, everything else waits 30 s and
+  repeats every 4 h. `send_resolved: true`, so a recovery arrives as its own ✅ message.
+- Inhibition: `VoiceWorkerGatewayDown` silences the other alerts for the same host (if metrics cannot be read, they
+  would all fire together), and `VoiceWorkerOomLockout` silences `VoiceWorkerNotReady` — cause, not effect.
+- Secrets in `/srv/lalin/alert-line.env`: `LALIN_ALERT_LINE_TOKEN` (channel access token), `LALIN_ALERT_LINE_TO`
+  (userId or groupId) and `LALIN_ALERT_BRIDGE_TOKEN` (must equal the `bridge-token` file Alertmanager reads).
+- A delivery failure returns 5xx on purpose, so Alertmanager retries rather than the bridge dropping the message.
+  Check with `docker logs lalin-monitoring-alert-line-bridge-1`; `line_rejected` carries LINE's own reason (expired
+  token, wrong destination, quota).
+- Alertmanager's UI on `${MONITORING_BIND_IP}:9093` is where silences are created before planned maintenance.
+
 
 ### 3.5 Putting the status on an existing dashboard
 
@@ -184,6 +209,7 @@ dashboard's dev server or backend holds it and proxies the request.
 
 | Version | Date | Status | Change | Evidence | Author |
 |---|---|---|---|---|---|
+| 0.1.6b | 2026-09-23 | beta | Alertmanager and the LINE bridge (§3.4.1); note that Prometheus needs a restart to pick up config/rule edits | based on 7affb29 | LALIN |
 | 0.1.5b | 2026-09-23 | beta | Prometheus + Grafana stack (§3.4) and the dashboard kit (§3.5); §3.2 now points at the gateway instead of a hypothetical sidecar | based on e833a7c | LALIN |
 | 0.1.4b | 2026-09-23 | beta | Status gateway section (tailnet-only, read-only, Funnel warning) | based on 05f869e | LALIN |
 | 0.1.3b | 2026-09-23 | beta | /metrics section (Prometheus over the socket, what to alert on) | based on 94884f3 | LALIN |
