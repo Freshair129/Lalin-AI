@@ -223,6 +223,27 @@ fn is_uuid(value: &str) -> bool {
     })
 }
 
+#[cfg(any(windows, test))]
+fn is_local_windows_canonical_path(value: &str) -> bool {
+    let normalized = value.replace('/', "\\");
+    let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
+    let bytes = path.as_bytes();
+    bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && bytes[2] == b'\\'
+}
+
+#[cfg(windows)]
+fn is_local_canonical_path(path: &Path) -> bool {
+    is_local_windows_canonical_path(&path.to_string_lossy())
+}
+
+#[cfg(not(windows))]
+fn is_local_canonical_path(path: &Path) -> bool {
+    path.is_absolute()
+}
+
 fn validate_media_file(raw: &str, title: &Option<String>) -> Result<PathBuf, String> {
     if raw.is_empty() || raw.len() > 4096 || raw.contains('\0') || raw.starts_with("\\\\") || raw.starts_with("//") || raw.starts_with("\\\\.\\") || raw.starts_with("\\\\?\\") {
         return Err("ไฟล์ handoff ต้องเป็น local file path ที่เลือกจาก Studio".into());
@@ -234,6 +255,9 @@ fn validate_media_file(raw: &str, title: &Option<String>) -> Result<PathBuf, Str
         return Err("ชื่อไฟล์สำหรับ Lalin Play ว่างหรือยาวเกิน 512 ตัวอักษร".into());
     }
     let path = std::fs::canonicalize(raw).map_err(|_| "ไม่พบไฟล์ที่เลือก หรือไฟล์ถูกย้ายแล้ว".to_string())?;
+    if !is_local_canonical_path(&path) {
+        return Err("ไม่อนุญาตให้ handoff ไปยัง UNC, device หรือ network path".into());
+    }
     if !path.is_file() { return Err("รายการที่เลือกไม่ใช่ไฟล์ปกติ".into()); }
     let ext = path.extension().and_then(|value| value.to_str()).unwrap_or_default().to_ascii_lowercase();
     if !["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aif", "aiff", "wma", "mp4", "webm"].contains(&ext.as_str()) {
@@ -673,5 +697,15 @@ mod tests {
         assert!(validate_media_file("https://example.test/song.wav", &None).is_err());
         assert!(!is_uuid("not-a-request-id"));
         assert!(is_uuid("00000000-0000-4000-8000-000000000001"));
+    }
+
+    #[test]
+    fn canonical_windows_media_paths_reject_network_and_device_roots() {
+        assert!(is_local_windows_canonical_path(r"C:\media\song.wav"));
+        assert!(is_local_windows_canonical_path(r"\\?\C:\media\song.wav"));
+        assert!(!is_local_windows_canonical_path(r"\\server\share\song.wav"));
+        assert!(!is_local_windows_canonical_path(r"\\?\UNC\server\share\song.wav"));
+        assert!(!is_local_windows_canonical_path(r"\\.\PhysicalDrive0"));
+        assert!(!is_local_windows_canonical_path(r"\\?\GLOBALROOT\Device\HarddiskVolume1\song.wav"));
     }
 }

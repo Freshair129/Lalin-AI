@@ -1,7 +1,7 @@
 ---
-version: "0.10.10b"
+version: "0.10.11b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-24T02:00:00+07:00,LALIN"
+last_update: "2026-09-26T05:25:06+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -80,7 +80,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 - `docs/product/LALIN_PLAY_DOCUMENTATION.md`: Play documentation entrypoint, source publication status and document ownership; approval/evidence/export remain distinct.
 - `docs/validation/LALIN_PLAY_TRACEABILITY.md`: all 33 PLAY product/video/Compact criteria mapped to source, tests, dated native evidence and open gates.
-- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: current native/storage contracts plus candidate wire protocol and opt-in migration/rollback; future portions NOT_IMPLEMENTED.
+- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: current native/storage contracts and approved S3 named-pipe protocol (implemented locally; paired-runtime acceptance open), plus candidate opt-in migration/rollback.
 - `docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md`: candidate export inventory, retained consumers, license/notices audit and recovery record; not an executed split.
 - `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: candidate NSIS/signing/updater/draft-publication and rollback qualification; all distribution gates remain open.
 - `docs/guides/LALIN_PLAY_USER_GUIDE.md`: current candidate controls, local files/state and non-destructive troubleshooting.
@@ -132,6 +132,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
+- `.brain/rca/2026-09-26-lalin-play-handoff-canonical-path.md`: canonical-path review and sender/receiver guards for UNC/device reparse targets; live ACL and paired-process checks remain open.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
 - `.brain/rca/2026-09-18-installer-version-hardcode.md`: documented the local packaging filename drift after the 0.1.1 version bump.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
@@ -158,6 +159,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.11b | 2026-09-26 | beta | Index canonical-path RCA for the S3 Studio-to-Play handoff | uncommitted | Codex |
 | 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |
 | 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |
 | 0.10.8b | 2026-09-23 | beta | Index the voice worker monitoring evidence | based on e833a7c | LALIN |

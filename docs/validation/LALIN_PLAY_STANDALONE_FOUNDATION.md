@@ -1,7 +1,7 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-25T19:20:01+07:00,Codex"
+last_update: "2026-09-26T05:25:06+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -44,7 +44,7 @@ resolution race. See [RCA](../../.brain/rca/2026-09-20-lalin-play-native-resolut
 React review kept engine lifetime outside layout changes and bounded listener
 cleanup; unit tests assert the same audio element and no extra play on switching.
 
-## S3 focused automated evidence (2026-09-25, ICT)
+## S3 focused automated evidence (2026-09-26, ICT)
 
 The S3 wire contract is approved and implemented locally. Studio's existing
 Play/Play Next/Queue route remains the default; distinct native actions explicitly
@@ -53,21 +53,24 @@ not live cross-process playback:
 
 | Check | Result | Scope / caveat |
 |---|---|---|
-| Studio native sender + retained bridge tests | 18/18 PASS | FIFO order/local path routing, exact-ID reconciliation request and the existing same-origin bridge; no live pipe |
-| Studio Rust handoff tests | 4/4 PASS | Cold/warm launch decisions, one-launch timeout and input validation; launch/connect are deterministic unit seams |
+| Studio native sender focused Vitest | 3/3 PASS | Local path routing and unknown-delivery reconciliation; native command mocked |
+| Studio retained sender + bridge tests | 18/18 PASS (2026-09-25 record) | FIFO order/local path routing, exact-ID reconciliation request and the same-origin bridge; no live pipe |
+| Studio Rust handoff tests | 5/5 PASS | Cold/warm launch decisions, one-launch timeout, input validation and canonical-root cases; launch/connect are deterministic unit seams; test build used a temporary worktree junction to the ignored sidecar, removed afterward |
 | Play handoff contract frontend test | 1/1 PASS | Versioned snapshot shape, bounded size and path-redaction assertions |
-| Play Rust tests | 13/13 PASS | Protocol, path validation, replay/history, snapshot cap, Windows protected DACL creation and remote-client-rejection flag |
+| Play Rust crate | 14/14 PASS | Protocol, local-file validation, replay/history, snapshot cap, Windows DACL construction/pipe creation and remote-client-rejection flag; no unauthorized connection attempt |
 | API playback resolver | 10/10 PASS | Workspace/upload/output containment and extension checks with local fixtures |
 | Studio and Play frontend builds | PASS | TypeScript/Vite build only; no playback acceptance |
+| Canonical Windows-root checks | PASS | Both native validators accept drive-rooted paths and reject UNC/device/GLOBALROOT examples after resolution; helper tests only, no reparse-to-network runtime fixture |
 | Studio–Play live process pair, FIFO pipe burst and audible result | NOT RUN | No native runtime parity claim |
-| ACK-loss interruption, cross-session/spoof attempts and Studio/API exit during active playback | NOT RUN | Requires paired-process lifecycle/security evidence |
+| ACK-loss interruption, unauthorized/cross-session client attempts, spoof attempts and Studio/API exit during active playback | NOT RUN | Requires paired-process lifecycle/security evidence |
 
-The Studio and Play native adapters validate canonical local media paths,
+The Studio and Play native adapters validate canonical local drive paths,
 resolve Studio-owned references through the API, enforce a same-logon SID pipe
-ACL, serialize commands, and reconcile an uncertain delivery using the same
-request ID and owner session. If reconciliation remains unknown, Studio blocks
-later standalone sends instead of replaying the command. This work does not
-remove or deactivate the existing Studio playback owner.
+ACL, reject canonical UNC/device roots before the Play asset grant, serialize
+commands, and reconcile an uncertain delivery using the same request ID and
+owner session. If reconciliation remains unknown, Studio blocks later standalone
+sends instead of replaying the command. This work does not remove or deactivate
+the existing Studio playback owner.
 
 ## Native evidence and user confirmation
 
@@ -132,9 +135,14 @@ repository SOT `0.4.0b → 0.4.1b`; docs index `0.5.0b → 0.5.1b`;
 sitemap `0.1.0b → 0.1.1b`; ADR-004 `0.1.0b → 0.1.2b`.
 Documentation approval/status changes do not bump Studio/Cast application versions.
 
+S3 follow-up versions: integration spec `0.1.1b → 0.1.2b`, traceability
+`0.1.1b → 0.1.2b`, foundation `0.2.0b → 0.2.1b`, DOCS_INDEX
+`0.10.10b → 0.10.11b`; canonical-path RCA added at `0.1.0b`.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-26 | beta | Record canonical-root validation, current focused checks and unchanged native parity gates | uncommitted | Codex |
 | 0.2.0b | 2026-09-25 | beta | Record approved S3 native handoff implementation and focused local evidence; retain live parity gate | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | beta | Record standalone foundation, native evidence and user-confirmed audio; preserve incomplete split gates | based on 8429010 | LALIN |

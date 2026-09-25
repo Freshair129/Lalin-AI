@@ -633,6 +633,9 @@ fn validate_media_file(path: &str) -> Result<std::path::PathBuf, String> {
         return Err("invalid_file_path".into());
     }
     let canonical = fs::canonicalize(candidate).map_err(|_| "ไม่พบไฟล์ที่ Studio ส่งมา")?;
+    if !is_local_canonical_path(&canonical) {
+        return Err("ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive".into());
+    }
     if !canonical.is_file() {
         return Err("ไฟล์ที่ส่งมาไม่ใช่ไฟล์ปกติ".into());
     }
@@ -641,6 +644,27 @@ fn validate_media_file(path: &str) -> Result<std::path::PathBuf, String> {
         return Err("ชนิดไฟล์นี้ Lalin Play ยังไม่รองรับ".into());
     }
     Ok(canonical)
+}
+
+#[cfg(any(windows, test))]
+fn is_local_windows_canonical(value: &str) -> bool {
+    let normalized = value.replace('/', "\\");
+    let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
+    let bytes = path.as_bytes();
+    bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && bytes[2] == b'\\'
+}
+
+#[cfg(windows)]
+fn is_local_canonical_path(path: &std::path::Path) -> bool {
+    is_local_windows_canonical(&path.to_string_lossy())
+}
+
+#[cfg(not(windows))]
+fn is_local_canonical_path(path: &std::path::Path) -> bool {
+    path.is_absolute()
 }
 
 #[cfg(windows)]
@@ -959,5 +983,15 @@ mod tests {
         assert!(validate_media_file("https://example.test/audio.wav").is_err());
         assert!(validate_media_file("\\\\server\\share\\audio.wav").is_err());
         assert!(validate_media_file(folder.path().to_str().unwrap()).is_err());
+    }
+
+    #[test]
+    fn canonical_windows_media_paths_reject_network_and_device_roots() {
+        assert!(is_local_windows_canonical(r"C:\media\song.wav"));
+        assert!(is_local_windows_canonical(r"\\?\C:\media\song.wav"));
+        assert!(!is_local_windows_canonical(r"\\server\share\song.wav"));
+        assert!(!is_local_windows_canonical(r"\\?\UNC\server\share\song.wav"));
+        assert!(!is_local_windows_canonical(r"\\.\PhysicalDrive0"));
+        assert!(!is_local_windows_canonical(r"\\?\GLOBALROOT\Device\HarddiskVolume1\song.wav"));
     }
 }

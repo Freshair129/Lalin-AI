@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-25T19:20:01+07:00,Codex"
+last_update: "2026-09-26T05:25:06+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -33,7 +33,7 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | UI | `src/App.tsx`, `src/native.ts`, `src/components/Transport.tsx` | `src/App.test.tsx`: one element, surface failure, queue/errors, no-autoplay restore, playlists, video/layout/metadata/error and fullscreen IPC mocks |
 | Owner | `src/playback/audioEngine.ts`, `src/playback/usePlaybackStore.ts`, `src/contracts.ts` | `src/playback/audioEngineState.test.ts` readiness; App Stop-during-resolution test; EQ tests |
 | Native | `src-tauri/src/lib.rs`, `src-tauri/src/library.rs`, `src-tauri/build.rs`, `src-tauri/capabilities/main.json` | Rust module tests: bounds restoration, selection/dedup/read-only, missing selection, catalog replacement, video classification and old kind-less catalog |
-| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `src/playback/playbackClient.ts`; API `app/routers/files.py`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts`, `src/handoffContract.ts` | Focused Studio 18/18, Studio Rust 4/4, Play Rust 13/13, API resolver 10/10; local tests only, live process pair not verified |
+| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `src/playback/playbackClient.ts`; API `app/routers/files.py`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts`, `src/handoffContract.ts` | Current: Studio sender Vitest 3/3, Studio Rust 5/5, Play contract 1/1, Play Rust 14/14, API resolver 10/10; local tests only, live process pair not verified |
 | EQ | `src/components/PlaybackEQPanel.tsx`, `src/playback/audioContext.ts` and Owner | `src/playback/playbackEQ.test.ts`: 10 bands, gain/preamp limits, bypass/presets, graph/volume and output fallback mocks |
 | Preview | `src/components/CompactTransport.tsx`, `src/playback/framePreview.ts`, `src/styles.css` | `src/components/CompactTransport.test.tsx`, `src/playback/framePreview.test.ts`: drag/hover, disposal, latest work, cache limit, errors/timeouts, controls |
 | Skip | `src/playback/relativeSeek.ts`, CompactTransport and Native | `src/playback/relativeSeek.test.ts`; CompactTransport live-clock/disabled tests; App native ACK/error tests |
@@ -60,7 +60,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
-| PLAY-06 | Single-instance focus plus approved native handoff path | PARTIAL | Local protocol, same-logon pipe code, validated local-file commands, FIFO and ACK/STATE reconciliation implemented; live process pair, ACK-loss interruption, cross-session attempt and audible parity NOT_VERIFIED; CLI forwarding remains absent |
+| PLAY-06 | Single-instance focus plus approved native handoff path | PARTIAL | Local protocol, same-logon pipe code, canonical local-drive validation, FIFO and ACK/STATE reconciliation implemented; live process pair, ACK-loss interruption, unauthorized/cross-session attempt and audible parity NOT_VERIFIED; CLI forwarding remains absent |
 | PLAY-07 | State, Native | F + App opt-in/no autoplay: PARTIAL | Full restart/corruption/storage-failure coverage |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | No exporter/importer | NOT_IMPLEMENTED | Candidate integration/migration spec, transactional recovery tests |
@@ -128,5 +128,6 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-26 | beta | Add canonical-root validation evidence while retaining PLAY-06 native acceptance gates | uncommitted | Codex |
 | 0.1.1b | 2026-09-25 | beta | Reconcile PLAY-06 traceability with local S3 handoff implementation and retain runtime acceptance gates | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | beta | Map all 33 standalone criteria to code/tests, dated evidence and unresolved gates | based on f5a6681 | LALIN |

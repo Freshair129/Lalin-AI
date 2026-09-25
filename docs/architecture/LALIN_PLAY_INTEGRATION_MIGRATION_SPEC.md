@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-25T19:20:01+07:00,Codex"
+last_update: "2026-09-26T05:25:06+07:00,Codex"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -111,9 +111,11 @@ Security and lifecycle implementation status:
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
-  is available; receiver revalidates local regular files. Reject remote URLs,
-  UNC/network paths for initial local-only handoff, device paths and directory
-  payloads. Never execute a shell or infer a path from a title/pack ID.
+  is available; sender and receiver canonicalize and revalidate local regular
+  files. Reject remote URLs and UNC/network/device roots both before and after
+  resolution, including a reparse point resolving to an extended UNC path.
+  Receiver checks the canonical path before granting it to the asset scope.
+  Never execute a shell or infer a path from a title/pack ID.
 - File grants apply only to the explicit handoff item; source survives Studio/API
   shutdown. Missing receiver reports install/configuration guidance; no fallback
   second engine. Studio's existing playback actions remain on the Studio owner;
@@ -137,11 +139,12 @@ Security and lifecycle implementation status:
   label. No keys/cookies/profile data on the wire or in captured diagnostics.
 
 Focused local tests now cover cold/warm launch decisions, one-launch timeout,
-Studio FIFO ordering, payload and path validation, duplicate/conflicting IDs,
-owner-session query checks, bounded history/snapshots, protected same-logon DACL
-creation and the remote-client-rejection flag. Live cross-process delivery, ACK-loss under
-process interruption, cross-session/spoof attempts, Studio/API exit during active
-playback, audible parity and Cast regression remain **NOT VERIFIED**.
+Studio FIFO ordering, payload and canonical-path validation, duplicate/conflicting
+IDs, owner-session query checks, bounded history/snapshots, protected same-logon
+DACL creation and the remote-client-rejection flag. The ACL test does not attempt
+an unauthorized connection. Live cross-process delivery, ACK-loss under process
+interruption, cross-session/spoof attempts, Studio/API exit during active playback,
+audible parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Proposed opt-in migration envelope v1 (review required)
 
@@ -195,5 +198,6 @@ Candidate schema/code parity tests must exist before declaring S2 data complete.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-09-26 | candidate | Require canonical local-drive paths on both native handoff sides; record unit evidence and keep runtime gates open | uncommitted | Codex |
 | 0.1.1b | 2026-09-25 | candidate | Record approved S3 named-pipe contract and local implementation evidence; leave migration design gated | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | candidate | Separate observed local API/storage from proposed bounded IPC and opt-in transactional migration | based on f5a6681 | LALIN |
