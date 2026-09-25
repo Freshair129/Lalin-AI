@@ -139,6 +139,7 @@ export interface PlaybackStoreState {
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   clearQueue: () => void;
   playAtIndex: (index: number) => Promise<void>;
+  replaceFromMigration: (queue: PlaybackQueue, eq: PlaybackEQ) => void;
 
   togglePlay: () => Promise<void>;
   pause: () => void;
@@ -537,6 +538,24 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       engine.stop();
       set((state) => ({
         nowPlaying: { ...state.nowPlaying, state: "idle", currentTime: 0 },
+      }));
+    },
+
+    replaceFromMigration: (queue: PlaybackQueue, eq: PlaybackEQ) => {
+      loadGeneration++;
+      engine.stop();
+      engine.applyEQ(eq);
+      set((state) => ({
+        queue,
+        eq,
+        nowPlaying: {
+          ...state.nowPlaying,
+          item: queue.items[queue.currentIndex] ?? null,
+          state: "idle",
+          currentTime: 0,
+          duration: queue.items[queue.currentIndex]?.duration ?? 0,
+          error: undefined,
+        },
       }));
     },
 

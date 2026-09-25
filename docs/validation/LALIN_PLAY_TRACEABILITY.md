@@ -1,13 +1,13 @@
 ---
-version: "0.1.0b"
+version: "0.2.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T20:50:46+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "validation"
   doc_type: "traceability-matrix"
-  scope: "All PLAY-01..10, PLAY-V01..10 and PLAY-C01..13 requirements"
+  scope: "All PLAY-01..10, PLAY-V01..10 and PLAY-C01..13 requirements with S2 migration evidence"
 ---
 
 # Lalin Play — requirements, implementation and evidence
@@ -36,7 +36,8 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Preview | `src/components/CompactTransport.tsx`, `src/playback/framePreview.ts`, `src/styles.css` | `src/components/CompactTransport.test.tsx`, `src/playback/framePreview.test.ts`: drag/hover, disposal, latest work, cache limit, errors/timeouts, controls |
 | Skip | `src/playback/relativeSeek.ts`, CompactTransport and Native | `src/playback/relativeSeek.test.ts`; CompactTransport live-clock/disabled tests; App native ACK/error tests |
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
-| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; EQ mocks; not complete migration/disk-failure tests |
+| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery and selected storage-failure tests; process-crash and remaining storage-failure coverage open |
+| Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases and selected native write-failure tests; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
@@ -59,9 +60,9 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
 | PLAY-06 | Single-instance focus only | F: PARTIAL | CLI forwarding and native Studio sender/receiver NOT_IMPLEMENTED |
-| PLAY-07 | State, Native | F + App opt-in/no autoplay: PARTIAL | Full restart/corruption/storage-failure coverage |
+| PLAY-07 | State, Native | F + App opt-in/no autoplay + S2 phase recovery and selected write-failure fixtures: PARTIAL | Process termination, corruption and remaining storage-failure coverage |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
-| PLAY-09 | No exporter/importer | NOT_IMPLEMENTED | Candidate integration/migration spec, transactional recovery tests |
+| PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Process-crash recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
 | PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
 
 ## Video requirements (CR-003)
@@ -125,4 +126,6 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-25 | beta | Trace native journal-phase recovery, selected write-failure evidence and open runtime gates | based on 411d2ed | LALIN |
+| 0.2.0b | 2026-09-25 | beta | Trace approved S2 exporter/importer, rollback tests and remaining runtime gates | based on 411d2ed | LALIN |
 | 0.1.0b | 2026-09-20 | beta | Map all 33 standalone criteria to code/tests, dated evidence and unresolved gates | based on f5a6681 | LALIN |

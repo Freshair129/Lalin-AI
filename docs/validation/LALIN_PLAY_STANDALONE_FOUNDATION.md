@@ -1,25 +1,32 @@
 ---
-version: "0.1.0b"
+version: "0.2.1b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-20T19:35:00+07:00,LALIN"
+last_update: "2026-09-25T20:50:46+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "validation"
   doc_type: "verification-report"
-  scope: "ADR-004 S1 and partial S2; Windows local evidence only"
+  scope: "ADR-004 S1 and S2 local migration implementation; Windows evidence only"
 ---
 
 # Lalin Play standalone foundation — local evidence
 
 ## Outcome and boundary
 
-**S1 LOCAL PASS; S2 PARTIAL. Overall repository split is NOT complete.**
+**S1 LOCAL PASS. S2 queue/EQ migration is implemented and locally verified; full S2 acceptance and the overall repository split remain PARTIAL.**
 
 The user approved PRD/ADR-004 implementation on `codex/lalin-play-split`.
 Source baseline is `84290102b84fd76dec069bf6d61ffdd2fc8466ab` in
 `Freshair129/Lalin-AI`. Changes are uncommitted branch work. No push, remote
 creation, source removal, main merge or release was performed in this slice.
+
+The 2026-09-25 S2 implementation is an uncommitted worktree based on
+`411d2ed`. Focused frontend/native checks and both frontend builds passed.
+Synthetic tests cover each durable journal phase and selected native write
+failures; process-crash recovery, remaining native write failures and transfer of
+actual Studio user data were not run. See [S2 migration evidence](LALIN_PLAY_S2_MIGRATION.md).
+No WebView profile files were accessed.
 
 An additive candidate exists at `apps/play-desktop`, with independent npm/Cargo
 manifests and lockfiles, app ID `ai.lalin.play` and app version `0.1.0`.
@@ -86,7 +93,7 @@ output settings and dark native controls.
 | Gate | Status |
 |---|---|
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
-| Opt-in old Studio queue/EQ export/import and atomic rollback | NOT IMPLEMENTED |
+| Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
 | Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | NOT IMPLEMENTED |
 | Command-line file forwarding, cold/warm Studio handoff and Studio exit | NOT VERIFIED; repeated launch currently focuses only |
@@ -95,10 +102,11 @@ output settings and dark native controls.
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
-Next approved implementation work is S2 completion and S3 delivery/security
-integration. S4–S7 remain gated by ADR-004. Recovery currently requires only
-stopping the additive candidate; the prior Studio sources and user state remain
-intact. Temporary isolated build files and fixture are ignored under `runtime/`
+Next work is actual process-termination/restart verification and the remaining
+journal/history write-failure cases, then S3 delivery/security integration.
+S4–S7 remain gated by ADR-004.
+An interrupted import restores through the Play-owned journal on next launch; the
+prior Studio sources and user state remain intact. Temporary isolated build files and fixture are ignored under `runtime/`
 and `.smoke/`; they were retained, not committed or deleted.
 
 ## Version changes in this slice
@@ -112,4 +120,6 @@ Documentation approval/status changes do not bump Studio/Cast application versio
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-25 | beta | Add synthetic journal-phase recovery and selected native write-failure evidence | based on 411d2ed | LALIN |
+| 0.2.0b | 2026-09-25 | beta | Add focused S2 migration implementation evidence without claiming runtime crash acceptance | based on 411d2ed | LALIN |
 | 0.1.0b | 2026-09-20 | beta | Record standalone foundation, native evidence and user-confirmed audio; preserve incomplete split gates | based on 8429010 | LALIN |

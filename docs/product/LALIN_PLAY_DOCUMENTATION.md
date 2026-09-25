@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.2.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T20:50:46+07:00,LALIN"
 status: "beta"
 superseded_by: null
 attributes:
@@ -43,8 +43,9 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Architecture / split gates | [ADR-004](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) | Approved direction; implementation partial |
 | Video / Compact / fullscreen | [CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md), [CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md), [Sitemap](../design/LALIN_SITEMAP_SOT.md) | Approved, implemented locally |
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
-| Current local API/storage + future integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Current facts + clearly separated candidate protocol |
-| Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Candidate execution checklist; export not performed |
+| Current local API/storage + future integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration implementation; Studio IPC remains candidate |
+| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Local tests/builds and selected synthetic phase/failure checks passed; process-crash recovery and real data transfer not run |
+| Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository extraction not performed; S2 queue/EQ migration code is local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
 | Developer setup / provenance | [Play README](../../apps/play-desktop/README.md) | Current candidate behavior |
@@ -55,10 +56,10 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 - **LOCAL PASS** = ผ่านเฉพาะ environment/fixture ที่รายงาน ไม่เท่ากับ clean-machine release.
 - **PARTIAL** = มี implementation/evidence บางส่วน แต่ acceptance รวมยังเปิด.
 - **NOT_IMPLEMENTED / NOT_RUN** = ยังไม่มีโค้ด / ยังไม่มีผลตรวจ ห้ามแทนด้วย PASS.
-- **candidate** = รายละเอียดออกแบบใหม่ที่ต้อง review ก่อน implementation ตาม R5.
+- **candidate** = รายละเอียดออกแบบที่ยังไม่อนุมัติให้ implement ตาม R5.
 - **BLOCKED** ใน checklist = ต้องเติม decision/evidence ก่อนผ่าน gate ไม่ใช่รายงานว่า agent ทำงานต่อไม่ได้.
 
-ลำดับ: review candidate contract → S2 data/relink และ S3 Studio handoff →
+ลำดับ: verify S2 process-termination recovery, remaining failure cases and relink acceptance → S3 Studio handoff →
 license/provenance + S4 export → S5 clean-checkout/regression → S6 scoped removal →
 S7 installer/update. แยก authorization สำหรับ remote creation, deletion,
 merge และ publication จากการอนุมัติเอกสารเสมอ
@@ -66,7 +67,17 @@ merge และ publication จากการอนุมัติเอกส�
 เอกสารครบในแง่ coverage ของหัวข้อที่ตรวจพบ ไม่ได้ปิดงาน implementation หรือ
 แทนที่การตัดสินใจเรื่อง license, release signing และการทดสอบที่ยังขาด
 
-## ผลตรวจชุดเอกสารรอบนี้
+## S2 implementation update — 2026-09-25
+
+Implementation is in the uncommitted worktree `runtime/worktrees/lalin-play-s2`,
+branch `codex/lalin-play-split`, based on `411d2ed`. Focused checks passed:
+3 Studio export tests, 20 standalone Play migration tests, 19 native Rust tests,
+and both frontend builds. Synthetic native tests cover all journal phases and
+selected write failures. No WebView profile files or actual user migration were
+used. Process-termination recovery and remaining write-failure cases are open;
+see the [evidence report](../validation/LALIN_PLAY_S2_MIGRATION.md).
+
+## Prior documentation round — 2026-09-20
 
 ตรวจแบบอ่าน source/เอกสารและแก้เฉพาะ documentation ไม่มี runtime implementation,
 commit หรือ push ในรอบจัดเอกสารนี้ ไม่รัน generated doc-graph writer เพราะมีงาน
@@ -87,7 +98,7 @@ commit หรือ push ในรอบจัดเอกสารนี้ ไ
 commits advance branch HEAD. This round's document edits remain local until a
 separate commit/push request. Historical runtime reports retain their own hashes.
 
-## Version diff
+## Prior documentation version diff
 
 | Document | Before → after |
 |---|---|
@@ -103,8 +114,20 @@ separate commit/push request. Historical runtime reports retain their own hashes
 | Register, traceability, user guide | New 0.1.0b beta documents |
 | Integration/migration, handoff, release runbook | New 0.1.0b candidate documents; review required before implementation |
 
+## S2 documentation version diff — 2026-09-25
+
+| Document | Before → after |
+|---|---|
+| Integration/migration contract | 0.2.1b → 0.2.2b |
+| Play traceability | 0.2.0b → 0.2.1b |
+| Standalone foundation report | 0.2.0b → 0.2.1b |
+| Documentation register | 0.2.0b → 0.2.1b |
+| S2 migration evidence | 0.1.0b → 0.1.1b |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-25 | beta | Update S2 focused test totals and record synthetic recovery/failure evidence limits | based on 411d2ed | LALIN |
+| 0.2.0b | 2026-09-25 | beta | Register approved S2 migration implementation, verification and remaining runtime gates | based on 411d2ed | LALIN |
 | 0.1.0b | 2026-09-20 | beta | Consolidate document ownership, pushed source status and open gates | based on f5a6681 | LALIN |

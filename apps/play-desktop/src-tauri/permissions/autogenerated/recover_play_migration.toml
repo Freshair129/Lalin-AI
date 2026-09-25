@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recover-play-migration"
+description = "Enables the recover_play_migration command without any pre-configured scope."
+commands.allow = ["recover_play_migration"]
+
+[[permission]]
+identifier = "deny-recover-play-migration"
+description = "Denies the recover_play_migration command without any pre-configured scope."
+commands.deny = ["recover_play_migration"]

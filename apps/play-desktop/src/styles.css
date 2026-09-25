@@ -402,6 +402,105 @@ main {
   margin: 0;
   font-size: 13px;
 }
+.play-migration {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  width: min(100%, 720px);
+  padding: 14px;
+  border: 1px solid #3b452e;
+  border-radius: 8px;
+  background: #171d14;
+}
+.play-migration h2,
+.play-migration h3,
+.play-migration p {
+  margin: 0;
+}
+.play-migration h2 {
+  font-size: 16px;
+}
+.play-migration > p,
+.play-migration-preview p,
+.play-migration-preview li {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.play-migration-file {
+  display: none;
+}
+.play-migration-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #59664a;
+  border-radius: 6px;
+  background: #11160f;
+}
+.play-migration-preview h3 {
+  font-size: 14px;
+}
+.play-migration-preview ul {
+  max-height: 220px;
+  overflow: auto;
+  margin: 0;
+  padding-left: 22px;
+}
+.play-migration-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.play-migration-error {
+  color: #ffbca1;
+}
+
+.play-migration-overlay {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 12, 16, 0.78);
+  backdrop-filter: blur(5px);
+  color: var(--text-primary, #f6f7f8);
+  cursor: wait;
+}
+
+.play-migration-overlay p {
+  max-width: 520px;
+  padding: 20px 24px;
+  border: 1px solid var(--border, #3c4650);
+  border-radius: 12px;
+  background: var(--panel, #1c242d);
+  text-align: center;
+}
+.lalin-migration-export {
+  flex-shrink: 0;
+  margin: 0 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.lalin-migration-export-status {
+  position: absolute;
+  z-index: 5;
+  top: 46px;
+  right: 190px;
+  max-width: min(420px, 60vw);
+  padding: 7px 10px;
+  border: 1px solid #59664a;
+  border-radius: 5px;
+  background: #11160f;
+  color: #d7e7c1;
+  font-size: 11px;
+}
 .error {
   padding: 9px 14px;
   background: #3c251d;

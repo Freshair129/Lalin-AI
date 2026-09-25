@@ -20,6 +20,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
+import { buildPlayMigrationEnvelope, downloadPlayMigration } from "../playback/playMigrationExport";
 import { PlaybackEQPanel } from "./PlaybackEQPanel";
 import { initMediaSessionAdapter } from "../playback/mediaSessionAdapter";
 import { connectPlaybackOwner } from "../playback/playbackOwner";
@@ -50,6 +51,7 @@ export function LalinPlayWindow() {
   const {
     nowPlaying,
     queue,
+    eq,
     togglePlay,
     stop,
     next,
@@ -76,6 +78,19 @@ export function LalinPlayWindow() {
   const tvRootRef = useRef<HTMLDivElement>(null);
   const tvModeToggleRef = useRef<HTMLButtonElement>(null);
   const [windowError, setWindowError] = useState<string | null>(null);
+  const [migrationExportStatus, setMigrationExportStatus] = useState("");
+
+  const exportQueueAndEq = () => {
+    try {
+      const migration = buildPlayMigrationEnvelope(queue, eq);
+      downloadPlayMigration(migration);
+      setMigrationExportStatus(
+        `Migration exported. ${migration.unresolved.length} queue item(s) need manual relink.`,
+      );
+    } catch (error) {
+      setMigrationExportStatus(`Migration export failed: ${String(error)}`);
+    }
+  };
 
   const exitTvMode = useCallback(() => {
     setTvError(null);
@@ -272,6 +287,16 @@ export function LalinPlayWindow() {
           </button>
         </div>
 
+        {!tvMode ? (
+          <button
+            className="lalin-migration-export"
+            data-testid="play-migration-export"
+            onClick={exportQueueAndEq}
+          >
+            Export queue/EQ
+          </button>
+        ) : null}
+
         {/* Native Window Controls */}
         <div className="lalin-play-window-controls">
           <button
@@ -297,6 +322,11 @@ export function LalinPlayWindow() {
           </button>
         </div>
       </div>
+      {migrationExportStatus ? (
+        <div className="lalin-migration-export-status" role="status" aria-live="polite">
+          {migrationExportStatus}
+        </div>
+      ) : null}
 
       {/* Main Content Body */}
       {windowError && <div className="fm-err" role="alert">{windowError}</div>}

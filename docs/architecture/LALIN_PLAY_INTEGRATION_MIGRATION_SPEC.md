@@ -1,13 +1,13 @@
 ---
-version: "0.1.0b"
+version: "0.2.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
-status: "candidate"
+last_update: "2026-09-25T20:50:46+07:00,LALIN"
+status: "beta"
 superseded_by: null
 attributes:
   domain: "architecture"
   doc_type: "interface-specification"
-  scope: "Observed standalone contracts and proposed Studio IPC/data migration"
+  scope: "Observed standalone contracts, approved S2 migration and proposed Studio IPC"
 ---
 
 # Lalin Play — runtime, integration and migration contract
@@ -16,9 +16,11 @@ Parent: [ADR-004 §§4–6](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md),
 [PRD §4.9](../product/PRD.md#49-lalin-play--standalone-local-media-player-approved).
 Peers: [legacy Studio delivery](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md),
 [handoff](LALIN_PLAY_SEPARATION_HANDOFF.md), [traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
-Current facts below are read from `f5a6681`. Sections 2–4 are **candidate design,
-NOT_IMPLEMENTED**; review before code. Risk HIGH for eventual IPC/data implementation.
-This document adds no executable schema, pipe, migration UI or permission.
+Current facts below are read from `f5a6681`. Section 2 remains a **candidate**;
+the user approved the S2 opt-in data migration in §§3–4 on 2026-09-25. The
+migration is **HIGH risk** and implementation is limited to the envelope and
+recovery behavior below. This approval does not approve Studio IPC or repository
+export.
 
 ## 1. Current standalone boundary (implemented)
 
@@ -131,56 +133,80 @@ conflicting duplicate; ACK loss; restart and expired request history; oversized/
 malformed/version-mismatch frames; different logon/remote client/endpoint spoof;
 path escape/missing file; Studio/API exit during playback; unchanged Cast launcher.
 
-## 3. Proposed opt-in migration envelope v1 (review required)
+## 3. Approved S2 opt-in migration envelope v1
 
-This is distinct from native library JSON and internal WebView keys. Proposed
-export: UTF-8 JSON ≤16 MiB, format `lalin-play-migration`, `schemaVersion:1`,
-`exportId` UUID, `createdAt` ISO timestamp, `sourceApp` and `sourceVersion`,
-`queue`, `eq`, and `unresolved` list. No executable content, asset URLs, auth tokens,
-cover blobs, volume autoplay commands or raw WebView profile data.
+This is distinct from native library JSON and internal WebView keys. Export is
+UTF-8 JSON ≤16 MiB, format `lalin-play-migration`, `schemaVersion:1`, `exportId`
+UUID, ISO `createdAt`, `sourceApp` (`lalin-studio`), `sourceVersion`
+(`unknown` when unavailable), nullable `sourceCommit`, `queue`, `eq`, and an
+`unresolved` list. It contains no executable content, asset URLs, auth tokens,
+cover blobs, volume/autoplay commands or WebView profile data. Studio reads the
+live Play store only; it does not open the WebView profile.
 
-| Section | Proposed validation / import semantics |
+| Section | Validation / import semantics |
 |---|---|
-| queue | ≤10,000 entries `{entryId, localPath, title?, kind?}`; preserve duplicates and order; selected `currentEntryId` optional; repeat off/one/all and boolean shuffle |
-| eq | enabled boolean; finite preamp and 10 gains in −12..12 dB; fixed frequency order from playback contract; ≤100 custom presets, unique nonempty names ≤120 chars |
-| unresolved | original entry ID, display label and reason only; stale HTTP references are never guessed into paths |
-| provenance | Exact exported source version/commit where available; unknown provenance explicitly marked, not invented |
+| queue | ≤10,000 ordered items `{entryId, localPath, title?, kind?}`; preserve duplicate tracks; nullable `currentEntryId`; `repeatMode` off/one/all; boolean `shuffle` |
+| eq | `enabled`, finite `preamp`, 10 ordered `{frequency,gain}` bands in −12..12 dB, `currentPreset`, and ≤100 custom presets as an array of `{name,preamp,gains}` with unique nonempty names ≤120 chars |
+| unresolved | Unique `entryId`, display label and reason only; stale HTTP, upload IDs and relative references are never guessed into paths |
+| provenance | `sourceVersion` and nullable `sourceCommit`; unavailable values are explicitly `unknown` / `null` |
 
-The old Studio exporter must resolve legitimate local references before export;
-the new importer revalidates and previews readable/unresolved counts before any
-mutation. Users may explicitly choose to import resolvable entries and preserve
-the unresolved report; no silent item loss. Selected unresolved current item
-results in no active selection. Always finish idle, never autoplay.
+The Studio exporter emits an item path only when the live queue item has a
+supported, absolute local `sourcePath`; all other items are listed in
+`unresolved`. Standalone revalidates file paths natively (regular local files;
+no UNC/network, device or relative paths), then previews readable/unresolved
+counts and labels before any mutation. The user can cancel or explicitly import
+resolvable entries while retaining the unresolved report. A selected unresolved
+current item maps to no active selection. Successful import enables queue restore
+for the next launch because the user explicitly opted into queue migration; the
+player remains stopped and never autoplays.
 
-Proposed import mode: explicit **replace queue/EQ**, not implicit merge. Library
-adds validated media references without deleting existing catalog items. Playlist
-migration and full-profile copying are out of scope. Unknown schema, duplicate
-entry IDs, nonfinite/out-of-range EQ, malformed or oversized data rejects before
-mutation. Re-import of the same export ID is detected and requires confirmation.
+Import mode is explicit **replace queue/EQ**. The library adds validated media
+references by canonical path without deleting existing catalog items. Playlist
+migration and full-profile copying are out of scope. Unknown schema or fields,
+duplicate entry IDs, invalid local paths, nonfinite/out-of-range EQ, malformed or
+oversized data reject before mutation. Re-import of an export ID is detected and
+requires a separate explicit confirmation.
 
-## 4. Transaction, recovery and completion gates (not implemented)
+## 4. Approved S2 transaction and recovery
 
-1. Parse/validate/preview without changing current state; allow cancel.
-2. On explicit confirmation, stop active playback, snapshot queue/EQ/catalog and
-   persist a recovery journal in Play-owned app data before applying anything.
-3. Journal contains transaction ID, old/new values and committed marker. Apply
-   native catalog and UI stores as a coordinated operation; never claim that
-   multiple localStorage writes plus catalog rename are already atomic.
-4. Set committed marker only after all writes acknowledged. Crash before that
-   marker restores the previous snapshot on next launch; crash after it uses
-   the new state. Recovery failure preserves journal/backups and blocks another
-   import with an actionable error, not a default-empty overwrite.
-5. Keep old Studio state/media untouched. Explicit undo restores the last import
-   snapshot; do not delete user files or unrelated profile folders. Backup retention
-   and exact journal implementation need review together with storage design.
+1. Parse, validate, resolve and preview without changing queue/EQ/library; allow cancel.
+2. On confirmation, stop playback and atomically persist a Play-owned journal
+   containing transaction/export IDs, prior/new catalog snapshots, exact prior
+   queue/EQ/resume storage values, normalized new queue/EQ, and phase.
+3. Persist new queue, EQ and resume choice, then atomically replace the native
+   catalog. Mark the journal committed only after both WebView storage writes and
+   the native catalog write acknowledge success. These separate stores are
+   coordinated by recovery; they are not represented as one filesystem write.
+4. Startup checks the journal before React creates the playback store. An
+   uncommitted transaction restores the previous catalog and exact WebView values;
+   a committed transaction reapplies the new values. Keep the journal until WebView
+   storage restoration is acknowledged. Recovery failure retains it and blocks
+   another import with an actionable error; never initialize defaults over it.
+5. Rollback leaves Studio state and media untouched. S2 provides failure/crash
+   rollback; post-commit manual undo is outside this approved scope. No files or
+   unrelated profile folders are deleted.
 
-Exit tests (**NOT_RUN**): cancel no-op, invalid version/size/EQ/path, unresolved
-selection, duplicate entries and repeated import, disk-full/write failure, crash
-at each phase, journal recovery/undo, retained old Studio startup and no autoplay.
-Candidate schema/code parity tests must exist before declaring S2 data complete.
+Exit tests: cancel no-op; invalid version/size/fields/EQ/path; unresolved
+selection; duplicate queue entries and export IDs; write failure at each phase;
+restart recovery before store initialization; retained Studio state; and no autoplay.
+S2 queue/EQ migration is implemented locally; schema parity, focused rollback
+tests, synthetic native restart-phase coverage and selected write-failure tests
+are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
+Process-crash restart recovery, power-loss durability, remaining native write
+failures (including journal creation and import-history persistence), and an
+actual Studio-to-Play transfer remain unverified. Named-pipe Studio handoff and
+media relink remain separate gates.
+
+Implementation boundary: Studio export reads the live Play store in the running
+Studio app. Standalone import reads/writes its own active `localStorage` through
+the application runtime and stores its journal/library under Play app data. It
+does not open, copy, parse or edit either product's WebView profile files.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-09-25 | beta | Record synthetic native restart-phase and selected write-failure evidence with remaining gates | based on 411d2ed | LALIN |
+| 0.2.1b | 2026-09-25 | beta | Record local S2 exporter/importer, journal recovery and focused evidence limits | based on 411d2ed | LALIN |
+| 0.2.0b | 2026-09-25 | beta | Approve S2 queue/EQ migration envelope and journal recovery; keep Studio IPC candidate | based on 411d2ed | LALIN |
 | 0.1.0b | 2026-09-20 | candidate | Separate observed local API/storage from proposed bounded IPC and opt-in transactional migration | based on f5a6681 | LALIN |
