@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fs, type FsEntry } from "../api";
-import { requestPlayback } from "../playback/playbackClient";
+import { requestPlayback, requestStandalonePlayback } from "../playback/playbackClient";
+import { isTauri } from "../playback/windowManager";
 import type { MediaItem } from "@lalin/contracts";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Icon } from "./icons";
@@ -54,6 +55,10 @@ export function FileManager() {
     requestPlayback({ type: "ADD_TO_QUEUE", item });
   }, [toMediaItem]);
 
+  const handleStandalone = useCallback((e: FsEntry, type: "PLAY" | "PLAY_NEXT" | "ADD_TO_QUEUE") => {
+    requestStandalonePlayback({ type, item: toMediaItem(e) });
+  }, [toMediaItem]);
+
   const load = useCallback((p: string) => {
     fs.list(p).then((r) => { setEntries(r.entries); setErr(""); }).catch((e) => setErr(String(e.message ?? e)));
   }, []);
@@ -90,6 +95,12 @@ export function FileManager() {
           { label: "Play Next", icon: "⏭", onClick: () => handlePlayNext(e) } as MenuItem,
           { label: "Add to Queue", icon: "➕", onClick: () => handleAddToQueue(e) } as MenuItem,
           { type: "sep" } as MenuItem,
+          ...(isTauri() ? [
+            { label: "Play in standalone Lalin Play", icon: "↗", onClick: () => handleStandalone(e, "PLAY") } as MenuItem,
+            { label: "Play Next in standalone Lalin Play", icon: "⏭", onClick: () => handleStandalone(e, "PLAY_NEXT") } as MenuItem,
+            { label: "Add to standalone Lalin Play queue", icon: "➕", onClick: () => handleStandalone(e, "ADD_TO_QUEUE") } as MenuItem,
+            { type: "sep" } as MenuItem,
+          ] : []),
         ]
       : []),
     { label: "Rename", icon: "✎", shortcut: "F2", onClick: () => setRenaming(e.name) },

@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -16,6 +16,9 @@ attributes:
 หรือ Lalin Cast และยังไม่มี installer/update ที่ผ่าน release gate
 ดู [สถานะและเอกสารทั้งหมด](../product/LALIN_PLAY_DOCUMENTATION.md)
 
+หมายเหตุ S3: Studio มีคำสั่งส่งไฟล์ไป standalone Play แยกจากปุ่มเล่นเดิม
+การเล่นปกติใน Studio ยังคงใช้ playback owner เดิมจนกว่าจะตรวจ parity ครบ
+
 ## เริ่มใช้งาน
 
 1. เปิด `lalin-play.exe` ที่ build จาก standalone candidate ไว้แล้ว นักพัฒนาใช้
@@ -27,6 +30,11 @@ attributes:
    ถ้าไม่มีจะแสดงชื่อไฟล์/ไม่ระบุศิลปิน ไม่ได้ดาวน์โหลดปกหรือข้อมูลจาก Spotify
 4. ใช้ช่องค้นหา และหมวดเพลง/ศิลปิน/อัลบั้ม จัด playlist ใน Full ได้
    สร้างชื่อ playlist ก่อน แล้วเลือก Playlist… ที่รายการเพื่อเพิ่มไฟล์
+
+จาก Studio บน Windows ใช้เมนูคลิกขวา `Play in standalone Lalin Play`,
+`Play Next in standalone Lalin Play` หรือ `Add to standalone Lalin Play queue`
+เมื่อต้องการทดสอบ handoff แบบ native; คำสั่ง Play เดิมยังเปิด player ของ Studio
+ไฟล์ที่ส่งต้องอยู่ใน Workspace, uploads หรือ outputs ที่ Studio อนุญาต
 
 การเพิ่มโฟลเดอร์มีขอบเขต: ไม่เกิน 10,000 รายการในคลัง, depth 32 และไม่ตาม
 symbolic links เลือกโฟลเดอร์ย่อยหากใหญ่เกินไป การรับ extension ไม่รับรอง codec
@@ -83,7 +91,7 @@ fullscreen. Preview ที่ decode ไม่ได้แสดงข้อค�
 | ภาพ paused เล็กชั่วคราวหลัง resize | เป็นข้อจำกัดที่พบ; ลอง seek หรือเล่นต่อเพื่อให้มีเฟรมใหม่ ไม่ถือว่าแก้สาเหตุแล้ว |
 | จบไฟล์แล้วเวลา 0:00 แต่ภาพสุดท้ายค้าง | เป็นข้อสังเกตที่บันทึกไว้ในรุ่นทดสอบ ไม่ใช่การเริ่มวิดีโอใหม่ |
 | เปิดคลัง/playlist เดิมไม่ได้ | เก็บไฟล์/state เดิมไว้และรายงาน error; ไม่มีคำแนะนำให้ล้าง app-data หรือ WebView |
-| ส่งจาก Studio ไม่เข้า standalone | Native handoff ยังไม่ทำ เปิดไฟล์ผ่าน Play เองชั่วคราว; อย่าถือ legacy Studio window เป็น standalone |
+| ส่งจาก Studio ไม่เข้า standalone | ตั้ง `LALIN_PLAY_EXECUTABLE` ให้ชี้ absolute path ของ `lalin-play.exe` ใน Studio dev process; หากผลเป็น unknown ให้กด “ตรวจสถานะเครื่องเล่น” ก่อนส่งใหม่ และอย่ากดซ้ำอัตโนมัติ |
 | กด X แล้วโปรแกรมยังอยู่ | ปิด surface เป็น hide-to-tray; ใช้คำสั่งออกจริงเมื่อต้องการหยุด |
 
 ## ข้อมูลที่เก็บและการแจ้งปัญหา
@@ -102,6 +110,13 @@ expected/actual, ข้อความ error และภาพที่ปิ�
 DPI 150%, multi-monitor, touch, physical A/V sync และ output-device recovery
 ยังไม่มีหลักฐานรับรองครบ ดู [ข้อจำกัดล่าสุด](../validation/LALIN_PLAY_FULLSCREEN_SKIP.md)
 ก่อนตีความผลทดสอบว่าใช้ได้ทุกเครื่อง
+
+## CHANGELOG
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 0.1.1b | 2026-09-25 | beta | Document explicit Studio-to-standalone actions and keep Studio playback as default pending parity | uncommitted | Codex |
+| 0.1.0b | 2026-09-20 | beta | Document current Windows standalone candidate usage and data boundaries | based on f5a6681 | LALIN |
 
 ## CHANGELOG
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -12,6 +13,10 @@ from ..config import get_settings
 from ..utils.ids import short_id
 
 router = APIRouter(prefix="/files", tags=["files"])
+
+PLAYBACK_EXTENSIONS = {
+    "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aif", "aiff", "wma", "mp4", "webm",
+}
 
 
 def _resolve_flat(root: Path, name: str) -> Path:
@@ -26,6 +31,45 @@ def _resolve_flat(root: Path, name: str) -> Path:
     if dest != root and root not in dest.parents:
         raise HTTPException(400, "ชื่อไฟล์ไม่ถูกต้อง")
     return dest
+
+
+def _resolve_playback_file(kind: str, name: str) -> Path:
+    """Resolve a Studio playback reference to an existing file in its owned root."""
+    if not name or "\x00" in name or len(name) > 2048:
+        raise HTTPException(400, "ไฟล์สำหรับส่งไป Lalin Play ไม่ถูกต้อง")
+
+    settings = get_settings()
+    if kind == "workspace":
+        if name.startswith(("/", "\\")) or "\\" in name:
+            raise HTTPException(400, "เส้นทาง Workspace ต้องเป็น relative path")
+        root = (settings.data_dir / "workspace").resolve()
+        root.mkdir(parents=True, exist_ok=True)
+        candidate = (root / name).resolve()
+    elif kind in ("upload", "output"):
+        root = (settings.uploads_dir if kind == "upload" else settings.outputs_dir).resolve()
+        if kind == "upload":
+            candidate = _resolve_flat(root, name)
+        else:
+            relative = Path(name)
+            if relative.is_absolute() or any(part in ("", ".", "..") for part in name.replace("\\", "/").split("/")):
+                raise HTTPException(400, "ชื่อไฟล์ผลลัพธ์ไม่ถูกต้อง")
+            candidate = (root / relative).resolve()
+    else:
+        raise HTTPException(400, "ชนิดไฟล์สำหรับส่งไป Lalin Play ไม่รองรับ")
+
+    if candidate != root and root not in candidate.parents:
+        raise HTTPException(400, "เส้นทางไฟล์อยู่นอกขอบเขตที่อนุญาต")
+    if not candidate.is_file():
+        raise HTTPException(404, "ไม่พบไฟล์ในเครื่องหรือไฟล์ถูกย้ายแล้ว")
+    if candidate.suffix.lower().lstrip(".") not in PLAYBACK_EXTENSIONS:
+        raise HTTPException(400, "ชนิดไฟล์นี้ Lalin Play ยังไม่รองรับ")
+    return candidate
+
+
+@router.get("/resolve")
+async def resolve_playback_file(kind: Literal["workspace", "upload", "output"], name: str):
+    """Resolve an authorized Studio media reference for native local-file handoff."""
+    return {"path": str(_resolve_playback_file(kind, name))}
 
 
 @router.post("/upload")

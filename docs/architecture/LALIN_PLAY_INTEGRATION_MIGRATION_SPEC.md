@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -16,9 +16,11 @@ Parent: [ADR-004 §§4–6](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md),
 [PRD §4.9](../product/PRD.md#49-lalin-play--standalone-local-media-player-approved).
 Peers: [legacy Studio delivery](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md),
 [handoff](LALIN_PLAY_SEPARATION_HANDOFF.md), [traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
-Current facts below are read from `f5a6681`. Sections 2–4 are **candidate design,
-NOT_IMPLEMENTED**; review before code. Risk HIGH for eventual IPC/data implementation.
-This document adds no executable schema, pipe, migration UI or permission.
+Current standalone facts below use `f5a6681` as their pinned source snapshot.
+Section 2 is the approved S3 Windows wire contract and has a local implementation
+in the current working tree; focused automated checks pass, while a live Studio–Play
+process-pair/audio run remains unverified. Sections 3–4 remain candidate migration
+design and require separate approval before code. Risk HIGH for IPC/data changes.
 
 ## 1. Current standalone boundary (implemented)
 
@@ -58,7 +60,7 @@ versioned import validator. These internal stores are **not** an approved portab
 migration format. Do not instruct users to copy Studio WebView databases or edit
 these keys to migrate. Playback and previews re-resolve catalog IDs through native.
 
-## 2. Proposed Studio wire contract v1 (review required)
+## 2. Studio wire contract v1 (approved S3; local implementation)
 
 ```mermaid
 sequenceDiagram
@@ -74,11 +76,12 @@ sequenceDiagram
   Note over S,P: Lost ACK -> query request status; never blind replay
 ```
 
-Proposed framing: UTF-8 JSON, 4-byte unsigned little-endian length prefix;
+Framing: UTF-8 JSON, 4-byte unsigned little-endian length prefix;
 maximum 1 MiB/frame checked before allocation. Protocol name `lalin-play`,
 `protocolVersion:1`; unknown versions reject without side effects. Integers must
 be finite safe integers; reject malformed frames/unknown message types/extra
-action fields. These limits and names are proposals, not existing API compatibility.
+action fields. They define the approved local S3 v1 protocol; compatibility with
+an independent exported Play repository remains unverified.
 
 | Message | Required fields / allowed values |
 |---|---|
@@ -97,13 +100,15 @@ appears in STATE. Full snapshots over the frame cap return `snapshot_too_large`
 without truncating or applying another command; incremental/paged protocol needs
 a separately reviewed revision if required.
 
-Security and lifecycle requirements retained from ADR-004:
+Security and lifecycle implementation status:
 
-- Pipe name derived by native code from app/protocol identity and logon identity,
-  never a UI-supplied arbitrary name. Exact Win32 construction and ACL must be
-  reviewed/tested before implementation; do not publish a guessed SDDL string.
-- Explicit same-logon restriction, remote-client rejection and peer verification;
-  reject a conflicting/untrusted pre-existing endpoint. Same-user malicious code
+- Pipe name derives in native code from app/protocol identity and the current
+  logon SID, never from a UI-supplied name. Play creates a protected DACL for
+  that SID and enables `PIPE_REJECT_REMOTE_CLIENTS`; Studio verifies the server
+  process image and session, and Play impersonates/checks the client SID.
+  Local tests verify DACL creation and the remote-rejection flag; live
+  cross-session and endpoint-spoof attempts remain unverified.
+- A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
   is available; receiver revalidates local regular files. Reject remote URLs,
@@ -111,25 +116,32 @@ Security and lifecycle requirements retained from ADR-004:
   payloads. Never execute a shell or infer a path from a title/pack ID.
 - File grants apply only to the explicit handoff item; source survives Studio/API
   shutdown. Missing receiver reports install/configuration guidance; no fallback
-  second engine. `LALIN_PLAY_EXECUTABLE` is explicit developer configuration,
-  not implemented automatic discovery.
-- Proposed FIFO queue cap 128 pending requests; reject excess as `busy`, do not
-  drop/reorder silently. Record at most 1,024 request outcomes per owner session;
-  after eviction, QUERY returns `unknown` and sender must not automatically replay.
+  second engine. Studio's existing playback actions remain on the Studio owner;
+  separate standalone actions opt into this handoff. `LALIN_PLAY_EXECUTABLE` is
+  the developer override; Studio also checks the Windows App Paths registration,
+  whose installer setup remains unverified.
+- Studio's explicit standalone handoff actions keep an in-memory FIFO capped at
+  128 commands and reject overflow visibly. A native sender mutex and one pipe
+  request at a time preserve that order. Play records at most 1,024 request
+  outcomes per owner session; after eviction, QUERY returns `unknown` and sender
+  must not automatically replay.
 - Duplicate ID with same payload returns original outcome without a second
   application; duplicate ID with different payload rejects `request_conflict`.
   Wrong/new owner session requires reconciliation and explicit user action before
   resubmitting an uncertain old command. Disconnect does not undo accepted work.
-- Proposed 10-second connect/ACK deadline reports delivery unknown, not “failed
-  so retry”. Serialize actual owner mutations and revision updates. Cancellation
-  before acceptance does not imply rollback after acceptance.
+- Play waits up to 10 seconds for owner ACK; Studio allows 12 seconds for a pipe
+  response. A cold launch waits up to 10 seconds for the endpoint. Unknown
+  delivery triggers same-ID QUERY and remains blocked if the ACK/STATE pair is
+  still unavailable. Serialize owner mutations and revision updates.
 - Keep raw paths out of routine logs; log request ID/status and a redacted file
   label. No keys/cookies/profile data on the wire or in captured diagnostics.
 
-Exit tests (all **NOT_RUN**): cold/warm launch; FIFO burst; duplicate payload/
-conflicting duplicate; ACK loss; restart and expired request history; oversized/
-malformed/version-mismatch frames; different logon/remote client/endpoint spoof;
-path escape/missing file; Studio/API exit during playback; unchanged Cast launcher.
+Focused local tests now cover cold/warm launch decisions, one-launch timeout,
+Studio FIFO ordering, payload and path validation, duplicate/conflicting IDs,
+owner-session query checks, bounded history/snapshots, protected same-logon DACL
+creation and the remote-client-rejection flag. Live cross-process delivery, ACK-loss under
+process interruption, cross-session/spoof attempts, Studio/API exit during active
+playback, audible parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Proposed opt-in migration envelope v1 (review required)
 
@@ -183,4 +195,5 @@ Candidate schema/code parity tests must exist before declaring S2 data complete.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-09-25 | candidate | Record approved S3 named-pipe contract and local implementation evidence; leave migration design gated | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | candidate | Separate observed local API/storage from proposed bounded IPC and opt-in transactional migration | based on f5a6681 | LALIN |

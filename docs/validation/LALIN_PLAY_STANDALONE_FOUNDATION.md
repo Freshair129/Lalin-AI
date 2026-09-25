@@ -1,20 +1,20 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-20T19:35:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "validation"
   doc_type: "verification-report"
-  scope: "ADR-004 S1 and partial S2; Windows local evidence only"
+  scope: "ADR-004 S1, partial S2 and partial S3; Windows local evidence only"
 ---
 
 # Lalin Play standalone foundation — local evidence
 
 ## Outcome and boundary
 
-**S1 LOCAL PASS; S2 PARTIAL. Overall repository split is NOT complete.**
+**S1 LOCAL PASS; S2 PARTIAL; S3 LOCAL IMPLEMENTATION with paired-runtime acceptance open. Overall repository split is NOT complete.**
 
 The user approved PRD/ADR-004 implementation on `codex/lalin-play-split`.
 Source baseline is `84290102b84fd76dec069bf6d61ffdd2fc8466ab` in
@@ -43,6 +43,31 @@ Controlled-promise test reproduces and fixes the newly introduced Stop/native
 resolution race. See [RCA](../../.brain/rca/2026-09-20-lalin-play-native-resolution-race.md).
 React review kept engine lifetime outside layout changes and bounded listener
 cleanup; unit tests assert the same audio element and no extra play on switching.
+
+## S3 focused automated evidence (2026-09-25, ICT)
+
+The S3 wire contract is approved and implemented locally. Studio's existing
+Play/Play Next/Queue route remains the default; distinct native actions explicitly
+send local media to standalone Play. These checks cover local code and fixtures,
+not live cross-process playback:
+
+| Check | Result | Scope / caveat |
+|---|---|---|
+| Studio native sender + retained bridge tests | 18/18 PASS | FIFO order/local path routing, exact-ID reconciliation request and the existing same-origin bridge; no live pipe |
+| Studio Rust handoff tests | 4/4 PASS | Cold/warm launch decisions, one-launch timeout and input validation; launch/connect are deterministic unit seams |
+| Play handoff contract frontend test | 1/1 PASS | Versioned snapshot shape, bounded size and path-redaction assertions |
+| Play Rust tests | 13/13 PASS | Protocol, path validation, replay/history, snapshot cap, Windows protected DACL creation and remote-client-rejection flag |
+| API playback resolver | 10/10 PASS | Workspace/upload/output containment and extension checks with local fixtures |
+| Studio and Play frontend builds | PASS | TypeScript/Vite build only; no playback acceptance |
+| Studio–Play live process pair, FIFO pipe burst and audible result | NOT RUN | No native runtime parity claim |
+| ACK-loss interruption, cross-session/spoof attempts and Studio/API exit during active playback | NOT RUN | Requires paired-process lifecycle/security evidence |
+
+The Studio and Play native adapters validate canonical local media paths,
+resolve Studio-owned references through the API, enforce a same-logon SID pipe
+ACL, serialize commands, and reconcile an uncertain delivery using the same
+request ID and owner session. If reconciliation remains unknown, Studio blocks
+later standalone sends instead of replaying the command. This work does not
+remove or deactivate the existing Studio playback owner.
 
 ## Native evidence and user confirmation
 
@@ -88,18 +113,17 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in old Studio queue/EQ export/import and atomic rollback | NOT IMPLEMENTED |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | NOT IMPLEMENTED |
-| Command-line file forwarding, cold/warm Studio handoff and Studio exit | NOT VERIFIED; repeated launch currently focuses only |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Implemented locally; focused tests pass; live process-pair parity NOT VERIFIED |
+| Cold/warm Studio-to-Play lifecycle and Studio/API exit during playback | Cold/warm decision tests pass; paired runtime and Studio/API exit NOT VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
-Next approved implementation work is S2 completion and S3 delivery/security
-integration. S4–S7 remain gated by ADR-004. Recovery currently requires only
-stopping the additive candidate; the prior Studio sources and user state remain
-intact. Temporary isolated build files and fixture are ignored under `runtime/`
-and `.smoke/`; they were retained, not committed or deleted.
+Next work is S2 completion and live S3 process-pair, delivery/security and audio
+parity acceptance. S4–S7 remain gated by ADR-004. The original Studio playback
+owner and source remain intact. No migration, source removal or release action
+was performed for this evidence update.
 
 ## Version changes in this slice
 
@@ -112,4 +136,5 @@ Documentation approval/status changes do not bump Studio/Cast application versio
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-09-25 | beta | Record approved S3 native handoff implementation and focused local evidence; retain live parity gate | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | beta | Record standalone foundation, native evidence and user-confirmed audio; preserve incomplete split gates | based on 8429010 | LALIN |

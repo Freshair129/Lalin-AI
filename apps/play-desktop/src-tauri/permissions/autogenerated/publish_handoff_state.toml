@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-publish-handoff-state"
+description = "Enables the publish_handoff_state command without any pre-configured scope."
+commands.allow = ["publish_handoff_state"]
+
+[[permission]]
+identifier = "deny-publish-handoff-state"
+description = "Denies the publish_handoff_state command without any pre-configured scope."
+commands.deny = ["publish_handoff_state"]

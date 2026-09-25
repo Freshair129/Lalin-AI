@@ -6,6 +6,8 @@
   "permissions": [
     "core:event:default", "allow-get-library", "allow-select-media",
     "allow-remove-library-track", "allow-resolve-media", "allow-set-surface",
-    "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen"
+    "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen",
+    "allow-register-handoff-owner", "allow-publish-handoff-state",
+    "allow-complete-handoff-command", "allow-grant-handoff-media"
   ]
 }
