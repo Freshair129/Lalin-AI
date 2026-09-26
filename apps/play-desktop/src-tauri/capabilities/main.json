@@ -10,6 +10,7 @@
     "allow-apply-play-migration", "allow-commit-play-migration",
     "allow-rollback-play-migration", "allow-recover-play-migration",
     "allow-ack-play-migration",
+    "allow-get-play-migration-undo-status", "allow-prepare-undo-play-migration",
     "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen"
   ]
 }

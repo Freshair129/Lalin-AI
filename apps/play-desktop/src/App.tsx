@@ -452,7 +452,10 @@ export function App() {
           ) : view === "settings" ? (
             <section className="settings">
               <PlaybackSettings report={report} />
-              <PlayMigrationImport onImported={() => setResume(true)} />
+              <PlayMigrationImport onChanged={() => {
+                setResume(localStorage.getItem("lalin-play:v1:resume") === "true");
+                void refresh().catch(report);
+              }} />
               <label>
                 <input
                   type="checkbox"

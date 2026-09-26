@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
+import { invoke } from "@tauri-apps/api/core";
 import {
   PLAY_MIGRATION_MAX_BYTES,
   parseMigrationEnvelope,
   previewPlayMigration,
   type MigrationPreview,
 } from "../playMigration";
-import { importPlayMigration } from "../playMigrationImport";
+import { importPlayMigration, undoLastPlayMigration } from "../playMigrationImport";
 
-export function PlayMigrationImport({ onImported }: { onImported: () => void }) {
+export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [rawJson, setRawJson] = useState<string | null>(null);
   const [preview, setPreview] = useState<MigrationPreview | null>(null);
@@ -17,6 +18,17 @@ export function PlayMigrationImport({ onImported }: { onImported: () => void }) 
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [completedUnresolved, setCompletedUnresolved] = useState<MigrationPreview["unresolved"]>([]);
+  const [undoAvailable, setUndoAvailable] = useState(false);
+  const [undoReason, setUndoReason] = useState("");
+
+  useEffect(() => {
+    void invoke<{ available: boolean; reason: string | null }>("get_play_migration_undo_status")
+      .then((status) => {
+        setUndoAvailable(status.available);
+        setUndoReason(status.reason ?? "");
+      })
+      .catch((cause) => setError(String(cause)));
+  }, []);
 
   useEffect(() => {
     if (!busy) return;
@@ -66,7 +78,9 @@ export function PlayMigrationImport({ onImported }: { onImported: () => void }) 
     setStatus("");
     try {
       const result = await importPlayMigration(rawJson, preview, allowRepeat);
-      onImported();
+      onChanged();
+      setUndoAvailable(!result.cleanupPending);
+      setUndoReason("");
       setCompletedUnresolved(preview.unresolved);
       setPreview(null);
       setRawJson(null);
@@ -74,6 +88,32 @@ export function PlayMigrationImport({ onImported }: { onImported: () => void }) 
         result.cleanupPending
           ? `คิวและ EQ ถูกนำเข้าแล้ว (${preview.unresolved.length} รายการยังแก้ไขไม่ได้); จะตรวจ journal ซ้ำเมื่อเปิด Lalin Play ครั้งถัดไป`
           : `นำเข้าคิวและ EQ แล้ว (${preview.unresolved.length} รายการยังแก้ไขไม่ได้) · หยุดเล่นอยู่และไม่เล่นอัตโนมัติ`,
+      );
+    } catch (cause) {
+      setError(String(cause));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const undoImport = async () => {
+    if (busy || !undoAvailable) return;
+    const confirmed = window.confirm(
+      "ย้อนกลับคิว, EQ และคลัง Play ไปยังสถานะก่อน migration ครั้งล่าสุดหรือไม่? การแก้ไขคลังหลัง migration จะไม่ถูกรวมไว้ใน undo และไฟล์สื่อจะไม่ถูกลบ",
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError("");
+    setStatus("");
+    try {
+      const result = await undoLastPlayMigration();
+      onChanged();
+      setUndoAvailable(false);
+      setUndoReason("");
+      setStatus(
+        result.cleanupPending
+          ? "ย้อนกลับข้อมูลแล้ว; จะตรวจ journal ซ้ำเมื่อเปิด Lalin Play ครั้งถัดไป"
+          : "ย้อนกลับคิว, EQ และคลังไปยังสถานะก่อน migration แล้ว · ไฟล์สื่อเดิมยังอยู่",
       );
     } catch (cause) {
       setError(String(cause));
@@ -102,6 +142,12 @@ export function PlayMigrationImport({ onImported }: { onImported: () => void }) 
       </button>
       {error ? <p className="play-migration-error" role="alert">{error}</p> : null}
       {status ? <p role="status" aria-live="polite">{status}</p> : null}
+      {undoReason ? <p role="status">{undoReason}</p> : null}
+      {undoAvailable ? (
+        <button type="button" onClick={() => void undoImport()} disabled={busy}>
+          ย้อนกลับการย้ายครั้งล่าสุด
+        </button>
+      ) : null}
       {completedUnresolved.length ? (
         <details className="play-migration-report">
           <summary>รายงานรายการที่แก้ไขไม่ได้ ({completedUnresolved.length})</summary>

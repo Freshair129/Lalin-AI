@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-25T20:50:46+07:00,LALIN"
+last_update: "2026-09-26T05:34:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -182,15 +182,18 @@ requires a separate explicit confirmation.
    a committed transaction reapplies the new values. Keep the journal until WebView
    storage restoration is acknowledged. Recovery failure retains it and blocks
    another import with an actionable error; never initialize defaults over it.
-5. Rollback leaves Studio state and media untouched. S2 provides failure/crash
-   rollback; post-commit manual undo is outside this approved scope. No files or
-   unrelated profile folders are deleted.
+5. After a committed import, retain one Play-owned snapshot of the prior queue,
+   EQ, resume flag and catalog. The user can explicitly undo that import through
+   the same journaled transaction; disable undo if the Play catalog changed since
+   import. Undo restores the prior state and never deletes source media, Studio
+   state or unrelated profile folders.
 
 Exit tests: cancel no-op; invalid version/size/fields/EQ/path; unresolved
 selection; duplicate queue entries and export IDs; write failure at each phase;
-restart recovery before store initialization; retained Studio state; and no autoplay.
-S2 queue/EQ migration is implemented locally; schema parity, focused rollback
-tests, synthetic native restart-phase coverage and selected write-failure tests
+restart recovery before store initialization; apply→undo queue/EQ/catalog parity;
+undo-disabled-after-catalog-change; retained Studio state; and no autoplay.
+S2 queue/EQ migration and bounded undo are implemented locally; schema parity,
+focused rollback/undo tests, synthetic native restart-phase coverage and selected write-failure tests
 are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
 Process-crash restart recovery, power-loss durability, remaining native write
 failures (including journal creation and import-history persistence), and an
@@ -206,6 +209,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-26 | beta | Add explicit journaled last-import undo and report its safety gate | based on 58f6b67 | Codex |
 | 0.2.2b | 2026-09-25 | beta | Record synthetic native restart-phase and selected write-failure evidence with remaining gates | based on 411d2ed | LALIN |
 | 0.2.1b | 2026-09-25 | beta | Record local S2 exporter/importer, journal recovery and focused evidence limits | based on 411d2ed | LALIN |
 | 0.2.0b | 2026-09-25 | beta | Approve S2 queue/EQ migration envelope and journal recovery; keep Studio IPC candidate | based on 411d2ed | LALIN |

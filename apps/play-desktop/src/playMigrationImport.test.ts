@@ -4,9 +4,11 @@ import {
   PLAY_EQ_KEY,
   PLAY_QUEUE_KEY,
   PLAY_RESUME_KEY,
+  playbackEqFromMigration,
+  playbackQueueFromPlan,
   type MigrationPreview,
 } from "./playMigration";
-import { importPlayMigration } from "./playMigrationImport";
+import { importPlayMigration, undoLastPlayMigration } from "./playMigrationImport";
 import type { LocalTrack } from "./native";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -193,6 +195,7 @@ describe("atomic Play migration import", () => {
     vi.mocked(invoke).mockImplementation(async (command) => {
       if (command === "prepare_play_migration") return prepared;
       if (command === "commit_play_migration") throw new Error("commit write failed");
+      if (command === "recover_play_migration") return recovery;
       if (command === "rollback_play_migration") return recovery;
       return undefined;
     });
@@ -207,7 +210,7 @@ describe("atomic Play migration import", () => {
     expect(usePlaybackStore.getState().nowPlaying.state).toBe("idle");
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
       "prepare_play_migration", "apply_play_migration", "commit_play_migration",
-      "rollback_play_migration", "ack_play_migration",
+      "recover_play_migration", "rollback_play_migration", "ack_play_migration",
     ]);
   });
 
@@ -243,5 +246,55 @@ describe("atomic Play migration import", () => {
       .resolves.toEqual({ cleanupPending: true });
     expect(usePlaybackStore.getState().queue.items[0].id).toBe(track.id);
     expect(usePlaybackStore.getState().eq.currentPreset).toBe("Imported");
+  });
+
+  it("undoes the last import and restores the exact prior queue, EQ, resume and catalog transaction", async () => {
+    usePlaybackStore.getState().addToQueue({ id: "old", title: "old", url: "asset:old" });
+    usePlaybackStore.getState().setBandGain(0, 4);
+    const oldQueueRaw = JSON.stringify(usePlaybackStore.getState().queue);
+    const oldEqRaw = JSON.stringify(usePlaybackStore.getState().eq);
+    localStorage.setItem(PLAY_QUEUE_KEY, oldQueueRaw);
+    localStorage.setItem(PLAY_EQ_KEY, oldEqRaw);
+    localStorage.setItem(PLAY_RESUME_KEY, "false");
+    const importedQueue = playbackQueueFromPlan(preview.plan);
+    usePlaybackStore.getState().replaceFromMigration(
+      importedQueue,
+      playbackEqFromMigration(preview.eq),
+    );
+    localStorage.setItem(PLAY_QUEUE_KEY, JSON.stringify(importedQueue));
+    localStorage.setItem(PLAY_EQ_KEY, JSON.stringify(preview.eq));
+    localStorage.setItem(PLAY_RESUME_KEY, "true");
+
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "prepare_undo_play_migration") {
+        return {
+          transactionId: txId,
+          committed: false,
+          oldQueueRaw: localStorage.getItem(PLAY_QUEUE_KEY),
+          oldEqRaw: localStorage.getItem(PLAY_EQ_KEY),
+          oldResumeRaw: "true",
+          restoreRawStorage: true,
+          newQueueRaw: oldQueueRaw,
+          newEqRaw: oldEqRaw,
+          newResumeRaw: "false",
+          plan: preview.plan,
+          eq: preview.eq,
+        };
+      }
+      return undefined;
+    });
+
+    await expect(undoLastPlayMigration()).resolves.toEqual({ cleanupPending: false });
+
+    expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe(oldQueueRaw);
+    expect(localStorage.getItem(PLAY_EQ_KEY)).toBe(oldEqRaw);
+    expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
+    expect(usePlaybackStore.getState().queue.items.map((item) => item.id)).toEqual(["old"]);
+    expect(usePlaybackStore.getState().eq.bands[0].gain).toBe(4);
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("idle");
+    expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
+      "prepare_undo_play_migration", "apply_play_migration",
+      "commit_play_migration", "ack_play_migration",
+    ]);
   });
 });

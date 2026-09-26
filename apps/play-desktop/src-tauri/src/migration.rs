@@ -13,6 +13,14 @@ const MAX_HISTORY: usize = 1_000;
 const FORMAT: &str = "lalin-play-migration";
 const FREQUENCIES: [u32; 10] = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+enum TransactionAction {
+    #[default]
+    Import,
+    Undo,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RepeatMode {
@@ -130,8 +138,35 @@ struct Journal {
     version: u32,
     transaction_id: String,
     export_id: String,
+    #[serde(default)]
+    action: TransactionAction,
     phase: Phase,
     ready_to_ack: bool,
+    old_library: Library,
+    new_library: Library,
+    old_queue_raw: Option<String>,
+    old_eq_raw: Option<String>,
+    old_resume_raw: Option<String>,
+    #[serde(default)]
+    restore_raw_storage: bool,
+    #[serde(default)]
+    new_queue_raw: Option<String>,
+    #[serde(default)]
+    new_eq_raw: Option<String>,
+    #[serde(default)]
+    new_resume_raw: Option<String>,
+    #[serde(default)]
+    undo_source_transaction_id: Option<String>,
+    plan: QueuePlan,
+    eq: MigrationEq,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct UndoSnapshot {
+    version: u32,
+    transaction_id: String,
+    export_id: String,
     old_library: Library,
     new_library: Library,
     old_queue_raw: Option<String>,
@@ -156,8 +191,19 @@ pub struct MigrationRecovery {
     pub old_queue_raw: Option<String>,
     pub old_eq_raw: Option<String>,
     pub old_resume_raw: Option<String>,
+    pub restore_raw_storage: bool,
+    pub new_queue_raw: Option<String>,
+    pub new_eq_raw: Option<String>,
+    pub new_resume_raw: Option<String>,
     pub plan: QueuePlan,
     pub eq: MigrationEq,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UndoStatus {
+    pub available: bool,
+    pub reason: Option<String>,
 }
 
 fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -172,6 +218,10 @@ fn journal_path(directory: &Path) -> PathBuf {
 
 fn history_path(directory: &Path) -> PathBuf {
     directory.join("play-migration-history-v1.json")
+}
+
+fn undo_snapshot_path(directory: &Path) -> PathBuf {
+    directory.join("play-migration-undo-v1.json")
 }
 
 fn library_file_path(directory: &Path) -> PathBuf {
@@ -244,6 +294,96 @@ fn load_history(directory: &Path) -> Result<ImportHistory, String> {
     Ok(history)
 }
 
+fn load_undo_snapshot(directory: &Path) -> Result<Option<UndoSnapshot>, String> {
+    let path = undo_snapshot_path(directory);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let snapshot: UndoSnapshot = read_json(&path, MAX_JOURNAL_BYTES)?;
+    if snapshot.version != 1
+        || !is_uuid(&snapshot.transaction_id)
+        || !is_uuid(&snapshot.export_id)
+        || serde_json::to_vec(&snapshot.old_library)
+            .map_err(|e| e.to_string())?
+            .len()
+            > MAX_MIGRATION_BYTES
+        || serde_json::to_vec(&snapshot.new_library)
+            .map_err(|e| e.to_string())?
+            .len()
+            > MAX_MIGRATION_BYTES
+    {
+        return Err("เวอร์ชันหรือข้อมูล undo snapshot ไม่รองรับ; เก็บไฟล์ไว้โดยไม่เขียนทับ".into());
+    }
+    Ok(Some(snapshot))
+}
+
+fn save_undo_snapshot(directory: &Path, journal: &Journal) -> Result<(), String> {
+    let snapshot = UndoSnapshot {
+        version: 1,
+        transaction_id: journal.transaction_id.clone(),
+        export_id: journal.export_id.clone(),
+        old_library: journal.old_library.clone(),
+        new_library: journal.new_library.clone(),
+        old_queue_raw: journal.old_queue_raw.clone(),
+        old_eq_raw: journal.old_eq_raw.clone(),
+        old_resume_raw: journal.old_resume_raw.clone(),
+        plan: journal.plan.clone(),
+        eq: journal.eq.clone(),
+    };
+    let bytes = serde_json::to_vec(&snapshot).map_err(|e| e.to_string())?;
+    if bytes.len() as u64 > MAX_JOURNAL_BYTES {
+        return Err("migration undo snapshot exceeds the supported size".into());
+    }
+    save_json(&undo_snapshot_path(directory), &snapshot)
+}
+
+fn record_import_commit(directory: &Path, journal: &Journal) -> Result<(), String> {
+    if journal.action != TransactionAction::Import
+        || (journal.phase != Phase::Committed && journal.phase != Phase::Acknowledged)
+    {
+        return Err("migration import is not committed".into());
+    }
+    save_undo_snapshot(directory, journal)?;
+    let mut history = load_history(directory)?;
+    if !history.export_ids.contains(&journal.export_id) {
+        history.export_ids.push(journal.export_id.clone());
+        if history.export_ids.len() > MAX_HISTORY {
+            history.export_ids.remove(0);
+        }
+        save_json(&history_path(directory), &history)?;
+    }
+    Ok(())
+}
+
+fn remove_undo_snapshot_for(directory: &Path, transaction_id: &str) -> Result<(), String> {
+    let Some(snapshot) = load_undo_snapshot(directory)? else {
+        return Ok(());
+    };
+    if snapshot.transaction_id == transaction_id {
+        fs::remove_file(undo_snapshot_path(directory))
+            .map_err(|_| "ล้าง undo snapshot ไม่สำเร็จ; restart Lalin Play".to_string())?;
+    }
+    Ok(())
+}
+
+fn finalize_acknowledged_journal(directory: &Path, journal: &Journal) -> Result<(), String> {
+    if journal.phase != Phase::Acknowledged {
+        return Err("migration transaction is not acknowledged".into());
+    }
+    if journal.ready_to_ack {
+        return Ok(());
+    }
+    match journal.action {
+        TransactionAction::Import => record_import_commit(directory, journal),
+        TransactionAction::Undo => {
+            if let Some(source_id) = &journal.undo_source_transaction_id {
+                remove_undo_snapshot_for(directory, source_id)?;
+            }
+            Ok(())
+        }
+    }
+}
+
 fn parse_envelope(raw_json: &str) -> Result<MigrationEnvelope, String> {
     if raw_json.as_bytes().len() > MAX_MIGRATION_BYTES {
         return Err("ไฟล์ migration มีขนาดเกิน 16 MiB".into());
@@ -287,7 +427,7 @@ fn restore_journal_library(
     };
     save_json(&library_file_path(directory), &target)?;
     *current = target;
-    journal.ready_to_ack = true;
+    journal.ready_to_ack = !committed;
     save_journal(directory, journal)
 }
 
@@ -484,6 +624,133 @@ fn file_label(path: &Path) -> String {
         .collect()
 }
 
+fn library_matches_snapshot(current: &Library, expected: &Library) -> Result<bool, String> {
+    Ok(serde_json::to_value(current).map_err(|e| e.to_string())?
+        == serde_json::to_value(expected).map_err(|e| e.to_string())?)
+}
+
+fn undo_journal(
+    snapshot: &UndoSnapshot,
+    current: &Library,
+    transaction_id: String,
+    old_queue_raw: Option<String>,
+    old_eq_raw: Option<String>,
+    old_resume_raw: Option<String>,
+) -> Journal {
+    Journal {
+        version: 1,
+        transaction_id,
+        export_id: snapshot.export_id.clone(),
+        action: TransactionAction::Undo,
+        phase: Phase::Prepared,
+        ready_to_ack: false,
+        old_library: current.clone(),
+        new_library: snapshot.old_library.clone(),
+        old_queue_raw,
+        old_eq_raw,
+        old_resume_raw,
+        restore_raw_storage: true,
+        new_queue_raw: snapshot.old_queue_raw.clone(),
+        new_eq_raw: snapshot.old_eq_raw.clone(),
+        new_resume_raw: snapshot.old_resume_raw.clone(),
+        undo_source_transaction_id: Some(snapshot.transaction_id.clone()),
+        plan: snapshot.plan.clone(),
+        eq: snapshot.eq.clone(),
+    }
+}
+
+#[tauri::command]
+pub fn get_play_migration_undo_status(
+    app: AppHandle,
+    state: tauri::State<'_, LibraryState>,
+) -> Result<UndoStatus, String> {
+    let directory = data_dir(&app)?;
+    if let Some(journal) = load_journal(&directory)? {
+        if journal.phase == Phase::Acknowledged {
+            finalize_acknowledged_journal(&directory, &journal)?;
+            fs::remove_file(journal_path(&directory)).map_err(|_| {
+                "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+            })?;
+        } else {
+            return Ok(UndoStatus {
+                available: false,
+                reason: Some("กำลังกู้คืน migration ที่ค้างอยู่; restart Lalin Play ก่อน".into()),
+            });
+        }
+    }
+    let Some(snapshot) = load_undo_snapshot(&directory)? else {
+        return Ok(UndoStatus {
+            available: false,
+            reason: None,
+        });
+    };
+    let current = state.0.lock().map_err(|e| e.to_string())?;
+    if !library_matches_snapshot(&current, &snapshot.new_library)? {
+        return Ok(UndoStatus {
+            available: false,
+            reason: Some("คลังเปลี่ยนหลัง migration จึงปิดการย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into()),
+        });
+    }
+    Ok(UndoStatus {
+        available: true,
+        reason: None,
+    })
+}
+
+#[tauri::command]
+pub fn prepare_undo_play_migration(
+    app: AppHandle,
+    state: tauri::State<'_, LibraryState>,
+    transaction_id: String,
+    old_queue_raw: Option<String>,
+    old_eq_raw: Option<String>,
+    old_resume_raw: Option<String>,
+) -> Result<MigrationRecovery, String> {
+    if !is_uuid(&transaction_id) {
+        return Err("transaction ID ไม่ถูกต้อง".into());
+    }
+    if old_queue_raw
+        .as_ref()
+        .is_some_and(|value| value.len() > MAX_MIGRATION_BYTES)
+        || old_eq_raw
+            .as_ref()
+            .is_some_and(|value| value.len() > 1024 * 1024)
+        || old_resume_raw
+            .as_ref()
+            .is_some_and(|value| value.len() > 64)
+    {
+        return Err("ข้อมูลเดิมเกินขนาด recovery ที่รองรับ".into());
+    }
+    let directory = data_dir(&app)?;
+    match load_journal(&directory)? {
+        Some(journal) if journal.phase == Phase::Acknowledged => {
+            finalize_acknowledged_journal(&directory, &journal)?;
+            fs::remove_file(journal_path(&directory)).map_err(|_| {
+                "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+            })?;
+        }
+        Some(_) => {
+            return Err("มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนย้อนกลับ".into())
+        }
+        None => {}
+    }
+    let snapshot = load_undo_snapshot(&directory)?.ok_or("ไม่มี migration ล่าสุดที่ย้อนกลับได้")?;
+    let current = state.0.lock().map_err(|e| e.to_string())?;
+    if !library_matches_snapshot(&current, &snapshot.new_library)? {
+        return Err("คลังเปลี่ยนหลัง migration จึงไม่ย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into());
+    }
+    let journal = undo_journal(
+        &snapshot,
+        &current,
+        transaction_id,
+        old_queue_raw,
+        old_eq_raw,
+        old_resume_raw,
+    );
+    save_journal(&directory, &journal)?;
+    Ok(recovery_from(journal, false))
+}
+
 #[tauri::command]
 pub fn preview_play_migration(
     app: AppHandle,
@@ -538,11 +805,16 @@ pub fn prepare_play_migration(
     }
     let (mut preview, new_library) = build_preview(&envelope, &state_guard, already_imported)?;
     match load_journal(&directory)? {
-        Some(journal)
-            if journal.phase == Phase::Committed || journal.phase == Phase::Acknowledged =>
-        {
+        Some(journal) if journal.phase == Phase::Acknowledged => {
+            finalize_acknowledged_journal(&directory, &journal)?;
             fs::remove_file(journal_path(&directory))
-                .map_err(|_| "ล้าง committed recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+                .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+        }
+        Some(journal) if journal.phase == Phase::Committed => {
+            return Err(
+                "มี migration ที่ commit แล้วรอการยืนยัน recovery; restart Lalin Play ก่อนนำเข้าอีกครั้ง"
+                    .into(),
+            )
         }
         Some(_) => {
             return Err("มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนนำเข้าอีกครั้ง".into())
@@ -554,6 +826,7 @@ pub fn prepare_play_migration(
         version: 1,
         transaction_id: transaction_id.clone(),
         export_id: envelope.export_id.clone(),
+        action: TransactionAction::Import,
         phase: Phase::Prepared,
         ready_to_ack: false,
         old_library,
@@ -561,6 +834,11 @@ pub fn prepare_play_migration(
         old_queue_raw,
         old_eq_raw,
         old_resume_raw,
+        restore_raw_storage: false,
+        new_queue_raw: None,
+        new_eq_raw: None,
+        new_resume_raw: None,
+        undo_source_transaction_id: None,
         plan: preview.plan.clone(),
         eq: preview.eq.clone(),
     };
@@ -586,13 +864,9 @@ pub fn commit_play_migration(app: AppHandle, transaction_id: String) -> Result<(
     let directory = data_dir(&app)?;
     let mut journal = journal_for_transaction(&directory, &transaction_id)?;
     mark_journal_committed(&directory, &mut journal)?;
-    let mut history = load_history(&directory)?;
-    if !history.export_ids.contains(&journal.export_id) {
-        history.export_ids.push(journal.export_id.clone());
-        if history.export_ids.len() > MAX_HISTORY {
-            history.export_ids.remove(0);
-        }
-        save_json(&history_path(&directory), &history)?;
+    match journal.action {
+        TransactionAction::Import => record_import_commit(&directory, &journal)?,
+        TransactionAction::Undo => {}
     }
     Ok(())
 }
@@ -624,20 +898,15 @@ pub fn recover_play_migration(
         return Ok(None);
     };
     if journal.phase == Phase::Acknowledged {
-        let _ = fs::remove_file(journal_path(&directory));
+        finalize_acknowledged_journal(&directory, &journal)?;
+        fs::remove_file(journal_path(&directory))
+            .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
         return Ok(None);
     }
     let committed = journal.phase == Phase::Committed;
     restore_journal_library(&directory, &mut current, &mut journal, committed)?;
-    if committed {
-        let mut history = load_history(&directory)?;
-        if !history.export_ids.contains(&journal.export_id) {
-            history.export_ids.push(journal.export_id.clone());
-            if history.export_ids.len() > MAX_HISTORY {
-                history.export_ids.remove(0);
-            }
-            save_json(&history_path(&directory), &history)?;
-        }
+    if committed && journal.action == TransactionAction::Import {
+        record_import_commit(&directory, &journal)?;
     }
     Ok(Some(recovery_from(journal, committed)))
 }
@@ -649,9 +918,22 @@ pub fn ack_play_migration(app: AppHandle, transaction_id: String) -> Result<(), 
     if journal.phase != Phase::Committed && !journal.ready_to_ack {
         return Err("migration recovery has not been applied".into());
     }
+    if journal.phase == Phase::Committed {
+        match journal.action {
+            TransactionAction::Import => record_import_commit(&directory, &journal)?,
+            TransactionAction::Undo => {
+                if let Some(source_id) = &journal.undo_source_transaction_id {
+                    remove_undo_snapshot_for(&directory, source_id)?;
+                }
+            }
+        }
+    }
+    journal.ready_to_ack = journal.phase != Phase::Committed;
     journal.phase = Phase::Acknowledged;
     save_journal(&directory, &journal)?;
-    let _ = fs::remove_file(journal_path(&directory));
+    finalize_acknowledged_journal(&directory, &journal)?;
+    fs::remove_file(journal_path(&directory))
+        .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
     Ok(())
 }
 
@@ -662,6 +944,10 @@ fn recovery_from(journal: Journal, committed: bool) -> MigrationRecovery {
         old_queue_raw: journal.old_queue_raw,
         old_eq_raw: journal.old_eq_raw,
         old_resume_raw: journal.old_resume_raw,
+        restore_raw_storage: journal.restore_raw_storage,
+        new_queue_raw: journal.new_queue_raw,
+        new_eq_raw: journal.new_eq_raw,
+        new_resume_raw: journal.new_resume_raw,
         plan: journal.plan,
         eq: journal.eq,
     }
@@ -679,7 +965,10 @@ pub fn ensure_no_active_journal(app: &AppHandle) -> Result<(), String> {
     let directory = data_dir(app)?;
     if let Some(journal) = load_journal(&directory)? {
         if journal.phase == Phase::Acknowledged {
-            let _ = fs::remove_file(journal_path(&directory));
+            finalize_acknowledged_journal(&directory, &journal)?;
+            fs::remove_file(journal_path(&directory)).map_err(|_| {
+                "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+            })?;
             return Ok(());
         }
         return Err("Play migration recovery is pending; finish recovery or restart Play before changing the library".into());
@@ -692,7 +981,10 @@ fn restore_library_before_ui_from_directory(directory: &Path) -> Result<(), Stri
         return Ok(());
     };
     if journal.phase == Phase::Acknowledged {
-        let _ = fs::remove_file(journal_path(&directory));
+        finalize_acknowledged_journal(directory, &journal)?;
+        fs::remove_file(journal_path(directory)).map_err(|_| {
+            "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+        })?;
         return Ok(());
     }
     let target = if journal.phase == Phase::Committed {
@@ -704,6 +996,8 @@ fn restore_library_before_ui_from_directory(directory: &Path) -> Result<(), Stri
     if journal.phase != Phase::Committed {
         journal.ready_to_ack = true;
         save_journal(&directory, &journal)?;
+    } else if journal.action == TransactionAction::Import {
+        record_import_commit(directory, &journal)?;
     }
     Ok(())
 }
@@ -942,6 +1236,7 @@ mod tests {
             version: 1,
             transaction_id: "00000000-0000-4000-8000-000000000010".into(),
             export_id: "00000000-0000-4000-8000-000000000001".into(),
+            action: TransactionAction::Import,
             phase: Phase::Prepared,
             ready_to_ack: false,
             old_library: old.clone(),
@@ -949,6 +1244,11 @@ mod tests {
             old_queue_raw: Some("old queue".into()),
             old_eq_raw: Some("old eq".into()),
             old_resume_raw: Some("false".into()),
+            restore_raw_storage: false,
+            new_queue_raw: None,
+            new_eq_raw: None,
+            new_resume_raw: None,
+            undo_source_transaction_id: None,
             plan: QueuePlan {
                 items: Vec::new(),
                 current_entry_id: None,
@@ -1010,6 +1310,7 @@ mod tests {
             version: 1,
             transaction_id: "00000000-0000-4000-8000-000000000010".into(),
             export_id: "00000000-0000-4000-8000-000000000001".into(),
+            action: TransactionAction::Import,
             phase,
             ready_to_ack: false,
             old_library: old_library.clone(),
@@ -1017,6 +1318,11 @@ mod tests {
             old_queue_raw: Some("old queue".into()),
             old_eq_raw: Some("old eq".into()),
             old_resume_raw: Some("false".into()),
+            restore_raw_storage: false,
+            new_queue_raw: None,
+            new_eq_raw: None,
+            new_resume_raw: None,
+            undo_source_transaction_id: None,
             plan: QueuePlan {
                 items: Vec::new(),
                 current_entry_id: None,
@@ -1034,6 +1340,98 @@ mod tests {
             serde_json::to_value(actual).unwrap(),
             serde_json::to_value(expected).unwrap()
         );
+    }
+
+    #[test]
+    fn committed_import_can_be_undone_without_deleting_source_media() {
+        let directory = tempfile::tempdir().unwrap();
+        let retained_media = directory.path().join("retained.wav");
+        let imported_media = directory.path().join("imported.wav");
+        fs::write(&retained_media, b"retained source media").unwrap();
+        fs::write(&imported_media, b"imported source media").unwrap();
+        let old = Library {
+            version: 1,
+            tracks: vec![Track {
+                kind: MediaKind::Audio,
+                id: retained_media.to_string_lossy().into_owned(),
+                path: retained_media.to_string_lossy().into_owned(),
+                title: "Retained".into(),
+                artist: None,
+                album: None,
+                duration: None,
+                missing: false,
+            }],
+        };
+        let new = Library {
+            version: 1,
+            tracks: [
+                old.tracks[0].clone(),
+                Track {
+                    kind: MediaKind::Audio,
+                    id: imported_media.to_string_lossy().into_owned(),
+                    path: imported_media.to_string_lossy().into_owned(),
+                    title: "Imported".into(),
+                    artist: None,
+                    album: None,
+                    duration: None,
+                    missing: false,
+                },
+            ]
+            .into(),
+        };
+        let mut current = old.clone();
+        save_json(&library_file_path(directory.path()), &old).unwrap();
+        let mut import = fixture_journal(&old, &new, Phase::Prepared);
+        import.old_queue_raw = Some("previous queue raw".into());
+        import.old_eq_raw = Some("previous EQ raw".into());
+        import.old_resume_raw = Some("false".into());
+        save_journal(directory.path(), &import).unwrap();
+        apply_journal_to_library(directory.path(), &mut current, &mut import).unwrap();
+        mark_journal_committed(directory.path(), &mut import).unwrap();
+        record_import_commit(directory.path(), &import).unwrap();
+        assert!(library_matches_snapshot(&current, &new).unwrap());
+        let snapshot = load_undo_snapshot(directory.path()).unwrap().unwrap();
+
+        import.phase = Phase::Acknowledged;
+        finalize_acknowledged_journal(directory.path(), &import).unwrap();
+        fs::remove_file(journal_path(directory.path())).unwrap();
+
+        let mut undo = undo_journal(
+            &snapshot,
+            &current,
+            "00000000-0000-4000-8000-000000000099".into(),
+            Some("imported queue raw".into()),
+            Some("imported EQ raw".into()),
+            Some("true".into()),
+        );
+        save_journal(directory.path(), &undo).unwrap();
+        apply_journal_to_library(directory.path(), &mut current, &mut undo).unwrap();
+        assert!(library_matches_snapshot(&current, &old).unwrap());
+        mark_journal_committed(directory.path(), &mut undo).unwrap();
+        restore_journal_library(directory.path(), &mut current, &mut undo, true).unwrap();
+        let recovery = recovery_from(undo.clone(), true);
+        assert!(recovery.restore_raw_storage);
+        assert_eq!(
+            recovery.new_queue_raw.as_deref(),
+            Some("previous queue raw")
+        );
+        assert_eq!(recovery.new_eq_raw.as_deref(), Some("previous EQ raw"));
+        assert_eq!(recovery.new_resume_raw.as_deref(), Some("false"));
+
+        undo.phase = Phase::Acknowledged;
+        finalize_acknowledged_journal(directory.path(), &undo).unwrap();
+        assert!(load_undo_snapshot(directory.path()).unwrap().is_none());
+        assert!(retained_media.is_file());
+        assert!(imported_media.is_file());
+        assert_library_file(directory.path(), &old);
+    }
+
+    #[test]
+    fn undo_is_disabled_after_a_catalog_change() {
+        let (_, imported) = fixture_libraries();
+        let mut changed = imported.clone();
+        changed.tracks[0].title = "Changed by user".into();
+        assert!(!library_matches_snapshot(&changed, &imported).unwrap());
     }
 
     #[test]

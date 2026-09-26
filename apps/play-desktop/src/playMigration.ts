@@ -62,6 +62,10 @@ export interface MigrationRecovery {
   oldQueueRaw: string | null;
   oldEqRaw: string | null;
   oldResumeRaw: string | null;
+  restoreRawStorage?: boolean;
+  newQueueRaw?: string | null;
+  newEqRaw?: string | null;
+  newResumeRaw?: string | null;
   plan: MigrationQueuePlan;
   eq: MigrationEnvelope["eq"];
 }
@@ -160,15 +164,21 @@ export async function recoverPlayMigrationBeforeStore(): Promise<void> {
   const recovery = await invoke<MigrationRecovery | null>("recover_play_migration");
   if (!recovery) return;
   if (recovery.committed) {
-    localStorage.setItem(
-      PLAY_QUEUE_KEY,
-      JSON.stringify(playbackQueueFromPlan(recovery.plan)),
-    );
-    localStorage.setItem(
-      PLAY_EQ_KEY,
-      JSON.stringify(playbackEqFromMigration(recovery.eq)),
-    );
-    localStorage.setItem(PLAY_RESUME_KEY, "true");
+    if (recovery.restoreRawStorage) {
+      restoreKey(PLAY_QUEUE_KEY, recovery.newQueueRaw ?? null);
+      restoreKey(PLAY_EQ_KEY, recovery.newEqRaw ?? null);
+      restoreKey(PLAY_RESUME_KEY, recovery.newResumeRaw ?? null);
+    } else {
+      localStorage.setItem(
+        PLAY_QUEUE_KEY,
+        JSON.stringify(playbackQueueFromPlan(recovery.plan)),
+      );
+      localStorage.setItem(
+        PLAY_EQ_KEY,
+        JSON.stringify(playbackEqFromMigration(recovery.eq)),
+      );
+      localStorage.setItem(PLAY_RESUME_KEY, "true");
+    }
   } else {
     restoreOldStorage(recovery);
   }

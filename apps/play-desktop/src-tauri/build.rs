@@ -12,6 +12,8 @@ fn main() {
             "rollback_play_migration",
             "recover_play_migration",
             "ack_play_migration",
+            "get_play_migration_undo_status",
+            "prepare_undo_play_migration",
             "set_surface",
             "get_compact_fullscreen",
             "set_compact_fullscreen",
