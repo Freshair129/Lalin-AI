@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 pub const MEDIA_EXTENSIONS: &[&str] = &[
     "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aif", "aiff", "wma", "mp4", "webm",
 ];
-const MAX_TRACKS: usize = 10_000;
+pub const MAX_TRACKS: usize = 10_000;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -24,7 +24,7 @@ pub enum MediaKind {
     Video,
 }
 
-fn media_kind(path: &Path) -> MediaKind {
+pub fn media_kind(path: &Path) -> MediaKind {
     match path
         .extension()
         .and_then(|ext| ext.to_str())
@@ -59,7 +59,7 @@ pub struct Library {
 
 pub struct LibraryState(pub Mutex<Library>);
 
-fn supported(path: &Path) -> bool {
+pub fn supported(path: &Path) -> bool {
     path.extension()
         .and_then(|ext| ext.to_str())
         .map(|ext| MEDIA_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
@@ -97,7 +97,7 @@ pub fn selected_files(roots: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     Ok(files)
 }
 
-fn track(path: &Path) -> Track {
+pub fn track(path: &Path) -> Track {
     let name = path
         .file_stem()
         .unwrap_or_default()
@@ -125,7 +125,7 @@ fn track(path: &Path) -> Track {
     }
 }
 
-fn data_path(app: &AppHandle) -> Result<PathBuf, String> {
+pub fn data_path(app: &AppHandle) -> Result<PathBuf, String> {
     let directory = app.path().app_data_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     Ok(directory.join("library-v1.json"))
@@ -139,6 +139,7 @@ pub fn save_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
 }
 
 pub fn initialize(app: &AppHandle) -> Result<Library, String> {
+    crate::migration::restore_library_before_ui(app)?;
     let path = data_path(app)?;
     if !path.exists() {
         return Ok(Library {
@@ -177,6 +178,7 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
     let imported: Vec<Track> = paths.iter().map(|path| track(path)).collect();
     let state = app.state::<LibraryState>();
     let mut library = state.0.lock().map_err(|e| e.to_string())?;
+    crate::migration::ensure_no_active_journal(&app)?;
     let mut next = library.clone();
     for item in &imported {
         if let Some(existing) = next
@@ -246,6 +248,7 @@ pub async fn select_media(app: AppHandle, folder: bool) -> Result<Vec<Track>, St
 pub fn remove_library_track(app: AppHandle, id: String) -> Result<(), String> {
     let state = app.state::<LibraryState>();
     let mut library = state.0.lock().map_err(|e| e.to_string())?;
+    crate::migration::ensure_no_active_journal(&app)?;
     let mut next = library.clone();
     next.tracks.retain(|item| item.id != id);
     save_json(&data_path(&app)?, &next)?;

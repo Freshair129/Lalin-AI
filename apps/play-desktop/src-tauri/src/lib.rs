@@ -1,4 +1,5 @@
 mod library;
+mod migration;
 
 use library::LibraryState;
 use std::sync::Mutex;
@@ -269,6 +270,15 @@ pub fn run() {
             library::select_media,
             library::remove_library_track,
             library::resolve_media,
+            migration::preview_play_migration,
+            migration::prepare_play_migration,
+            migration::apply_play_migration,
+            migration::commit_play_migration,
+            migration::rollback_play_migration,
+            migration::recover_play_migration,
+            migration::ack_play_migration,
+            migration::get_play_migration_undo_status,
+            migration::prepare_undo_play_migration,
             set_surface,
             get_compact_fullscreen,
             set_compact_fullscreen,

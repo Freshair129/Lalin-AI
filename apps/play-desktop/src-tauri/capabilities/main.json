@@ -6,6 +6,11 @@
   "permissions": [
     "core:event:default", "allow-get-library", "allow-select-media",
     "allow-remove-library-track", "allow-resolve-media", "allow-set-surface",
+    "allow-preview-play-migration", "allow-prepare-play-migration",
+    "allow-apply-play-migration", "allow-commit-play-migration",
+    "allow-rollback-play-migration", "allow-recover-play-migration",
+    "allow-ack-play-migration",
+    "allow-get-play-migration-undo-status", "allow-prepare-undo-play-migration",
     "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen"
   ]
 }

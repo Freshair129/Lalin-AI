@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { PlaybackEQPanel } from "./components/PlaybackEQPanel";
 import { PlaybackSettings } from "./components/PlaybackSettings";
+import { PlayMigrationImport } from "./components/PlayMigrationImport";
 import { VideoStage } from "./components/VideoStage";
 import { CompactTransport } from "./components/CompactTransport";
 import { Transport, formatTime } from "./components/Transport";
@@ -451,6 +452,10 @@ export function App() {
           ) : view === "settings" ? (
             <section className="settings">
               <PlaybackSettings report={report} />
+              <PlayMigrationImport onChanged={() => {
+                setResume(localStorage.getItem("lalin-play:v1:resume") === "true");
+                void refresh().catch(report);
+              }} />
               <label>
                 <input
                   type="checkbox"
