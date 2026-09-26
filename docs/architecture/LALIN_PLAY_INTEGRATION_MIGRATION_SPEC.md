@@ -1,7 +1,7 @@
 ---
 version: "0.1.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T05:25:06+07:00,Codex"
+last_update: "2026-09-26T20:44:52+07:00,Codex"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -202,6 +202,6 @@ Candidate schema/code parity tests must exist before declaring S2 data complete.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.2b | 2026-09-26 | candidate | Require canonical local paths and known local drive types on both handoff sides; keep runtime gates open | uncommitted | Codex |
+| 0.1.2b | 2026-09-26 | candidate | Require canonical local paths and known local drive types on both handoff sides; keep runtime gates open | 235875b | Codex |
 | 0.1.1b | 2026-09-25 | candidate | Record approved S3 named-pipe contract and local implementation evidence; leave migration design gated | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | candidate | Separate observed local API/storage from proposed bounded IPC and opt-in transactional migration | based on f5a6681 | LALIN |
