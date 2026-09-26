@@ -1925,6 +1925,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tempfile",
  "walkdir",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

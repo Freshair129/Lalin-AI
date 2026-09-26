@@ -1,7 +1,7 @@
 ---
-version: "0.1.2b"
+version: "0.1.3b"
 created_at: "2026-09-25T19:25:00+07:00,LALIN,411d2ed"
-last_update: "2026-09-26T05:35:40+07:00,Codex"
+last_update: "2026-09-26T20:50:38+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -37,7 +37,7 @@ performed.
 | `npm run build` in `apps/desktop` | PASS | Studio TypeScript + Vite; 274 modules |
 | `npm test -- src/playMigration.test.ts src/playMigrationImport.test.ts src/components/PlayMigrationImport.test.tsx` in `apps/play-desktop` | 22/22 PASS | Parse/validation, preview mapping, cancel, report retention, prepare-response recovery, storage/apply/commit rollback, import→undo queue/EQ/resume restoration, confirmation gate, and no autoplay |
 | `npm run build` in `apps/play-desktop` | PASS | Standalone TypeScript + Vite; 53 modules |
-| `cargo test --manifest-path src-tauri/Cargo.toml --offline` in `apps/play-desktop` | 21/21 PASS | 14 migration tests, five library tests and two presentation tests; apply→undo retains both source media files |
+| `cargo test --manifest-path src-tauri/Cargo.toml --offline` in `apps/play-desktop` | 23/23 PASS | 16 migration tests, five library tests and two presentation tests; apply→undo retains source media; fixed/removable accepted, remote/unknown/no-root rejected |
 | `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check` in `apps/play-desktop` | PASS | Rust formatting |
 | `git diff --check` | PASS | Whitespace and patch hygiene; Git reported existing LF-to-CRLF normalization notices |
 
@@ -49,8 +49,14 @@ desktop build or clean-machine qualification.
 
 - Strict v1 schema, bounded fields and file size, local supported paths, EQ
   ranges, duplicate IDs, unknown fields and unresolved current selection.
+- Windows migration validation calls `GetDriveTypeW` for each drive root and
+  fails closed for mapped remote, unknown, no-root and unrecognized types; pure
+  deterministic tests accept fixed/removable local drives and reject remote or
+  unavailable drive classes.
 - Export keeps repeated tracks and ordering, captures live queue/EQ, excludes
   URL-only/upload references, and retains unresolved labels in the report.
+- The mapped-drive locality gap and its prevention are recorded in the
+  [S2 mapped network-drive RCA](../../.brain/rca/2026-09-26-lalin-play-s2-mapped-network-drive.md).
 - Standalone native preview revalidates paths, preserves duplicate queue entries,
   adds unique canonical media references without deleting existing library items,
   and lists missing files without changing the library.
@@ -84,6 +90,7 @@ separate from this migration implementation.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.3b | 2026-09-26 | beta | Reject mapped network drives and document deterministic S2 validation coverage | based on 1d30d44 | Codex |
 | 0.1.2b | 2026-09-26 | beta | Add journaled last-import undo tests and current branch verification evidence | based on 58f6b67 | Codex |
 | 0.1.1b | 2026-09-25 | beta | Add synthetic native journal-phase restart/write-failure coverage and committed frontend recovery evidence | based on 411d2ed | LALIN |
 | 0.1.0b | 2026-09-25 | beta | Record local S2 migration implementation checks and explicit runtime limits | based on 411d2ed | LALIN |

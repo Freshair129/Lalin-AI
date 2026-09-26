@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     fs,
-    path::{Component, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 use tauri::{AppHandle, Manager};
 
@@ -1010,17 +1010,54 @@ pub fn restore_library_before_ui(app: &AppHandle) -> Result<(), String> {
 fn is_local_absolute(path: &Path) -> bool {
     #[cfg(windows)]
     {
-        path.is_absolute()
-            && matches!(
-                path.components().next(),
-                Some(Component::Prefix(prefix))
-                    if matches!(prefix.kind(), std::path::Prefix::Disk(_) | std::path::Prefix::VerbatimDisk(_))
-            )
+        if !path.is_absolute() {
+            return false;
+        }
+        let Some(root) = local_windows_drive_root(&path.to_string_lossy()) else {
+            return false;
+        };
+        let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
+        let drive_type =
+            unsafe { windows_sys::Win32::Storage::FileSystem::GetDriveTypeW(wide.as_ptr()) };
+        is_local_windows_drive_type(drive_type)
     }
     #[cfg(not(windows))]
     {
         path.is_absolute() && !path.as_os_str().to_string_lossy().starts_with("//")
     }
+}
+
+#[cfg(any(windows, test))]
+fn local_windows_drive_root(value: &str) -> Option<String> {
+    let normalized = value.replace('/', "\\");
+    let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
+    let bytes = path.as_bytes();
+    (bytes.len() >= 3 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && bytes[2] == b'\\')
+        .then(|| path[..3].to_string())
+}
+
+// Win32 GetDriveTypeW return values; only local media drive kinds are accepted.
+#[cfg(test)]
+const DRIVE_UNKNOWN: u32 = 0;
+#[cfg(test)]
+const DRIVE_NO_ROOT_DIR: u32 = 1;
+#[cfg(any(windows, test))]
+const DRIVE_REMOVABLE: u32 = 2;
+#[cfg(any(windows, test))]
+const DRIVE_FIXED: u32 = 3;
+#[cfg(test)]
+const DRIVE_REMOTE: u32 = 4;
+#[cfg(any(windows, test))]
+const DRIVE_CDROM: u32 = 5;
+#[cfg(any(windows, test))]
+const DRIVE_RAMDISK: u32 = 6;
+
+#[cfg(any(windows, test))]
+fn is_local_windows_drive_type(drive_type: u32) -> bool {
+    matches!(
+        drive_type,
+        DRIVE_REMOVABLE | DRIVE_FIXED | DRIVE_CDROM | DRIVE_RAMDISK
+    )
 }
 
 fn is_local_import_path(value: &str) -> bool {
@@ -1643,5 +1680,32 @@ mod tests {
         assert!(is_local_import_path("C:\\Music\\track.wav"));
         #[cfg(not(windows))]
         assert!(is_local_import_path("/music/track.wav"));
+    }
+
+    #[test]
+    fn windows_drive_type_classifier_accepts_local_and_rejects_remote_or_unknown() {
+        assert!(is_local_windows_drive_type(DRIVE_FIXED));
+        assert!(is_local_windows_drive_type(DRIVE_REMOVABLE));
+        assert!(is_local_windows_drive_type(DRIVE_CDROM));
+        assert!(is_local_windows_drive_type(DRIVE_RAMDISK));
+        assert!(!is_local_windows_drive_type(DRIVE_REMOTE));
+        assert!(!is_local_windows_drive_type(DRIVE_UNKNOWN));
+        assert!(!is_local_windows_drive_type(DRIVE_NO_ROOT_DIR));
+        assert!(!is_local_windows_drive_type(7));
+    }
+
+    #[test]
+    fn windows_drive_root_parser_rejects_network_and_device_namespaces() {
+        assert_eq!(
+            local_windows_drive_root(r"Z:\Music\track.wav").as_deref(),
+            Some("Z:\\")
+        );
+        assert_eq!(
+            local_windows_drive_root(r"\\?\C:\Music\track.wav").as_deref(),
+            Some("C:\\")
+        );
+        assert!(local_windows_drive_root(r"\\server\share\track.wav").is_none());
+        assert!(local_windows_drive_root(r"\\?\UNC\server\share\track.wav").is_none());
+        assert!(local_windows_drive_root(r"\\.\PhysicalDrive0").is_none());
     }
 }

@@ -1,7 +1,7 @@
 ---
-version: "0.2.3b"
+version: "0.2.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T05:34:00+07:00,Codex"
+last_update: "2026-09-26T20:50:38+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -154,7 +154,10 @@ The Studio exporter emits an item path only when the live queue item has a
 supported, absolute local `sourcePath`; all other items are listed in
 `unresolved`. Standalone revalidates file paths natively (regular local files;
 no UNC/network, device or relative paths), then previews readable/unresolved
-counts and labels before any mutation. The user can cancel or explicitly import
+counts and labels before any mutation. On Windows, mapped drive roots are
+classified with `GetDriveTypeW`: fixed, removable, CD-ROM and RAM-disk drives
+are accepted; remote, unknown, no-root and unrecognized drive types fail closed.
+The user can cancel or explicitly import
 resolvable entries while retaining the unresolved report. A selected unresolved
 current item maps to no active selection. Successful import enables queue restore
 for the next launch because the user explicitly opted into queue migration; the
@@ -209,6 +212,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-26 | beta | Reject mapped network drives in S2 native file validation and record deterministic drive-type coverage | based on 1d30d44 | Codex |
 | 0.2.3b | 2026-09-26 | beta | Add explicit journaled last-import undo and report its safety gate | based on 58f6b67 | Codex |
 | 0.2.2b | 2026-09-25 | beta | Record synthetic native restart-phase and selected write-failure evidence with remaining gates | based on 411d2ed | LALIN |
 | 0.2.1b | 2026-09-25 | beta | Record local S2 exporter/importer, journal recovery and focused evidence limits | based on 411d2ed | LALIN |
