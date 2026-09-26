@@ -55,22 +55,22 @@ not live cross-process playback:
 |---|---|---|
 | Studio native sender focused Vitest | 3/3 PASS | Local path routing and unknown-delivery reconciliation; native command mocked |
 | Studio retained sender + bridge tests | 18/18 PASS (2026-09-25 record) | FIFO order/local path routing, exact-ID reconciliation request and the same-origin bridge; no live pipe |
-| Studio Rust handoff tests | 5/5 PASS | Cold/warm launch decisions, one-launch timeout, input validation and canonical-root cases; launch/connect are deterministic unit seams; test build used a temporary worktree junction to the ignored sidecar, removed afterward |
+| Studio Rust handoff tests | 6/6 PASS | Cold/warm launch decisions, one-launch timeout, input validation, canonical-root and drive-type classifier cases; launch/connect and type classification are unit seams; temporary sidecar junction was removed afterward |
 | Play handoff contract frontend test | 1/1 PASS | Versioned snapshot shape, bounded size and path-redaction assertions |
-| Play Rust crate | 14/14 PASS | Protocol, local-file validation, replay/history, snapshot cap, Windows DACL construction/pipe creation and remote-client-rejection flag; no unauthorized connection attempt |
+| Play Rust crate | 15/15 PASS | Protocol, local-file validation, replay/history, snapshot cap, Windows DACL construction/pipe creation and remote-client-rejection flag; drive-type classifier is unit-tested, with no mapped-drive or unauthorized-connection attempt |
 | API playback resolver | 10/10 PASS | Workspace/upload/output containment and extension checks with local fixtures |
 | Studio and Play frontend builds | PASS | TypeScript/Vite build only; no playback acceptance |
-| Canonical Windows-root checks | PASS | Both native validators accept drive-rooted paths and reject UNC/device/GLOBALROOT examples after resolution; helper tests only, no reparse-to-network runtime fixture |
+| Canonical Windows-root and drive-type checks | PASS | Both native validators accept local drive syntax, reject UNC/device/GLOBALROOT roots and reject remote/unknown drive types; pure helper tests, no reparse or mapped-drive runtime fixture |
 | Studio–Play live process pair, FIFO pipe burst and audible result | NOT RUN | No native runtime parity claim |
 | ACK-loss interruption, unauthorized/cross-session client attempts, spoof attempts and Studio/API exit during active playback | NOT RUN | Requires paired-process lifecycle/security evidence |
 
 The Studio and Play native adapters validate canonical local drive paths,
 resolve Studio-owned references through the API, enforce a same-logon SID pipe
-ACL, reject canonical UNC/device roots before the Play asset grant, serialize
-commands, and reconcile an uncertain delivery using the same request ID and
-owner session. If reconciliation remains unknown, Studio blocks later standalone
-sends instead of replaying the command. This work does not remove or deactivate
-the existing Studio playback owner.
+ACL, reject canonical UNC/device roots and non-local drive types before the Play
+asset grant, serialize commands, and reconcile an uncertain delivery using the
+same request ID and owner session. If reconciliation remains unknown, Studio
+blocks later standalone sends instead of replaying the command. This work does
+not remove or deactivate the existing Studio playback owner.
 
 ## Native evidence and user confirmation
 
@@ -143,6 +143,6 @@ S3 follow-up versions: integration spec `0.1.1b → 0.1.2b`, traceability
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.2.1b | 2026-09-26 | beta | Record canonical-root validation, current focused checks and unchanged native parity gates | uncommitted | Codex |
+| 0.2.1b | 2026-09-26 | beta | Record canonical-root/drive-type checks, current focused evidence and unchanged native parity gates | uncommitted | Codex |
 | 0.2.0b | 2026-09-25 | beta | Record approved S3 native handoff implementation and focused local evidence; retain live parity gate | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | beta | Record standalone foundation, native evidence and user-confirmed audio; preserve incomplete split gates | based on 8429010 | LALIN |

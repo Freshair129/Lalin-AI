@@ -132,7 +132,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
-- `.brain/rca/2026-09-26-lalin-play-handoff-canonical-path.md`: canonical-path review and sender/receiver guards for UNC/device reparse targets; live ACL and paired-process checks remain open.
+- `.brain/rca/2026-09-26-lalin-play-handoff-canonical-path.md`: canonical-path and drive-type guards for UNC/device reparse targets and mapped network drives; live ACL and paired-process checks remain open.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
 - `.brain/rca/2026-09-18-installer-version-hardcode.md`: documented the local packaging filename drift after the 0.1.1 version bump.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`

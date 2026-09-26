@@ -114,7 +114,9 @@ Security and lifecycle implementation status:
   is available; sender and receiver canonicalize and revalidate local regular
   files. Reject remote URLs and UNC/network/device roots both before and after
   resolution, including a reparse point resolving to an extended UNC path.
-  Receiver checks the canonical path before granting it to the asset scope.
+  On Windows, `GetDriveTypeW` must classify the canonical drive root as fixed,
+  removable, CD-ROM or RAM disk; remote, unknown and invalid drive types fail
+  closed. Receiver checks both conditions before granting to the asset scope.
   Never execute a shell or infer a path from a title/pack ID.
 - File grants apply only to the explicit handoff item; source survives Studio/API
   shutdown. Missing receiver reports install/configuration guidance; no fallback
@@ -139,10 +141,12 @@ Security and lifecycle implementation status:
   label. No keys/cookies/profile data on the wire or in captured diagnostics.
 
 Focused local tests now cover cold/warm launch decisions, one-launch timeout,
-Studio FIFO ordering, payload and canonical-path validation, duplicate/conflicting
-IDs, owner-session query checks, bounded history/snapshots, protected same-logon
-DACL creation and the remote-client-rejection flag. The ACL test does not attempt
-an unauthorized connection. Live cross-process delivery, ACK-loss under process
+Studio FIFO ordering, payload, canonical-root and drive-type validation,
+duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots,
+protected same-logon DACL creation and the remote-client-rejection flag. Drive
+classification is tested with fixed, remote, unknown and invalid values; no
+mapped-drive runtime case was exercised. The ACL test does not attempt an
+unauthorized connection. Live cross-process delivery, ACK-loss under process
 interruption, cross-session/spoof attempts, Studio/API exit during active playback,
 audible parity and Cast regression remain **NOT VERIFIED**.
 
@@ -198,6 +202,6 @@ Candidate schema/code parity tests must exist before declaring S2 data complete.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.2b | 2026-09-26 | candidate | Require canonical local-drive paths on both native handoff sides; record unit evidence and keep runtime gates open | uncommitted | Codex |
+| 0.1.2b | 2026-09-26 | candidate | Require canonical local paths and known local drive types on both handoff sides; keep runtime gates open | uncommitted | Codex |
 | 0.1.1b | 2026-09-25 | candidate | Record approved S3 named-pipe contract and local implementation evidence; leave migration design gated | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | candidate | Separate observed local API/storage from proposed bounded IPC and opt-in transactional migration | based on f5a6681 | LALIN |

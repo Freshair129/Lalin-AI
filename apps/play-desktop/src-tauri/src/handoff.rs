@@ -646,20 +646,49 @@ fn validate_media_file(path: &str) -> Result<std::path::PathBuf, String> {
     Ok(canonical)
 }
 
-#[cfg(any(windows, test))]
+#[cfg(test)]
 fn is_local_windows_canonical(value: &str) -> bool {
+    local_windows_drive_root(value).is_some()
+}
+
+#[cfg(any(windows, test))]
+fn local_windows_drive_root(value: &str) -> Option<String> {
     let normalized = value.replace('/', "\\");
     let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
     let bytes = path.as_bytes();
-    bytes.len() >= 3
+    (bytes.len() >= 3
         && bytes[0].is_ascii_alphabetic()
         && bytes[1] == b':'
-        && bytes[2] == b'\\'
+        && bytes[2] == b'\\')
+        .then(|| path[..3].to_string())
+}
+
+// Win32 GetDriveTypeW return values; only local media drive kinds are accepted.
+#[cfg(test)]
+const DRIVE_UNKNOWN: u32 = 0;
+#[cfg(test)]
+const DRIVE_NO_ROOT_DIR: u32 = 1;
+#[cfg(any(windows, test))]
+const DRIVE_REMOVABLE: u32 = 2;
+#[cfg(any(windows, test))]
+const DRIVE_FIXED: u32 = 3;
+#[cfg(any(windows, test))]
+const DRIVE_REMOTE: u32 = 4;
+#[cfg(any(windows, test))]
+const DRIVE_CDROM: u32 = 5;
+#[cfg(any(windows, test))]
+const DRIVE_RAMDISK: u32 = 6;
+
+#[cfg(any(windows, test))]
+fn is_local_windows_drive_type(drive_type: u32) -> bool {
+    drive_type != DRIVE_REMOTE
+        && matches!(drive_type, DRIVE_REMOVABLE | DRIVE_FIXED | DRIVE_CDROM | DRIVE_RAMDISK)
 }
 
 #[cfg(windows)]
 fn is_local_canonical_path(path: &std::path::Path) -> bool {
-    is_local_windows_canonical(&path.to_string_lossy())
+    let Some(root) = local_windows_drive_root(&path.to_string_lossy()) else { return false; };
+    windows_pipe::is_local_drive(&root)
 }
 
 #[cfg(not(windows))]
@@ -681,7 +710,7 @@ mod windows_pipe {
         Foundation::{CloseHandle, GetLastError, LocalFree, ERROR_PIPE_CONNECTED, HANDLE, INVALID_HANDLE_VALUE},
         Security::{GetTokenInformation, RevertToSelf, SECURITY_ATTRIBUTES, TOKEN_GROUPS, TOKEN_QUERY, TokenLogonSid},
         Security::Authorization::{ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1},
-        Storage::FileSystem::{FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX},
+        Storage::FileSystem::{GetDriveTypeW, FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX},
         System::{
             IO::OVERLAPPED,
             Pipes::{ConnectNamedPipe, CreateNamedPipeW, DisconnectNamedPipe, GetNamedPipeClientSessionId, GetNamedPipeServerSessionId, ImpersonateNamedPipeClient, PeekNamedPipe, PIPE_READMODE_BYTE, PIPE_REJECT_REMOTE_CLIENTS, PIPE_TYPE_BYTE, PIPE_WAIT},
@@ -693,6 +722,11 @@ mod windows_pipe {
     const PIPE_CAP: usize = MAX_FRAME_BYTES;
     const PIPE_NAME_PREFIX: &str = r"\\.\pipe\ai.lalin.play.handoff.v1";
     const TOKEN_ACCESS: u32 = TOKEN_QUERY;
+
+    pub fn is_local_drive(root: &str) -> bool {
+        let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
+        is_local_windows_drive_type(unsafe { GetDriveTypeW(wide.as_ptr()) })
+    }
 
     pub fn pipe_name() -> Result<Vec<u16>, String> {
         let sid = current_logon_sid()?;
@@ -993,5 +1027,15 @@ mod tests {
         assert!(!is_local_windows_canonical(r"\\?\UNC\server\share\song.wav"));
         assert!(!is_local_windows_canonical(r"\\.\PhysicalDrive0"));
         assert!(!is_local_windows_canonical(r"\\?\GLOBALROOT\Device\HarddiskVolume1\song.wav"));
+    }
+
+    #[test]
+    fn canonical_drive_type_classifier_rejects_remote_and_unknown_drives() {
+        assert_eq!(local_windows_drive_root(r"\\?\Z:\media\song.wav").as_deref(), Some("Z:\\"));
+        assert!(is_local_windows_drive_type(DRIVE_FIXED));
+        assert!(is_local_windows_drive_type(DRIVE_REMOVABLE));
+        assert!(!is_local_windows_drive_type(DRIVE_REMOTE));
+        assert!(!is_local_windows_drive_type(DRIVE_UNKNOWN));
+        assert!(!is_local_windows_drive_type(DRIVE_NO_ROOT_DIR));
     }
 }
