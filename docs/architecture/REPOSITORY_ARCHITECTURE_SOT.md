@@ -1,7 +1,7 @@
 ---
-version: "0.4.2b"
+version: "0.4.3b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -24,14 +24,15 @@ authoritative for the umbrella repository; Cast source and release ownership
 are recorded in [the separation handoff](LALIN_CAST_SEPARATION_HANDOFF.md).
 
 The Play separation specification is approved. An additive standalone candidate
-exists at `apps/play-desktop`; original Studio Play ownership remains unchanged.
-No independent repository export or source removal has happened. See the
-[foundation evidence](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md).
+exists at `apps/play-desktop`; S3 named-pipe handoff is implemented locally for
+explicit standalone actions. Existing Studio playback actions and source remain
+in place until native parity is proven. No independent repository export or
+source removal has happened. See the [foundation evidence](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md).
 
 ## Current Tree Truth
 
 - `apps/desktop/`: Tauri v2 desktop app using React, TypeScript, Vite, Zustand, and Tauri plugins.
-- `apps/play-desktop/`: additive standalone Play candidate with its own npm/Cargo manifests and lockfiles; deliberately outside root npm workspaces. Studio IPC and migration are not implemented.
+- `apps/play-desktop/`: additive standalone Play candidate with its own npm/Cargo manifests and lockfiles; deliberately outside root npm workspaces. Approved S3 IPC exists locally; migration is not implemented.
 - `apps/api/`: FastAPI app with brain providers, audio pipelines, routers, job manager, and sidecar entrypoints.
 - `apps/mcp/`: local stdio MCP server that exposes read/propose tools backed by the API.
 - `packages/contracts/`: shared TypeScript contracts and JSON Schemas for desktop/API/MCP boundaries.
@@ -124,9 +125,12 @@ empty Cast folders in this repository.
 ### Consumer playback boundary
 
 `playbackClient.ts` exposes Studio commands without importing the consumer engine.
-`playbackBridge.ts` provides readiness, FIFO command IDs, ACK/STATE and explicit
-unknown-delivery reconciliation. `playbackOwner.ts` connects the store only on
-the lazy-loaded Play surface. Arrange keeps its editor engine/session. The old
+The existing `playbackBridge.ts` remains the active Studio Play/Play Next/Queue
+path and retains readiness, FIFO command IDs, ACK/STATE and explicit
+unknown-delivery reconciliation. Separate explicit standalone actions use a
+Windows named pipe with same-logon ACL, local-file validation and native ACK/STATE
+reconciliation. `playbackOwner.ts` and the embedded Play surface remain intact
+until standalone parity passes. Arrange keeps its editor engine/session. The old
 `LalinPlayModal.tsx` prototype remains as unmounted source, not an active owner.
 
 The predeclared native `play` window hides on close. Native capabilities authorize
@@ -204,6 +208,7 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.3b | 2026-09-25 | beta | Record local S3 handoff while retaining Studio playback until native parity evidence | uncommitted | Codex |
 | 0.4.2b | 2026-09-20 | beta | Reconcile existing candidate source versus future export and link current handoff status | based on f5a6681 | LALIN |
 | 0.4.1b | 2026-09-20 | beta | Record independent candidate manifests and preserve existing Studio ownership | based on 8429010 | LALIN |
 | 0.4.0b | 2026-09-20 | candidate | Add Play standalone target and retention gates without changing current source ownership | based on 8429010 | LALIN |

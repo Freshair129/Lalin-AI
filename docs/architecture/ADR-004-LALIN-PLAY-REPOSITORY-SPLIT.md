@@ -1,7 +1,7 @@
 ---
-version: "0.4.1b"
+version: "0.4.2b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -31,7 +31,8 @@ attributes:
 ## 2. Parent and peer alignment
 
 - [Current document/status register](../product/LALIN_PLAY_DOCUMENTATION.md): source `f5a6681` pushed on the Lalin-AI branch; S4 independent export remains NOT_RUN.
-- [Integration/migration detail](LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md), [prepared handoff](LALIN_PLAY_SEPARATION_HANDOFF.md) and [release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) elaborate future work as candidates; their new protocol/transaction/release decisions require review before code. They do not supersede this ADR's approved invariants.
+- [Integration/migration detail](LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md): its S3 wire contract is approved and locally implemented; opt-in migration and release details remain candidate work.
+- [Prepared handoff](LALIN_PLAY_SEPARATION_HANDOFF.md) and [release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) retain their separate execution and release gates.
 - [Standalone traceability](../validation/LALIN_PLAY_TRACEABILITY.md) maps each PLAY requirement to implementation, dated tests and still-open acceptance.
 - [PRODUCT](../../PRODUCT.md) and [PRD](../product/PRD.md): Studio creates/edits; Play listens to local media; Cast owns YouTube TV.
 - [CR-001](../product/CR-001--LALIN_PLAY_WINDOWS_MEDIA_EQ.md): preserve consumer queue/EQ, audio-first baseline and later video scope.
@@ -145,7 +146,7 @@ before removal. A revert must not remove Play's library or the user's source fil
 | S0 | Review this ADR, PRD and agent rules on the split branch | User replied `approve` on 2026-09-20 | APPROVED |
 | S1 | Add independent candidate at `apps/play-desktop/` | Own manifests/lockfiles; local audio without Studio/API | LOCAL PASS; source-copy tests/build, native playback and user audible confirmation; not a remote checkout/release |
 | S2 | Full/Compact, library/playlists and opt-in state import | PLAY-01–05 and PLAY-07–09 verification | PARTIAL: native surfaces and local library work; old-state import, relink, persistent bounds and full lifecycle/output acceptance remain open |
-| S3 | Native Studio sender/receiver integration | PLAY-06, lifecycle, delivery and security checks | NOT_RUN |
+| S3 | Native Studio sender/receiver integration | PLAY-06, lifecycle, delivery and security checks | PARTIAL: named-pipe implementation and focused local tests pass; live Studio–Play process/audio parity and full delivery/security acceptance NOT_VERIFIED |
 | S4 | Export candidate to separate repo root (`src`, `src-tauri`, docs/tooling) | License/provenance audit; independent checkout build; exact source/export SHA record | NOT_RUN |
 | S5 | Verify exported repo and retained Studio consumers | Export snapshot available and regression gates pass | NOT_RUN |
 | S6 | Remove replaced source and temporary staging from Lalin-AI | Migration path remains usable, diff inventory and recovery evidence reviewed | NOT_RUN |
@@ -154,6 +155,20 @@ before removal. A revert must not remove Play's library or the user's source fil
 Do not create the remote, publish releases, delete the old implementation or
 merge `main` merely because these actions appear in this plan. Record their
 authorization and evidence at the relevant phase.
+
+### S3 local implementation status — 2026-09-25
+
+Studio's existing Play/Play Next/Queue route remains active. Separate explicit
+standalone actions use the new Windows named pipe; the native sender resolves
+workspace/upload/output references through the API, validates canonical local
+media paths, launches or connects to Play, serializes delivery, and reconciles
+unknown outcomes by the original request ID and owner session. Play applies an
+explicit same-logon SID DACL, rejects remote clients, revalidates each file, and
+returns ACK plus bounded STATE. Cold/warm decision tests, focused protocol and
+ACL tests, and the local API resolver suite pass. No live paired process or
+audible parity run has been recorded, so S3 remains partial and Studio playback
+must remain available until that evidence passes. See the [dated foundation
+report](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md).
 
 ## 8. Verification and release gates
 
@@ -245,6 +260,7 @@ decoder boundary. See [local proof and remaining checks](../validation/LALIN_PLA
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.2b | 2026-09-25 | beta | Record approved S3 named-pipe implementation status while retaining Studio playback and parity gates | uncommitted | Codex |
 | 0.4.1b | 2026-09-20 | beta | Link candidate execution details, traceability and published branch status without closing split gates | based on f5a6681 | LALIN |
 | 0.4.0b | 2026-09-20 | beta | Add approved native fullscreen snapshot/restore and live relative-seek boundaries | based on 8429010 | LALIN |
 | 0.3.1b | 2026-09-20 | beta | Record approved isolated preview architecture, minimal bounds and bounded native proof | based on 8429010 | LALIN |

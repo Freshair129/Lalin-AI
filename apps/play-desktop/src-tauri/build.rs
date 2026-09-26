@@ -19,6 +19,10 @@ fn main() {
             "set_compact_fullscreen",
             "set_tv",
             "quit_play",
+            "register_handoff_owner",
+            "publish_handoff_state",
+            "complete_handoff_command",
+            "grant_handoff_media",
         ]),
     ))
     .expect("generate scoped Play commands");

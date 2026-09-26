@@ -11,6 +11,8 @@
     "allow-rollback-play-migration", "allow-recover-play-migration",
     "allow-ack-play-migration",
     "allow-get-play-migration-undo-status", "allow-prepare-undo-play-migration",
-    "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen"
+    "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen",
+    "allow-register-handoff-owner", "allow-publish-handoff-state",
+    "allow-complete-handoff-command", "allow-grant-handoff-media"
   ]
 }

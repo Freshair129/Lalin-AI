@@ -10,6 +10,7 @@ import { Transport, formatTime } from "./components/Transport";
 import { getLibrary, mediaItem, isVideoItem, type LocalTrack } from "./native";
 import { loadPlaylists, savePlaylists, type Playlist } from "./playlists";
 import { usePlaybackStore } from "./playback/usePlaybackStore";
+import { bindHandoffReceiver } from "./handoffReceiver";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -61,6 +62,21 @@ export function App() {
   const root = useRef<HTMLDivElement>(null);
   const queue = usePlaybackStore((state) => state.queue);
   const report = useCallback((value: unknown) => setError(String(value)), []);
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window) && !("__TAURI__" in window)) return;
+    let active = true;
+    let cleanup: (() => void) | undefined;
+    void bindHandoffReceiver(report)
+      .then((dispose) => {
+        if (active) cleanup = dispose;
+        else dispose();
+      })
+      .catch(report);
+    return () => {
+      active = false;
+      cleanup?.();
+    };
+  }, [report]);
   const reconcileFullscreen = useCallback(async () => {
     try {
       setFullscreen(await invoke<boolean>("get_compact_fullscreen"));
