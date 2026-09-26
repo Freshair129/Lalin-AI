@@ -77,3 +77,37 @@ def test_resolve_upload_still_finds_a_real_upload(client, data_dir):
 
     p = resolve_upload("real.wav")
     assert p.endswith("real.wav")
+
+
+def test_playback_resolver_allows_only_existing_files_in_owned_roots(client, data_dir):
+    upload = _upload(client, "studio.wav", b"RIFFupload")
+    assert upload.status_code == 200
+    output_dir = data_dir / "outputs" / "rendered"
+    output_dir.mkdir(parents=True)
+    (output_dir / "mix.mp3").write_bytes(b"ID3output")
+    workspace_dir = data_dir / "workspace" / "ไทย"
+    workspace_dir.mkdir(parents=True)
+    (workspace_dir / "เสียง.wav").write_bytes(b"RIFFworkspace")
+
+    resolved_upload = client.get("/files/resolve", params={"kind": "upload", "name": "studio.wav"})
+    resolved_output = client.get("/files/resolve", params={"kind": "output", "name": "rendered/mix.mp3"})
+    resolved_workspace = client.get("/files/resolve", params={"kind": "workspace", "name": "ไทย/เสียง.wav"})
+
+    assert resolved_upload.status_code == 200
+    assert resolved_upload.json()["path"] == str(data_dir / "uploads" / "studio.wav")
+    assert resolved_output.status_code == 200
+    assert resolved_output.json()["path"] == str(output_dir / "mix.mp3")
+    assert resolved_workspace.status_code == 200
+    assert resolved_workspace.json()["path"] == str(workspace_dir / "เสียง.wav")
+
+
+def test_playback_resolver_rejects_untrusted_or_unplayable_references(client, data_dir):
+    outside = data_dir.parent / "outside.wav"
+    outside.write_bytes(b"RIFFoutside")
+
+    assert client.get("/files/resolve", params={"kind": "upload", "name": "missing.wav"}).status_code == 404
+    assert client.get("/files/resolve", params={"kind": "upload", "name": "../outside.wav"}).status_code == 400
+    assert client.get("/files/resolve", params={"kind": "output", "name": "../outside.wav"}).status_code == 400
+    assert client.get("/files/resolve", params={"kind": "workspace", "name": "../outside.wav"}).status_code == 400
+    assert client.get("/files/resolve", params={"kind": "workspace", "name": "https://example.com/a.wav"}).status_code == 404
+    assert client.get("/files/resolve", params={"kind": "upload", "name": "not-audio.txt"}).status_code == 404

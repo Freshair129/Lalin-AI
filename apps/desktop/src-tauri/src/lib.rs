@@ -15,6 +15,8 @@ use tauri::{Manager, RunEvent};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
+mod playback_handoff;
+
 const BACKEND_PORT: u16 = 8756;
 const BACKEND_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -271,7 +273,14 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .manage(MediaProcess(Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![media_lifecycle])
+        .manage(playback_handoff::StudioHandoffClient::default())
+        .invoke_handler(tauri::generate_handler![
+            media_lifecycle,
+            playback_handoff::handoff_playback,
+            playback_handoff::focus_play_window,
+            playback_handoff::get_playback_state,
+            playback_handoff::reconcile_playback_handoff
+        ])
         .setup(|app| {
             spawn_backend(app.handle());
             Ok(())

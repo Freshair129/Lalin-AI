@@ -91,6 +91,8 @@ export const files = {
   downloadUrl: (name: string) => `${API_BASE}/files/download/${name}`,
   inputUrl: (name: string) => `${API_BASE}/files/input/${name}`,
   exportUrl: (name: string, fmt: "wav" | "mp3" = "wav") => `${API_BASE}/files/export/${name}?fmt=${fmt}`,
+  resolveForPlayback: (kind: "workspace" | "upload" | "output", name: string) =>
+    req<{ path: string }>(`/files/resolve?kind=${encodeURIComponent(kind)}&name=${encodeURIComponent(name)}`),
 };
 
 // ── FS (file-manager sandboxed workspace) ─────────────────

@@ -1,4 +1,6 @@
+mod handoff;
 mod library;
+mod migration;
 
 use library::LibraryState;
 use std::sync::Mutex;
@@ -218,6 +220,7 @@ pub fn run() {
             small: PhysicalSize::new(500, 340),
             fullscreen_restore: None,
         }))
+        .manage(handoff::HandoffService::default())
         .setup(|app| {
             let library = library::initialize(app.handle()).map_err(std::io::Error::other)?;
             app.manage(LibraryState(Mutex::new(library)));
@@ -269,6 +272,19 @@ pub fn run() {
             library::select_media,
             library::remove_library_track,
             library::resolve_media,
+            migration::preview_play_migration,
+            migration::prepare_play_migration,
+            migration::apply_play_migration,
+            migration::commit_play_migration,
+            migration::rollback_play_migration,
+            migration::recover_play_migration,
+            migration::ack_play_migration,
+            migration::get_play_migration_undo_status,
+            migration::prepare_undo_play_migration,
+            handoff::grant_handoff_media,
+            handoff::register_handoff_owner,
+            handoff::publish_handoff_state,
+            handoff::complete_handoff_command,
             set_surface,
             get_compact_fullscreen,
             set_compact_fullscreen,

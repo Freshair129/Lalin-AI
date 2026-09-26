@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-prepare-play-migration"
+description = "Enables the prepare_play_migration command without any pre-configured scope."
+commands.allow = ["prepare_play_migration"]
+
+[[permission]]
+identifier = "deny-prepare-play-migration"
+description = "Denies the prepare_play_migration command without any pre-configured scope."
+commands.deny = ["prepare_play_migration"]

@@ -1,7 +1,7 @@
 ---
-version: "0.10.10b"
+version: "0.10.11b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-24T02:00:00+07:00,LALIN"
+last_update: "2026-09-26T21:20:52+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -25,7 +25,10 @@ attributes:
 - `docs/architecture/ADR-001-LALIN-UMBRELLA-PLATFORM.md`: candidate umbrella platform decision and Tauri/Electron/YouTube boundaries.
 - `docs/architecture/ADR-002-LALIN-MEDIA-TAURI-PORT.md`: approved local Rust + Tauri v2 port boundary and VacuumTube feature matrix.
 - `docs/architecture/ADR-003-LALIN-CAST-REPOSITORY-SPLIT.md`: accepted Lalin Cast repository boundary and product identity decision.
-- `docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md`: approved standalone local Play specification; additive native foundation exists, Studio handoff and migration/export/release gates remain open.
+- `docs/architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md`: approved standalone local Play specification; S2 migration and S3 handoff code exist locally, while parity/recovery/export/release gates remain open.
+- `docs/architecture/LALIN_PLAY_EXECUTION_DAG.md`: approved S2/S3 execution DAG; G0-G2 are complete, G3 native parity remains NOT_RUN, and Studio playback stays available.
+- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: approved S2 migration and S3 named-pipe contract; local implementation is separate from native parity/recovery acceptance.
+- `docs/validation/LALIN_PLAY_S2_MIGRATION.md`: S2 local schema/transaction/recovery evidence and remaining crash/transfer gates.
 - `docs/validation/LALIN_PLAY_STANDALONE_FOUNDATION.md`: local tests, native Full/Compact screenshots, user-confirmed audible output and explicit unverified gates.
 - `docs/architecture/ADR-005-HEADLESS-VOICE-WORKER-PROFILE.md`: candidate fail-closed voice-worker entrypoint, control/engine process split, speech-core seams and profile-scoped exceptions to Studio jobs/WS/auth rules (CR-005).
 - `docs/architecture/JAITTS_EASY_COMPARISON.md`: source-only comparison of JaiTTS-Easy with Studio `tts.py` and the voice worker; verified F5-TTS license facts, Thai chunking gap and eval protocol proposal.
@@ -79,8 +82,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 ## Product and Runtime Docs
 
 - `docs/product/LALIN_PLAY_DOCUMENTATION.md`: Play documentation entrypoint, source publication status and document ownership; approval/evidence/export remain distinct.
-- `docs/validation/LALIN_PLAY_TRACEABILITY.md`: all 33 PLAY product/video/Compact criteria mapped to source, tests, dated native evidence and open gates.
-- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: current native/storage contracts plus candidate wire protocol and opt-in migration/rollback; future portions NOT_IMPLEMENTED.
+- `docs/validation/LALIN_PLAY_TRACEABILITY.md`: all 33 PLAY criteria map to source/tests; S2/S3 local checks pass while live parity and recovery gates remain open.
+- `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: approved S2 migration and S3 named-pipe contract with local code evidence; paired-runtime parity and recovery acceptance remain open.
 - `docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md`: candidate export inventory, retained consumers, license/notices audit and recovery record; not an executed split.
 - `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: candidate NSIS/signing/updater/draft-publication and rollback qualification; all distribution gates remain open.
 - `docs/guides/LALIN_PLAY_USER_GUIDE.md`: current candidate controls, local files/state and non-destructive troubleshooting.
@@ -132,6 +135,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
+- `.brain/rca/2026-09-26-lalin-play-handoff-canonical-path.md`: canonical-path and drive-type guards for UNC/device reparse targets and mapped network drives; live ACL and paired-process checks remain open.
+- `.brain/rca/2026-09-26-lalin-play-s2-mapped-network-drive.md`: S2 absolute-path validation gap and fail-closed Windows drive classification.
 - `.brain/rca/2026-09-18-release-workflow-billing-block.md`: documented the GitHub account billing restriction that prevented the v0.1.1 signed draft workflow from starting.
 - `.brain/rca/2026-09-18-installer-version-hardcode.md`: documented the local packaging filename drift after the 0.1.1 version bump.
 - `.brain/rca/2026-07-23-release-workflow-legacy-path.md`
@@ -158,6 +163,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.11b | 2026-09-26 | beta | Index the approved Play execution DAG, S2/S3 contract and implementation evidence, and both local-path RCAs | S2 7c30ea1; S3 235875b/362bbd0; base 43121cc | Codex |
 | 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |
 | 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |
 | 0.10.8b | 2026-09-23 | beta | Index the voice worker monitoring evidence | based on e833a7c | LALIN |

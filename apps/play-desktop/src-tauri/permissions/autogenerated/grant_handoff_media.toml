@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-grant-handoff-media"
+description = "Enables the grant_handoff_media command without any pre-configured scope."
+commands.allow = ["grant_handoff_media"]
+
+[[permission]]
+identifier = "deny-grant-handoff-media"
+description = "Denies the grant_handoff_media command without any pre-configured scope."
+commands.deny = ["grant_handoff_media"]

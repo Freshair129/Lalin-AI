@@ -3,12 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { PlaybackEQPanel } from "./components/PlaybackEQPanel";
 import { PlaybackSettings } from "./components/PlaybackSettings";
+import { PlayMigrationImport } from "./components/PlayMigrationImport";
 import { VideoStage } from "./components/VideoStage";
 import { CompactTransport } from "./components/CompactTransport";
 import { Transport, formatTime } from "./components/Transport";
 import { getLibrary, mediaItem, isVideoItem, type LocalTrack } from "./native";
 import { loadPlaylists, savePlaylists, type Playlist } from "./playlists";
 import { usePlaybackStore } from "./playback/usePlaybackStore";
+import { bindHandoffReceiver } from "./handoffReceiver";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -60,6 +62,21 @@ export function App() {
   const root = useRef<HTMLDivElement>(null);
   const queue = usePlaybackStore((state) => state.queue);
   const report = useCallback((value: unknown) => setError(String(value)), []);
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window) && !("__TAURI__" in window)) return;
+    let active = true;
+    let cleanup: (() => void) | undefined;
+    void bindHandoffReceiver(report)
+      .then((dispose) => {
+        if (active) cleanup = dispose;
+        else dispose();
+      })
+      .catch(report);
+    return () => {
+      active = false;
+      cleanup?.();
+    };
+  }, [report]);
   const reconcileFullscreen = useCallback(async () => {
     try {
       setFullscreen(await invoke<boolean>("get_compact_fullscreen"));
@@ -451,6 +468,10 @@ export function App() {
           ) : view === "settings" ? (
             <section className="settings">
               <PlaybackSettings report={report} />
+              <PlayMigrationImport onChanged={() => {
+                setResume(localStorage.getItem("lalin-play:v1:resume") === "true");
+                void refresh().catch(report);
+              }} />
               <label>
                 <input
                   type="checkbox"

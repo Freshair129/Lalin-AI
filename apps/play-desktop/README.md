@@ -1,7 +1,7 @@
 ---
-version: "0.4.1b"
+version: "0.4.2b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-09-25T19:20:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -19,16 +19,17 @@ This does **not** replace the decoder with Rust or provide VLC codec coverage.
 
 Application version: `0.1.0`; executable: `lalin-play.exe`; app identifier:
 `ai.lalin.play`. This is an additive development candidate, not a published release.
-There is no Python/API/Studio runtime dependency. Studio's original Play remains
-untouched until integration, migration and export gates pass.
+There is no Python/API runtime dependency in standalone Play. Studio's original
+playback owner and normal actions remain in place until native parity is proven.
 
 Candidate source was committed/pushed as `f5a6681` on `codex/lalin-play-split`
 in Lalin-AI, not exported to a new repository. Start at the
 [documentation/status register](../../docs/product/LALIN_PLAY_DOCUMENTATION.md),
 [user guide](../../docs/guides/LALIN_PLAY_USER_GUIDE.md) and
 [requirements/evidence matrix](../../docs/validation/LALIN_PLAY_TRACEABILITY.md).
-Future IPC/migration, extraction and release runbooks linked there are candidate
-designs; they do not change the current runtime or approve publication.
+The S3 Studio-to-Play named-pipe handoff is implemented locally for explicit
+standalone actions. Queue/EQ migration, extraction and release runbooks remain
+separate candidate work; no independent publication is approved.
 
 ## Develop and verify
 
@@ -48,6 +49,21 @@ Prerequisites: Node/npm, Rust Windows MSVC toolchain and Windows WebView2.
 `npm run dev` alone is only a frontend server; real file/native commands require
 Tauri. `node tools/make-smoke-audio.mjs` generates an ignored local WAV fixture;
 it never overwrites an existing fixture. Play it through the native file picker.
+
+## Studio handoff (approved S3, local implementation)
+
+In the native Studio app, File Manager context menus offer explicit standalone
+Play actions for workspace files. Existing Play/Play Next/Queue actions
+continue to use the Studio player until standalone parity is proven. The pipe
+accepts only validated local media files, uses a same-logon Windows ACL, and
+returns ACK/STATE; a lost ACK is queried with the original request ID instead of
+blindly replaying the command.
+
+For development, set `LALIN_PLAY_EXECUTABLE` in the Studio process environment
+to the absolute path of the built `lalin-play.exe`. Installed lookup uses the
+Windows App Paths registration; the current installer has not been verified to
+create that registration. Cold/warm launch logic has deterministic unit tests,
+but the Studio–Play process pair and audible result still need a live run.
 
 ## Local video (CR-003)
 
@@ -102,7 +118,8 @@ ignored developer fixtures only (no FFmpeg dependency in the shipped runtime).
 - Native commands are explicitly listed in `build.rs` and `capabilities/main.json`;
   no remote-page or unrestricted filesystem/shell capability is granted.
 - Closing hides to the tray. Explicit Quit exits; repeated launch focuses the
-  existing process. Command-line file forwarding is not implemented yet.
+  existing process. Studio handoff uses the native pipe; arbitrary command-line
+  file forwarding is not implemented.
 
 ## Current limits and next gates
 
@@ -111,7 +128,8 @@ restoration exist. Native audible WAV playback and surface continuity were
 verified locally, but complete acceptance remains open:
 
 - Explicit old Studio queue/EQ export/import and rollback: not implemented.
-- Studio named-pipe delivery, session ACL and ACK reconciliation: not implemented.
+- Studio named-pipe delivery, session ACL and ACK reconciliation: implemented locally; focused tests pass; live process-pair/audio parity remains unverified.
+- Cold/warm Studio handoff and Studio/API exit during playback: launch decision tests pass; paired runtime and exit behavior remain unverified.
 - Missing-file relink and persistent per-mode window bounds: not implemented
   (bounds are currently remembered only during this process).
 - Output-device loss, native TV/gamepad coverage and complete codec matrix:
@@ -146,6 +164,7 @@ Do not invent a license grant from this README.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.2b | 2026-09-25 | beta | Document approved S3 native handoff and preserve Studio playback pending parity evidence | uncommitted | Codex |
 | 0.4.1b | 2026-09-20 | beta | Link complete docs/user guide and record candidate branch publication | based on f5a6681 | LALIN |
 | 0.4.0b | 2026-09-20 | beta | Add approved native fullscreen, bounded relative seek and local verification | based on 8429010 | LALIN |
 | 0.3.0b | 2026-09-20 | beta | Document minimal Compact, isolated frame preview, reduced bounds and evidence limits | based on 8429010 | LALIN |

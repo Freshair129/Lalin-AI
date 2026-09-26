@@ -1,9 +1,24 @@
 import ReactDOM from "react-dom/client";
-import { App } from "./App";
-import { initMediaSessionAdapter } from "./playback/mediaSessionAdapter";
+import { recoverPlayMigrationBeforeStore } from "./playMigration";
 import "./styles.css";
 
-// เจ้าของเสียงอยู่นอก layout; Full/Compact ไม่สร้าง audio element ใหม่
-const cleanup = initMediaSessionAdapter();
-window.addEventListener("pagehide", cleanup, { once: true });
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+async function startPlay() {
+  const root = document.getElementById("root")!;
+  try {
+    await recoverPlayMigrationBeforeStore();
+    const [{ App }, { initMediaSessionAdapter }] = await Promise.all([
+      import("./App"),
+      import("./playback/mediaSessionAdapter"),
+    ]);
+    // Migration recovery runs before App imports the playback store.
+    const cleanup = initMediaSessionAdapter();
+    window.addEventListener("pagehide", cleanup, { once: true });
+    ReactDOM.createRoot(root).render(<App />);
+  } catch (error) {
+    root.setAttribute("role", "alert");
+    root.textContent =
+      `Lalin Play could not recover its queue/EQ migration state. The recovery journal was retained. Fix the storage issue and restart Play. ${String(error)}`;
+  }
+}
+
+void startPlay();
