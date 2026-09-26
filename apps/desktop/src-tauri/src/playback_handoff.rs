@@ -330,6 +330,27 @@ fn send_playback(
     action: String,
     file: HandoffFile,
 ) -> Result<PlaybackReply, String> {
+    let expected_executable = resolve_play_executable()?;
+    send_playback_with_launcher(
+        client,
+        request_id,
+        action,
+        file,
+        expected_executable,
+        CONNECT_ATTEMPTS,
+        spawn_play,
+    )
+}
+
+fn send_playback_with_launcher(
+    client: &StudioHandoffClient,
+    request_id: String,
+    action: String,
+    file: HandoffFile,
+    expected_executable: PathBuf,
+    connect_attempts: usize,
+    launch: impl FnOnce(&Path) -> Result<(), String>,
+) -> Result<PlaybackReply, String> {
     if !is_uuid(&request_id) {
         return Err("รหัส handoff ไม่ถูกต้อง".into());
     }
@@ -353,13 +374,12 @@ fn send_playback(
     {
         return Err("delivery_unknown: ตรวจผลคำสั่งก่อนหน้าก่อนส่งคำสั่งใหม่".into());
     }
-    let expected_executable = resolve_play_executable()?;
     let name = windows_pipe::pipe_name()?;
     let (mut pipe, _cold_launch) = connect_with_launch(
         || windows_pipe::open_client(&name, &expected_executable),
-        || spawn_play(&expected_executable),
+        || launch(&expected_executable),
         || std::thread::sleep(Duration::from_millis(100)),
-        CONNECT_ATTEMPTS,
+        connect_attempts,
     )?;
     let (owner_session, _initial_state) = handshake(&mut pipe)?;
     let command = CommandFrame {
@@ -409,7 +429,7 @@ fn read_playback_state(client: &StudioHandoffClient) -> Result<Option<PlaybackSt
         Err(_) => return Ok(None),
     };
     let name = windows_pipe::pipe_name()?;
-    let Some(mut pipe) = windows_pipe::open_client(&name, &executable)? else {
+    let Some(mut pipe) = open_existing_pipe(&name, &executable, 10)? else {
         return Ok(None);
     };
     let (owner_session, _) = handshake(&mut pipe)?;
@@ -423,6 +443,22 @@ fn read_playback_state(client: &StudioHandoffClient) -> Result<Option<PlaybackSt
         },
     )?;
     read_state(&mut pipe).map(Some)
+}
+
+fn open_existing_pipe(
+    name: &[u16],
+    executable: &Path,
+    attempts: usize,
+) -> Result<Option<std::fs::File>, String> {
+    for attempt in 0..attempts {
+        if let Some(pipe) = windows_pipe::open_client(name, executable)? {
+            return Ok(Some(pipe));
+        }
+        if attempt + 1 < attempts {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+    Ok(None)
 }
 
 fn reconcile_pending(client: &StudioHandoffClient) -> Result<PlaybackReply, String> {
@@ -557,8 +593,13 @@ fn reconcile_request(
     request_id: &str,
     owner_session: &str,
 ) -> Result<PlaybackReply, String> {
-    let mut pipe = windows_pipe::open_client(name, executable)?
-        .ok_or_else(|| "delivery_unknown: ไม่สามารถเชื่อมต่อกลับเพื่อยืนยันคำสั่งได้".to_string())?;
+    let (mut pipe, _) = connect_with_launch(
+        || windows_pipe::open_client(name, executable),
+        || Ok::<(), String>(()),
+        || std::thread::sleep(Duration::from_millis(100)),
+        CONNECT_ATTEMPTS,
+    )
+    .map_err(|_| "delivery_unknown: ไม่สามารถเชื่อมต่อกลับเพื่อยืนยันคำสั่งได้".to_string())?;
     let (current_owner, _) = handshake(&mut pipe)
         .map_err(|_| "delivery_unknown: ไม่สามารถยืนยันสถานะคำสั่งได้".to_string())?;
     if current_owner != owner_session {
@@ -1063,5 +1104,246 @@ mod tests {
         assert!(!is_local_windows_drive_type(DRIVE_REMOTE));
         assert!(!is_local_windows_drive_type(DRIVE_UNKNOWN));
         assert!(!is_local_windows_drive_type(DRIVE_NO_ROOT_DIR));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires an isolated Windows session, built Play app, and silent WAV fixture"]
+    fn paired_windows_cold_and_warm_handoff_ack_state_and_duplicate() {
+        let executable = std::env::var_os("LALIN_PLAY_EXECUTABLE")
+            .map(PathBuf::from)
+            .expect("set LALIN_PLAY_EXECUTABLE to the isolated lalin-play.exe");
+        let executable = std::fs::canonicalize(executable).expect("Play executable must exist");
+        let media = std::env::var_os("LALIN_G3_MEDIA_FILE")
+            .map(PathBuf::from)
+            .expect("set LALIN_G3_MEDIA_FILE to a local silent WAV fixture");
+        assert!(
+            media.is_absolute() && media.is_file(),
+            "silent WAV fixture must be an absolute local file path"
+        );
+        let client = StudioHandoffClient::default();
+        let name =
+            windows_pipe::pipe_name().expect("current logon session should have a pipe name");
+
+        assert!(
+            windows_pipe::open_client(&name, &executable)
+                .expect("preflight pipe check should be safe")
+                .is_none(),
+            "refusing to stop or reuse a Play process that was already running"
+        );
+
+        let mut child = None;
+        let cold_launches = std::cell::Cell::new(0);
+        let warm_launches = std::cell::Cell::new(0);
+        let result = (|| -> Result<(), String> {
+            let play_id = "00000000-0000-4000-8000-000000000101";
+            let play_file = HandoffFile {
+                path: media.to_string_lossy().into_owned(),
+                title: Some("G3 cold play".into()),
+            };
+            let first = send_playback_with_launcher(
+                &client,
+                play_id.into(),
+                "play".into(),
+                play_file.clone(),
+                executable.clone(),
+                CONNECT_ATTEMPTS * 3,
+                |path| {
+                    cold_launches.set(cold_launches.get() + 1);
+                    child = Some(
+                        Command::new(path)
+                            .env_remove("TAURI_CONFIG")
+                            .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                            .stdin(Stdio::null())
+                            .stdout(Stdio::null())
+                            .stderr(Stdio::null())
+                            .spawn()
+                            .map_err(|_| "ไม่สามารถเปิด Lalin Play สำหรับ G3 test ได้")?,
+                    );
+                    Ok(())
+                },
+            )?;
+            if cold_launches.get() != 1 {
+                return Err("G3 cold handoff must launch Play exactly once".into());
+            }
+            require_applied_reply(&first, play_id, &first.ack.owner_session, 0)?;
+
+            if child
+                .as_mut()
+                .and_then(|process| process.try_wait().ok().flatten())
+                .is_some()
+            {
+                return Err("Lalin Play exited after the cold handoff".into());
+            }
+
+            let next_id = "00000000-0000-4000-8000-000000000102";
+            let next = send_playback_with_launcher(
+                &client,
+                next_id.into(),
+                "play-next".into(),
+                HandoffFile {
+                    path: media.to_string_lossy().into_owned(),
+                    title: Some("G3 warm play next".into()),
+                },
+                executable.clone(),
+                CONNECT_ATTEMPTS * 3,
+                |_| {
+                    warm_launches.set(warm_launches.get() + 1);
+                    Err("warm Play launch should not be called".into())
+                },
+            )?;
+            require_applied_reply(&next, next_id, &first.ack.owner_session, first.ack.revision)?;
+
+            let queue_id = "00000000-0000-4000-8000-000000000103";
+            let queued = send_playback_with_launcher(
+                &client,
+                queue_id.into(),
+                "add-to-queue".into(),
+                HandoffFile {
+                    path: media.to_string_lossy().into_owned(),
+                    title: Some("G3 warm queue".into()),
+                },
+                executable.clone(),
+                CONNECT_ATTEMPTS * 3,
+                |_| {
+                    warm_launches.set(warm_launches.get() + 1);
+                    Err("warm Play launch should not be called".into())
+                },
+            )?;
+            require_applied_reply(
+                &queued,
+                queue_id,
+                &first.ack.owner_session,
+                next.ack.revision,
+            )?;
+
+            let lost_id = "00000000-0000-4000-8000-000000000104";
+            let (mut lost_pipe, cold) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Ok::<(), String>(()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            if cold {
+                return Err(
+                    "ACK/STATE reconciliation unexpectedly lost the warm Play owner".into(),
+                );
+            }
+            let (lost_owner, _) = handshake(&mut lost_pipe)?;
+            if lost_owner != first.ack.owner_session {
+                return Err("Play owner changed before ACK/STATE reconciliation".into());
+            }
+            let lost_file = HandoffFile {
+                path: media.to_string_lossy().into_owned(),
+                title: Some("G3 reconcile lost state".into()),
+            };
+            write_frame(
+                &mut lost_pipe,
+                &CommandFrame {
+                    frame_type: "COMMAND",
+                    protocol: PROTOCOL,
+                    protocol_version: PROTOCOL_VERSION,
+                    request_id: lost_id,
+                    owner_session: &lost_owner,
+                    action: "add-to-queue",
+                    file: &lost_file,
+                },
+            )?;
+            let lost_ack: PlaybackAck =
+                serde_json::from_value(read_value(&mut lost_pipe, ACK_TIMEOUT)?).map_err(|_| {
+                    "G3 test expected a committed ACK before dropping STATE".to_string()
+                })?;
+            if lost_ack.request_id != lost_id
+                || lost_ack.owner_session != first.ack.owner_session
+                || lost_ack.result != "applied"
+            {
+                return Err("G3 test did not receive the expected committed ACK".into());
+            }
+            drop(lost_pipe);
+
+            let recovered =
+                reconcile_request(&name, &executable, lost_id, &first.ack.owner_session)?;
+            require_applied_reply(
+                &recovered,
+                lost_id,
+                &first.ack.owner_session,
+                queued.ack.revision,
+            )?;
+            if recovered.ack.revision != lost_ack.revision {
+                return Err("reconciled ACK revision did not match the committed command".into());
+            }
+            let before_duplicate = read_playback_state(&client)?
+                .ok_or("Play state disappeared before duplicate reconciliation")?;
+            if before_duplicate.owner_session != first.ack.owner_session {
+                return Err("Play owner changed during warm handoff".into());
+            }
+
+            let duplicate = send_playback_with_launcher(
+                &client,
+                lost_id.into(),
+                "add-to-queue".into(),
+                lost_file,
+                executable.clone(),
+                CONNECT_ATTEMPTS * 3,
+                |_| {
+                    warm_launches.set(warm_launches.get() + 1);
+                    Err("warm Play launch should not be called".into())
+                },
+            )?;
+            require_applied_reply(
+                &duplicate,
+                lost_id,
+                &first.ack.owner_session,
+                queued.ack.revision,
+            )?;
+            if duplicate.ack.revision != lost_ack.revision {
+                return Err("duplicate request changed its original ACK revision".into());
+            }
+            let after_duplicate = read_playback_state(&client)?
+                .ok_or("Play state disappeared after duplicate reconciliation")?;
+            if after_duplicate.revision != before_duplicate.revision
+                || after_duplicate.snapshot.queue.len() != before_duplicate.snapshot.queue.len()
+            {
+                return Err("duplicate request changed reconciled playback state".into());
+            }
+            if warm_launches.get() != 0 {
+                return Err("warm handoff unexpectedly launched another Play process".into());
+            }
+            Ok(())
+        })();
+
+        if let Some(mut process) = child {
+            let _ = process.kill();
+            let _ = process.wait();
+        }
+        result.expect(
+            "paired Windows native handoff must pass cold, warm, ACK, STATE, and replay checks",
+        );
+    }
+
+    #[cfg(windows)]
+    fn require_applied_reply(
+        reply: &PlaybackReply,
+        request_id: &str,
+        owner_session: &str,
+        minimum_revision: u64,
+    ) -> Result<(), String> {
+        if reply.ack.frame_type != "ACK"
+            || reply.ack.request_id != request_id
+            || reply.ack.owner_session != owner_session
+            || reply.ack.result != "applied"
+            || reply.state.frame_type != "STATE"
+            || reply.state.owner_session != owner_session
+            || reply.state.revision < reply.ack.revision
+            || reply.state.revision < minimum_revision
+        {
+            return Err(format!(
+                "paired handoff reply mismatch: ack={:?}, state_owner_match={}, state_revision={}",
+                reply.ack,
+                reply.state.owner_session == owner_session,
+                reply.state.revision
+            ));
+        }
+        Ok(())
     }
 }
