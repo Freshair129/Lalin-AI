@@ -750,17 +750,15 @@ pub fn grant_handoff_media(
 
 fn validate_media_file(path: &str) -> Result<std::path::PathBuf, String> {
     use std::{fs, path::Path};
+    let candidate = Path::new(path);
     if path.is_empty()
         || path.len() > 4096
         || path.contains('\0')
-        || path.starts_with("\\\\")
+        || (path.starts_with("\\\\") && local_windows_drive_root(path).is_none())
         || path.starts_with("//")
-        || path.starts_with("\\\\.\\")
-        || path.starts_with("\\\\?\\")
     {
         return Err("invalid_file_path".into());
     }
-    let candidate = Path::new(path);
     if !candidate.is_absolute() {
         return Err("invalid_file_path".into());
     }
@@ -787,7 +785,6 @@ fn is_local_windows_canonical(value: &str) -> bool {
     local_windows_drive_root(value).is_some()
 }
 
-#[cfg(any(windows, test))]
 fn local_windows_drive_root(value: &str) -> Option<String> {
     let normalized = value.replace('/', "\\");
     let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
@@ -857,7 +854,9 @@ mod windows_pipe {
             GetTokenInformation, RevertToSelf, TokenLogonSid, SECURITY_ATTRIBUTES, TOKEN_GROUPS,
             TOKEN_QUERY,
         },
-        Storage::FileSystem::{GetDriveTypeW, FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX},
+        Storage::FileSystem::{
+            FlushFileBuffers, GetDriveTypeW, FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX,
+        },
         System::{
             Pipes::{
                 ConnectNamedPipe, CreateNamedPipeW, DisconnectNamedPipe,
@@ -1018,7 +1017,7 @@ mod windows_pipe {
     pub fn serve(app: AppHandle, service: HandoffService, name: Vec<u16>, first: File) {
         let mut next = Some(first);
         loop {
-            let pipe = match next.take() {
+            let mut pipe = match next.take() {
                 Some(pipe) => pipe,
                 None => match create_server_pipe(&name, false) {
                     Ok(pipe) => pipe,
@@ -1030,14 +1029,25 @@ mod windows_pipe {
             if connect == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
                 continue;
             }
-            if !same_logon_client(raw.cast()) {
-                unsafe {
-                    DisconnectNamedPipe(raw.cast());
+            let first_frame = match read_initial_authorized_frame(&mut pipe) {
+                Ok(frame) => frame,
+                Err(_) => {
+                    unsafe {
+                        DisconnectNamedPipe(raw.cast());
+                    }
+                    continue;
                 }
-                continue;
-            }
-            let _ = serve_connection(&app, &service, pipe);
+            };
+            let _ = serve_connection(&app, &service, pipe, first_frame);
         }
+    }
+
+    fn read_initial_authorized_frame(pipe: &mut File) -> Result<Vec<u8>, String> {
+        let first = read_frame(pipe, Duration::from_secs(3))?;
+        if !same_logon_client(pipe.as_raw_handle().cast()) {
+            return Err("unauthorized_client".into());
+        }
+        Ok(first)
     }
 
     fn same_logon_client(pipe: HANDLE) -> bool {
@@ -1072,11 +1082,20 @@ mod windows_pipe {
         app: &AppHandle,
         service: &HandoffService,
         mut pipe: File,
+        first: Vec<u8>,
     ) -> Result<(), String> {
-        let first = read_frame(&mut pipe, Duration::from_secs(3))?;
-        let message: ClientMessage =
-            serde_json::from_slice(&first).map_err(|_| "malformed_frame")?;
-        let responses = process_message(app, service, message)?;
+        let message: ClientMessage = match serde_json::from_slice(&first) {
+            Ok(message) => message,
+            Err(_) => {
+                return Err("malformed_frame".into());
+            }
+        };
+        let responses = match process_message(app, service, message) {
+            Ok(responses) => responses,
+            Err(error) => {
+                return Err(error);
+            }
+        };
         for response in responses {
             write_value(&mut pipe, &response)?;
         }
@@ -1088,7 +1107,7 @@ mod windows_pipe {
             let message: ClientMessage = match serde_json::from_slice(&command) {
                 Ok(message) => message,
                 Err(_) => {
-                    return write_error(&mut pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง")
+                    return write_error(&mut pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง");
                 }
             };
             match process_message(app, service, message) {
@@ -1100,6 +1119,7 @@ mod windows_pipe {
                 Err(code) => write_error(&mut pipe, &code, "ไม่สามารถยืนยันคำสั่ง handoff ได้")?,
             }
         }
+        let _ = unsafe { FlushFileBuffers(pipe.as_raw_handle().cast()) };
         unsafe {
             DisconnectNamedPipe(pipe.as_raw_handle().cast());
         }
@@ -1181,9 +1201,16 @@ mod windows_pipe {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use std::ptr::null;
+        use std::time::{SystemTime, UNIX_EPOCH};
+        use windows_sys::Win32::{
+            Foundation::{ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, GENERIC_READ, GENERIC_WRITE},
+            Storage::FileSystem::{CreateFileW, FILE_ATTRIBUTE_NORMAL, OPEN_EXISTING},
+            System::Pipes::WaitNamedPipeW,
+        };
 
         #[test]
-        fn pipe_dacl_is_protected_for_the_current_logon_sid_and_rejects_remote_clients() {
+        fn pipe_acl_and_same_logon_first_frame_are_enforced() {
             let sid = current_logon_sid().unwrap();
             assert_eq!(sddl_for_logon_sid(&sid), format!("D:P(A;;GA;;;{sid})"));
             assert_ne!(server_pipe_mode() & PIPE_REJECT_REMOTE_CLIENTS, 0);
@@ -1191,14 +1218,74 @@ mod windows_pipe {
             let nonce = format!(
                 "{}.{}",
                 std::process::id(),
-                Instant::now().elapsed().as_nanos()
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
             );
             let name = format!("{PIPE_NAME_PREFIX}.test.{nonce}")
                 .encode_utf16()
                 .chain([0])
                 .collect::<Vec<_>>();
-            let _pipe =
+            let pipe =
                 create_server_pipe(&name, true).expect("same-session ACL should create the pipe");
+
+            let (ready_tx, ready_rx) = mpsc::sync_channel(1);
+            let server = std::thread::spawn(move || {
+                let raw = pipe.as_raw_handle();
+                ready_tx.send(()).unwrap();
+                let connected = unsafe { ConnectNamedPipe(raw.cast(), null_mut::<OVERLAPPED>()) };
+                assert!(connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED);
+                let mut pipe = pipe;
+                let frame = read_initial_authorized_frame(&mut pipe)
+                    .expect("read the HELLO frame before impersonating its same-logon client");
+                serde_json::from_slice::<Value>(&frame).unwrap()
+            });
+            ready_rx
+                .recv_timeout(Duration::from_secs(1))
+                .expect("server thread should begin listening");
+
+            let mut client = connect_test_client(&name);
+            let hello = serde_json::json!({
+                "type": "HELLO",
+                "protocol": "lalin-play",
+                "protocolVersion": 1
+            });
+            write_value(&mut client, &hello).unwrap();
+            assert_eq!(server.join().unwrap(), hello);
+        }
+
+        fn connect_test_client(name: &[u16]) -> File {
+            let deadline = Instant::now() + Duration::from_secs(3);
+            loop {
+                let handle = unsafe {
+                    CreateFileW(
+                        name.as_ptr(),
+                        GENERIC_READ | GENERIC_WRITE,
+                        0,
+                        null(),
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        null_mut(),
+                    )
+                };
+                if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                    return unsafe { File::from_raw_handle(handle as RawHandle) };
+                }
+                let error = unsafe { GetLastError() };
+                assert!(
+                    error == ERROR_PIPE_BUSY || error == ERROR_FILE_NOT_FOUND,
+                    "unexpected named-pipe client error: {error}"
+                );
+                assert!(
+                    Instant::now() < deadline,
+                    "timed out connecting to test pipe"
+                );
+                unsafe {
+                    WaitNamedPipeW(name.as_ptr(), 100);
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            }
         }
     }
 }
@@ -1326,8 +1413,17 @@ mod tests {
         std::fs::write(&path, b"RIFFfixture").unwrap();
         let canonical = validate_media_file(path.to_str().unwrap()).unwrap();
         assert_eq!(canonical, std::fs::canonicalize(path).unwrap());
+        assert_eq!(
+            validate_media_file(canonical.to_str().unwrap()).unwrap(),
+            canonical
+        );
         assert!(validate_media_file("https://example.test/audio.wav").is_err());
         assert!(validate_media_file("\\\\server\\share\\audio.wav").is_err());
+        assert!(validate_media_file("\\\\?\\UNC\\server\\share\\audio.wav").is_err());
+        assert!(
+            validate_media_file("\\\\?\\GLOBALROOT\\Device\\HarddiskVolume1\\audio.wav").is_err()
+        );
+        assert!(validate_media_file("\\\\.\\PhysicalDrive0").is_err());
         assert!(validate_media_file(folder.path().to_str().unwrap()).is_err());
     }
 

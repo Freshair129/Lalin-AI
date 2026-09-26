@@ -1,7 +1,7 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T00:56:22+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -33,8 +33,9 @@ integrated native path passes the parity gate.
    not proof that their old verification still passes on today's baseline.
 2. S2 and S3 may edit overlapping app/docs/native files; all integration is
    serialized on a separate branch after both implementation lanes finish.
-3. No branch push, PR, `main` merge, Studio route removal, Play source deletion,
-   or release action is included in this execution DAG.
+3. Scope includes opening the implementation PR and merging only after its
+   review and required checks are ready. Removing the Studio route, deleting Play
+   source, and releasing the app remain outside this execution.
 
 ## Dependency graph
 
@@ -111,9 +112,9 @@ it **NOT_RUN**, keep Studio playback, and report the exact missing evidence.
 
 Update the Play status/traceability documents with code SHAs, actual test
 commands/results, native acceptance status, limitations and remaining S4–S7
-gates. Do not describe a branch commit as an export, PR, merge or release.
+gates. Record export, PR, merge and release states independently.
 
-## Execution status — 2026-09-26
+## Execution status — 2026-09-26 (before paired-process validation)
 
 - **G0 — complete:** baseline `43121cc97acb535d3b9d232d246ce54df9e3d48d`
   was clean. S2 recovery is based on that baseline; S3 is integrated from its
@@ -135,13 +136,45 @@ gates. Do not describe a branch commit as an export, PR, merge or release.
   native acceptance. S2 crash/power-loss and remaining write-failure gates remain
   open. No source removal, export, PR, publication or release occurred.
 
+## Execution status — 2026-09-27
+
+- **G2 — complete:** `cargo test --manifest-path
+  apps/play-desktop/src-tauri/Cargo.toml --offline` passed **31/31**. The Studio
+  native library command `cargo test --manifest-path
+  apps/desktop/src-tauri/Cargo.toml --lib` passed **6/6**, with the isolated
+  paired-process test intentionally ignored in the normal run. Both Rust format
+  checks passed and `cargo build --manifest-path
+  apps/play-desktop/src-tauri/Cargo.toml --offline` produced the paired-test app.
+- **G3 — partial; parity gate remains open:** the ignored Windows paired test
+  `playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+  was run with `cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+  playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate
+  -- --ignored --exact --test-threads=1` and passed **1/1** against the freshly
+  built Play app and a silent local WAV fixture.
+  It verified a single cold launch, warm Play Next/Add to Queue without relaunch,
+  matching ACK/STATE owner and revisions, ACK-then-disconnect reconciliation via
+  QUERY_RESULT, and duplicate replay without queue/revision changes. The Play
+  Windows pipe regression also passed in the 31-test suite and exercised a real
+  same-logon HELLO before impersonation.
+- Remaining G3 checks are not proven: unauthorized/cross-session and remote
+  client rejection, concurrent FIFO bursts, owner restart, Studio/API exit during
+  active playback, mapped-drive/reparse runtime cases, and audible playback
+  parity. Mark G3 **PARTIAL**, not accepted; ordinary Studio playback remains
+  enabled.
+- **G4 — evidence updated locally:** this DAG, the Play status register and the
+  [authorization-order RCA](../../.brain/rca/2026-09-26-lalin-play-handoff-impersonation-order.md),
+  [canonical-path RCA](../../.brain/rca/2026-09-26-lalin-play-handoff-canonical-prefix.md)
+  and [unread-reply RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-unread-replies.md)
+  distinguish the paired-process result from the still-open parity checks. S2
+  crash/power-loss and remaining write-failure gates also remain open.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
 - Requested automated lifecycle/migration checks and affected builds are
   recorded with exact outcomes.
-- Native cold/warm parity either passes with evidence or remains explicitly
-  **NOT_RUN** with Studio playback retained.
+- Native paired-process checks either pass with evidence or remain explicitly
+  partial/NOT_RUN; keep Studio playback until full parity is proven.
 - Documentation separates implementation, automated checks and native runtime
   acceptance; no release or extraction gate is claimed complete prematurely.
 
@@ -149,5 +182,6 @@ gates. Do not describe a branch commit as an export, PR, merge or release.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
 | 0.2.0b | 2026-09-26 | beta | Record G0-G2 completion and G3 native parity NOT_RUN status while preserving Studio playback | S2 7c30ea1; S3 235875b/362bbd0 | Codex |
 | 0.1.0b | 2026-09-26 | beta | Define parallel S2/S3 implementation lanes and serial integration/parity gates | based on 43121cc | Codex |

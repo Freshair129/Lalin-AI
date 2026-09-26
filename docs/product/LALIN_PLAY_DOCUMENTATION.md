@@ -78,7 +78,7 @@ selected write failures. No WebView profile files or actual user migration were
 used. Process-termination recovery and remaining write-failure cases are open;
 see the [evidence report](../validation/LALIN_PLAY_S2_MIGRATION.md).
 
-## Current S2/S3 implementation — 2026-09-26
+## Current S2/S3 implementation — 2026-09-26 snapshot
 
 The recovered S2 branch is based on clean baseline `43121cc`. Local commits are
 `58f6b67` (migration), `1d30d44` (explicit undo), and `7c30ea1` (mapped-network
@@ -109,6 +109,39 @@ Play frontend 23/23, Play Rust 31/31, Studio native handoff 6/6, API file tests
 Rust cold/warm checks cover launch decisions only. Actual paired delivery,
 unauthorized connection attempts, interrupted ACK recovery, Studio/API exit during
 playback and audible parity remain NOT_RUN/NOT_VERIFIED.
+
+## Paired native handoff update — 2026-09-27
+
+On an isolated Windows session, the Studio native library tests passed **6/6**
+with the paired-process test skipped by default; Play Rust tests passed **31/31**
+and both Rust formatting checks passed. The ignored paired test
+`playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+then passed **1/1** using the freshly built Play app and a local silent WAV file.
+It verified one cold launch, warm Play Next and Add to Queue without another
+launch, ACK/STATE owner and revision agreement, reconciliation after the client
+read ACK and disconnected before STATE, and duplicate replay without changing
+the reconciled queue or revision. Play's Windows named-pipe regression test also
+passed with the Play suite.
+
+This is paired delivery evidence, not full Studio/Play playback parity. Remote or
+cross-session rejection, concurrent FIFO bursts, owner restart, Studio/API exit
+during active playback, mapped-drive/reparse runtime behavior and audible parity
+remain unverified. Ordinary Studio playback is still enabled. The branch/PR/merge
+state must be checked against the remote before describing publication.
+The runtime RCA records are [authorization order](../../.brain/rca/2026-09-26-lalin-play-handoff-impersonation-order.md),
+[canonical path validation](../../.brain/rca/2026-09-26-lalin-play-handoff-canonical-prefix.md),
+and [ACK/STATE delivery](../../.brain/rca/2026-09-27-lalin-play-handoff-unread-replies.md).
+
+## Current documentation version diff — 2026-09-27
+
+| Document | Before → after |
+|---|---|
+| Execution DAG | 0.2.0b → 0.2.1b |
+| Documentation register | 0.2.2b → 0.2.3b |
+| Handoff impersonation-order RCA | 0.1.0b → 0.1.1b |
+| Handoff canonical-path RCA | 0.1.0b → 0.1.1b |
+| Handoff unread-reply RCA | New 0.1.0b |
+| Studio and Play application versions | No change |
 ## Current documentation version diff — 2026-09-26
 
 | Document | Before → after |
@@ -178,6 +211,7 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-27 | beta | Record isolated native cold/warm delivery and ACK/STATE reconciliation while preserving open parity gates | based on ed20af8 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile recovered S2 migration and S3 handoff implementation status with exact local checks and open parity gates | S2 7c30ea1; S3 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Update S2 focused test totals and record synthetic recovery/failure evidence limits | based on 411d2ed | LALIN |
 | 0.2.0b | 2026-09-25 | beta | Register approved S2 migration implementation, verification and remaining runtime gates | based on 411d2ed | LALIN |
