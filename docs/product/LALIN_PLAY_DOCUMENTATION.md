@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T02:44:46+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -126,13 +126,41 @@ passed with the Play suite.
 This is paired delivery evidence, not full Studio/Play playback parity. Remote or
 cross-session rejection, concurrent FIFO bursts, owner restart, Studio/API exit
 during active playback, mapped-drive/reparse runtime behavior and audible parity
-remain unverified. Ordinary Studio playback is still enabled. The branch/PR/merge
-state must be checked against the remote before describing publication.
+remain unverified. Ordinary Studio playback is still enabled. At that earlier
+snapshot, branch/PR/merge status was not verified against the remote; see the
+current follow-up below for the current main/origin/main baseline.
 The runtime RCA records are [authorization order](../../.brain/rca/2026-09-26-lalin-play-handoff-impersonation-order.md),
 [canonical path validation](../../.brain/rca/2026-09-26-lalin-play-handoff-canonical-prefix.md),
 and [ACK/STATE delivery](../../.brain/rca/2026-09-27-lalin-play-handoff-unread-replies.md).
 
-## Current documentation version diff — 2026-09-27
+## G3 registration readiness follow-up — 2026-09-27
+
+The S2/S3 implementation PRs are merged. The current `main` and
+`origin/main` baseline for this follow-up is
+`daa2867be389851a91bbd18fb86e896836e69975`.
+
+Follow-up coverage was added for sender-side FIFO under deferred ACKs, a native
+four-command FIFO sequence, and owner restart with no blind replay. Sender tests
+passed **3/3**; the Studio native library suite passed **6/6** with the real
+paired test ignored by default; the expanded Rust test compiled; Play frontend
+and release builds passed; `cargo fmt --check` passed.
+
+The expanded ignored paired test did not pass: the debug app timed out without
+a Vite server, and the release app timed out before the Studio client received
+HELLO/STATE. A manually launched release app using a disposable WebView2 profile
+stayed responsive, but the expected handoff owner was not observed. The attempt
+therefore does not verify the new FIFO/restart assertions or any added parity
+gate. The confirmed failure boundary is that the owner-registration path did
+not become reachable to the paired sender; the exact failing step between
+React mount, Tauri event/API bridge, command authorization and native pipe
+creation is unconfirmed. See the
+[registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
+
+G3 remains **PARTIAL**. The implementation follow-up is local and unmerged.
+Ordinary Studio playback remains enabled; no Play parity, source removal, or
+release acceptance is claimed.
+
+## Previous documentation version diff — 2026-09-27
 
 | Document | Before → after |
 |---|---|
@@ -141,6 +169,15 @@ and [ACK/STATE delivery](../../.brain/rca/2026-09-27-lalin-play-handoff-unread-r
 | Handoff impersonation-order RCA | 0.1.0b → 0.1.1b |
 | Handoff canonical-path RCA | 0.1.0b → 0.1.1b |
 | Handoff unread-reply RCA | New 0.1.0b |
+| Studio and Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 follow-up
+
+| Document | Before → after |
+|---|---|
+| Execution DAG | 0.2.1b → 0.2.2b |
+| Documentation register | 0.2.3b → 0.2.4b |
+| Handoff registration readiness RCA | New 0.1.0b |
 | Studio and Play application versions | No change |
 ## Current documentation version diff — 2026-09-26
 
@@ -211,6 +248,7 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-27 | beta | Record G3 owner-registration readiness failure and keep Studio playback enabled | based on daa2867 | Codex |
 | 0.2.3b | 2026-09-27 | beta | Record isolated native cold/warm delivery and ACK/STATE reconciliation while preserving open parity gates | based on ed20af8 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile recovered S2 migration and S3 handoff implementation status with exact local checks and open parity gates | S2 7c30ea1; S3 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Update S2 focused test totals and record synthetic recovery/failure evidence limits | based on 411d2ed | LALIN |

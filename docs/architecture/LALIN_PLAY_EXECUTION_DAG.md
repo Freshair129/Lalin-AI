@@ -1,7 +1,7 @@
 ---
-version: "0.2.1b"
+version: "0.2.2b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T00:56:22+07:00,Codex"
+last_update: "2026-09-27T02:44:46+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -168,6 +168,37 @@ gates. Record export, PR, merge and release states independently.
   distinguish the paired-process result from the still-open parity checks. S2
   crash/power-loss and remaining write-failure gates also remain open.
 
+## Execution status — 2026-09-27 G3 registration follow-up
+
+- The implementation PRs are merged on `main`; this isolated follow-up starts
+  from `daa2867be389851a91bbd18fb86e896836e69975`, matching `origin/main` at
+  the start of this follow-up.
+- **G2 — follow-up checks:** Studio sender FIFO test passed **3/3**; Studio
+  native library tests passed **6/6** with the paired-process test ignored by
+  default; the expanded Rust test compiled; Play frontend build and release
+  build passed. `cargo fmt --check` passed. These checks do not establish native
+  pipe readiness.
+- **G3 — still PARTIAL:** the expanded ignored paired test, now requiring an
+  empty disposable WebView2 profile, timed out before HELLO/STATE on both the
+  debug launch without a Vite server and a release launch. A separate manual
+  release launch with its own profile produced a responsive `Lalin Play`
+  window, but the paired sender still could not observe an owner pipe. The
+  manual window observation is not proof of React or IPC readiness.
+- The test source now includes a four-command FIFO sequence with ACK revision and
+  queue-order assertions plus an owner-restart case that requires
+  `delivery_unknown` and blocks blind replay. Those assertions were **not
+  reached** because startup did not produce a connectable owner pipe.
+- **Confirmed failure boundary:** `register_handoff_owner` is the only path that
+  marks the receiver ready and creates the named-pipe server. The process starts
+  and remains responsive, while the paired client cannot connect; evidence does
+  not isolate whether registration stops at frontend mount, the event/API
+  bridge, command authorization, or native server creation. See the
+  [registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
+- Do not merge this follow-up or close G3 on the current evidence. Keep ordinary
+  Studio playback enabled. Cross-session/remote rejection, invalid-path runtime
+  cases, ACK-loss under process interruption, mapped-drive/reparse runtime
+  cases, Studio/API exit during playback and audible parity remain unverified.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -182,6 +213,7 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-09-27 | beta | Record FIFO/restart test additions and cold owner-registration readiness failure; keep G3 partial | based on daa2867 | Codex |
 | 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
 | 0.2.0b | 2026-09-26 | beta | Record G0-G2 completion and G3 native parity NOT_RUN status while preserving Studio playback | S2 7c30ea1; S3 235875b/362bbd0 | Codex |
 | 0.1.0b | 2026-09-26 | beta | Define parallel S2/S3 implementation lanes and serial integration/parity gates | based on 43121cc | Codex |

@@ -1108,7 +1108,7 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
-    #[ignore = "requires an isolated Windows session, built Play app, and silent WAV fixture"]
+    #[ignore = "requires an isolated Windows session, built Play app, silent WAV fixture, and empty disposable WebView2 profile"]
     fn paired_windows_cold_and_warm_handoff_ack_state_and_duplicate() {
         let executable = std::env::var_os("LALIN_PLAY_EXECUTABLE")
             .map(PathBuf::from)
@@ -1120,6 +1120,26 @@ mod tests {
         assert!(
             media.is_absolute() && media.is_file(),
             "silent WAV fixture must be an absolute local file path"
+        );
+        let profile_dir = std::env::var_os("LALIN_G3_PROFILE_DIR")
+            .map(PathBuf::from)
+            .expect("set LALIN_G3_PROFILE_DIR to a disposable WebView2 profile directory");
+        let profile_dir =
+            std::fs::canonicalize(profile_dir).expect("disposable WebView2 profile must exist");
+        let temp_root = std::env::temp_dir()
+            .canonicalize()
+            .expect("system temp directory must exist");
+        assert_eq!(
+            profile_dir.parent(),
+            Some(temp_root.as_path()),
+            "WebView2 test profile must be a dedicated direct child of the system temp directory"
+        );
+        assert!(
+            std::fs::read_dir(&profile_dir)
+                .expect("WebView2 test profile must be readable")
+                .next()
+                .is_none(),
+            "WebView2 test profile must be empty before the run"
         );
         let client = StudioHandoffClient::default();
         let name =
@@ -1154,6 +1174,7 @@ mod tests {
                         Command::new(path)
                             .env_remove("TAURI_CONFIG")
                             .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                            .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
                             .stdin(Stdio::null())
                             .stdout(Stdio::null())
                             .stderr(Stdio::null())
@@ -1305,6 +1326,185 @@ mod tests {
                 || after_duplicate.snapshot.queue.len() != before_duplicate.snapshot.queue.len()
             {
                 return Err("duplicate request changed reconciled playback state".into());
+            }
+
+            let mut burst_results = Vec::new();
+            let mut previous_revision = after_duplicate.revision;
+            for index in 0..4 {
+                let burst_id = format!("00000000-0000-4000-8000-{:012x}", 200 + index);
+                let title = format!("G3 FIFO sequence {index}");
+                let burst = send_playback_with_launcher(
+                    &client,
+                    burst_id.clone(),
+                    "add-to-queue".into(),
+                    HandoffFile {
+                        path: media.to_string_lossy().into_owned(),
+                        title: Some(title.clone()),
+                    },
+                    executable.clone(),
+                    CONNECT_ATTEMPTS * 3,
+                    |_| {
+                        warm_launches.set(warm_launches.get() + 1);
+                        Err("FIFO sequence must keep the warm Play owner".into())
+                    },
+                )?;
+                require_applied_reply(
+                    &burst,
+                    &burst_id,
+                    &first.ack.owner_session,
+                    previous_revision,
+                )?;
+                if burst.ack.revision <= previous_revision {
+                    return Err("FIFO sequence ACK revisions did not advance in order".into());
+                }
+                previous_revision = burst.ack.revision;
+                burst_results.push((title, burst.ack.revision));
+            }
+            let burst_state = read_playback_state(&client)?
+                .ok_or("Play state disappeared after the FIFO burst")?;
+            if burst_state.owner_session != first.ack.owner_session
+                || burst_state.snapshot.queue.len() < burst_results.len()
+            {
+                return Err("FIFO sequence did not retain the warm Play queue".into());
+            }
+            let expected_burst_titles = burst_results
+                .iter()
+                .map(|(title, _)| title.as_str())
+                .collect::<Vec<_>>();
+            let actual_burst_titles = burst_state.snapshot.queue
+                [burst_state.snapshot.queue.len() - burst_results.len()..]
+                .iter()
+                .map(|item| item.title.as_str())
+                .collect::<Vec<_>>();
+            if actual_burst_titles != expected_burst_titles {
+                return Err("FIFO sequence queue order did not match ACK order".into());
+            }
+
+            let restart_id = "00000000-0000-4000-8000-000000000105";
+            let (mut restart_pipe, cold) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Ok::<(), String>(()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            if cold {
+                return Err("Play owner disappeared before the restart check".into());
+            }
+            let (restart_owner, _) = handshake(&mut restart_pipe)?;
+            if restart_owner != first.ack.owner_session {
+                return Err("Play owner changed before the restart check".into());
+            }
+            let restart_file = HandoffFile {
+                path: media.to_string_lossy().into_owned(),
+                title: Some("G3 restart uncertain delivery".into()),
+            };
+            write_frame(
+                &mut restart_pipe,
+                &CommandFrame {
+                    frame_type: "COMMAND",
+                    protocol: PROTOCOL,
+                    protocol_version: PROTOCOL_VERSION,
+                    request_id: restart_id,
+                    owner_session: &restart_owner,
+                    action: "add-to-queue",
+                    file: &restart_file,
+                },
+            )?;
+            let restart_ack: PlaybackAck =
+                serde_json::from_value(read_value(&mut restart_pipe, ACK_TIMEOUT)?).map_err(
+                    |_| "restart check expected an ACK before dropping STATE".to_string(),
+                )?;
+            if restart_ack.request_id != restart_id
+                || restart_ack.owner_session != restart_owner
+                || restart_ack.result != "applied"
+            {
+                return Err("restart check did not commit its uncertain command".into());
+            }
+            drop(restart_pipe);
+            *client
+                .uncertain
+                .lock()
+                .map_err(|_| "Studio handoff state ใช้งานไม่ได้")? = Some(UncertainCommand {
+                request_id: restart_id.into(),
+                owner_session: restart_owner.clone(),
+            });
+
+            if let Some(mut process) = child.take() {
+                if process
+                    .try_wait()
+                    .map_err(|_| "could not inspect the isolated Play owner")?
+                    .is_none()
+                {
+                    process
+                        .kill()
+                        .map_err(|_| "could not stop the isolated Play owner")?;
+                }
+                process
+                    .wait()
+                    .map_err(|_| "could not wait for the isolated Play owner to stop")?;
+            }
+            child = Some(
+                Command::new(&executable)
+                    .env_remove("TAURI_CONFIG")
+                    .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                    .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .spawn()
+                    .map_err(|_| "could not restart the isolated Play owner")?,
+            );
+            let restart_deadline = std::time::Instant::now() + Duration::from_secs(60);
+            let restarted_state = loop {
+                if std::time::Instant::now() >= restart_deadline {
+                    return Err("restarted Play owner did not publish READY/STATE in time".into());
+                }
+                if let Ok(Some(state)) = read_playback_state(&client) {
+                    if state.owner_session != restart_owner {
+                        break state;
+                    }
+                }
+                std::thread::sleep(Duration::from_millis(100));
+            };
+            let queue_before_reconcile = restarted_state.snapshot.queue.clone();
+            match reconcile_pending(&client) {
+                Err(error) if error.starts_with("delivery_unknown") => {}
+                _ => return Err("owner restart must leave the prior delivery unknown".into()),
+            }
+            let pending = client
+                .uncertain
+                .lock()
+                .map_err(|_| "Studio handoff state ใช้งานไม่ได้")?
+                .clone();
+            if !pending.as_ref().is_some_and(|value| {
+                value.request_id == restart_id && value.owner_session == restart_owner
+            }) {
+                return Err("owner restart cleared an unreconciled command".into());
+            }
+
+            let restart_launches = std::cell::Cell::new(0);
+            match send_playback_with_launcher(
+                &client,
+                restart_id.into(),
+                "add-to-queue".into(),
+                restart_file,
+                executable.clone(),
+                CONNECT_ATTEMPTS,
+                |_| {
+                    restart_launches.set(restart_launches.get() + 1);
+                    Err("uncertain command must not be replayed after owner restart".into())
+                },
+            ) {
+                Err(error) if error.starts_with("delivery_unknown") => {}
+                _ => return Err("Studio must block replay after the owner session changes".into()),
+            }
+            let after_restart = read_playback_state(&client)?
+                .ok_or("restarted Play state disappeared after blocked replay")?;
+            if after_restart.owner_session != restarted_state.owner_session
+                || after_restart.snapshot.queue != queue_before_reconcile
+                || restart_launches.get() != 0
+            {
+                return Err("uncertain delivery changed the restarted Play state".into());
             }
             if warm_launches.get() != 0 {
                 return Err("warm handoff unexpectedly launched another Play process".into());
