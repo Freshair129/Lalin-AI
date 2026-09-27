@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T08:13:29+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 ## Outcome and boundary
 
-**S1 LOCAL PASS. S2 migration and S3 handoff are implemented locally with focused automated evidence; S2 recovery and S3 paired-runtime parity remain NOT_VERIFIED, and the overall repository split remains PARTIAL.**
+**S1 LOCAL PASS. S2 migration and S3 handoff are implemented locally with focused automated evidence; S2 recovery and full S3 playback parity remain NOT_VERIFIED. An isolated paired control-plane lifecycle run passed its listed cases, and the overall repository split remains PARTIAL.**
 
 The user approved PRD/ADR-004 implementation on `codex/lalin-play-split`.
 Source baseline is `84290102b84fd76dec069bf6d61ffdd2fc8466ab` in
@@ -95,17 +95,19 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Implemented locally; focused checks pass; live process-pair and audible parity NOT_VERIFIED |
-| Cold/warm Studio-to-Play lifecycle and Studio/API exit | Cold/warm decision tests pass; paired runtime, Studio/API exit and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential four-file queue order and owner restart; concurrent-client security cases and audible parity NOT_VERIFIED |
+| Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
 Next work is actual S2 process-termination/restart verification and remaining
-journal/history write failures, plus S3 paired-process, unauthorized/cross-session,
-ACK-loss, mapped-drive/reparse runtime and audible parity checks. Studio playback
-stays available until parity is proven. S4–S7 remain gated by ADR-004.
+journal/history write failures, plus S3 concurrent-client ordering,
+unauthorized/cross-session and remote rejection, invalid/mapped-drive/reparse
+runtime cases, ACK loss across process interruption, Studio/API exit during
+active playback and audible parity. Studio playback stays available until parity
+is proven. S4–S7 remain gated by ADR-004.
 An interrupted import restores through the Play-owned journal on next launch; the
 prior Studio sources and user state remain intact. Temporary isolated build files and fixture are ignored under `runtime/`
 and `.smoke/`; they were retained, not committed or deleted.
@@ -158,10 +160,38 @@ playback available until parity is observed.
 | Docs index | 0.10.10b → 0.10.11b |
 | S2 migration evidence and both RCA notes | New 0.1.0b documents |
 | Studio and Play application versions | No change |
+
+## Current paired G3 lifecycle evidence — 2026-09-27
+
+The test-only Play executable was built through Tauri CLI with its frontend
+embedded at a relative path, `g3-test-app-data-dir` enabled, and distinct empty
+WebView2 and app-data directories under system temp. The ignored Studio test
+`playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+passed **1/1** with this command from `apps/desktop`:
+
+```powershell
+cargo test --offline --manifest-path src-tauri/Cargo.toml playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate -- --ignored --nocapture
+```
+
+Play Rust tests with `--features g3-test-app-data-dir` passed **31/31**;
+Studio `playback_handoff::tests` passed **6/6**, with this paired test ignored in
+the ordinary run. Rust format checks passed for both crates.
+
+The run verified cold launch, warm Play Next/Add to Queue, ACK/STATE agreement,
+ACK-disconnect reconciliation, duplicate suppression, ordered unique-path queue
+entries and owner restart without replay of an uncertain prior-owner command.
+The four queue entries were sent sequentially; concurrent independent clients
+were not tested. Cross-session/unauthorized and remote rejection, invalid or
+mapped-drive/reparse runtime cases, process-interrupted ACK loss, Studio/API exit
+during playback and audible parity remain open. The startup RCA records why the
+earlier test artifact did not run the frontend and the FIFO fixture corrections.
+Normal Studio playback remains enabled.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-27 | beta | Add isolated paired lifecycle evidence while keeping audio parity and remaining S3 acceptance gates open | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 and S3 local implementation checks and preserve native lifecycle/parity gates | 7c30ea1 / 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Add synthetic journal-phase recovery and selected native write-failure evidence | based on 411d2ed | LALIN |
 | 0.2.0b | 2026-09-25 | beta | Add focused S2 migration implementation evidence without claiming runtime crash acceptance | based on 411d2ed | LALIN |

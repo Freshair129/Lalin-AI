@@ -1172,6 +1172,16 @@ mod tests {
         let temp_root = std::env::temp_dir()
             .canonicalize()
             .expect("system temp directory must exist");
+        let media_parent = media
+            .parent()
+            .expect("silent WAV fixture must have a parent");
+        assert_eq!(
+            media_parent
+                .canonicalize()
+                .expect("silent WAV parent must exist"),
+            temp_root,
+            "silent WAV fixture must be a direct child of the system temp directory"
+        );
         let app_data_parent = app_data_dir
             .parent()
             .and_then(|parent| parent.canonicalize().ok())
@@ -1230,10 +1240,12 @@ mod tests {
             !has_existing_play,
             "close the existing Lalin Play process before the isolated test; it will not be stopped or reused"
         );
+        eprintln!("G3 isolated Play app-data: {}", app_data_dir.display());
 
         let child = std::cell::RefCell::new(None::<std::process::Child>);
         let cold_launches = std::cell::Cell::new(0);
         let warm_launches = std::cell::Cell::new(0);
+        let mut burst_media_paths = Vec::new();
         let result = (|| -> Result<(), String> {
             let play_id = "00000000-0000-4000-8000-000000000101";
             let play_file = HandoffFile {
@@ -1423,15 +1435,30 @@ mod tests {
 
             let mut burst_results = Vec::new();
             let mut previous_revision = after_duplicate.revision;
+            let burst_nonce = format!(
+                "{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_err(|_| "G3 test clock is unavailable")?
+                    .as_nanos()
+            );
             for index in 0..4 {
                 let burst_id = format!("00000000-0000-4000-8000-{:012x}", 200 + index);
-                let title = format!("G3 FIFO sequence {index}");
+                let title = format!("lalin-play-g3-fifo-{burst_nonce}-{index}");
+                let burst_media = media_parent.join(format!("{title}.wav"));
+                if burst_media.exists() {
+                    return Err("G3 FIFO fixture path already exists".into());
+                }
+                std::fs::copy(&media, &burst_media)
+                    .map_err(|_| "could not prepare a unique G3 FIFO media fixture")?;
+                burst_media_paths.push(burst_media.clone());
                 let burst = send_playback_with_launcher(
                     &client,
                     burst_id.clone(),
                     "add-to-queue".into(),
                     HandoffFile {
-                        path: media.to_string_lossy().into_owned(),
+                        path: burst_media.to_string_lossy().into_owned(),
                         title: Some(title.clone()),
                     },
                     executable.clone(),
@@ -1608,6 +1635,9 @@ mod tests {
         if let Some(mut process) = child.into_inner() {
             let _ = process.kill();
             let _ = process.wait();
+        }
+        for path in burst_media_paths {
+            let _ = std::fs::remove_file(path);
         }
         result.expect(
             "paired Windows native handoff must pass cold, warm, ACK, STATE, and replay checks",

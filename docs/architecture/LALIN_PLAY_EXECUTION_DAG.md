@@ -1,7 +1,7 @@
 ---
-version: "0.2.4b"
+version: "0.2.5b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T06:56:17+07:00,Codex"
+last_update: "2026-09-27T08:13:29+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -215,6 +215,55 @@ gates. Record export, PR, merge and release states independently.
   cases, ACK-loss under process interruption, mapped-drive/reparse runtime
   cases, Studio/API exit during playback and audible parity remain unverified.
 
+## Execution status — 2026-09-27 G3 asset-loading and paired lifecycle follow-up
+
+- **Confirmed test-build cause for the earlier pre-HELLO reproductions:** a
+  direct Cargo-built Play test executable reached native setup and library
+  initialization but did not reach WebView page load, migration recovery or
+  owner registration. A separate diagnostic Tauri CLI build with an absolute
+  temporary `frontendDist` loaded a `file:///...` URL and reported `root=false`.
+  With Tauri CLI and a relative embedded frontend directory, the isolated app
+  loaded `http://tauri.localhost/`, reported `root=true`, completed migration
+  recovery, created the pipe and reported `handoff_receiver_ready`. The exact
+  build artifact used by every older failed attempt is not established; see the
+  [registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
+- **Paired Windows lifecycle — PASS for the tested boundary:** the ignored
+  Studio test
+  `playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+  passed **1/1** with a Tauri CLI-built Play executable using
+  `g3-test-app-data-dir`, a fresh direct-child WebView2 profile and a separate
+  fresh direct-child app-data directory under system temp. It verified one cold
+  launch; warm Play Next and Add to Queue without relaunch; ACK/STATE owner and
+  revision agreement; ACK followed by disconnect and QUERY_RESULT recovery;
+  duplicate suppression; four unique-file queue additions whose order matched
+  increasing ACK revisions; then owner restart, new owner state and refusal to
+  replay an uncertain old-session command. Startup trace reached receiver-ready
+  before both the cold and restarted owner.
+- **G2 — follow-up checks:** Play Rust native tests with
+  `g3-test-app-data-dir` passed **31/31**; Studio handoff tests passed **6/6**
+  with the paired test ignored by default; Rust format checks passed in both
+  crates. `git diff --check` is recorded after the final documentation edit.
+- **FIFO test-fixture correction:** Play derives queue titles from native media
+  paths, so repeated use of the same silent WAV made the original title-based
+  order assertion unable to distinguish entries. The unique-file fixture was
+  first built from Rust's canonical temp path (`\\?\...`), which the unchanged
+  local-path validator correctly rejected. The test now copies unique WAV files
+  beside the raw-path silent fixture, asserts their canonical parent is system
+  temp and removes each copied file after the child exits. No production path
+  validation was weakened. The paired four-command sequence is sent
+  sequentially; ordering between concurrent independent Studio clients remains
+  unverified.
+- **G3 remains PARTIAL:** remote/cross-session rejection, invalid-path and
+  mapped-drive/reparse runtime cases, ACK loss across process interruption,
+  Studio/API exit during active Play playback, and audible playback parity have
+  not passed. This control-plane test does not prove audio-owner parity. Keep the
+  ordinary Studio playback route enabled; do not merge or remove the Studio
+  owner until the full parity gate is accepted.
+- **G4 — evidence updated locally:** this DAG, the Play status register,
+  traceability, foundation report and registration readiness RCA now record the
+  successful paired boundary, earlier test-build/fixture causes and remaining
+  gates. PR #25 is still open and draft; no merge or release is claimed.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -229,6 +278,7 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-09-27 | beta | Record successful isolated cold/warm paired lifecycle, FIFO fixture fix and remaining parity gates | based on 9e0cb06 | Codex |
 | 0.2.4b | 2026-09-27 | beta | Add fail-closed Play app-data isolation to G3 and record the continued pre-HELLO timeout | based on 5351a18 | Codex |
 | 0.2.3b | 2026-09-27 | beta | Record the unisolated Tauri app-data boundary and gate further paired runs on a disposable test-only data path | based on 5351a18 | Codex |
 | 0.2.2b | 2026-09-27 | beta | Record FIFO/restart test additions and cold owner-registration readiness failure; keep G3 partial | based on daa2867 | Codex |

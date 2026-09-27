@@ -647,11 +647,13 @@ pub fn register_handoff_owner(
     owner_session: String,
     snapshot: HandoffSnapshot,
 ) -> Result<(), String> {
+    crate::g3_test_trace(&app, "handoff_registration_invoked");
     require_main_window(&window)?;
     if !is_uuid(&owner_session) {
         return Err("owner session ไม่ถูกต้อง".into());
     }
     validate_snapshot(&snapshot)?;
+    crate::g3_test_trace(&app, "handoff_snapshot_validated");
     {
         let mut core = service
             .core
@@ -684,10 +686,12 @@ pub fn register_handoff_owner(
                     return Err(error);
                 }
             };
+            crate::g3_test_trace(&app, "handoff_pipe_created");
             let service_state = service.inner().clone();
+            let server_app = app.clone();
             if let Err(error) = std::thread::Builder::new()
                 .name("lalin-play-handoff".into())
-                .spawn(move || windows_pipe::serve(app, service_state, name, first))
+                .spawn(move || windows_pipe::serve(server_app, service_state, name, first))
             {
                 service.server_started.store(false, Ordering::SeqCst);
                 if let Ok(mut core) = service.core.lock() {
@@ -702,6 +706,7 @@ pub fn register_handoff_owner(
             return Err("Native Studio handoff รองรับเฉพาะ Windows".into());
         }
     }
+    crate::g3_test_trace(&app, "handoff_receiver_ready");
     Ok(())
 }
 

@@ -892,15 +892,18 @@ pub fn recover_play_migration(
     app: AppHandle,
     state: tauri::State<'_, LibraryState>,
 ) -> Result<Option<MigrationRecovery>, String> {
+    crate::g3_test_trace(&app, "migration_recovery_invoked");
     let directory = data_dir(&app)?;
     let mut current = state.0.lock().map_err(|e| e.to_string())?;
     let Some(mut journal) = load_journal(&directory)? else {
+        crate::g3_test_trace(&app, "migration_recovery_complete_no_journal");
         return Ok(None);
     };
     if journal.phase == Phase::Acknowledged {
         finalize_acknowledged_journal(&directory, &journal)?;
         fs::remove_file(journal_path(&directory))
             .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+        crate::g3_test_trace(&app, "migration_recovery_complete_acknowledged");
         return Ok(None);
     }
     let committed = journal.phase == Phase::Committed;
@@ -908,6 +911,7 @@ pub fn recover_play_migration(
     if committed && journal.action == TransactionAction::Import {
         record_import_commit(&directory, &journal)?;
     }
+    crate::g3_test_trace(&app, "migration_recovery_complete");
     Ok(Some(recovery_from(journal, committed)))
 }
 

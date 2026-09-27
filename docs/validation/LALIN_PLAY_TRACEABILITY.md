@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T08:13:29+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -38,7 +38,7 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
 | State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery and selected storage-failure tests; process-crash and remaining storage-failure coverage open |
 | Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases and selected native write-failure tests; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
-| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Local path/drive validation, same-logon ACL construction, FIFO, owner/session ACK/STATE reconciliation and cold/warm decision tests; live process pair, unauthorized connection and audible parity NOT_VERIFIED |
+| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE reconciliation, duplicate handling, ordered four-file queue and owner restart; concurrent-client FIFO, unauthorized/cross-session cases and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
@@ -47,10 +47,11 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | V | [Local video](LALIN_PLAY_LOCAL_VIDEO.md) | 30 frontend/6 Rust, MP4/WebM/silent-video captures; physical A/V limits |
 | C | [Minimal Compact](LALIN_PLAY_MINIMAL_COMPACT.md) | 40 frontend/6 Rust, preview/auto-hide/minimum captures; touch/DPI limits |
 | X | [Fullscreen/skip](LALIN_PLAY_FULLSCREEN_SKIP.md) | 48 frontend/7 Rust, native fullscreen/bounds/±10, WebM preview and muted WAV |
-| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 31/31, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; live parity NOT_RUN |
+| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 31/31 with G3 test feature, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; isolated paired G3 cases pass, full playback parity NOT_VERIFIED |
 
-Earlier evidence remains tied to its own source/binary hash. The final 48/7 suite
-was also rerun before commit; no newer native runtime claim is made by this audit.
+Earlier evidence remains tied to its own source/binary hash. The isolated paired
+G3 run is a separate current runtime result; it does not update the older 48/7
+suite's provenance or establish full Studio/Play playback parity.
 
 ## Product requirements (PRD)
 
@@ -61,7 +62,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
-| PLAY-06 | Single-instance plus native handoff | Local sender/receiver, canonical local path and mapped-drive checks, FIFO and ACK/STATE reconciliation implemented; focused cold/warm tests pass | Live process-pair delivery, cross-session/unauthorized connection attempts, ACK-loss interruption, Studio/API exit and audible parity NOT_VERIFIED; CLI forwarding remains absent |
+| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate suppression, sequential four-file queue order and owner restart without blind replay | Concurrent-client ordering, cross-session/unauthorized and remote rejection, invalid/mapped-drive/reparse runtime cases, ACK loss across process interruption, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
 | PLAY-07 | State, Native | F + S2 journal-phase recovery, selected write-failure fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Process termination, corruption, power-loss durability and remaining storage-failure coverage |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Process-crash recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
@@ -104,7 +105,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 
 | SRS family | Standalone mapping | Evidence boundary |
 |---|---|---|
-| FR-16 | PLAY-01..09, V01..10, C01..13 | Normal Studio playback remains on the Studio owner; explicit standalone actions use S3 handoff. Paired delivery/parity remains unverified |
+| FR-16 | PLAY-01..09, V01..10, C01..13 | Normal Studio playback remains on the Studio owner; explicit standalone actions use S3 handoff. Selected paired delivery cases pass; full playback parity remains unverified |
 | FR-16W | PLAY-03/05/06, Owner/TV/Native | Hardware media keys/output loss/SMTC need native standalone proof |
 | FR-17 | PLAY-03/04/07, EQ | Automated graph/preset proof exists; mastering remains separate |
 | FR-18 | TV, ADR-004 retained presentation | TV input unit tests do not certify native gamepad; Compact fullscreen is not TV parity |
@@ -114,7 +115,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 
 | Priority | Work | Requirement / next evidence owner |
 |---|---|---|
-| Before split | Relink, actual S2 import/undo and crash recovery, live S3 IPC/ACL/reconciliation/parity | PLAY-06/08/09; implementer + independent test reviewer |
+| Before split | Relink, actual S2 import/undo and crash recovery, remaining S3 security/interruption/playback parity | PLAY-06/08/09; implementer + independent test reviewer |
 | Before native acceptance | Paused-resize/end-frame issues, device loss, A/V sync, DPI/multimonitor/touch/gamepad | V05/06, C02/07/12/13; Windows QA with user audible confirmation |
 | Before export | Independent clean checkout and license/notices | ADR S4/S5; source owner + export reviewer |
 | Before release | Installer/uninstaller, signed update A→B, security and state recovery | PLAY-10; release operator + product approval |
@@ -128,6 +129,7 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-27 | beta | Trace passing isolated paired G3 lifecycle cases separately from remaining security and playback parity gates | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 migration and S3 handoff traceability while preserving live parity gates | 7c30ea1 / 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Trace native journal-phase recovery, selected write-failure evidence and open runtime gates | based on 411d2ed | LALIN |
 | 0.2.0b | 2026-09-25 | beta | Trace approved S2 exporter/importer, rollback tests and remaining runtime gates | based on 411d2ed | LALIN |

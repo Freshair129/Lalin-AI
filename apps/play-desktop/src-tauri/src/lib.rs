@@ -43,6 +43,28 @@ pub(crate) fn play_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
     }
 }
 
+#[cfg(feature = "g3-test-app-data-dir")]
+pub(crate) fn g3_test_trace(app: &AppHandle, stage: &str) {
+    use std::{fs::OpenOptions, io::Write};
+
+    let Ok(directory) = play_app_data_dir(app) else {
+        return;
+    };
+    if std::fs::create_dir_all(&directory).is_err() {
+        return;
+    }
+    if let Ok(mut trace) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(directory.join("g3-startup.log"))
+    {
+        let _ = writeln!(trace, "{stage}");
+    }
+}
+
+#[cfg(not(feature = "g3-test-app-data-dir"))]
+pub(crate) fn g3_test_trace(_app: &AppHandle, _stage: &str) {}
+
 struct Presentation {
     compact: bool,
     full: PhysicalSize<u32>,
@@ -254,8 +276,27 @@ pub fn run() {
             fullscreen_restore: None,
         }))
         .manage(handoff::HandoffService::default())
+        .on_page_load(|webview, payload| {
+            let stage = match payload.event() {
+                tauri::webview::PageLoadEvent::Started => "webview_page_load_started",
+                tauri::webview::PageLoadEvent::Finished => "webview_page_load_finished",
+            };
+            g3_test_trace(webview.app_handle(), stage);
+            #[cfg(feature = "g3-test-app-data-dir")]
+            if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                let probe = "localStorage.setItem('lalin-play:g3-native-probe', JSON.stringify({url:location.href,ready:document.readyState,internals:typeof window.__TAURI_INTERNALS__,root:!!document.getElementById('root'),text:(document.getElementById('root')?.innerText||'').slice(0,512)}))";
+                let stage = if webview.eval(probe).is_ok() {
+                    "webview_probe_eval_sent"
+                } else {
+                    "webview_probe_eval_failed"
+                };
+                g3_test_trace(webview.app_handle(), stage);
+            }
+        })
         .setup(|app| {
+            g3_test_trace(app.handle(), "native_setup_started");
             let library = library::initialize(app.handle()).map_err(std::io::Error::other)?;
+            g3_test_trace(app.handle(), "library_initialized");
             app.manage(LibraryState(Mutex::new(library)));
             let open = MenuItem::with_id(app, "open", "เปิด Lalin Play", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "ออกจาก Lalin Play", true, None::<&str>)?;
