@@ -1,7 +1,7 @@
 ---
-version: "0.2.15b"
+version: "0.2.16b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T13:49:47+07:00,Codex"
+last_update: "2026-09-27T14:03:11+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; child-process termination at five transaction checkpoints and directory-level recovery pass; power-loss, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; same-host loopback SMB/UNC client is denied with a working remote positive control and local access; cross-host test and mapped/reparse tests compile but are NOT_RUN; separate-logon-session, Studio/API exit during playback and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; same-host loopback SMB/UNC client is denied with a working remote positive control and local access; cross-host listener timed out before a client result, so remote rejection remains NOT_VERIFIED; mapped/reparse tests compile but are NOT_RUN; separate-logon-session, Studio/API exit during playback and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -315,16 +315,18 @@ host when the DACL allows the client, and that local access remains available.
 It does not test another machine or a separate interactive Windows logon
 session. Keep Studio playback enabled until audible parity is proven.
 
-## G3 different-host probe preparation — 2026-09-27
+## G3 different-host listener attempt — 2026-09-27
 
 Added an ignored Windows test that hosts three same-DACL named pipes and a
 PowerShell client at `tools/verify/lalin-play-remote-pipe-client.ps1`. The client
 first connects to the control pipe, then records the target pipe's Win32 error
 and reports both values through the result pipe. The test requires a successful
 remote control connection, `ERROR_ACCESS_DENIED` (5) on the protected target,
-and a successful local open to that same target. PowerShell parser validation
-passed; the ignored test compiled in the full suite. The cross-host runtime test
-is **NOT_RUN** until it is executed from the second Windows host.
+and a successful local open to that same target. PowerShell parser and embedded
+P/Invoke compilation passed; the ignored test compiled in the full suite. The
+server listener timed out after 180 seconds before receiving a complete client
+result. This is a coordination timeout only and does not establish whether the
+remote control or protected target pipe connected.
 
 The full Play Rust suite passed **35 tests, 0 failures, 5 ignored**. The two
 mapped-drive/reparse runtime tests compile against `validate_media_file` but are
@@ -356,6 +358,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Prepare a second-host named-pipe probe and record unrun mapped/reparse runtime tests | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Record loopback SMB/UNC remote-client denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Cover retry after undo-snapshot write failure with initial journal/history failures and five process checkpoints | based on e843e1c | Codex |

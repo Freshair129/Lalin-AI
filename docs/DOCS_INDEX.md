@@ -1,7 +1,7 @@
 ---
-version: "0.10.12b"
+version: "0.10.13b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-27T13:49:47+07:00,Codex"
+last_update: "2026-09-27T14:03:11+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -164,6 +164,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.13b | 2026-09-27 | beta | Index the Play mapped-drive/reparse RCA and record the timed-out second-host listener | based on ef5f87b | Codex |
 | 0.10.12b | 2026-09-27 | beta | Index the Play mapped-drive/reparse runtime RCA and its compiled opt-in probes | based on 3bb4414 | Codex |
 | 0.10.11b | 2026-09-26 | beta | Index the approved Play execution DAG, S2/S3 contract and implementation evidence, and both local-path RCAs | S2 7c30ea1; S3 235875b/362bbd0; base 43121cc | Codex |
 | 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |

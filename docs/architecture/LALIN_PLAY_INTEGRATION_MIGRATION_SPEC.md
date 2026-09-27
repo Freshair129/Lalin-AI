@@ -1,7 +1,7 @@
 ---
-version: "0.2.15b"
+version: "0.2.16b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T13:49:47+07:00,Codex"
+last_update: "2026-09-27T14:03:11+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -119,8 +119,9 @@ Security and lifecycle implementation status:
   the same remote path with `ERROR_ACCESS_DENIED`; a local open still succeeds.
   This isolates the remote-rejection flag from DACL denial. An ignored
   different-host probe and PowerShell client are prepared with the same-DACL
-  positive control and target denial; the runtime test is NOT_RUN. A separate
-  interactive logon session remains unverified.
+  positive control and target denial. One server-listener attempt timed out
+  after 180 seconds before a complete client result arrived, so remote rejection
+  remains NOT_VERIFIED. A separate interactive logon session remains unverified.
   The isolated paired owner-restart test verifies that a command applied before
   its ACK is read is not blindly replayed after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
@@ -175,8 +176,8 @@ controls. Drive
 classification is tested with fixed, remote, unknown and invalid values; the
 ignored mapped-drive and reparse tests compile but are NOT_RUN. The local
 negative ACL case does not exercise a separate interactive logon session; the
-loopback SMB probe does not use a different remote machine. The ignored
-second-host probe and its PowerShell client are prepared but NOT_RUN. Live
+loopback SMB probe does not use a different remote machine. The second-host listener timed out after 180 seconds without a complete client result; remote rejection remains NOT_VERIFIED.
+Live
 cross-process cold/warm delivery, FIFO, ACK/STATE
 reconciliation including a dropped ACK while the owner remains live, a command applied before a lost ACK
 followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
@@ -268,6 +269,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Specify second-host pipe probe and distinguish compiled mapped/reparse runtime tests from execution | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Verify loopback SMB/UNC rejection with a remote positive control and local access; retain separate-session and parity gates | based on a75c540 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Add retryable S2 undo-snapshot failure evidence alongside journal/history and process-recovery tests | based on e843e1c | Codex |
