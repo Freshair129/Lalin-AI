@@ -1,7 +1,7 @@
 ---
-version: "0.2.11b"
+version: "0.2.12b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:42:00+07:00,Codex"
+last_update: "2026-09-27T11:53:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -239,11 +239,12 @@ focused rollback/undo tests, synthetic native restart-phase coverage, and select
 write-failure tests are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
 A test-binary child process was terminated at five journal/catalog checkpoints;
 directory-level recovery restored the expected catalog state before UI
-initialization. This does not test restarting the Play desktop/WebView or
-power-loss durability. Remaining native write failures (including journal
-creation and import-history persistence) and an actual Studio-to-Play transfer
-remain unverified. Named-pipe Studio handoff and media relink remain separate
-gates.
+initialization. The tests also verify initial journal-write failure leaves no
+journal and import-history failure remains retryable without a duplicate export
+ID. This does not test restarting the Play desktop/WebView or power-loss
+durability. Other native write-failure points and an actual Studio-to-Play
+transfer remain unverified. Named-pipe Studio handoff and media relink remain
+separate gates.
 
 Implementation boundary: Studio export reads the live Play store in the running
 Studio app. Standalone import reads/writes its own active `localStorage` through
@@ -254,6 +255,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.12b | 2026-09-27 | beta | Add S2 journal-creation and retryable history-write failure evidence; retain power-loss and transfer gates | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Record test-binary termination at five S2 checkpoints and directory-level restart recovery; retain power-loss and transfer gates | based on e2bd20a | Codex |
 | 0.2.10b | 2026-09-27 | beta | Record local Windows pipe ACL denial for a restricted token; retain cross-session and playback parity gates | based on 988a3e4 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired applied-command/lost-ACK owner-restart no-replay evidence; retain security and playback-parity gates | based on 17a5c96 | Codex |

@@ -1644,6 +1644,49 @@ mod tests {
     }
 
     #[test]
+    fn initial_journal_write_failure_leaves_no_persisted_journal() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Prepared);
+        save_json(&library_file_path(directory.path()), &old).unwrap();
+        fs::create_dir(journal_path(directory.path()).with_extension("json.tmp")).unwrap();
+
+        assert!(save_journal(directory.path(), &journal).is_err());
+
+        assert!(load_journal(directory.path()).unwrap().is_none());
+        assert_library_file(directory.path(), &old);
+    }
+
+    #[test]
+    fn failed_import_history_write_can_be_retried_without_duplicate() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Committed);
+        save_json(&library_file_path(directory.path()), &new).unwrap();
+        save_journal(directory.path(), &journal).unwrap();
+        let blocked_history_temp = history_path(directory.path()).with_extension("json.tmp");
+        fs::create_dir(&blocked_history_temp).unwrap();
+
+        assert!(record_import_commit(directory.path(), &journal).is_err());
+
+        assert!(undo_snapshot_path(directory.path()).is_file());
+        assert!(!history_path(directory.path()).is_file());
+        assert_eq!(
+            load_journal(directory.path()).unwrap().unwrap().phase,
+            Phase::Committed
+        );
+
+        fs::remove_dir(blocked_history_temp).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+
+        assert_eq!(
+            load_history(directory.path()).unwrap().export_ids,
+            vec![journal.export_id]
+        );
+    }
+
+    #[test]
     fn failed_applied_marker_write_restores_catalog_and_keeps_prepared_journal() {
         let directory = tempfile::tempdir().unwrap();
         let (old, new) = fixture_libraries();

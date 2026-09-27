@@ -1,7 +1,7 @@
 ---
-version: "0.2.11b"
+version: "0.2.12b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T11:42:00+07:00,Codex"
+last_update: "2026-09-27T11:53:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -102,8 +102,8 @@ output settings and dark native controls.
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
-Remaining work includes S2 power-loss durability and journal/history write
-failures, plus S3 different-logon-session and
+Remaining work includes S2 power-loss durability and other native write-failure
+points, plus S3 different-logon-session and
 remote pipe-client rejection, UNC/mapped-drive/reparse runtime cases,
 Studio/API exit during
 active playback and audible parity. The paired URL-shaped invalid-path case now
@@ -292,25 +292,29 @@ Cross-session and remote rejection, mapped-drive/reparse runtime cases, Studio/A
 exit during active playback, audible parity, S2 process-crash/power-loss recovery
 and remaining native write-failure cases remain open. Preserve Studio playback.
 
-## S2 child-process termination recovery — 2026-09-27
+## S2 recovery and storage-write failures — 2026-09-27
 
 The Play native test launched a separate test-binary child and forcibly ended it
 at Prepared, catalog-written-before-Applied, Applied, Committed and Acknowledged
 checkpoints. Directory-level recovery restored the old catalog for the first
 three states, retained the committed catalog for the last two, and removed the
-acknowledged journal. The focused test passed **1/1**; the full Play Rust suite
-passed **32 tests** with its test-only child driver ignored by default. `cargo fmt
+acknowledged journal. Two write-failure cases also pass: failed initial journal
+creation leaves no journal, and failed import-history persistence retains the
+committed journal and undo snapshot until retry records the export ID exactly
+once. The focused process test passed **1/1**; the full Play Rust suite passed
+**34 tests** with its test-only child driver ignored by default. `cargo fmt
 -- --check` passed.
 
 This does not restart the packaged Play app or its WebView and does not prove
-power-loss durability. Journal creation/import-history failure coverage, live
-Studio-to-Play transfer, Studio/API exit during playback and audible parity
-remain open. Preserve Studio playback.
+power-loss durability. Other untested native write failures, live Studio-to-Play
+transfer, Studio/API exit during playback and audible parity remain open.
+Preserve Studio playback.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.12b | 2026-09-27 | beta | Add initial journal-creation and retryable history-write failure evidence alongside five S2 process checkpoints | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Add five-checkpoint child-process termination and directory-level S2 recovery evidence; retain power-loss, transfer and parity gates | based on e2bd20a | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add local Windows ACL denial evidence for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Add paired evidence that an applied lost-ACK command is not replayed after Play owner restart; retain audible parity and remaining security gates | based on 17a5c96 | Codex |
