@@ -1687,6 +1687,35 @@ mod tests {
     }
 
     #[test]
+    fn failed_undo_snapshot_write_can_be_retried() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Committed);
+        save_json(&library_file_path(directory.path()), &new).unwrap();
+        save_journal(directory.path(), &journal).unwrap();
+        let blocked_snapshot_temp = undo_snapshot_path(directory.path()).with_extension("json.tmp");
+        fs::create_dir(&blocked_snapshot_temp).unwrap();
+
+        assert!(record_import_commit(directory.path(), &journal).is_err());
+
+        assert!(!undo_snapshot_path(directory.path()).is_file());
+        assert!(!history_path(directory.path()).is_file());
+        assert_eq!(
+            load_journal(directory.path()).unwrap().unwrap().phase,
+            Phase::Committed
+        );
+
+        fs::remove_dir(blocked_snapshot_temp).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+
+        assert!(undo_snapshot_path(directory.path()).is_file());
+        assert_eq!(
+            load_history(directory.path()).unwrap().export_ids,
+            vec![journal.export_id]
+        );
+    }
+
+    #[test]
     fn failed_applied_marker_write_restores_catalog_and_keeps_prepared_journal() {
         let directory = tempfile::tempdir().unwrap();
         let (old, new) = fixture_libraries();

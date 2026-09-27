@@ -1,7 +1,7 @@
 ---
-version: "0.2.12b"
+version: "0.2.13b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:53:00+07:00,Codex"
+last_update: "2026-09-27T11:59:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -36,8 +36,8 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Preview | `src/components/CompactTransport.tsx`, `src/playback/framePreview.ts`, `src/styles.css` | `src/components/CompactTransport.test.tsx`, `src/playback/framePreview.test.ts`: drag/hover, disposal, latest work, cache limit, errors/timeouts, controls |
 | Skip | `src/playback/relativeSeek.ts`, CompactTransport and Native | `src/playback/relativeSeek.test.ts`; CompactTransport live-clock/disabled tests; App native ACK/error tests |
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
-| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery, five child-process termination checkpoints, initial journal-write failure and retryable history-write tests; power-loss and other storage failures open |
-| Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases, five child-process termination checkpoints, journal-creation and retryable history-write failures; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
+| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery, five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write failures; power-loss and other storage failures open |
+| Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases, five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write failures; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
 | Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE recovery after a dropped command ACK, same-ID duplicate handling, sequential four-file queue, four independent concurrent senders ordered by ACK revision, busy-pipe wait without cold launch, owner restart after a lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED`; different-logon-session, remote pipe-client rejection, mapped-drive/reparse runtime cases and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
@@ -47,7 +47,7 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | V | [Local video](LALIN_PLAY_LOCAL_VIDEO.md) | 30 frontend/6 Rust, MP4/WebM/silent-video captures; physical A/V limits |
 | C | [Minimal Compact](LALIN_PLAY_MINIMAL_COMPACT.md) | 40 frontend/6 Rust, preview/auto-hide/minimum captures; touch/DPI limits |
 | X | [Fullscreen/skip](LALIN_PLAY_FULLSCREEN_SKIP.md) | 48 frontend/7 Rust, native fullscreen/bounds/±10, WebM preview and muted WAV |
-| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 34 passed/1 ignored with G3 test feature, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; isolated paired G3 cases pass, full playback parity NOT_VERIFIED |
+| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 35 passed/1 ignored with G3 test feature, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; isolated paired G3 cases pass, full playback parity NOT_VERIFIED |
 
 Earlier evidence remains tied to its own source/binary hash. The isolated paired
 G3 run is a separate current runtime result; it does not update the older 48/7
@@ -63,7 +63,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
 | PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, lost-ACK QUERY/STATE recovery while the owner is live, same-ID duplicate suppression, sequential four-file ordering, four independent concurrent clients with queue order matching unique increasing ACK revisions, no cold launch while the pipe is occupied, owner restart after lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED` | Different-logon-session and remote pipe-client rejection, mapped-drive/reparse runtime cases, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
-| PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal-write and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
+| PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
 | PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
@@ -129,6 +129,7 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.13b | 2026-09-27 | beta | Trace retryable undo-snapshot write failure alongside initial journal/history and process-recovery cases | based on e843e1c | Codex |
 | 0.2.12b | 2026-09-27 | beta | Trace initial journal-creation and retryable import-history failure tests; retain power-loss and live-transfer gaps | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Trace S2 recovery after child-process termination at five checkpoints; retain power-loss and live-transfer gaps | based on e2bd20a | Codex |
 | 0.2.10b | 2026-09-27 | beta | Trace local Windows ACL denial for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |

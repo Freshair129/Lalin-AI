@@ -1,7 +1,7 @@
 ---
-version: "0.2.14b"
+version: "0.2.15b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T11:53:00+07:00,Codex"
+last_update: "2026-09-27T11:59:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -421,10 +421,11 @@ Committed and Acknowledged. Recovery restored the prior catalog for the first
 three; it retained the new catalog for Committed and Acknowledged and removed
 the acknowledged journal.
 
-The focused test passed **1/1**. Two storage-failure cases also pass: failed
-initial journal creation leaves no journal, and failed import-history persistence
+The focused test passed **1/1**. Three storage-failure cases also pass: failed
+initial journal creation leaves no journal; failed undo-snapshot persistence
+leaves the committed journal retryable; failed import-history persistence also
 retains retry state and records the export ID exactly once after retry. The full
-Play Rust suite passed **34 tests** with one test-only child driver ignored by
+Play Rust suite passed **35 tests** with one test-only child driver ignored by
 default; `cargo fmt -- --check` passed. This does not exercise a restarted
 desktop binary or WebView, power loss, other untested storage writes or a live
 Studio-to-Play transfer. G3's remote/session security and audible parity gates
@@ -444,6 +445,7 @@ remain open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.15b | 2026-09-27 | beta | Add retryable undo-snapshot write-failure evidence alongside initial journal and history failures | based on e843e1c | Codex |
 | 0.2.14b | 2026-09-27 | beta | Cover initial journal creation and retryable history-write failures with process-termination recovery; retain runtime and parity gates | based on 75c2001 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Verify directory-level S2 recovery after forced child-process termination at five checkpoints; retain runtime and parity gates | based on e2bd20a | Codex |
 | 0.2.12b | 2026-09-27 | beta | Verify the local Windows named-pipe ACL denies a restricted client without the allowed logon SID; retain cross-session and playback gates | based on 988a3e4 | Codex |

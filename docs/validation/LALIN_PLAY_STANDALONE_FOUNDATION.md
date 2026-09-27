@@ -1,7 +1,7 @@
 ---
-version: "0.2.12b"
+version: "0.2.13b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T11:53:00+07:00,Codex"
+last_update: "2026-09-27T11:59:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -299,10 +299,11 @@ at Prepared, catalog-written-before-Applied, Applied, Committed and Acknowledged
 checkpoints. Directory-level recovery restored the old catalog for the first
 three states, retained the committed catalog for the last two, and removed the
 acknowledged journal. Two write-failure cases also pass: failed initial journal
-creation leaves no journal, and failed import-history persistence retains the
+creation leaves no journal, failed undo-snapshot persistence leaves the
+committed journal retryable, and failed import-history persistence retains the
 committed journal and undo snapshot until retry records the export ID exactly
 once. The focused process test passed **1/1**; the full Play Rust suite passed
-**34 tests** with its test-only child driver ignored by default. `cargo fmt
+**35 tests** with its test-only child driver ignored by default. `cargo fmt
 -- --check` passed.
 
 This does not restart the packaged Play app or its WebView and does not prove
@@ -314,6 +315,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.13b | 2026-09-27 | beta | Cover retry after undo-snapshot write failure with initial journal/history failures and five process checkpoints | based on e843e1c | Codex |
 | 0.2.12b | 2026-09-27 | beta | Add initial journal-creation and retryable history-write failure evidence alongside five S2 process checkpoints | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Add five-checkpoint child-process termination and directory-level S2 recovery evidence; retain power-loss, transfer and parity gates | based on e2bd20a | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add local Windows ACL denial evidence for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |

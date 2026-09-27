@@ -1,7 +1,7 @@
 ---
-version: "0.2.15b"
+version: "0.2.16b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:53:00+07:00,Codex"
+last_update: "2026-09-27T11:59:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -44,7 +44,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Video / Compact / fullscreen | [CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md), [CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md), [Sitemap](../design/LALIN_SITEMAP_SOT.md) | Approved, implemented locally |
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
-| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 34 passed/1 ignored; five child-process termination checkpoints, initial journal-write failure and retryable history-write failure pass; power-loss, other writes and actual Studio transfer remain open |
+| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
 | S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, and local restricted-token ACL denial pass; different-logon-session and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
@@ -252,9 +252,10 @@ remain unverified. The paired test now covers a command applied before its ACK
 is read, followed by owner restart, delivery_unknown and blocked replay.
 S2 child-process termination at five journal/catalog checkpoints now recovers to
 the expected catalog before store initialization. Tests also verify initial
-journal-write failure leaves no journal and import-history failure can be retried
-without a duplicate export ID. Power-loss durability and other storage-write
-cases remain open. PR #25 remains draft pending those gates. Keep ordinary Studio
+journal-write failure leaves no journal; undo-snapshot failure remains retryable;
+import-history failure can be retried without a duplicate export ID. Power-loss
+durability and other storage-write cases remain open. PR #25 remains draft pending
+those gates. Keep ordinary Studio
 playback enabled; no playback parity, source removal or release is claimed.
 
 ## G3 lost ACK across Play owner restart — 2026-09-27
@@ -476,12 +477,13 @@ Prepared, catalog-written-before-Applied, Applied, Committed and Acknowledged.
 Directory-level startup recovery restored the old catalog in the first three
 cases, retained the committed catalog in the last two, and removed the
 acknowledged journal. The focused process test passed **1/1**; the full Play Rust
-suite passed **34 tests** with one test-only driver ignored by default, and
+suite passed **35 tests** with one test-only driver ignored by default, and
 `cargo fmt -- --check` passed.
 
-Initial journal creation failure and import-history persistence failure are also
-covered. The first leaves no persisted journal; the second retains committed
-recovery state and succeeds on retry without duplicating the export ID.
+Initial journal creation, undo-snapshot persistence and import-history
+persistence failures are also covered. Journal creation failure leaves no
+persisted journal; the other two retain committed recovery state and succeed on
+retry without duplicating the export ID.
 
 This proves only test-binary process-termination handling in a temporary
 directory. It does not restart the Play desktop/WebView or establish power-loss
@@ -512,10 +514,23 @@ are open. Studio playback remains available until parity is proven.
 | S2 migration evidence | 0.1.4b → 0.1.5b |
 | Studio and Play application versions | No change |
 
+## Current documentation version diff — 2026-09-27 S2 undo-snapshot failure test
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.12b → 0.2.13b |
+| Execution DAG | 0.2.14b → 0.2.15b |
+| Documentation register | 0.2.15b → 0.2.16b |
+| Foundation evidence | 0.2.12b → 0.2.13b |
+| Traceability matrix | 0.2.12b → 0.2.13b |
+| S2 migration evidence | 0.1.5b → 0.1.6b |
+| Studio and Play application versions | No change |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.16b | 2026-09-27 | beta | Record retryable undo-snapshot write failure and synchronized S2 evidence; retain power-loss and runtime gates | based on e843e1c | Codex |
 | 0.2.15b | 2026-09-27 | beta | Record initial journal and retryable history-write failure evidence with exact remaining S2 gates | based on 75c2001 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Record five-checkpoint S2 child-process recovery evidence and exact open power-loss/live-transfer gates | based on e2bd20a | Codex |
 | 0.2.13b | 2026-09-27 | beta | Record local restricted-logon SID ACL denial and retain cross-session and playback gates | based on 988a3e4 | Codex |
