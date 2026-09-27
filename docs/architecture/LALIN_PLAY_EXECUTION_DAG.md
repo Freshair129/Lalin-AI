@@ -1,7 +1,7 @@
 ---
-version: "0.2.8b"
+version: "0.2.10b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T09:49:00+07:00,Codex"
+last_update: "2026-09-27T10:10:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -314,8 +314,9 @@ gates. Record export, PR, merge and release states independently.
   cold-launch callback calls while busy, then verified one applied ACK per
   command, unique strictly increasing ACK revisions, and final queue order
   matching ACK revision order. Existing cold/warm delivery, ACK/STATE recovery,
-  duplicate suppression, owner restart without blind replay and live invalid-URL
-  rejection also passed in that paired run. Test profile, app-data and media
+  duplicate suppression, owner restart without blind replay and live URL/UNC-
+  shaped path rejection also passed in that paired run. Test profile, app-data
+  and media
   fixtures were isolated in system temp.
 - **Final source revalidation:** after the pipe-creation error path was changed
   to disconnect and release a failed instance before replacement, the Tauri
@@ -325,15 +326,47 @@ gates. Record export, PR, merge and release states independently.
   paired test ignored in the normal suite. Play Rust tests with
   `g3-test-app-data-dir` passed **31/31**. The Tauri CLI test-feature release
   build, both Rust format checks and `git diff --check` passed.
-- **G3 remains PARTIAL:** cross-session/unauthorized and remote rejection,
-  UNC/mapped-drive/reparse runtime paths, ACK loss across process interruption,
-  Studio/API exit during active playback and audible parity remain unverified.
+- **G3 remains PARTIAL:** cross-session/unauthorized and remote pipe-client
+  rejection, mapped-drive/reparse runtime paths (including a reparse target
+  resolving to UNC), ACK loss across process interruption, Studio/API exit
+  during active playback and audible parity remain unverified.
   S2 process-crash/power-loss recovery and remaining write-failure gates also
   remain open. Keep ordinary Studio playback available; do not merge or remove
   the Studio playback owner before full parity is proven.
 - **G4 — evidence updated locally:** the integration spec, this DAG, status
   register, foundation, traceability and RCA record the fix and exact test
   boundary. PR #25 remains draft until the remaining acceptance gates pass.
+
+## Execution status — 2026-09-27 G3 live UNC-shaped path rejection
+
+The ignored paired Windows test sends both a URL-shaped path and
+`\\server\share\audio.wav` as raw commands to the live same-logon Play pipe.
+Each command receives `ERROR/invalid_file_path`; a fresh STATE after each
+rejection has the same owner, revision and playback snapshot. The paired test
+passed **1/1** after both assertions were added. The UNC-shaped value is
+rejected before path resolution, so this does not exercise opening an SMB
+share, a mapped network drive or a reparse target that resolves to UNC.
+
+G3 remains **PARTIAL**. Live remote named-pipe-client rejection,
+cross-session/unauthorized connection attempts, mapped-drive and reparse
+runtime cases, ACK loss across process interruption, Studio/API exit during
+active playback and audible parity remain unverified. Keep the Studio playback
+route enabled.
+
+## Execution status — 2026-09-27 G3 lost-ACK reconciliation
+
+The paired test now writes an `add-to-queue` command and closes the sender pipe
+without reading its ACK. Studio's reconciliation query then returns the
+original applied result plus matching STATE from the still-running owner. A
+same-ID retry returns the original ACK revision and does not add another queue
+item. The paired Windows test passed **1/1** with this lost-ACK scenario,
+alongside cold/warm, sequential and concurrent FIFO, restart and path-rejection
+checks.
+
+This verifies lost-response recovery while the Play owner remains alive. Loss
+across Play process interruption or restart still returns unknown and blocks
+blind replay; that durability case remains unverified. Keep ordinary Studio
+playback enabled.
 
 ## Definition of done for this execution
 
@@ -349,6 +382,8 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.10b | 2026-09-27 | beta | Add paired lost-ACK query/state reconciliation against the live owner; keep interruption and parity gates open | based on cee5e93 | Codex |
+| 0.2.9b | 2026-09-27 | beta | Record paired live URL/UNC-shaped path rejection with unchanged STATE; keep remaining security/parity gates open | based on cee5e93 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Rebuild final Play source and rerun paired G3 lifecycle/concurrency test successfully; keep remaining parity gates open | based on 1084d5e | Codex |
 | 0.2.7b | 2026-09-27 | beta | Record the busy-pipe/cold-launch fix and concurrent paired FIFO result; preserve remaining parity gates | based on 1084d5e | Codex |
 | 0.2.6b | 2026-09-27 | beta | Record live receiver rejection of an invalid URL path with unchanged STATE; keep remaining parity gates open | based on b90ffaed | Codex |

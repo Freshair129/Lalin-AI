@@ -1394,16 +1394,7 @@ mod tests {
                     file: &lost_file,
                 },
             )?;
-            let lost_ack: PlaybackAck =
-                serde_json::from_value(read_value(&mut lost_pipe, ACK_TIMEOUT)?).map_err(|_| {
-                    "G3 test expected a committed ACK before dropping STATE".to_string()
-                })?;
-            if lost_ack.request_id != lost_id
-                || lost_ack.owner_session != first.ack.owner_session
-                || lost_ack.result != "applied"
-            {
-                return Err("G3 test did not receive the expected committed ACK".into());
-            }
+            // Simulate the sender losing its ACK after the command frame was written.
             drop(lost_pipe);
 
             let recovered =
@@ -1414,9 +1405,6 @@ mod tests {
                 &first.ack.owner_session,
                 queued.ack.revision,
             )?;
-            if recovered.ack.revision != lost_ack.revision {
-                return Err("reconciled ACK revision did not match the committed command".into());
-            }
             let before_duplicate = read_playback_state(&client)?
                 .ok_or("Play state disappeared before duplicate reconciliation")?;
             if before_duplicate.owner_session != first.ack.owner_session {
@@ -1441,7 +1429,7 @@ mod tests {
                 &first.ack.owner_session,
                 queued.ack.revision,
             )?;
-            if duplicate.ack.revision != lost_ack.revision {
+            if duplicate.ack.revision != recovered.ack.revision {
                 return Err("duplicate request changed its original ACK revision".into());
             }
             let after_duplicate = read_playback_state(&client)?
@@ -1804,49 +1792,65 @@ mod tests {
                 return Err("warm handoff unexpectedly launched another Play process".into());
             }
 
-            let invalid_id = "00000000-0000-4000-8000-000000000106";
-            let (mut invalid_pipe, _) = connect_with_launch(
-                || windows_pipe::open_client(&name, &executable),
-                || Ok::<(), String>(()),
-                || std::thread::sleep(Duration::from_millis(100)),
-                CONNECT_ATTEMPTS,
-            )?;
-            let (invalid_owner, _) = handshake(&mut invalid_pipe)?;
-            if invalid_owner != after_restart.owner_session {
-                return Err("Play owner changed before the invalid-path check".into());
-            }
-            let invalid_file = HandoffFile {
-                path: "https://example.invalid/audio.wav".into(),
-                title: Some("G3 invalid remote URL".into()),
-            };
-            write_frame(
-                &mut invalid_pipe,
-                &CommandFrame {
-                    frame_type: "COMMAND",
-                    protocol: PROTOCOL,
-                    protocol_version: PROTOCOL_VERSION,
-                    request_id: invalid_id,
-                    owner_session: &invalid_owner,
-                    action: "add-to-queue",
-                    file: &invalid_file,
-                },
-            )?;
-            let invalid_response = read_value(&mut invalid_pipe, ACK_TIMEOUT)?;
-            if invalid_response.get("type").and_then(Value::as_str) != Some("ERROR")
-                || invalid_response.get("code").and_then(Value::as_str) != Some("invalid_file_path")
-            {
-                return Err(
-                    "Play receiver did not reject the invalid G3 path over the pipe".into(),
-                );
-            }
-            drop(invalid_pipe);
-            let after_invalid = read_playback_state(&client)?
-                .ok_or("Play state disappeared after invalid-path rejection")?;
-            if after_invalid.owner_session != after_restart.owner_session
-                || after_invalid.revision != after_restart.revision
-                || after_invalid.snapshot != after_restart.snapshot
-            {
-                return Err("invalid-path rejection changed Play playback state".into());
+            for (invalid_id, invalid_path, invalid_title) in [
+                (
+                    "00000000-0000-4000-8000-000000000106",
+                    "https://example.invalid/audio.wav",
+                    "G3 invalid remote URL",
+                ),
+                (
+                    "00000000-0000-4000-8000-000000000107",
+                    r"\\server\share\audio.wav",
+                    "G3 invalid UNC path",
+                ),
+            ] {
+                let (mut invalid_pipe, cold) = connect_with_launch(
+                    || windows_pipe::open_client(&name, &executable),
+                    || Ok::<(), String>(()),
+                    || std::thread::sleep(Duration::from_millis(100)),
+                    CONNECT_ATTEMPTS,
+                )?;
+                if cold {
+                    return Err("invalid-path check unexpectedly used the cold-launch path".into());
+                }
+                let (invalid_owner, _) = handshake(&mut invalid_pipe)?;
+                if invalid_owner != after_restart.owner_session {
+                    return Err("Play owner changed before the invalid-path check".into());
+                }
+                let invalid_file = HandoffFile {
+                    path: invalid_path.into(),
+                    title: Some(invalid_title.into()),
+                };
+                write_frame(
+                    &mut invalid_pipe,
+                    &CommandFrame {
+                        frame_type: "COMMAND",
+                        protocol: PROTOCOL,
+                        protocol_version: PROTOCOL_VERSION,
+                        request_id: invalid_id,
+                        owner_session: &invalid_owner,
+                        action: "add-to-queue",
+                        file: &invalid_file,
+                    },
+                )?;
+                let invalid_response = read_value(&mut invalid_pipe, ACK_TIMEOUT)?;
+                if invalid_response.get("type").and_then(Value::as_str) != Some("ERROR")
+                    || invalid_response.get("code").and_then(Value::as_str)
+                        != Some("invalid_file_path")
+                {
+                    return Err(
+                        "Play receiver did not reject the invalid G3 path over the pipe".into(),
+                    );
+                }
+                drop(invalid_pipe);
+                let after_invalid = read_playback_state(&client)?
+                    .ok_or("Play state disappeared after invalid-path rejection")?;
+                if after_invalid.owner_session != after_restart.owner_session
+                    || after_invalid.revision != after_restart.revision
+                    || after_invalid.snapshot != after_restart.snapshot
+                {
+                    return Err("invalid-path rejection changed Play playback state".into());
+                }
             }
             Ok(())
         })();

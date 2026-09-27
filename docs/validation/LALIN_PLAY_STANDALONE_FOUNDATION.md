@@ -1,7 +1,7 @@
 ---
-version: "0.2.6b"
+version: "0.2.8b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T09:49:00+07:00,Codex"
+last_update: "2026-09-27T10:10:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential and four-client concurrent queue order by ACK revision, owner restart, busy-pipe no-relaunch behavior, and live invalid-URL rejection with unchanged STATE; cross-session/unauthorized, remote, UNC/mapped-drive/reparse, interrupted-ACK and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, owner restart, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; cross-session/unauthorized, remote-client, mapped-drive/reparse, process-interrupted ACK and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -233,8 +233,12 @@ because Play's published playback snapshots may advance the state revision
 between ACKs.
 
 The same paired run retained the earlier cold/warm, ACK/STATE reconciliation,
-duplicate suppression, owner-restart/no-blind-replay and invalid URL-shaped
-path/no-state-change assertions. Play Rust tests with
+duplicate suppression and owner-restart/no-blind-replay checks. A following
+run also sent URL- and UNC-shaped invalid paths over separate live pipe
+connections and confirmed both were rejected without changing STATE. A further
+run closed the command connection before reading ACK, recovered the original
+applied result through QUERY/STATE while Play remained alive, and confirmed a
+same-ID retry did not enqueue a duplicate. Play Rust tests with
 `g3-test-app-data-dir` passed **31/31**; Studio native handoff tests passed
 **6/6** with the paired case ignored in the ordinary run. Tauri CLI test-feature
 release build, both Rust format checks and `git diff --check` passed. The run
@@ -244,8 +248,9 @@ After the pipe-creation error path was updated to release a failed instance
 before replacement, the Tauri CLI release binary was rebuilt from final source
 and the paired test was rerun successfully (**1/1**).
 
-G3 remains **PARTIAL**. Cross-session/unauthorized and remote rejection,
-UNC/mapped-drive/reparse runtime cases, ACK loss across process interruption,
+G3 remains **PARTIAL**. Cross-session/unauthorized and remote pipe-client
+rejection, mapped-drive/reparse runtime cases (including a reparse target
+resolving to UNC), ACK loss across Play process interruption,
 Studio/API exit during active playback and audible parity remain unverified.
 S2 process-crash/power-loss recovery and remaining storage-write cases also
 remain open. Preserve ordinary Studio playback until parity is proven.
@@ -254,6 +259,8 @@ remain open. Preserve ordinary Studio playback until parity is proven.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.8b | 2026-09-27 | beta | Add paired lost-ACK recovery and same-ID no-duplicate evidence; preserve owner-restart and audible parity gates | based on cee5e93 | Codex |
+| 0.2.7b | 2026-09-27 | beta | Add live paired rejection of URL- and UNC-shaped commands with unchanged STATE; retain runtime parity gates | based on cee5e93 | Codex |
 | 0.2.6b | 2026-09-27 | beta | Revalidate paired concurrent lifecycle against a rebuild of final pipe-recovery source; retain open playback parity gates | based on 1084d5e | Codex |
 | 0.2.5b | 2026-09-27 | beta | Add isolated concurrent-client paired FIFO evidence and record busy-pipe lifecycle fix; keep playback parity gates open | based on 1084d5e | Codex |
 | 0.2.4b | 2026-09-27 | beta | Add paired invalid-path receiver evidence and retain remaining S3 parity gates | based on b90ffaed | Codex |

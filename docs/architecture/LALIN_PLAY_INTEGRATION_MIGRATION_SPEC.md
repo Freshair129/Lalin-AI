@@ -1,7 +1,7 @@
 ---
-version: "0.2.6b"
+version: "0.2.8b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T09:34:00+07:00,Codex"
+last_update: "2026-09-27T10:10:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -106,8 +106,12 @@ Security and lifecycle implementation status:
   logon SID, never from a UI-supplied name. Play creates a protected DACL for
   that SID and enables `PIPE_REJECT_REMOTE_CLIENTS`; Studio verifies the server
   process image and session, and Play impersonates/checks the client SID.
-  Local tests verify DACL creation and the remote-rejection flag; live
-  cross-session and endpoint-spoof attempts remain unverified.
+  Local tests verify DACL creation and the remote-rejection flag. The isolated
+  paired pipe test sends URL- and UNC-shaped invalid paths; Play rejects both
+  before path/network lookup and leaves STATE unchanged. It also drops the
+  sender connection before reading a command ACK, then reconciles by request
+  ID against the still-running owner. Live cross-session, unauthorized, remote
+  pipe-client and owner-process-interruption attempts remain unverified.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
@@ -154,9 +158,12 @@ duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots
 protected same-logon DACL creation and the remote-client-rejection flag. Drive
 classification is tested with fixed, remote, unknown and invalid values; no
 mapped-drive runtime case was exercised. The ACL test does not attempt an
-unauthorized connection. Live cross-process delivery, ACK-loss under process
-interruption, cross-session/spoof attempts, Studio/API exit during active playback,
-audible parity and Cast regression remain **NOT VERIFIED**.
+unauthorized connection. Live cross-process cold/warm delivery, FIFO,
+ACK/STATE reconciliation including a lost ACK to a still-running owner, owner
+restart, and URL/UNC-shaped invalid path rejection are verified in the isolated
+Windows paired test. ACK-loss across owner-process interruption,
+cross-session/spoof and remote pipe-client attempts, Studio/API exit during
+active playback, audible parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Approved S2 opt-in migration envelope v1
 
@@ -237,6 +244,8 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.8b | 2026-09-27 | beta | Verify live ACK-loss query/state recovery while the owner remains active; preserve process-interruption and parity gates | based on cee5e93 | Codex |
+| 0.2.7b | 2026-09-27 | beta | Record live rejection of UNC-shaped handoff input before lookup; retain remote-client and parity gates | based on cee5e93 | Codex |
 | 0.2.6b | 2026-09-27 | beta | Define independent-client ACK revision ordering, retain the server pipe instance, and prohibit cold launch while its owner is busy | based on 1084d5e | Codex |
 | 0.2.5b | 2026-09-26 | beta | Integrate approved S3 named-pipe handoff with S2 migration; record local drive validation and open parity/recovery gates | S2 7c30ea1; S3 235875b; docs 362bbd0 | Codex |
 | 0.2.4b | 2026-09-26 | beta | Reject mapped network drives in S2 native file validation and record deterministic drive-type coverage | 7c30ea1 | Codex |

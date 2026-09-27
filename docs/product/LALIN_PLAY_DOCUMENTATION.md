@@ -1,7 +1,7 @@
 ---
-version: "0.2.9b"
+version: "0.2.11b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T09:49:00+07:00,Codex"
+last_update: "2026-09-27T10:10:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 31/31; earlier S2-only Rust 23/23 and focused UI/build checks are recorded in the linked report; process-crash recovery and actual Studio transfer remain NOT_RUN |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, ACK/STATE recovery, duplicate handling, owner restart and live invalid-URL rejection with unchanged STATE pass; cross-session/unauthorized and remote rejection, mapped/reparse runtime cases, process-interrupted ACK loss, active playback and audible parity remain NOT_VERIFIED |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart and live URL/UNC-shaped invalid-path rejection with unchanged STATE pass; cross-session/unauthorized and remote pipe-client rejection, mapped/reparse runtime cases, process-interrupted ACK loss, active playback and audible parity remain NOT_VERIFIED |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -234,7 +234,10 @@ regression evidence are recorded in the
 The isolated Windows paired test passed **1/1** with cold and warm lifecycle,
 ACK/STATE reconciliation, duplicate suppression, sequential FIFO, four
 independent clients released together, owner restart without blind replay and
-receiver rejection of a URL-shaped invalid path without state change. The
+receiver rejection of URL- and UNC-shaped invalid paths without state change.
+The paired run also dropped a command connection before ACK receipt, recovered
+the applied result from QUERY/STATE and verified a same-ID retry did not enqueue
+a duplicate. The
 concurrent queue order matched unique strictly increasing ACK revisions, and
 no client invoked the cold-launch callback while the pipe was held. Studio
 native handoff tests passed **6/6**; Play native tests passed **31/31** with the
@@ -242,8 +245,9 @@ test app-data feature; Tauri CLI test-feature release build and format checks
 passed. All paired media/profile/app-data remained in disposable system-temp
 paths.
 
-G3 remains **PARTIAL**. Cross-session/unauthorized and remote rejection,
-UNC/mapped-drive/reparse runtime paths, ACK loss across process interruption,
+G3 remains **PARTIAL**. Cross-session/unauthorized and remote pipe-client
+rejection, mapped-drive/reparse runtime paths (including a reparse target
+resolving to UNC), ACK loss across process interruption,
 Studio/API exit during active playback and audible parity remain unverified.
 S2 process-crash/power-loss recovery and remaining storage-write cases are
 also open. PR #25 remains draft pending those gates. Keep ordinary Studio
@@ -271,6 +275,28 @@ playback enabled; no playback parity, source removal or release is claimed.
 | Traceability matrix | 0.2.5b → 0.2.6b |
 | Concurrent-client RCA | 0.1.2b → 0.1.3b |
 | Integration/migration spec and Studio/Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 UNC receiver test
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.6b → 0.2.7b |
+| Execution DAG | 0.2.8b → 0.2.9b |
+| Documentation register | 0.2.9b → 0.2.10b |
+| Foundation evidence | 0.2.6b → 0.2.7b |
+| Traceability matrix | 0.2.6b → 0.2.7b |
+| Studio and Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 lost-ACK reconciliation
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.7b → 0.2.8b |
+| Execution DAG | 0.2.9b → 0.2.10b |
+| Documentation register | 0.2.10b → 0.2.11b |
+| Foundation evidence | 0.2.7b → 0.2.8b |
+| Traceability matrix | 0.2.7b → 0.2.8b |
+| Studio and Play application versions | No change |
 
 ## Current documentation version diff — 2026-09-27 G3 paired lifecycle
 
@@ -392,6 +418,8 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.11b | 2026-09-27 | beta | Record paired lost-ACK QUERY/STATE recovery while the owner is live; retain interruption and parity gates | based on cee5e93 | Codex |
+| 0.2.10b | 2026-09-27 | beta | Record live URL/UNC-shaped receiver rejection with unchanged STATE; keep remote and parity gates open | based on cee5e93 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired G3 rerun against rebuilt final pipe-recovery source while keeping remaining acceptance gates open | based on 1084d5e | Codex |
 | 0.2.8b | 2026-09-27 | beta | Record the busy-pipe/cold-launch fix and concurrent paired FIFO evidence while retaining remaining parity gates | based on 1084d5e | Codex |
 | 0.2.7b | 2026-09-27 | beta | Record native receiver invalid-path rejection and unchanged STATE while retaining parity gates | based on b90ffaed | Codex |
