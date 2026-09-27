@@ -1269,6 +1269,147 @@ mod windows_pipe {
             assert_eq!(server.join().unwrap(), hello);
         }
 
+        #[test]
+        #[ignore = "requires SMB Server and loopback named-pipe access"]
+        fn remote_named_pipe_client_is_denied_with_local_positive_control() {
+            assert_ne!(
+                server_pipe_mode() & PIPE_REJECT_REMOTE_CLIENTS,
+                0,
+                "the target pipe must enable remote-client rejection"
+            );
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let control_name = format!("{PIPE_NAME_PREFIX}.remote-control.{nonce}")
+                .encode_utf16()
+                .chain([0])
+                .collect::<Vec<_>>();
+            let control_pipe = create_test_pipe_with_dacl(
+                &control_name,
+                "D:P(A;;GA;;;AU)",
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+            );
+            let remote_control = remote_pipe_path(&control_name);
+            let remote_control_client = open_pipe_client(&remote_control).unwrap_or_else(|error| {
+                panic!("loopback SMB named-pipe positive control failed: {error}")
+            });
+            let control_raw = control_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "loopback SMB control client should connect to a pipe without remote rejection"
+            );
+            unsafe {
+                CloseHandle(remote_control_client);
+            }
+            drop(control_pipe);
+
+            let target_name = format!("{PIPE_NAME_PREFIX}.remote-target.{nonce}")
+                .encode_utf16()
+                .chain([0])
+                .collect::<Vec<_>>();
+            let remote_target = remote_pipe_path(&target_name);
+            // Keep the DACL identical to the control so this probe isolates the server mode flag.
+            let target_pipe =
+                create_test_pipe_with_dacl(&target_name, "D:P(A;;GA;;;AU)", server_pipe_mode());
+            let remote_result = open_pipe_client(&remote_target);
+            assert_eq!(
+                remote_result.err(),
+                Some(ERROR_ACCESS_DENIED),
+                "a client using the UNC/SMB path must be denied by the protected handoff pipe"
+            );
+            drop(target_pipe);
+
+            let local_pipe =
+                create_test_pipe_with_dacl(&target_name, "D:P(A;;GA;;;AU)", server_pipe_mode());
+            let local_client = connect_test_client(&target_name);
+            drop(local_client);
+            drop(local_pipe);
+        }
+
+        fn create_test_pipe_with_dacl(name: &[u16], sddl: &str, mode: u32) -> File {
+            let sddl = sddl.encode_utf16().chain([0]).collect::<Vec<_>>();
+            let mut descriptor = null_mut();
+            assert_ne!(
+                unsafe {
+                    ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                        sddl.as_ptr(),
+                        SDDL_REVISION_1,
+                        &mut descriptor,
+                        null_mut(),
+                    )
+                },
+                0,
+                "test pipe DACL should be valid"
+            );
+            let attributes = SECURITY_ATTRIBUTES {
+                nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+                lpSecurityDescriptor: descriptor,
+                bInheritHandle: 0,
+            };
+            let handle = unsafe {
+                CreateNamedPipeW(
+                    name.as_ptr(),
+                    PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                    mode,
+                    1,
+                    PIPE_CAP as u32,
+                    PIPE_CAP as u32,
+                    0,
+                    &attributes,
+                )
+            };
+            unsafe {
+                LocalFree(descriptor.cast());
+            }
+            assert!(
+                handle != INVALID_HANDLE_VALUE && !handle.is_null(),
+                "loopback SMB control pipe should be created"
+            );
+            unsafe { File::from_raw_handle(handle as RawHandle) }
+        }
+
+        fn remote_pipe_path(name: &[u16]) -> Vec<u16> {
+            let length = name
+                .iter()
+                .position(|value| *value == 0)
+                .unwrap_or(name.len());
+            let local_name = String::from_utf16(&name[..length])
+                .expect("local test pipe name should be valid UTF-16");
+            let suffix = local_name
+                .strip_prefix(r"\\.\pipe\")
+                .expect("test pipe should use the local named-pipe namespace");
+            format!(r"\\localhost\pipe\{suffix}")
+                .encode_utf16()
+                .chain([0])
+                .collect()
+        }
+
+        fn open_pipe_client(name: &[u16]) -> Result<HANDLE, u32> {
+            let handle = unsafe {
+                CreateFileW(
+                    name.as_ptr(),
+                    GENERIC_READ | GENERIC_WRITE,
+                    0,
+                    null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    null_mut(),
+                )
+            };
+            if handle == INVALID_HANDLE_VALUE || handle.is_null() {
+                Err(unsafe { GetLastError() })
+            } else {
+                Ok(handle)
+            }
+        }
+
         fn assert_restricted_logon_client_is_denied(name: &[u16]) {
             let token = restricted_token_without_logon_sid();
             assert_ne!(unsafe { ImpersonateLoggedOnUser(token) }, 0);

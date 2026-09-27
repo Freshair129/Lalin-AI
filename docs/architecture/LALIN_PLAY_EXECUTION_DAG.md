@@ -1,7 +1,7 @@
 ---
-version: "0.2.15b"
+version: "0.2.16b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T11:59:00+07:00,Codex"
+last_update: "2026-09-27T13:04:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -104,9 +104,12 @@ test executable with the `g3-test-app-data-dir` feature; it must fail closed if
 the override is missing. Do not use the normal `ai.lalin.play` app-data
 directory.
 
-Verify same-session authorization and remote-client rejection, valid and invalid
-local paths, FIFO bursts, duplicate delivery, ACK loss followed by query/state
-reconciliation, and owner restart without blind replay. Confirm that Play/Play
+Verify same-session authorization and remote-client rejection. For the remote
+case, first prove the loopback SMB/UNC route accepts a connection to a test pipe
+without remote rejection; then require the protected Play pipe to return
+`ERROR_ACCESS_DENIED` on that same path while a local client still opens it.
+Also verify valid and invalid local paths, FIFO bursts, duplicate delivery, ACK
+loss followed by query/state reconciliation, and owner restart without blind replay. Confirm that Play/Play
 Next/Add to Queue retain their distinct outcomes and that valid local media
 reaches the same single playback owner while Studio/API may exit.
 
@@ -395,7 +398,7 @@ playback and audible parity remain unverified. S2 process-crash/power-loss
 recovery and remaining write-failure gates also remain open. Keep ordinary
 Studio playback available.
 
-## Execution status — 2026-09-27 restricted-logon ACL negative
+## Earlier execution status — 2026-09-27 restricted-logon ACL negative
 
 The Windows pipe ACL test now creates a restricted impersonation token with the
 current logon SID disabled, attempts `CreateFileW` against the real local test
@@ -406,10 +409,30 @@ a separate Windows logon session or a remote pipe client.
 
 The focused test passed **1/1**, and the complete Play Rust suite passed **31/31**
 with `g3-test-app-data-dir`. `cargo fmt -- --check` and `git diff --check` passed.
-G3 remains PARTIAL: different-logon-session and remote pipe-client
-rejection, mapped-drive/reparse runtime cases, Studio/API exit during active
-playback and audible parity remain open. S2 process-crash/power-loss recovery and
-remaining native write-failure gates are open. Preserve Studio playback.
+At this validation point G3 remained PARTIAL: different-logon-session and remote
+pipe-client rejection, mapped-drive/reparse runtime cases, Studio/API exit during
+active playback and audible parity were still open. S2 process-crash/power-loss
+recovery and remaining native write-failure gates were also open. Preserve
+Studio playback.
+
+## Execution status — 2026-09-27 G3 loopback SMB denial
+
+The ignored Play Windows test
+`handoff::windows_pipe::tests::remote_named_pipe_client_is_denied_with_local_positive_control`
+passed **1/1**. Its authenticated-users positive-control pipe accepted
+`\\localhost\pipe\...`, proving the loopback SMB named-pipe route worked on this
+host. The target used the same permissive test DACL but the production pipe mode;
+it returned `ERROR_ACCESS_DENIED` for the same remote path, then accepted a
+local client. This isolates the remote-rejection flag from a DACL denial. The
+existing restricted-token ACL test also passed **1/1**. The full Play Rust suite
+passed **35 tests, 0 failures, 2 ignored** (the opt-in SMB probe and migration
+child-process driver); `cargo fmt --check` and `git diff --check` passed.
+
+This proves `PIPE_REJECT_REMOTE_CLIENTS` denies a loopback UNC/SMB client on
+this host when the pipe DACL would otherwise allow it. It does not prove
+behavior from a different machine or a separately logged-on interactive user.
+Mapped-drive/reparse runtime cases, Studio/API exit during active playback and
+audible parity remain open. Preserve Studio playback.
 
 ## Execution status — 2026-09-27 S2 recovery and write failures
 
@@ -445,6 +468,7 @@ remain open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.16b | 2026-09-27 | beta | Verify loopback SMB/UNC denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |
 | 0.2.15b | 2026-09-27 | beta | Add retryable undo-snapshot write-failure evidence alongside initial journal and history failures | based on e843e1c | Codex |
 | 0.2.14b | 2026-09-27 | beta | Cover initial journal creation and retryable history-write failures with process-termination recovery; retain runtime and parity gates | based on 75c2001 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Verify directory-level S2 recovery after forced child-process termination at five checkpoints; retain runtime and parity gates | based on e2bd20a | Codex |

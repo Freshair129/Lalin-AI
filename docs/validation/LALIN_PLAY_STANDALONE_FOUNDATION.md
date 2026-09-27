@@ -1,7 +1,7 @@
 ---
-version: "0.2.13b"
+version: "0.2.14b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T11:59:00+07:00,Codex"
+last_update: "2026-09-27T13:04:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; child-process termination at five transaction checkpoints and directory-level recovery pass; power-loss, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; different-logon-session, remote-client, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; same-host loopback SMB/UNC client is denied with a working remote positive control and local access; separate-logon-session, different-host, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -103,10 +103,9 @@ output settings and dark native controls.
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
 Remaining work includes S2 power-loss durability and other native write-failure
-points, plus S3 different-logon-session and
-remote pipe-client rejection, UNC/mapped-drive/reparse runtime cases,
-Studio/API exit during
-active playback and audible parity. The paired URL-shaped invalid-path case now
+points, plus S3 separate interactive logon-session and different-host pipe
+clients, media mapped-drive/reparse runtime cases, Studio/API exit during active
+playback and audible parity. The paired URL-shaped invalid-path case now
 passes but does not close those filesystem/runtime gates. Studio playback stays
 available until parity is proven. S4–S7 remain gated by ADR-004.
 An interrupted import restores through the Play-owned journal on next launch; the
@@ -287,10 +286,34 @@ complete Play Rust suite passed 31/31 with `g3-test-app-data-dir`; `cargo fmt --
 --check` and `git diff --check` passed.
 
 This verifies denial of a local client token without the pipe's allowed logon SID.
-It does not exercise a different Windows logon session or a remote client.
-Cross-session and remote rejection, mapped-drive/reparse runtime cases, Studio/API
-exit during active playback, audible parity, S2 process-crash/power-loss recovery
-and remaining native write-failure cases remain open. Preserve Studio playback.
+It does not exercise a different interactive Windows logon session or remote
+machine. The following loopback SMB probe covers the remote-client path on this
+host. Mapped-drive/reparse runtime cases, Studio/API exit during active playback,
+audible parity, S2 process-crash/power-loss recovery and remaining native
+write-failure cases remain open. Preserve Studio playback.
+
+## G3 loopback SMB remote-client denial — 2026-09-27
+
+The opt-in Windows test
+`handoff::windows_pipe::tests::remote_named_pipe_client_is_denied_with_local_positive_control`
+creates an authenticated-users control pipe without `PIPE_REJECT_REMOTE_CLIENTS`
+and successfully connects through `\\localhost\pipe\...`. It then creates a
+target pipe with the identical DACL and Play's production pipe mode, which
+includes `PIPE_REJECT_REMOTE_CLIENTS`; the same UNC/SMB path receives
+`ERROR_ACCESS_DENIED`, while a local client opens the target successfully. This
+isolates remote-client rejection from a DACL denial. The SMB Server service was
+running during the test.
+
+The focused runtime test passed **1/1**. The existing restricted-token ACL test
+passed **1/1**, demonstrating denial when the current logon SID is absent. The
+full Play Rust suite passed **35 tests, 0 failures, 2 ignored**; the new probe is
+ignored in ordinary runs because it requires loopback SMB named-pipe access.
+`cargo fmt --check` and `git diff --check` passed.
+
+This proves `PIPE_REJECT_REMOTE_CLIENTS` denies loopback UNC/SMB access on this
+host when the DACL allows the client, and that local access remains available.
+It does not test another machine or a separate interactive Windows logon
+session. Keep Studio playback enabled until audible parity is proven.
 
 ## S2 recovery and storage-write failures — 2026-09-27
 
@@ -315,6 +338,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.14b | 2026-09-27 | beta | Record loopback SMB/UNC remote-client denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Cover retry after undo-snapshot write failure with initial journal/history failures and five process checkpoints | based on e843e1c | Codex |
 | 0.2.12b | 2026-09-27 | beta | Add initial journal-creation and retryable history-write failure evidence alongside five S2 process checkpoints | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Add five-checkpoint child-process termination and directory-level S2 recovery evidence; retain power-loss, transfer and parity gates | based on e2bd20a | Codex |

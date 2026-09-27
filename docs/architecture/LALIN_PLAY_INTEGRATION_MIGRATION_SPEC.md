@@ -1,7 +1,7 @@
 ---
-version: "0.2.13b"
+version: "0.2.14b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:59:00+07:00,Codex"
+last_update: "2026-09-27T13:04:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -113,10 +113,14 @@ Security and lifecycle implementation status:
   ID against the still-running owner. A local Windows ACL test now attempts to
   open the pipe with a restricted token whose current logon SID is disabled and
   verifies `CreateFileW` receives `ERROR_ACCESS_DENIED`, then verifies the normal
-  same-session HELLO still succeeds. Different-logon-session and remote
-  pipe-client attempts remain unverified. The isolated paired owner-restart test
-  verifies that a command applied before its ACK is read is not blindly replayed
-  after a new owner session starts.
+  same-session HELLO still succeeds. An opt-in Windows runtime test verifies a
+  loopback SMB/UNC positive-control pipe accepts a connection, then a pipe using
+  the production remote-rejection mode and the same permissive test DACL denies
+  the same remote path with `ERROR_ACCESS_DENIED`; a local open still succeeds.
+  This isolates the remote-rejection flag from DACL denial. A separate
+  interactive logon session and a different remote machine remain unverified.
+  The isolated paired owner-restart test verifies that a command applied before
+  its ACK is read is not blindly replayed after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
@@ -161,16 +165,19 @@ Focused local tests now cover cold/warm launch decisions, one-launch timeout,
 Studio FIFO ordering, payload, canonical-root and drive-type validation,
 duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots,
 protected same-logon DACL creation, a local restricted-token denial when the
-allowed logon SID is absent, and the remote-client-rejection flag. Drive
+allowed logon SID is absent, the remote-client-rejection flag, and an opt-in
+loopback SMB/UNC runtime denial with identical-DACL remote and local positive
+controls. Drive
 classification is tested with fixed, remote, unknown and invalid values; no
 mapped-drive runtime case was exercised. The local negative ACL case does not
-exercise a separate logon session or remote client. Live cross-process cold/warm
-delivery, FIFO, ACK/STATE reconciliation including
-a dropped ACK while the owner remains live, a command applied before a lost ACK
+exercise a separate interactive logon session; the SMB probe does not use a
+different remote machine. Live cross-process cold/warm delivery, FIFO, ACK/STATE
+reconciliation including a dropped ACK while the owner remains live, a command applied before a lost ACK
 followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
-rejection are verified in the isolated Windows paired test. Different-logon-session
-and remote pipe-client attempts, Studio/API exit during active playback, audible
-parity and Cast regression remain **NOT VERIFIED**.
+rejection are verified in the isolated Windows paired test. Same-host SMB/UNC
+pipe rejection is verified by the dedicated runtime probe. A separate
+interactive logon session or remote machine, Studio/API exit during active
+playback, audible parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Approved S2 opt-in migration envelope v1
 
@@ -255,6 +262,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.14b | 2026-09-27 | beta | Verify loopback SMB/UNC rejection with a remote positive control and local access; retain separate-session and parity gates | based on a75c540 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Add retryable S2 undo-snapshot failure evidence alongside journal/history and process-recovery tests | based on e843e1c | Codex |
 | 0.2.12b | 2026-09-27 | beta | Add S2 journal-creation and retryable history-write failure evidence; retain power-loss and transfer gates | based on 75c2001 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Record test-binary termination at five S2 checkpoints and directory-level restart recovery; retain power-loss and transfer gates | based on e2bd20a | Codex |

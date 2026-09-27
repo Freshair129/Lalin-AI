@@ -1,7 +1,7 @@
 ---
-version: "0.2.16b"
+version: "0.2.17b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:59:00+07:00,Codex"
+last_update: "2026-09-27T13:04:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, and local restricted-token ACL denial pass; different-logon-session and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, and loopback SMB/UNC remote denial with positive controls pass; separate interactive logon session, different remote host, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -455,9 +455,38 @@ The focused ACL test passed 1/1, and the full Play Rust suite passed 31/31 with
 `g3-test-app-data-dir`. Rust formatting and `git diff --check` passed.
 
 This verifies local denial for a token without the pipe's allowed logon SID. It
-does not prove rejection from a separate Windows logon session or remote client.
-Those cases, mapped-drive/reparse runtime coverage, Studio/API exit during active
-playback and audible parity remain open. Studio playback stays enabled.
+does not prove rejection from a separate interactive Windows logon session. The
+following runtime check verifies the remote SMB/UNC route on this host.
+
+## G3 loopback SMB remote-client denial — 2026-09-27
+
+The opt-in Windows test
+`handoff::windows_pipe::tests::remote_named_pipe_client_is_denied_with_local_positive_control`
+successfully connected to an authenticated-users control pipe through
+`\\localhost\pipe\...` with remote rejection disabled. A target pipe with the
+same DACL and Play's production pipe mode returned `ERROR_ACCESS_DENIED` on the
+same path; a local open then succeeded. The SMB Server service was running.
+
+The remote probe passed **1/1**; the existing restricted-token ACL test passed
+**1/1**; the complete Play Rust suite passed **35 tests, 0 failures, 2 ignored**.
+The new probe is ignored in normal runs because it requires loopback SMB named
+pipe access. Formatting and `git diff --check` passed.
+
+This confirms loopback SMB/UNC denial on this host. It does not exercise a
+different machine or a separate interactive Windows logon session. Mapped-drive
+and reparse runtime cases, Studio/API exit during active playback and audible
+parity remain open. Studio playback stays enabled.
+
+## Current documentation version diff — 2026-09-27 G3 loopback SMB denial
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.13b → 0.2.14b |
+| Execution DAG | 0.2.15b → 0.2.16b |
+| Documentation register | 0.2.16b → 0.2.17b |
+| Foundation evidence | 0.2.13b → 0.2.14b |
+| Traceability matrix | 0.2.13b → 0.2.14b |
+| Studio and Play application versions | No change |
 
 ## Current documentation version diff — 2026-09-27 G3 restricted-logon ACL test
 
@@ -530,6 +559,7 @@ are open. Studio playback remains available until parity is proven.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.17b | 2026-09-27 | beta | Record loopback SMB/UNC remote-client denial with positive controls; retain cross-session and playback gates | based on a75c540 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record retryable undo-snapshot write failure and synchronized S2 evidence; retain power-loss and runtime gates | based on e843e1c | Codex |
 | 0.2.15b | 2026-09-27 | beta | Record initial journal and retryable history-write failure evidence with exact remaining S2 gates | based on 75c2001 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Record five-checkpoint S2 child-process recovery evidence and exact open power-loss/live-transfer gates | based on e2bd20a | Codex |
