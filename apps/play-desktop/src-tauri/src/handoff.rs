@@ -1019,19 +1019,19 @@ mod windows_pipe {
         Ok(unsafe { File::from_raw_handle(handle as RawHandle) })
     }
 
-    pub fn serve(app: AppHandle, service: HandoffService, name: Vec<u16>, first: File) {
-        let mut next = Some(first);
+    pub fn serve(app: AppHandle, service: HandoffService, name: Vec<u16>, mut pipe: File) {
         loop {
-            let mut pipe = match next.take() {
-                Some(pipe) => pipe,
-                None => match create_server_pipe(&name, false) {
-                    Ok(pipe) => pipe,
-                    Err(_) => return,
-                },
-            };
             let raw = pipe.as_raw_handle();
             let connect = unsafe { ConnectNamedPipe(raw.cast(), null_mut::<OVERLAPPED>()) };
             if connect == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                unsafe {
+                    DisconnectNamedPipe(raw.cast());
+                }
+                drop(pipe);
+                pipe = match create_server_pipe(&name, false) {
+                    Ok(pipe) => pipe,
+                    Err(_) => return,
+                };
                 continue;
             }
             let first_frame = match read_initial_authorized_frame(&mut pipe) {
@@ -1043,7 +1043,7 @@ mod windows_pipe {
                     continue;
                 }
             };
-            let _ = serve_connection(&app, &service, pipe, first_frame);
+            let _ = serve_connection(&app, &service, &mut pipe, first_frame);
         }
     }
 
@@ -1086,49 +1086,48 @@ mod windows_pipe {
     fn serve_connection(
         app: &AppHandle,
         service: &HandoffService,
-        mut pipe: File,
+        pipe: &mut File,
         first: Vec<u8>,
     ) -> Result<(), String> {
-        let message: ClientMessage = match serde_json::from_slice(&first) {
-            Ok(message) => message,
-            Err(_) => {
-                return Err("malformed_frame".into());
-            }
-        };
-        let responses = match process_message(app, service, message) {
-            Ok(responses) => responses,
-            Err(error) => {
-                return Err(error);
-            }
-        };
-        for response in responses {
-            write_value(&mut pipe, &response)?;
-        }
-
-        // A connection performs one request after HELLO. The single server loop
-        // serializes all mutations; the Studio client serializes burst sends.
-        let command = read_frame(&mut pipe, ACK_TIMEOUT).ok();
-        if let Some(command) = command {
-            let message: ClientMessage = match serde_json::from_slice(&command) {
+        let raw = pipe.as_raw_handle();
+        let result = (|| -> Result<(), String> {
+            let message: ClientMessage = match serde_json::from_slice(&first) {
                 Ok(message) => message,
                 Err(_) => {
-                    return write_error(&mut pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง");
+                    return Err("malformed_frame".into());
                 }
             };
-            match process_message(app, service, message) {
-                Ok(responses) => {
-                    for response in responses {
-                        write_value(&mut pipe, &response)?;
-                    }
-                }
-                Err(code) => write_error(&mut pipe, &code, "ไม่สามารถยืนยันคำสั่ง handoff ได้")?,
+            let responses = process_message(app, service, message)?;
+            for response in responses {
+                write_value(pipe, &response)?;
             }
-        }
-        let _ = unsafe { FlushFileBuffers(pipe.as_raw_handle().cast()) };
+
+            // A connection performs one request after HELLO. Reusing this pipe
+            // instance keeps a warm owner continuously discoverable.
+            let command = read_frame(pipe, ACK_TIMEOUT).ok();
+            if let Some(command) = command {
+                let message: ClientMessage = match serde_json::from_slice(&command) {
+                    Ok(message) => message,
+                    Err(_) => {
+                        return write_error(pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง");
+                    }
+                };
+                match process_message(app, service, message) {
+                    Ok(responses) => {
+                        for response in responses {
+                            write_value(pipe, &response)?;
+                        }
+                    }
+                    Err(code) => write_error(pipe, &code, "ไม่สามารถยืนยันคำสั่ง handoff ได้")?,
+                }
+            }
+            Ok(())
+        })();
+        let _ = unsafe { FlushFileBuffers(raw.cast()) };
         unsafe {
-            DisconnectNamedPipe(pipe.as_raw_handle().cast());
+            DisconnectNamedPipe(raw.cast());
         }
-        Ok(())
+        result
     }
 
     fn write_error(pipe: &mut File, code: &str, message: &str) -> Result<(), String> {

@@ -1,7 +1,7 @@
 ---
-version: "0.2.4b"
+version: "0.2.6b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T09:01:00+07:00,Codex"
+last_update: "2026-09-27T09:49:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,7 +14,7 @@ attributes:
 
 ## Outcome and boundary
 
-**S1 LOCAL PASS. S2 migration and S3 handoff are implemented locally with focused automated evidence; S2 recovery and full S3 playback parity remain NOT_VERIFIED. An isolated paired control-plane lifecycle run passed its listed cases, and the overall repository split remains PARTIAL.**
+**S1 LOCAL PASS. S2 migration and S3 handoff are implemented locally with focused automated evidence; S2 recovery and full S3 playback parity remain NOT_VERIFIED. Isolated paired control-plane lifecycle, receiver rejection and concurrent-client FIFO checks passed for their listed cases; the overall repository split remains PARTIAL.**
 
 The user approved PRD/ADR-004 implementation on `codex/lalin-play-split`.
 Source baseline is `84290102b84fd76dec069bf6d61ffdd2fc8466ab` in
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential four-file queue order, owner restart, and live invalid-URL receiver rejection with unchanged STATE; concurrent-client security cases and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential and four-client concurrent queue order by ACK revision, owner restart, busy-pipe no-relaunch behavior, and live invalid-URL rejection with unchanged STATE; cross-session/unauthorized, remote, UNC/mapped-drive/reparse, interrupted-ACK and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -212,10 +212,50 @@ Studio/API exit during playback and audible parity remain unverified. See the
 [receiver path-rejection RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md).
 Keep ordinary Studio playback enabled.
 
+## G3 concurrent-client ordering follow-up — 2026-09-27
+
+The paired run exposed two linked causes for possible cold Play launches during
+warm handoff: Studio returned the cold-start sentinel after a busy-pipe wait,
+and Play dropped/recreated its only server pipe instance after every request.
+Studio now retries a busy instance without calling the launch callback; Play
+reuses the same disconnected instance for the next connection. See the
+[concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md).
+
+The ignored Windows paired test
+`playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+passed **1/1** with a Tauri CLI-built Play executable embedded from the relative
+frontend path and `g3-test-app-data-dir`. One live HELLO connection occupied the
+single pipe while four independent Studio client states started together. They
+did not complete early or invoke the cold-launch callback; after release, each
+received one applied ACK. The final queue suffix matched the strict ACK revision
+order, with four unique increasing revisions. Revisions need not be contiguous
+because Play's published playback snapshots may advance the state revision
+between ACKs.
+
+The same paired run retained the earlier cold/warm, ACK/STATE reconciliation,
+duplicate suppression, owner-restart/no-blind-replay and invalid URL-shaped
+path/no-state-change assertions. Play Rust tests with
+`g3-test-app-data-dir` passed **31/31**; Studio native handoff tests passed
+**6/6** with the paired case ignored in the ordinary run. Tauri CLI test-feature
+release build, both Rust format checks and `git diff --check` passed. The run
+used an empty disposable WebView2 profile, separate test-only app-data and
+unique silent WAV fixtures under system temp; no normal Play profile was used.
+After the pipe-creation error path was updated to release a failed instance
+before replacement, the Tauri CLI release binary was rebuilt from final source
+and the paired test was rerun successfully (**1/1**).
+
+G3 remains **PARTIAL**. Cross-session/unauthorized and remote rejection,
+UNC/mapped-drive/reparse runtime cases, ACK loss across process interruption,
+Studio/API exit during active playback and audible parity remain unverified.
+S2 process-crash/power-loss recovery and remaining storage-write cases also
+remain open. Preserve ordinary Studio playback until parity is proven.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.6b | 2026-09-27 | beta | Revalidate paired concurrent lifecycle against a rebuild of final pipe-recovery source; retain open playback parity gates | based on 1084d5e | Codex |
+| 0.2.5b | 2026-09-27 | beta | Add isolated concurrent-client paired FIFO evidence and record busy-pipe lifecycle fix; keep playback parity gates open | based on 1084d5e | Codex |
 | 0.2.4b | 2026-09-27 | beta | Add paired invalid-path receiver evidence and retain remaining S3 parity gates | based on b90ffaed | Codex |
 | 0.2.3b | 2026-09-27 | beta | Add isolated paired lifecycle evidence while keeping audio parity and remaining S3 acceptance gates open | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 and S3 local implementation checks and preserve native lifecycle/parity gates | 7c30ea1 / 235875b | Codex |

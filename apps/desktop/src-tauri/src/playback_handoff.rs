@@ -787,6 +787,7 @@ mod windows_pipe {
     };
 
     const PIPE_PREFIX: &str = r"\\.\pipe\ai.lalin.play.handoff.v1";
+    const PIPE_BUSY_TIMEOUT: Duration = Duration::from_secs(12);
 
     pub fn is_local_drive(root: &str) -> bool {
         let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
@@ -863,33 +864,51 @@ mod windows_pipe {
     }
 
     pub fn open_client(name: &[u16], expected_executable: &Path) -> Result<Option<File>, String> {
-        let handle = unsafe {
-            CreateFileW(
-                name.as_ptr(),
-                GENERIC_READ | GENERIC_WRITE,
-                0,
-                null(),
-                OPEN_EXISTING,
-                FILE_ATTRIBUTE_NORMAL,
-                null_mut(),
-            )
-        };
-        if handle == INVALID_HANDLE_VALUE || handle.is_null() {
+        let deadline = Instant::now() + PIPE_BUSY_TIMEOUT;
+        let mut saw_busy = false;
+        loop {
+            let handle = unsafe {
+                CreateFileW(
+                    name.as_ptr(),
+                    GENERIC_READ | GENERIC_WRITE,
+                    0,
+                    null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    null_mut(),
+                )
+            };
+            if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                let pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
+                verify_server(pipe.as_raw_handle().cast(), expected_executable)?;
+                return Ok(Some(pipe));
+            }
+
             let error = unsafe { GetLastError() };
             if error == ERROR_PIPE_BUSY {
-                unsafe {
-                    WaitNamedPipeW(name.as_ptr(), 250);
+                saw_busy = true;
+                let remaining = deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err("named pipe Lalin Play ยังคงไม่พร้อมหลังรอ owner เดิม".into());
                 }
-                return Ok(None);
+                let wait_ms = remaining.as_millis().clamp(1, 250) as u32;
+                unsafe {
+                    WaitNamedPipeW(name.as_ptr(), wait_ms);
+                }
+                continue;
             }
             if error == ERROR_FILE_NOT_FOUND {
-                return Ok(None);
+                if !saw_busy {
+                    return Ok(None);
+                }
+                if Instant::now() >= deadline {
+                    return Err("named pipe Lalin Play หายไประหว่างรอ owner เดิม".into());
+                }
+                std::thread::sleep(Duration::from_millis(10));
+                continue;
             }
             return Err("named pipe Lalin Play ถูกปฏิเสธหรือไม่ปลอดภัย".into());
         }
-        let pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
-        verify_server(pipe.as_raw_handle().cast(), expected_executable)?;
-        Ok(Some(pipe))
     }
 
     fn verify_server(pipe: HANDLE, expected_executable: &Path) -> Result<(), String> {
@@ -1500,6 +1519,161 @@ mod tests {
                 return Err("FIFO sequence queue order did not match ACK order".into());
             }
 
+            let before_concurrent = burst_state;
+            let (mut occupied_pipe, cold) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Err::<(), String>("the existing Play owner must not be relaunched".into()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            if cold {
+                return Err("concurrent-client setup did not reuse the warm Play owner".into());
+            }
+            let (occupied_owner, _) = handshake(&mut occupied_pipe)?;
+            if occupied_owner != first.ack.owner_session {
+                return Err("Play owner changed before concurrent-client delivery".into());
+            }
+
+            let concurrent_nonce = format!("{burst_nonce}-concurrent");
+            let mut concurrent_commands = Vec::new();
+            for index in 0..4 {
+                let request_id = format!("00000000-0000-4000-8000-{:012x}", 300 + index);
+                let title = format!("lalin-play-g3-concurrent-{concurrent_nonce}-{index}");
+                let media_path = media_parent.join(format!("{title}.wav"));
+                if media_path.exists() {
+                    return Err("G3 concurrent fixture path already exists".into());
+                }
+                std::fs::copy(&media, &media_path)
+                    .map_err(|_| "could not prepare a unique concurrent G3 media fixture")?;
+                burst_media_paths.push(media_path.clone());
+                concurrent_commands.push((request_id, title, media_path));
+            }
+
+            let start = std::sync::Arc::new(std::sync::Barrier::new(concurrent_commands.len()));
+            let launch_count = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let (started_tx, started_rx) = std::sync::mpsc::channel();
+            let (finished_tx, finished_rx) = std::sync::mpsc::channel();
+            let mut senders = Vec::new();
+            for (request_id, title, media_path) in concurrent_commands {
+                let start = std::sync::Arc::clone(&start);
+                let launch_count = std::sync::Arc::clone(&launch_count);
+                let started_tx = started_tx.clone();
+                let finished_tx = finished_tx.clone();
+                let executable = executable.clone();
+                let owner_session = first.ack.owner_session.clone();
+                let minimum_revision = before_concurrent.revision;
+                senders.push(std::thread::spawn(move || {
+                    let client = StudioHandoffClient::default();
+                    start.wait();
+                    let _ = started_tx.send(());
+                    let reply = send_playback_with_launcher(
+                        &client,
+                        request_id.clone(),
+                        "add-to-queue".into(),
+                        HandoffFile {
+                            path: media_path.to_string_lossy().into_owned(),
+                            title: Some(title.clone()),
+                        },
+                        executable,
+                        CONNECT_ATTEMPTS * 3,
+                        move |_| {
+                            launch_count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                            Err("busy Play pipe must not invoke the cold-launch callback".into())
+                        },
+                    )
+                    .and_then(|reply| {
+                        require_applied_reply(
+                            &reply,
+                            &request_id,
+                            &owner_session,
+                            minimum_revision,
+                        )?;
+                        Ok(reply)
+                    });
+                    let _ = finished_tx.send((request_id, title, reply));
+                }));
+            }
+            drop(started_tx);
+            drop(finished_tx);
+            for _ in 0..senders.len() {
+                started_rx
+                    .recv_timeout(Duration::from_secs(3))
+                    .map_err(|_| "concurrent Studio clients did not reach their start barrier")?;
+            }
+            if let Ok((request_id, _, reply)) = finished_rx.recv_timeout(Duration::from_millis(600))
+            {
+                let outcome = match reply {
+                    Ok(reply) => format!("unexpected early ACK revision {}", reply.ack.revision),
+                    Err(error) => error,
+                };
+                return Err(format!(
+                    "client {request_id} completed while the existing Play pipe was occupied: {outcome}"
+                ));
+            }
+            drop(occupied_pipe);
+
+            let mut concurrent_results = Vec::with_capacity(senders.len());
+            for _ in 0..senders.len() {
+                let (request_id, title, reply) = finished_rx
+                    .recv_timeout(Duration::from_secs(30))
+                    .map_err(|_| {
+                        "concurrent Studio handoff did not finish after the pipe became free"
+                    })?;
+                let reply = reply.map_err(|error| {
+                    format!("concurrent Studio handoff {request_id} failed: {error}")
+                })?;
+                concurrent_results.push((request_id, title, reply));
+            }
+            for sender in senders {
+                sender
+                    .join()
+                    .map_err(|_| "concurrent Studio sender thread panicked")?;
+            }
+            if launch_count.load(std::sync::atomic::Ordering::SeqCst) != 0 {
+                return Err("concurrent warm handoffs attempted to relaunch Play".into());
+            }
+
+            concurrent_results.sort_by_key(|(_, _, reply)| reply.ack.revision);
+            let mut previous_revision = before_concurrent.revision;
+            for (request_id, _, reply) in &concurrent_results {
+                require_applied_reply(
+                    reply,
+                    request_id,
+                    &first.ack.owner_session,
+                    previous_revision,
+                )?;
+                if reply.ack.revision <= previous_revision {
+                    return Err("concurrent ACK revisions were not unique and increasing".into());
+                }
+                previous_revision = reply.ack.revision;
+            }
+
+            let concurrent_state = read_playback_state(&client)?
+                .ok_or("Play state disappeared after concurrent handoffs")?;
+            let expected_concurrent_titles = concurrent_results
+                .iter()
+                .map(|(_, title, _)| title.as_str())
+                .collect::<Vec<_>>();
+            let actual_concurrent_titles = concurrent_state
+                .snapshot
+                .queue
+                .iter()
+                .skip(before_concurrent.snapshot.queue.len())
+                .map(|item| item.title.as_str())
+                .collect::<Vec<_>>();
+            if concurrent_state.owner_session != first.ack.owner_session
+                || concurrent_state.revision != previous_revision
+                || concurrent_state.snapshot.queue.len()
+                    != before_concurrent.snapshot.queue.len() + concurrent_results.len()
+                || concurrent_state.snapshot.queue[..before_concurrent.snapshot.queue.len()]
+                    != before_concurrent.snapshot.queue
+                || actual_concurrent_titles != expected_concurrent_titles
+            {
+                return Err(
+                    "concurrent queue order did not match the applied ACK revision order".into(),
+                );
+            }
+
             let restart_id = "00000000-0000-4000-8000-000000000105";
             let (mut restart_pipe, cold) = connect_with_launch(
                 || windows_pipe::open_client(&name, &executable),
@@ -1685,7 +1859,7 @@ mod tests {
             let _ = std::fs::remove_file(path);
         }
         result.expect(
-            "paired Windows native handoff must pass cold, warm, ACK, STATE, and replay checks",
+            "paired Windows native handoff must pass cold, warm, FIFO, concurrent-client, ACK, STATE, and replay checks",
         );
     }
 

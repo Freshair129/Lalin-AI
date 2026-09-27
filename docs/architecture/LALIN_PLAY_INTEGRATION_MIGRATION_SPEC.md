@@ -1,7 +1,7 @@
 ---
-version: "0.2.5b"
+version: "0.2.6b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T09:34:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -126,7 +126,15 @@ Security and lifecycle implementation status:
   whose installer setup remains unverified.
 - Studio's explicit standalone handoff actions keep an in-memory FIFO capped at
   128 commands and reject overflow visibly. A native sender mutex and one pipe
-  request at a time preserve that order. Play records at most 1,024 request
+  request at a time preserve that order within one Studio process. Independent
+  Studio clients may race; Play's single-instance server serializes accepted
+  owner mutations, and the ACK revision defines the applied FIFO order across
+  those clients. When a sender observes `ERROR_PIPE_BUSY`, it waits for and
+  retries that existing owner; it must not treat an occupied or just-recreated
+  pipe as a cold start or launch another Play process. A missing endpoint on the
+  initial connection attempt may use the cold-start path. Play retains and
+  reconnects its single server pipe instance after each client disconnect so a
+  warm owner has no endpoint-recreation gap. Play records at most 1,024 request
   outcomes per owner session; after eviction, QUERY returns `unknown` and sender
   must not automatically replay.
 - Duplicate ID with same payload returns original outcome without a second
@@ -229,6 +237,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.6b | 2026-09-27 | beta | Define independent-client ACK revision ordering, retain the server pipe instance, and prohibit cold launch while its owner is busy | based on 1084d5e | Codex |
 | 0.2.5b | 2026-09-26 | beta | Integrate approved S3 named-pipe handoff with S2 migration; record local drive validation and open parity/recovery gates | S2 7c30ea1; S3 235875b; docs 362bbd0 | Codex |
 | 0.2.4b | 2026-09-26 | beta | Reject mapped network drives in S2 native file validation and record deterministic drive-type coverage | 7c30ea1 | Codex |
 | 0.2.3b | 2026-09-26 | beta | Add explicit journaled last-import undo and report its safety gate | based on 58f6b67 | Codex |

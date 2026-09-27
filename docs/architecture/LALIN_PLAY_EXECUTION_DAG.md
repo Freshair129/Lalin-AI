@@ -1,7 +1,7 @@
 ---
-version: "0.2.6b"
+version: "0.2.8b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T09:01:00+07:00,Codex"
+last_update: "2026-09-27T09:49:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -295,6 +295,46 @@ gates. Record export, PR, merge and release states independently.
   traceability and new acceptance-gap RCA record the result. PR #25 remains
   open and draft; no merge or release is claimed.
 
+## Execution status — 2026-09-27 G3 concurrent-client ordering follow-up
+
+- **Confirmed cause:** Studio treated a busy single-instance pipe as a missing
+  owner and could call its cold-launch path. Play also dropped and recreated its
+  one pipe instance after each client, leaving a short interval in which a warm
+  owner appeared absent. See the
+  [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md).
+- **Fix:** Studio retries after `ERROR_PIPE_BUSY` and does not invoke cold launch
+  after observing an existing owner. Play reuses the disconnected server pipe
+  instance for the next `ConnectNamedPipe`, closing the warm-owner recreation
+  gap. The wire contract and normal Studio playback route are unchanged.
+- **Paired Windows G3 — PASS for concurrent ordering:** the ignored
+  `playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+  test passed **1/1** against a Tauri CLI-built Play executable with a relative
+  embedded frontend and `g3-test-app-data-dir`. It held a live connection while
+  four separate Studio client states started together, required zero
+  cold-launch callback calls while busy, then verified one applied ACK per
+  command, unique strictly increasing ACK revisions, and final queue order
+  matching ACK revision order. Existing cold/warm delivery, ACK/STATE recovery,
+  duplicate suppression, owner restart without blind replay and live invalid-URL
+  rejection also passed in that paired run. Test profile, app-data and media
+  fixtures were isolated in system temp.
+- **Final source revalidation:** after the pipe-creation error path was changed
+  to disconnect and release a failed instance before replacement, the Tauri
+  CLI test-feature release binary was rebuilt and the same paired test passed
+  again **1/1** against that binary.
+- **G2 — regression:** Studio native handoff tests passed **6/6** with the
+  paired test ignored in the normal suite. Play Rust tests with
+  `g3-test-app-data-dir` passed **31/31**. The Tauri CLI test-feature release
+  build, both Rust format checks and `git diff --check` passed.
+- **G3 remains PARTIAL:** cross-session/unauthorized and remote rejection,
+  UNC/mapped-drive/reparse runtime paths, ACK loss across process interruption,
+  Studio/API exit during active playback and audible parity remain unverified.
+  S2 process-crash/power-loss recovery and remaining write-failure gates also
+  remain open. Keep ordinary Studio playback available; do not merge or remove
+  the Studio playback owner before full parity is proven.
+- **G4 — evidence updated locally:** the integration spec, this DAG, status
+  register, foundation, traceability and RCA record the fix and exact test
+  boundary. PR #25 remains draft until the remaining acceptance gates pass.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -309,6 +349,8 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.8b | 2026-09-27 | beta | Rebuild final Play source and rerun paired G3 lifecycle/concurrency test successfully; keep remaining parity gates open | based on 1084d5e | Codex |
+| 0.2.7b | 2026-09-27 | beta | Record the busy-pipe/cold-launch fix and concurrent paired FIFO result; preserve remaining parity gates | based on 1084d5e | Codex |
 | 0.2.6b | 2026-09-27 | beta | Record live receiver rejection of an invalid URL path with unchanged STATE; keep remaining parity gates open | based on b90ffaed | Codex |
 | 0.2.5b | 2026-09-27 | beta | Record successful isolated cold/warm paired lifecycle, FIFO fixture fix and remaining parity gates | based on 9e0cb06 | Codex |
 | 0.2.4b | 2026-09-27 | beta | Add fail-closed Play app-data isolation to G3 and record the continued pre-HELLO timeout | based on 5351a18 | Codex |
