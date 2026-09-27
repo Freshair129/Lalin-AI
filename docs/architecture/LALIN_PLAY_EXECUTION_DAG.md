@@ -1,7 +1,7 @@
 ---
-version: "0.2.10b"
+version: "0.2.11b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T10:10:00+07:00,Codex"
+last_update: "2026-09-27T10:30:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -363,10 +363,37 @@ item. The paired Windows test passed **1/1** with this lost-ACK scenario,
 alongside cold/warm, sequential and concurrent FIFO, restart and path-rejection
 checks.
 
-This verifies lost-response recovery while the Play owner remains alive. Loss
-across Play process interruption or restart still returns unknown and blocks
-blind replay; that durability case remains unverified. Keep ordinary Studio
-playback enabled.
+This verifies lost-response recovery while the Play owner remains alive. The
+paired restart case below separately verifies an applied command whose sender
+closed before reading ACK: after Play restarts with a new owner session, Studio
+returns delivery_unknown, keeps the request uncertain, and blocks replay. Keep
+ordinary Studio playback enabled.
+
+## Execution status — 2026-09-27 G3 lost ACK across Play owner restart
+
+The ignored paired Windows test writes an add-to-queue command, closes its
+sender without reading ACK, then reads STATE from the same owner and verifies
+exactly one appended queue item against the pre-command HELLO snapshot. It
+terminates the isolated Play process and starts a new owner session before
+reconciliation.
+
+The old request returns delivery_unknown after restart. Studio retains the
+uncertain request; retrying the same request does not launch Play, does not
+replay the command, and leaves the new owner's queue unchanged. See the [restart-test RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-restart-test-title-assumption.md). This verifies
+the no-blind-replay boundary across a process interruption. It does not prove
+durable ACK history or audible playback parity.
+
+The paired test passed 1/1 on Windows with a local silent WAV, a disposable
+WebView2 profile and test-only app-data directory under system temp. Studio
+handoff tests passed 6/6 with the paired test ignored by default. Play Rust tests
+passed 31/31 with g3-test-app-data-dir. Both Rust formatting checks and
+git diff --check passed.
+
+G3 remains PARTIAL: cross-session/unauthorized and remote pipe-client
+rejection, mapped-drive/reparse runtime paths, Studio/API exit during active
+playback and audible parity remain unverified. S2 process-crash/power-loss
+recovery and remaining write-failure gates also remain open. Keep ordinary
+Studio playback available.
 
 ## Definition of done for this execution
 
@@ -382,6 +409,7 @@ playback enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.11b | 2026-09-27 | beta | Verify paired lost-ACK command application before owner restart and block replay in the new session; retain playback parity gates | based on 17a5c96 | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add paired lost-ACK query/state reconciliation against the live owner; keep interruption and parity gates open | based on cee5e93 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired live URL/UNC-shaped path rejection with unchanged STATE; keep remaining security/parity gates open | based on cee5e93 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Rebuild final Play source and rerun paired G3 lifecycle/concurrency test successfully; keep remaining parity gates open | based on 1084d5e | Codex |

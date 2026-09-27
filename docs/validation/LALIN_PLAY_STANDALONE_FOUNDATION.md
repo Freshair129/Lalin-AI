@@ -1,7 +1,7 @@
 ---
-version: "0.2.8b"
+version: "0.2.9b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T10:10:00+07:00,Codex"
+last_update: "2026-09-27T10:30:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, owner restart, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; cross-session/unauthorized, remote-client, mapped-drive/reparse, process-interrupted ACK and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; cross-session/unauthorized, remote-client, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -103,9 +103,9 @@ output settings and dark native controls.
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
 Remaining work includes actual S2 process-termination/restart verification and
-journal/history write failures, plus S3 concurrent-client ordering,
-unauthorized/cross-session and remote rejection, UNC/mapped-drive/reparse
-runtime cases, ACK loss across process interruption, Studio/API exit during
+journal/history write failures, plus S3 unauthorized/cross-session and
+remote pipe-client rejection, UNC/mapped-drive/reparse runtime cases,
+Studio/API exit during
 active playback and audible parity. The paired URL-shaped invalid-path case now
 passes but does not close those filesystem/runtime gates. Studio playback stays
 available until parity is proven. S4–S7 remain gated by ADR-004.
@@ -255,10 +255,33 @@ Studio/API exit during active playback and audible parity remain unverified.
 S2 process-crash/power-loss recovery and remaining storage-write cases also
 remain open. Preserve ordinary Studio playback until parity is proven.
 
+## G3 lost ACK across Play owner restart — 2026-09-27
+
+The ignored paired Windows test now closes the command sender before reading
+ACK, confirms the same owner STATE contains exactly one appended queue item
+relative to the pre-command HELLO snapshot, and only then terminates Play. After
+Play starts with a new owner session, reconciliation returns delivery_unknown;
+Studio retains the uncertain request and a same-ID retry does not relaunch Play
+or append to the new owner's queue. See the [restart-test RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-restart-test-title-assumption.md).
+
+The paired test passed 1/1 with the Tauri CLI-built Play executable, the
+g3-test-app-data-dir feature, a silent WAV, and fresh disposable WebView2 and
+app-data directories under system temp. Studio native handoff tests passed 6/6
+with the paired test ignored in the ordinary run; Play native tests passed
+31/31. Both Rust format checks and git diff --check passed.
+
+This closes the tested control-plane no-blind-replay boundary across owner
+restart. It does not establish durable ACK history, active Studio/API exit
+behavior or audible parity. Cross-session/unauthorized and remote-client
+rejection and mapped-drive/reparse runtime cases remain unverified. S2
+process-crash/power-loss and remaining storage-write cases also remain open.
+Preserve ordinary Studio playback until parity is proven.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.9b | 2026-09-27 | beta | Add paired evidence that an applied lost-ACK command is not replayed after Play owner restart; retain audible parity and remaining security gates | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Add paired lost-ACK recovery and same-ID no-duplicate evidence; preserve owner-restart and audible parity gates | based on cee5e93 | Codex |
 | 0.2.7b | 2026-09-27 | beta | Add live paired rejection of URL- and UNC-shaped commands with unchanged STATE; retain runtime parity gates | based on cee5e93 | Codex |
 | 0.2.6b | 2026-09-27 | beta | Revalidate paired concurrent lifecycle against a rebuild of final pipe-recovery source; retain open playback parity gates | based on 1084d5e | Codex |

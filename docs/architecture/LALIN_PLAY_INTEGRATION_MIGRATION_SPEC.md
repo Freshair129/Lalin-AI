@@ -1,7 +1,7 @@
 ---
-version: "0.2.8b"
+version: "0.2.9b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T10:10:00+07:00,Codex"
+last_update: "2026-09-27T10:30:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -111,7 +111,9 @@ Security and lifecycle implementation status:
   before path/network lookup and leaves STATE unchanged. It also drops the
   sender connection before reading a command ACK, then reconciles by request
   ID against the still-running owner. Live cross-session, unauthorized, remote
-  pipe-client and owner-process-interruption attempts remain unverified.
+  pipe-client attempts remain unverified. The isolated paired owner-restart test
+  verifies that a command applied before its ACK is read is not blindly replayed
+  after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
@@ -158,12 +160,12 @@ duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots
 protected same-logon DACL creation and the remote-client-rejection flag. Drive
 classification is tested with fixed, remote, unknown and invalid values; no
 mapped-drive runtime case was exercised. The ACL test does not attempt an
-unauthorized connection. Live cross-process cold/warm delivery, FIFO,
-ACK/STATE reconciliation including a lost ACK to a still-running owner, owner
-restart, and URL/UNC-shaped invalid path rejection are verified in the isolated
-Windows paired test. ACK-loss across owner-process interruption,
-cross-session/spoof and remote pipe-client attempts, Studio/API exit during
-active playback, audible parity and Cast regression remain **NOT VERIFIED**.
+unauthorized connection. Live cross-process cold/warm delivery, FIFO, ACK/STATE reconciliation including
+a dropped ACK while the owner remains live, a command applied before a lost ACK
+followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
+rejection are verified in the isolated Windows paired test. Cross-session/spoof
+and remote pipe-client attempts, Studio/API exit during active playback, audible
+parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Approved S2 opt-in migration envelope v1
 
@@ -244,6 +246,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.9b | 2026-09-27 | beta | Record paired applied-command/lost-ACK owner-restart no-replay evidence; retain security and playback-parity gates | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Verify live ACK-loss query/state recovery while the owner remains active; preserve process-interruption and parity gates | based on cee5e93 | Codex |
 | 0.2.7b | 2026-09-27 | beta | Record live rejection of UNC-shaped handoff input before lookup; retain remote-client and parity gates | based on cee5e93 | Codex |
 | 0.2.6b | 2026-09-27 | beta | Define independent-client ACK revision ordering, retain the server pipe instance, and prohibit cold launch while its owner is busy | based on 1084d5e | Codex |

@@ -1672,7 +1672,7 @@ mod tests {
             if cold {
                 return Err("Play owner disappeared before the restart check".into());
             }
-            let (restart_owner, _) = handshake(&mut restart_pipe)?;
+            let (restart_owner, restart_before) = handshake(&mut restart_pipe)?;
             if restart_owner != first.ack.owner_session {
                 return Err("Play owner changed before the restart check".into());
             }
@@ -1692,17 +1692,23 @@ mod tests {
                     file: &restart_file,
                 },
             )?;
-            let restart_ack: PlaybackAck =
-                serde_json::from_value(read_value(&mut restart_pipe, ACK_TIMEOUT)?).map_err(
-                    |_| "restart check expected an ACK before dropping STATE".to_string(),
-                )?;
-            if restart_ack.request_id != restart_id
-                || restart_ack.owner_session != restart_owner
-                || restart_ack.result != "applied"
-            {
-                return Err("restart check did not commit its uncertain command".into());
-            }
             drop(restart_pipe);
+            let applied_before_restart = read_playback_state(&client)?
+                .ok_or("Play state disappeared before the simulated owner interruption")?;
+            let baseline_queue = &restart_before.snapshot.queue;
+            if applied_before_restart.owner_session != restart_owner {
+                return Err("Play owner changed while checking the lost ACK".into());
+            }
+            if applied_before_restart.snapshot.queue.len() != baseline_queue.len() + 1
+                || applied_before_restart.snapshot.queue[..baseline_queue.len()]
+                    != baseline_queue[..]
+            {
+                return Err(format!(
+                    "Play STATE did not append one item after the lost ACK (baseline {}, actual {})",
+                    baseline_queue.len(),
+                    applied_before_restart.snapshot.queue.len()
+                ));
+            }
             *client
                 .uncertain
                 .lock()

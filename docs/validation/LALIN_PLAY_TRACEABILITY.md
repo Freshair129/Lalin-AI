@@ -1,7 +1,7 @@
 ---
-version: "0.2.8b"
+version: "0.2.9b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T10:10:00+07:00,Codex"
+last_update: "2026-09-27T10:30:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -38,7 +38,7 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
 | State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery and selected storage-failure tests; process-crash and remaining storage-failure coverage open |
 | Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases and selected native write-failure tests; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
-| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE recovery after a dropped command ACK, same-ID duplicate handling, sequential four-file queue, four independent concurrent senders ordered by ACK revision, busy-pipe wait without cold launch, owner restart and live URL/UNC-shaped invalid-path rejection with unchanged STATE; unauthorized/cross-session, remote pipe-client rejection and audible parity NOT_VERIFIED |
+| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE recovery after a dropped command ACK, same-ID duplicate handling, sequential four-file queue, four independent concurrent senders ordered by ACK revision, busy-pipe wait without cold launch, owner restart after a lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; unauthorized/cross-session, remote pipe-client rejection, mapped-drive/reparse runtime cases and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
@@ -62,7 +62,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
-| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, lost-ACK QUERY/STATE recovery while the owner is live, same-ID duplicate suppression, sequential four-file ordering, four independent concurrent clients with queue order matching unique increasing ACK revisions, no cold launch while the pipe is occupied, owner restart without blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE | Cross-session/unauthorized and remote pipe-client rejection, mapped-drive/reparse runtime cases, ACK loss across Play process interruption, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
+| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, lost-ACK QUERY/STATE recovery while the owner is live, same-ID duplicate suppression, sequential four-file ordering, four independent concurrent clients with queue order matching unique increasing ACK revisions, no cold launch while the pipe is occupied, owner restart after lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE | Cross-session/unauthorized and remote pipe-client rejection, mapped-drive/reparse runtime cases, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
 | PLAY-07 | State, Native | F + S2 journal-phase recovery, selected write-failure fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Process termination, corruption, power-loss durability and remaining storage-failure coverage |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Process-crash recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
@@ -115,7 +115,7 @@ suite's provenance or establish full Studio/Play playback parity.
 
 | Priority | Work | Requirement / next evidence owner |
 |---|---|---|
-| Before split | Relink, actual S2 import/undo and crash recovery, remaining S3 security/interruption/playback parity | PLAY-06/08/09; implementer + independent test reviewer |
+| Before split | Relink, actual S2 import/undo and crash recovery, remaining S3 security/playback parity | PLAY-06/08/09; implementer + independent test reviewer |
 | Before native acceptance | Paused-resize/end-frame issues, device loss, A/V sync, DPI/multimonitor/touch/gamepad | V05/06, C02/07/12/13; Windows QA with user audible confirmation |
 | Before export | Independent clean checkout and license/notices | ADR S4/S5; source owner + export reviewer |
 | Before release | Installer/uninstaller, signed update A→B, security and state recovery | PLAY-10; release operator + product approval |
@@ -129,6 +129,7 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.9b | 2026-09-27 | beta | Trace paired process-interrupted lost-ACK handling and no replay after owner restart; retain security and audible parity gaps | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Trace paired dropped-ACK reconciliation for a live owner and retain process-interruption/parity gaps | based on cee5e93 | Codex |
 | 0.2.7b | 2026-09-27 | beta | Trace live URL/UNC-shaped receiver rejection with unchanged STATE; preserve session-security and playback parity gaps | based on cee5e93 | Codex |
 | 0.2.6b | 2026-09-27 | beta | Record successful paired G3 rerun against rebuilt final pipe-recovery source; preserve security and parity gaps | based on 1084d5e | Codex |

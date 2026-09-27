@@ -1,7 +1,7 @@
 ---
-version: "0.2.11b"
+version: "0.2.12b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T10:10:00+07:00,Codex"
+last_update: "2026-09-27T10:30:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 31/31; earlier S2-only Rust 23/23 and focused UI/build checks are recorded in the linked report; process-crash recovery and actual Studio transfer remain NOT_RUN |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart and live URL/UNC-shaped invalid-path rejection with unchanged STATE pass; cross-session/unauthorized and remote pipe-client rejection, mapped/reparse runtime cases, process-interrupted ACK loss, active playback and audible parity remain NOT_VERIFIED |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart and live URL/UNC-shaped invalid-path rejection with unchanged STATE pass; cross-session/unauthorized and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is now covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -60,7 +60,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 - **candidate** = รายละเอียดหรือ release gates ที่ยังรออนุมัติตาม R5; approved S2/S3 code remains subject to runtime acceptance.
 - **BLOCKED** ใน checklist = ต้องเติม decision/evidence ก่อนผ่าน gate ไม่ใช่รายงานว่า agent ทำงานต่อไม่ได้.
 
-ลำดับ: verify remaining S2 crash/recovery and write-failure cases plus S3 live process-pair/security/ACK-loss/audible parity and relink acceptance →
+ลำดับ: verify remaining S2 crash/recovery and write-failure cases plus S3 remote/security, Studio/API exit during playback, audible parity and relink acceptance →
 license/provenance + S4 export → S5 clean-checkout/regression → S6 scoped removal →
 S7 installer/update. แยก authorization สำหรับ remote creation, deletion,
 merge และ publication จากการอนุมัติเอกสารเสมอ
@@ -247,11 +247,27 @@ paths.
 
 G3 remains **PARTIAL**. Cross-session/unauthorized and remote pipe-client
 rejection, mapped-drive/reparse runtime paths (including a reparse target
-resolving to UNC), ACK loss across process interruption,
-Studio/API exit during active playback and audible parity remain unverified.
+resolving to UNC), Studio/API exit during active playback and audible parity
+remain unverified. The paired test now covers a command applied before its ACK
+is read, followed by owner restart, delivery_unknown and blocked replay.
 S2 process-crash/power-loss recovery and remaining storage-write cases are
 also open. PR #25 remains draft pending those gates. Keep ordinary Studio
 playback enabled; no playback parity, source removal or release is claimed.
+
+## G3 lost ACK across Play owner restart — 2026-09-27
+
+The Windows paired test closed the command sender before reading ACK and
+confirmed the original Play owner had appended one queue entry relative to its
+pre-command STATE. It then restarted Play. Studio returned delivery_unknown for
+the prior-session request, kept it uncertain and blocked same-ID replay; the new
+owner's queue remained unchanged. See the [restart-test RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-restart-test-title-assumption.md).
+This closes only the tested handoff control-plane boundary across process
+interruption. It does not prove durable ACK history or audible output.
+
+The paired test passed 1/1. Studio native handoff tests passed 6/6, Play native
+tests passed 31/31 with g3-test-app-data-dir, both Rust formatting checks passed,
+and git diff --check passed. The run used a silent local WAV and fresh disposable
+WebView2/app-data directories under system temp.
 
 ## Current documentation version diff — 2026-09-27 G3 concurrent-client ordering
 
@@ -296,6 +312,18 @@ playback enabled; no playback parity, source removal or release is claimed.
 | Documentation register | 0.2.10b → 0.2.11b |
 | Foundation evidence | 0.2.7b → 0.2.8b |
 | Traceability matrix | 0.2.7b → 0.2.8b |
+| Studio and Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 ACK loss across owner restart
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.8b → 0.2.9b |
+| Execution DAG | 0.2.10b → 0.2.11b |
+| Documentation register | 0.2.11b → 0.2.12b |
+| Foundation evidence | 0.2.8b → 0.2.9b |
+| Traceability matrix | 0.2.8b → 0.2.9b |
+| Restart-test RCA | New 0.1.0b |
 | Studio and Play application versions | No change |
 
 ## Current documentation version diff — 2026-09-27 G3 paired lifecycle
@@ -418,6 +446,7 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.12b | 2026-09-27 | beta | Record paired lost-ACK owner-restart/no-replay evidence and remaining parity gates | based on 17a5c96 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Record paired lost-ACK QUERY/STATE recovery while the owner is live; retain interruption and parity gates | based on cee5e93 | Codex |
 | 0.2.10b | 2026-09-27 | beta | Record live URL/UNC-shaped receiver rejection with unchanged STATE; keep remote and parity gates open | based on cee5e93 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired G3 rerun against rebuilt final pipe-recovery source while keeping remaining acceptance gates open | based on 1084d5e | Codex |
