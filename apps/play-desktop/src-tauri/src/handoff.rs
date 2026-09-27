@@ -1333,6 +1333,96 @@ mod windows_pipe {
             drop(local_pipe);
         }
 
+        #[test]
+        #[ignore = "requires a second Windows host running the repository PowerShell probe"]
+        fn remote_named_pipe_client_from_another_host_is_denied() {
+            assert_ne!(
+                server_pipe_mode() & PIPE_REJECT_REMOTE_CLIENTS,
+                0,
+                "the target pipe must enable remote-client rejection"
+            );
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let test_pipe_name = |role: &str| {
+                format!("{PIPE_NAME_PREFIX}.remote-host-{nonce}.{role}")
+                    .encode_utf16()
+                    .chain([0])
+                    .collect::<Vec<_>>()
+            };
+            let dacl = "D:P(A;;GA;;;AU)";
+            let mode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
+            let control_pipe = create_test_pipe_with_dacl(&test_pipe_name("control"), dacl, mode);
+            let target_name = test_pipe_name("target");
+            let target_pipe = create_test_pipe_with_dacl(&target_name, dacl, server_pipe_mode());
+            let result_pipe = create_test_pipe_with_dacl(&test_pipe_name("result"), dacl, mode);
+
+            let host = std::env::var("COMPUTERNAME")
+                .expect("Windows should provide the named-pipe server host name");
+            println!("REMOTE_PIPE_PROBE_READY host={host} nonce={nonce}");
+            println!(
+                "On another Windows host run tools/verify/lalin-play-remote-pipe-client.ps1 with the host and nonce above."
+            );
+
+            let (result_tx, result_rx) = std::sync::mpsc::sync_channel(1);
+            let server = std::thread::spawn(move || {
+                let mut control_pipe = control_pipe;
+                let control_raw = control_pipe.as_raw_handle();
+                let connected =
+                    unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+                if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                    let _ = result_tx.send(Err("remote positive-control pipe did not connect"));
+                    return;
+                }
+                let mut marker = [0u8; 1];
+                if control_pipe.read_exact(&mut marker).is_err() || marker != [b'C'] {
+                    let _ = result_tx.send(Err("remote positive-control marker is invalid"));
+                    return;
+                }
+
+                let mut result_pipe = result_pipe;
+                let result_raw = result_pipe.as_raw_handle();
+                let connected =
+                    unsafe { ConnectNamedPipe(result_raw.cast(), null_mut::<OVERLAPPED>()) };
+                if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                    let _ = result_tx.send(Err("remote result pipe did not connect"));
+                    return;
+                }
+                let mut payload = [0u8; 64];
+                if result_pipe.read_exact(&mut payload).is_err() {
+                    let _ = result_tx.send(Err("remote result payload was incomplete"));
+                    return;
+                }
+                let result = String::from_utf8_lossy(&payload)
+                    .trim_matches('\0')
+                    .to_string();
+                let _ = result_tx.send(Ok(result));
+            });
+
+            let result = result_rx
+                .recv_timeout(Duration::from_secs(180))
+                .expect("run the remote PowerShell client before the 180-second test deadline")
+                .expect("remote positive-control and result pipes should connect");
+            assert_eq!(result, "control=0;target=5");
+            server.join().unwrap();
+
+            let local_client = connect_test_client(&target_name);
+            let target_raw = target_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(target_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "a local client should still open the pipe protected from remote clients"
+            );
+            drop(local_client);
+            drop(target_pipe);
+        }
+
         fn create_test_pipe_with_dacl(name: &[u16], sddl: &str, mode: u32) -> File {
             let sddl = sddl.encode_utf16().chain([0]).collect::<Vec<_>>();
             let mut descriptor = null_mut();
@@ -1738,5 +1828,45 @@ mod tests {
         assert!(!is_local_windows_drive_type(DRIVE_REMOTE));
         assert!(!is_local_windows_drive_type(DRIVE_UNKNOWN));
         assert!(!is_local_windows_drive_type(DRIVE_NO_ROOT_DIR));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires an isolated SMB mapped-drive media fixture"]
+    fn mapped_network_drive_media_is_rejected_at_runtime() {
+        let local = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_LOCAL_MEDIA")
+                .expect("local positive-control fixture is required"),
+        );
+        let mapped = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_MAPPED_MEDIA")
+                .expect("mapped-drive fixture is required"),
+        );
+        assert!(validate_media_file(local.to_str().expect("local path should be Unicode")).is_ok());
+        assert_eq!(
+            validate_media_file(mapped.to_str().expect("mapped path should be Unicode"))
+                .unwrap_err(),
+            "ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires a local reparse fixture resolving to SMB mapped-drive media"]
+    fn reparse_path_to_mapped_network_media_is_rejected_at_runtime() {
+        let local = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_LOCAL_MEDIA")
+                .expect("local positive-control fixture is required"),
+        );
+        let reparse = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_REPARSE_MEDIA")
+                .expect("reparse-point fixture is required"),
+        );
+        assert!(validate_media_file(local.to_str().expect("local path should be Unicode")).is_ok());
+        assert_eq!(
+            validate_media_file(reparse.to_str().expect("reparse path should be Unicode"))
+                .unwrap_err(),
+            "ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive"
+        );
     }
 }

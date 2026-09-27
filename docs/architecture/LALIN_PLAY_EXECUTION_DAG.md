@@ -1,7 +1,7 @@
 ---
-version: "0.2.16b"
+version: "0.2.17b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T13:04:36+07:00,Codex"
+last_update: "2026-09-27T13:49:47+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -454,6 +454,43 @@ desktop binary or WebView, power loss, other untested storage writes or a live
 Studio-to-Play transfer. G3's remote/session security and audible parity gates
 remain open. Preserve Studio playback.
 
+## Execution status — 2026-09-27 G3 cross-host probe preparation
+
+Added the ignored test `handoff::windows_pipe::tests::remote_named_pipe_client_from_another_host_is_denied`
+and `tools/verify/lalin-play-remote-pipe-client.ps1`. The server creates a
+same-DACL remote positive-control pipe, a production-mode target pipe, and a
+result pipe. The client reports the positive-control connection and target
+Win32 error; the server requires `control=0;target=5` (`ERROR_ACCESS_DENIED`)
+and then verifies local access to the target. The script accepts only a host
+name and test nonce; it writes no files and requests no credentials.
+
+The mapped-drive and reparse runtime tests are also present as ignored tests and
+compile against the production validator, but have not run because their SMB
+mapping and reparse fixtures are not provisioned. The cross-host named-pipe test
+is NOT_RUN until the PowerShell client is run from the second Windows host. The
+full Play Rust suite passed **35 tests, 0 failures, 5 ignored**; `cargo fmt
+--check`, PowerShell parsing and embedded P/Invoke compilation plus `git diff --check` passed. The ignored tests are
+the cross-host and loopback named-pipe probes, the two filesystem fixture probes,
+and the migration child-process driver.
+
+On the Play host, run:
+
+```powershell
+cargo test --offline --manifest-path apps/play-desktop/src-tauri/Cargo.toml --features g3-test-app-data-dir remote_named_pipe_client_from_another_host_is_denied -- --ignored --nocapture --test-threads=1
+```
+
+After it prints `REMOTE_PIPE_PROBE_READY host=<host> nonce=<nonce>`, run this
+from the second Windows host in the same network:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify/lalin-play-remote-pipe-client.ps1 -PipeHost <host> -Nonce <nonce>
+```
+
+The test is currently NOT_RUN; this preparation does not close the remote-host
+gate. Separate interactive logon session, mapped-drive/reparse runtime cases,
+Studio/API exit during playback and audible parity remain open. Preserve Studio
+playback.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -468,6 +505,7 @@ remain open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.17b | 2026-09-27 | beta | Prepare opt-in second-host named-pipe probe and record mapped/reparse runtime tests as compiled but NOT_RUN | based on 3bb4414 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Verify loopback SMB/UNC denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |
 | 0.2.15b | 2026-09-27 | beta | Add retryable undo-snapshot write-failure evidence alongside initial journal and history failures | based on e843e1c | Codex |
 | 0.2.14b | 2026-09-27 | beta | Cover initial journal creation and retryable history-write failures with process-termination recovery; retain runtime and parity gates | based on 75c2001 | Codex |

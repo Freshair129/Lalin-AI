@@ -1,7 +1,7 @@
 ---
-version: "0.2.14b"
+version: "0.2.15b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T13:04:36+07:00,Codex"
+last_update: "2026-09-27T13:49:47+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -117,8 +117,10 @@ Security and lifecycle implementation status:
   loopback SMB/UNC positive-control pipe accepts a connection, then a pipe using
   the production remote-rejection mode and the same permissive test DACL denies
   the same remote path with `ERROR_ACCESS_DENIED`; a local open still succeeds.
-  This isolates the remote-rejection flag from DACL denial. A separate
-  interactive logon session and a different remote machine remain unverified.
+  This isolates the remote-rejection flag from DACL denial. An ignored
+  different-host probe and PowerShell client are prepared with the same-DACL
+  positive control and target denial; the runtime test is NOT_RUN. A separate
+  interactive logon session remains unverified.
   The isolated paired owner-restart test verifies that a command applied before
   its ACK is read is not blindly replayed after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
@@ -130,6 +132,8 @@ Security and lifecycle implementation status:
   On Windows, `GetDriveTypeW` must classify the canonical drive root as fixed,
   removable, CD-ROM or RAM disk; remote, unknown and invalid drive types fail
   closed. Receiver checks both conditions before granting to the asset scope.
+  Ignored mapped-drive and reparse-to-mapped-drive runtime tests are present but
+  NOT_RUN because their fixtures are not provisioned.
   Never execute a shell or infer a path from a title/pack ID.
 - File grants apply only to the explicit handoff item; source survives Studio/API
   shutdown. Missing receiver reports install/configuration guidance; no fallback
@@ -168,10 +172,12 @@ protected same-logon DACL creation, a local restricted-token denial when the
 allowed logon SID is absent, the remote-client-rejection flag, and an opt-in
 loopback SMB/UNC runtime denial with identical-DACL remote and local positive
 controls. Drive
-classification is tested with fixed, remote, unknown and invalid values; no
-mapped-drive runtime case was exercised. The local negative ACL case does not
-exercise a separate interactive logon session; the SMB probe does not use a
-different remote machine. Live cross-process cold/warm delivery, FIFO, ACK/STATE
+classification is tested with fixed, remote, unknown and invalid values; the
+ignored mapped-drive and reparse tests compile but are NOT_RUN. The local
+negative ACL case does not exercise a separate interactive logon session; the
+loopback SMB probe does not use a different remote machine. The ignored
+second-host probe and its PowerShell client are prepared but NOT_RUN. Live
+cross-process cold/warm delivery, FIFO, ACK/STATE
 reconciliation including a dropped ACK while the owner remains live, a command applied before a lost ACK
 followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
 rejection are verified in the isolated Windows paired test. Same-host SMB/UNC
@@ -262,6 +268,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.15b | 2026-09-27 | beta | Specify second-host pipe probe and distinguish compiled mapped/reparse runtime tests from execution | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Verify loopback SMB/UNC rejection with a remote positive control and local access; retain separate-session and parity gates | based on a75c540 | Codex |
 | 0.2.13b | 2026-09-27 | beta | Add retryable S2 undo-snapshot failure evidence alongside journal/history and process-recovery tests | based on e843e1c | Codex |
 | 0.2.12b | 2026-09-27 | beta | Add S2 journal-creation and retryable history-write failure evidence; retain power-loss and transfer gates | based on 75c2001 | Codex |
