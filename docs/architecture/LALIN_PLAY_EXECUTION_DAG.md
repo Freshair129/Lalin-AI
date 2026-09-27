@@ -1,7 +1,7 @@
 ---
-version: "0.2.11b"
+version: "0.2.12b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T10:30:00+07:00,Codex"
+last_update: "2026-09-27T11:12:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -389,11 +389,27 @@ handoff tests passed 6/6 with the paired test ignored by default. Play Rust test
 passed 31/31 with g3-test-app-data-dir. Both Rust formatting checks and
 git diff --check passed.
 
-G3 remains PARTIAL: cross-session/unauthorized and remote pipe-client
+G3 remains PARTIAL: different-logon-session and remote pipe-client
 rejection, mapped-drive/reparse runtime paths, Studio/API exit during active
 playback and audible parity remain unverified. S2 process-crash/power-loss
 recovery and remaining write-failure gates also remain open. Keep ordinary
 Studio playback available.
+
+## Execution status — 2026-09-27 restricted-logon ACL negative
+
+The Windows pipe ACL test now creates a restricted impersonation token with the
+current logon SID disabled, attempts `CreateFileW` against the real local test
+pipe, and verifies Windows returns `ERROR_ACCESS_DENIED`. The existing same-session
+client then connects and sends HELLO successfully. This proves the protected DACL
+denies a local client token that lacks the allowed logon SID; it does not exercise
+a separate Windows logon session or a remote pipe client.
+
+The focused test passed **1/1**, and the complete Play Rust suite passed **31/31**
+with `g3-test-app-data-dir`. `cargo fmt -- --check` and `git diff --check` passed.
+G3 remains PARTIAL: different-logon-session and remote pipe-client
+rejection, mapped-drive/reparse runtime cases, Studio/API exit during active
+playback and audible parity remain open. S2 process-crash/power-loss recovery and
+remaining native write-failure gates are open. Preserve Studio playback.
 
 ## Definition of done for this execution
 
@@ -409,6 +425,7 @@ Studio playback available.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.12b | 2026-09-27 | beta | Verify the local Windows named-pipe ACL denies a restricted client without the allowed logon SID; retain cross-session and playback gates | based on 988a3e4 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Verify paired lost-ACK command application before owner restart and block replay in the new session; retain playback parity gates | based on 17a5c96 | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add paired lost-ACK query/state reconciliation against the live owner; keep interruption and parity gates open | based on cee5e93 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired live URL/UNC-shaped path rejection with unchanged STATE; keep remaining security/parity gates open | based on cee5e93 | Codex |

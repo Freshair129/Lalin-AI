@@ -1,7 +1,7 @@
 ---
-version: "0.2.9b"
+version: "0.2.10b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T10:30:00+07:00,Codex"
+last_update: "2026-09-27T11:12:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -110,7 +110,10 @@ Security and lifecycle implementation status:
   paired pipe test sends URL- and UNC-shaped invalid paths; Play rejects both
   before path/network lookup and leaves STATE unchanged. It also drops the
   sender connection before reading a command ACK, then reconciles by request
-  ID against the still-running owner. Live cross-session, unauthorized, remote
+  ID against the still-running owner. A local Windows ACL test now attempts to
+  open the pipe with a restricted token whose current logon SID is disabled and
+  verifies `CreateFileW` receives `ERROR_ACCESS_DENIED`, then verifies the normal
+  same-session HELLO still succeeds. Different-logon-session and remote
   pipe-client attempts remain unverified. The isolated paired owner-restart test
   verifies that a command applied before its ACK is read is not blindly replayed
   after a new owner session starts.
@@ -157,13 +160,15 @@ Security and lifecycle implementation status:
 Focused local tests now cover cold/warm launch decisions, one-launch timeout,
 Studio FIFO ordering, payload, canonical-root and drive-type validation,
 duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots,
-protected same-logon DACL creation and the remote-client-rejection flag. Drive
+protected same-logon DACL creation, a local restricted-token denial when the
+allowed logon SID is absent, and the remote-client-rejection flag. Drive
 classification is tested with fixed, remote, unknown and invalid values; no
-mapped-drive runtime case was exercised. The ACL test does not attempt an
-unauthorized connection. Live cross-process cold/warm delivery, FIFO, ACK/STATE reconciliation including
+mapped-drive runtime case was exercised. The local negative ACL case does not
+exercise a separate logon session or remote client. Live cross-process cold/warm
+delivery, FIFO, ACK/STATE reconciliation including
 a dropped ACK while the owner remains live, a command applied before a lost ACK
 followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
-rejection are verified in the isolated Windows paired test. Cross-session/spoof
+rejection are verified in the isolated Windows paired test. Different-logon-session
 and remote pipe-client attempts, Studio/API exit during active playback, audible
 parity and Cast regression remain **NOT VERIFIED**.
 

@@ -1,7 +1,7 @@
 ---
-version: "0.2.9b"
+version: "0.2.10b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T10:30:00+07:00,Codex"
+last_update: "2026-09-27T11:12:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; cross-session/unauthorized, remote-client, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; different-logon-session, remote-client, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -103,7 +103,7 @@ output settings and dark native controls.
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
 Remaining work includes actual S2 process-termination/restart verification and
-journal/history write failures, plus S3 unauthorized/cross-session and
+journal/history write failures, plus S3 different-logon-session and
 remote pipe-client rejection, UNC/mapped-drive/reparse runtime cases,
 Studio/API exit during
 active playback and audible parity. The paired URL-shaped invalid-path case now
@@ -248,7 +248,7 @@ After the pipe-creation error path was updated to release a failed instance
 before replacement, the Tauri CLI release binary was rebuilt from final source
 and the paired test was rerun successfully (**1/1**).
 
-G3 remains **PARTIAL**. Cross-session/unauthorized and remote pipe-client
+G3 remains **PARTIAL**. Different-logon-session and remote pipe-client
 rejection, mapped-drive/reparse runtime cases (including a reparse target
 resolving to UNC), ACK loss across Play process interruption,
 Studio/API exit during active playback and audible parity remain unverified.
@@ -272,15 +272,31 @@ with the paired test ignored in the ordinary run; Play native tests passed
 
 This closes the tested control-plane no-blind-replay boundary across owner
 restart. It does not establish durable ACK history, active Studio/API exit
-behavior or audible parity. Cross-session/unauthorized and remote-client
+behavior or audible parity. Different-logon-session and remote-client
 rejection and mapped-drive/reparse runtime cases remain unverified. S2
 process-crash/power-loss and remaining storage-write cases also remain open.
 Preserve ordinary Studio playback until parity is proven.
+
+## G3 local restricted-logon SID ACL test — 2026-09-27
+
+The Play Windows Rust ACL test now impersonates a restricted token with the
+current logon SID disabled and attempts to open the real local pipe. `CreateFileW`
+returns `ERROR_ACCESS_DENIED`; the same test then opens it from the normal current
+session and sends HELLO successfully. The focused ACL test passed 1/1 and the
+complete Play Rust suite passed 31/31 with `g3-test-app-data-dir`; `cargo fmt --
+--check` and `git diff --check` passed.
+
+This verifies denial of a local client token without the pipe's allowed logon SID.
+It does not exercise a different Windows logon session or a remote client.
+Cross-session and remote rejection, mapped-drive/reparse runtime cases, Studio/API
+exit during active playback, audible parity, S2 process-crash/power-loss recovery
+and remaining native write-failure cases remain open. Preserve Studio playback.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.10b | 2026-09-27 | beta | Add local Windows ACL denial evidence for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Add paired evidence that an applied lost-ACK command is not replayed after Play owner restart; retain audible parity and remaining security gates | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Add paired lost-ACK recovery and same-ID no-duplicate evidence; preserve owner-restart and audible parity gates | based on cee5e93 | Codex |
 | 0.2.7b | 2026-09-27 | beta | Add live paired rejection of URL- and UNC-shaped commands with unchanged STATE; retain runtime parity gates | based on cee5e93 | Codex |

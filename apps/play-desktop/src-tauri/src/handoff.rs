@@ -1208,7 +1208,15 @@ mod windows_pipe {
         use std::ptr::null;
         use std::time::{SystemTime, UNIX_EPOCH};
         use windows_sys::Win32::{
-            Foundation::{ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, GENERIC_READ, GENERIC_WRITE},
+            Foundation::{
+                ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, GENERIC_READ,
+                GENERIC_WRITE,
+            },
+            Security::{
+                CreateRestrictedToken, DuplicateTokenEx, ImpersonateLoggedOnUser,
+                SecurityImpersonation, TokenImpersonation, DISABLE_MAX_PRIVILEGE,
+                SID_AND_ATTRIBUTES, TOKEN_DUPLICATE, TOKEN_IMPERSONATE,
+            },
             Storage::FileSystem::{CreateFileW, FILE_ATTRIBUTE_NORMAL, OPEN_EXISTING},
             System::Pipes::WaitNamedPipeW,
         };
@@ -1249,6 +1257,8 @@ mod windows_pipe {
                 .recv_timeout(Duration::from_secs(1))
                 .expect("server thread should begin listening");
 
+            assert_restricted_logon_client_is_denied(&name);
+
             let mut client = connect_test_client(&name);
             let hello = serde_json::json!({
                 "type": "HELLO",
@@ -1257,6 +1267,137 @@ mod windows_pipe {
             });
             write_value(&mut client, &hello).unwrap();
             assert_eq!(server.join().unwrap(), hello);
+        }
+
+        fn assert_restricted_logon_client_is_denied(name: &[u16]) {
+            let token = restricted_token_without_logon_sid();
+            assert_ne!(unsafe { ImpersonateLoggedOnUser(token) }, 0);
+
+            let deadline = Instant::now() + Duration::from_secs(3);
+            let acl_result = loop {
+                let handle = unsafe {
+                    CreateFileW(
+                        name.as_ptr(),
+                        GENERIC_READ | GENERIC_WRITE,
+                        0,
+                        null(),
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        null_mut(),
+                    )
+                };
+                if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                    unsafe {
+                        CloseHandle(handle);
+                    }
+                    break Err("restricted client unexpectedly opened the pipe".to_owned());
+                }
+
+                let error = unsafe { GetLastError() };
+                if error == ERROR_ACCESS_DENIED {
+                    break Ok(());
+                }
+                if error != ERROR_PIPE_BUSY && error != ERROR_FILE_NOT_FOUND {
+                    break Err(format!(
+                        "unexpected restricted named-pipe client error: {error}"
+                    ));
+                }
+                if Instant::now() >= deadline {
+                    break Err("timed out waiting for restricted client ACL decision".into());
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            };
+
+            let reverted = unsafe { RevertToSelf() } != 0;
+            unsafe {
+                CloseHandle(token);
+            }
+            assert!(reverted, "test thread impersonation must be reverted");
+            assert!(
+                acl_result.is_ok(),
+                "a client without the pipe logon SID must be denied: {}",
+                acl_result.unwrap_err()
+            );
+        }
+
+        fn restricted_token_without_logon_sid() -> HANDLE {
+            let mut source = null_mut();
+            assert_ne!(
+                unsafe {
+                    OpenProcessToken(
+                        GetCurrentProcess(),
+                        TOKEN_DUPLICATE | TOKEN_QUERY,
+                        &mut source,
+                    )
+                },
+                0
+            );
+
+            let mut needed = 0u32;
+            unsafe {
+                GetTokenInformation(source, TokenLogonSid, null_mut(), 0, &mut needed);
+            }
+            assert!(needed > 0, "current logon SID must be available");
+            let mut groups_buffer = vec![0u8; needed as usize];
+            assert_ne!(
+                unsafe {
+                    GetTokenInformation(
+                        source,
+                        TokenLogonSid,
+                        groups_buffer.as_mut_ptr().cast(),
+                        needed,
+                        &mut needed,
+                    )
+                },
+                0
+            );
+            let groups = unsafe { &*(groups_buffer.as_ptr().cast::<TOKEN_GROUPS>()) };
+            let entries = unsafe {
+                std::slice::from_raw_parts(groups.Groups.as_ptr(), groups.GroupCount as usize)
+            };
+            let logon_sid = entries
+                .iter()
+                .find(|entry| entry.Attributes & 0xc000_0000 == 0xc000_0000)
+                .expect("current token must contain its logon SID");
+            let sid_to_disable = SID_AND_ATTRIBUTES {
+                Sid: logon_sid.Sid,
+                Attributes: 0,
+            };
+
+            let mut restricted = null_mut();
+            assert_ne!(
+                unsafe {
+                    CreateRestrictedToken(
+                        source,
+                        DISABLE_MAX_PRIVILEGE,
+                        1,
+                        &sid_to_disable,
+                        0,
+                        null(),
+                        0,
+                        null(),
+                        &mut restricted,
+                    )
+                },
+                0
+            );
+            let mut impersonation = null_mut();
+            let duplicated = unsafe {
+                DuplicateTokenEx(
+                    restricted,
+                    TOKEN_QUERY | TOKEN_IMPERSONATE,
+                    null(),
+                    SecurityImpersonation,
+                    TokenImpersonation,
+                    &mut impersonation,
+                )
+            } != 0;
+            unsafe {
+                CloseHandle(restricted);
+                CloseHandle(source);
+            }
+            assert!(duplicated, "restricted client token must be impersonable");
+            impersonation
         }
 
         fn connect_test_client(name: &[u16]) -> File {

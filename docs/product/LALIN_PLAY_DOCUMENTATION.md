@@ -1,7 +1,7 @@
 ---
-version: "0.2.12b"
+version: "0.2.13b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T10:30:00+07:00,Codex"
+last_update: "2026-09-27T11:12:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 31/31; earlier S2-only Rust 23/23 and focused UI/build checks are recorded in the linked report; process-crash recovery and actual Studio transfer remain NOT_RUN |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart and live URL/UNC-shaped invalid-path rejection with unchanged STATE pass; cross-session/unauthorized and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is now covered by the paired test |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, and local restricted-token ACL denial pass; different-logon-session and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -245,7 +245,7 @@ test app-data feature; Tauri CLI test-feature release build and format checks
 passed. All paired media/profile/app-data remained in disposable system-temp
 paths.
 
-G3 remains **PARTIAL**. Cross-session/unauthorized and remote pipe-client
+G3 remains **PARTIAL**. Different-logon-session and remote pipe-client
 rejection, mapped-drive/reparse runtime paths (including a reparse target
 resolving to UNC), Studio/API exit during active playback and audible parity
 remain unverified. The paired test now covers a command applied before its ACK
@@ -442,10 +442,35 @@ separate commit/push request. Historical runtime reports retain their own hashes
 | Documentation register | 0.2.0b → 0.2.1b |
 | S2 migration evidence | 0.1.0b → 0.1.1b |
 
+## G3 local restricted-logon SID ACL test — 2026-09-27
+
+The Windows Rust ACL test impersonates a restricted token with the current logon
+SID disabled and attempts to open the real local pipe. Windows returns
+`ERROR_ACCESS_DENIED`; a normal same-session client then connects and sends HELLO.
+The focused ACL test passed 1/1, and the full Play Rust suite passed 31/31 with
+`g3-test-app-data-dir`. Rust formatting and `git diff --check` passed.
+
+This verifies local denial for a token without the pipe's allowed logon SID. It
+does not prove rejection from a separate Windows logon session or remote client.
+Those cases, mapped-drive/reparse runtime coverage, Studio/API exit during active
+playback and audible parity remain open. Studio playback stays enabled.
+
+## Current documentation version diff — 2026-09-27 G3 restricted-logon ACL test
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.9b → 0.2.10b |
+| Execution DAG | 0.2.11b → 0.2.12b |
+| Documentation register | 0.2.12b → 0.2.13b |
+| Foundation evidence | 0.2.9b → 0.2.10b |
+| Traceability matrix | 0.2.9b → 0.2.10b |
+| Studio and Play application versions | No change |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.13b | 2026-09-27 | beta | Record local restricted-logon SID ACL denial and retain cross-session and playback gates | based on 988a3e4 | Codex |
 | 0.2.12b | 2026-09-27 | beta | Record paired lost-ACK owner-restart/no-replay evidence and remaining parity gates | based on 17a5c96 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Record paired lost-ACK QUERY/STATE recovery while the owner is live; retain interruption and parity gates | based on cee5e93 | Codex |
 | 0.2.10b | 2026-09-27 | beta | Record live URL/UNC-shaped receiver rejection with unchanged STATE; keep remote and parity gates open | based on cee5e93 | Codex |
