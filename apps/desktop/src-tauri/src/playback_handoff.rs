@@ -351,6 +351,28 @@ fn send_playback_with_launcher(
     connect_attempts: usize,
     launch: impl FnOnce(&Path) -> Result<(), String>,
 ) -> Result<PlaybackReply, String> {
+    send_playback_with_launcher_checked(
+        client,
+        request_id,
+        action,
+        file,
+        expected_executable,
+        connect_attempts,
+        || Ok(()),
+        launch,
+    )
+}
+
+fn send_playback_with_launcher_checked(
+    client: &StudioHandoffClient,
+    request_id: String,
+    action: String,
+    file: HandoffFile,
+    expected_executable: PathBuf,
+    connect_attempts: usize,
+    mut check_owner: impl FnMut() -> Result<(), String>,
+    launch: impl FnOnce(&Path) -> Result<(), String>,
+) -> Result<PlaybackReply, String> {
     if !is_uuid(&request_id) {
         return Err("รหัส handoff ไม่ถูกต้อง".into());
     }
@@ -375,10 +397,11 @@ fn send_playback_with_launcher(
         return Err("delivery_unknown: ตรวจผลคำสั่งก่อนหน้าก่อนส่งคำสั่งใหม่".into());
     }
     let name = windows_pipe::pipe_name()?;
-    let (mut pipe, _cold_launch) = connect_with_launch(
+    let (mut pipe, _cold_launch) = connect_with_launch_checked(
         || windows_pipe::open_client(&name, &expected_executable),
         || launch(&expected_executable),
         || std::thread::sleep(Duration::from_millis(100)),
+        || check_owner(),
         connect_attempts,
     )?;
     let (owner_session, _initial_state) = handshake(&mut pipe)?;
@@ -503,9 +526,9 @@ fn spawn_play(executable: &Path) -> Result<(), String> {
 }
 
 fn connect_with_launch<T, C, L, W>(
-    mut connect: C,
+    connect: C,
     launch: L,
-    mut wait: W,
+    wait: W,
     attempts: usize,
 ) -> Result<(T, bool), String>
 where
@@ -513,12 +536,29 @@ where
     L: FnOnce() -> Result<(), String>,
     W: FnMut(),
 {
+    connect_with_launch_checked(connect, launch, wait, || Ok(()), attempts)
+}
+
+fn connect_with_launch_checked<T, C, L, W, H>(
+    mut connect: C,
+    launch: L,
+    mut wait: W,
+    mut check_owner: H,
+    attempts: usize,
+) -> Result<(T, bool), String>
+where
+    C: FnMut() -> Result<Option<T>, String>,
+    L: FnOnce() -> Result<(), String>,
+    W: FnMut(),
+    H: FnMut() -> Result<(), String>,
+{
     if let Some(pipe) = connect()? {
         return Ok((pipe, false));
     }
     launch()?;
     for _ in 0..attempts {
         wait();
+        check_owner()?;
         if let Some(pipe) = connect()? {
             return Ok((pipe, true));
         }
@@ -1108,7 +1148,7 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
-    #[ignore = "requires an isolated Windows session, built Play app, silent WAV fixture, and empty disposable WebView2 profile"]
+    #[ignore = "requires an isolated Windows session, G3 test-feature Play app, silent WAV, and empty disposable WebView2/app-data directories"]
     fn paired_windows_cold_and_warm_handoff_ack_state_and_duplicate() {
         let executable = std::env::var_os("LALIN_PLAY_EXECUTABLE")
             .map(PathBuf::from)
@@ -1124,11 +1164,31 @@ mod tests {
         let profile_dir = std::env::var_os("LALIN_G3_PROFILE_DIR")
             .map(PathBuf::from)
             .expect("set LALIN_G3_PROFILE_DIR to a disposable WebView2 profile directory");
+        let app_data_dir = std::env::var_os("LALIN_G3_APP_DATA_DIR")
+            .map(PathBuf::from)
+            .expect("set LALIN_G3_APP_DATA_DIR to a disposable Play app-data directory");
         let profile_dir =
             std::fs::canonicalize(profile_dir).expect("disposable WebView2 profile must exist");
         let temp_root = std::env::temp_dir()
             .canonicalize()
             .expect("system temp directory must exist");
+        let app_data_parent = app_data_dir
+            .parent()
+            .and_then(|parent| parent.canonicalize().ok())
+            .expect("disposable Play app-data parent must exist");
+        assert!(
+            app_data_dir.is_absolute()
+                && app_data_parent == temp_root
+                && app_data_dir
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.starts_with("lalin-play-g3-appdata-")),
+            "Play app-data must be a named direct child of the system temp directory"
+        );
+        assert!(
+            !app_data_dir.exists(),
+            "Play app-data directory must be empty and absent before the run"
+        );
         assert_eq!(
             profile_dir.parent(),
             Some(temp_root.as_path()),
@@ -1151,8 +1211,27 @@ mod tests {
                 .is_none(),
             "refusing to stop or reuse a Play process that was already running"
         );
+        let processes = Command::new("tasklist")
+            .args(["/FI", "IMAGENAME eq lalin-play.exe", "/FO", "CSV", "/NH"])
+            .output()
+            .expect("tasklist must be available for isolated Play process detection");
+        assert!(
+            processes.status.success(),
+            "tasklist failed before G3 launch"
+        );
+        let has_existing_play = String::from_utf8_lossy(&processes.stdout)
+            .lines()
+            .filter_map(|line| line.split(',').next())
+            .any(|name| {
+                name.trim_matches('"')
+                    .eq_ignore_ascii_case("lalin-play.exe")
+            });
+        assert!(
+            !has_existing_play,
+            "close the existing Lalin Play process before the isolated test; it will not be stopped or reused"
+        );
 
-        let mut child = None;
+        let child = std::cell::RefCell::new(None::<std::process::Child>);
         let cold_launches = std::cell::Cell::new(0);
         let warm_launches = std::cell::Cell::new(0);
         let result = (|| -> Result<(), String> {
@@ -1161,26 +1240,39 @@ mod tests {
                 path: media.to_string_lossy().into_owned(),
                 title: Some("G3 cold play".into()),
             };
-            let first = send_playback_with_launcher(
+            let first = send_playback_with_launcher_checked(
                 &client,
                 play_id.into(),
                 "play".into(),
                 play_file.clone(),
                 executable.clone(),
                 CONNECT_ATTEMPTS * 3,
+                || {
+                    if let Some(process) = child.borrow_mut().as_mut() {
+                        if let Some(status) = process
+                            .try_wait()
+                            .map_err(|_| "could not inspect the isolated Play process")?
+                        {
+                            return Err(format!(
+                                "isolated Play process exited before pipe readiness ({status})"
+                            ));
+                        }
+                    }
+                    Ok(())
+                },
                 |path| {
                     cold_launches.set(cold_launches.get() + 1);
-                    child = Some(
-                        Command::new(path)
-                            .env_remove("TAURI_CONFIG")
-                            .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
-                            .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
-                            .stdin(Stdio::null())
-                            .stdout(Stdio::null())
-                            .stderr(Stdio::null())
-                            .spawn()
-                            .map_err(|_| "ไม่สามารถเปิด Lalin Play สำหรับ G3 test ได้")?,
-                    );
+                    let process = Command::new(path)
+                        .env_remove("TAURI_CONFIG")
+                        .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                        .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
+                        .env("LALIN_PLAY_G3_APP_DATA_DIR", &app_data_dir)
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .spawn()
+                        .map_err(|_| "ไม่สามารถเปิด Lalin Play สำหรับ G3 test ได้")?;
+                    *child.borrow_mut() = Some(process);
                     Ok(())
                 },
             )?;
@@ -1190,6 +1282,7 @@ mod tests {
             require_applied_reply(&first, play_id, &first.ack.owner_session, 0)?;
 
             if child
+                .borrow_mut()
                 .as_mut()
                 .and_then(|process| process.try_wait().ok().flatten())
                 .is_some()
@@ -1429,7 +1522,7 @@ mod tests {
                 owner_session: restart_owner.clone(),
             });
 
-            if let Some(mut process) = child.take() {
+            if let Some(mut process) = child.borrow_mut().take() {
                 if process
                     .try_wait()
                     .map_err(|_| "could not inspect the isolated Play owner")?
@@ -1443,17 +1536,17 @@ mod tests {
                     .wait()
                     .map_err(|_| "could not wait for the isolated Play owner to stop")?;
             }
-            child = Some(
-                Command::new(&executable)
-                    .env_remove("TAURI_CONFIG")
-                    .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
-                    .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
-                    .stdin(Stdio::null())
-                    .stdout(Stdio::null())
-                    .stderr(Stdio::null())
-                    .spawn()
-                    .map_err(|_| "could not restart the isolated Play owner")?,
-            );
+            let process = Command::new(&executable)
+                .env_remove("TAURI_CONFIG")
+                .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
+                .env("LALIN_PLAY_G3_APP_DATA_DIR", &app_data_dir)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .map_err(|_| "could not restart the isolated Play owner")?;
+            *child.borrow_mut() = Some(process);
             let restart_deadline = std::time::Instant::now() + Duration::from_secs(60);
             let restarted_state = loop {
                 if std::time::Instant::now() >= restart_deadline {
@@ -1512,7 +1605,7 @@ mod tests {
             Ok(())
         })();
 
-        if let Some(mut process) = child {
+        if let Some(mut process) = child.into_inner() {
             let _ = process.kill();
             let _ = process.wait();
         }

@@ -3,12 +3,45 @@ mod library;
 mod migration;
 
 use library::LibraryState;
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
     AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize, WindowEvent,
 };
+
+pub(crate) fn play_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    #[cfg(feature = "g3-test-app-data-dir")]
+    {
+        let _ = app;
+        let path = std::env::var_os("LALIN_PLAY_G3_APP_DATA_DIR")
+            .map(PathBuf::from)
+            .ok_or_else(|| "G3 test build requires LALIN_PLAY_G3_APP_DATA_DIR".to_string())?;
+        let temp_root = std::env::temp_dir()
+            .canonicalize()
+            .map_err(|_| "cannot resolve the G3 temporary directory".to_string())?;
+        let parent = path
+            .parent()
+            .and_then(|parent| parent.canonicalize().ok())
+            .ok_or_else(|| "G3 app-data path must be a direct child of system temp".to_string())?;
+        let has_test_prefix = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with("lalin-play-g3-appdata-"));
+        if !path.is_absolute() || parent != temp_root || !has_test_prefix {
+            return Err("G3 app-data path must be a named direct child of system temp".into());
+        }
+        Ok(path)
+    }
+
+    #[cfg(not(feature = "g3-test-app-data-dir"))]
+    {
+        if std::env::var_os("LALIN_PLAY_G3_APP_DATA_DIR").is_some() {
+            return Err("G3 app-data override requires the dedicated test build".into());
+        }
+        app.path().app_data_dir().map_err(|error| error.to_string())
+    }
+}
 
 struct Presentation {
     compact: bool,

@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.4b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T02:44:46+07:00,Codex"
+last_update: "2026-09-27T06:56:17+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -98,11 +98,17 @@ parity from mocked/unit evidence.
 ### G3 — native parity gate
 
 On Windows, exercise the real Studio sender and Play receiver in cold and warm
-launch paths. Verify same-session authorization and remote-client rejection,
-valid and invalid local paths, FIFO bursts, duplicate delivery, ACK loss followed
-by query/state reconciliation, and owner restart without blind replay. Confirm
-that Play/Play Next/Add to Queue retain their distinct outcomes and that valid
-local media reaches the same single playback owner while Studio/API may exit.
+launch paths. Each paired-test Play process must use both an empty disposable
+WebView2 profile and an isolated disposable Play app-data directory. Build that
+test executable with the `g3-test-app-data-dir` feature; it must fail closed if
+the override is missing. Do not use the normal `ai.lalin.play` app-data
+directory.
+
+Verify same-session authorization and remote-client rejection, valid and invalid
+local paths, FIFO bursts, duplicate delivery, ACK loss followed by query/state
+reconciliation, and owner restart without blind replay. Confirm that Play/Play
+Next/Add to Queue retain their distinct outcomes and that valid local media
+reaches the same single playback owner while Studio/API may exit.
 
 The Studio route stays enabled unless all applicable checks pass and playback
 parity is observed. If a native paired-process or audible check cannot run, mark
@@ -178,12 +184,22 @@ gates. Record export, PR, merge and release states independently.
   default; the expanded Rust test compiled; Play frontend build and release
   build passed. `cargo fmt --check` passed. These checks do not establish native
   pipe readiness.
-- **G3 — still PARTIAL:** the expanded ignored paired test, now requiring an
-  empty disposable WebView2 profile, timed out before HELLO/STATE on both the
-  debug launch without a Vite server and a release launch. A separate manual
-  release launch with its own profile produced a responsive `Lalin Play`
-  window, but the paired sender still could not observe an owner pipe. The
-  manual window observation is not proof of React or IPC readiness.
+- **G3 — still PARTIAL:** after adding an isolated, fail-closed app-data path,
+  the expanded ignored paired test still timed out after **31.26 seconds**
+  before HELLO/STATE. The test-created app-data directory appeared under system
+  temp, and its process remained alive through the connect timeout. The FIFO
+  burst and owner-restart checks were not reached. Isolating app data therefore
+  closes the harness safety gap but does not explain the owner-readiness timeout.
+- **Confirmed test-isolation gap:** the harness overrides only
+  `WEBVIEW2_USER_DATA_FOLDER`. Play startup also reads and may recover files
+  under Tauri `app_data_dir` (`ai.lalin.play`); Tauri resolves this through the
+  Windows Known Folder API, so a fresh WebView2 profile does not isolate Play
+  app data. Previous paired/manual launches may have accessed the real Play
+  app-data directory; its contents were not inspected, and no mutation is
+  confirmed. The harness now builds Play with the `g3-test-app-data-dir`
+  feature, requires a named direct child of system temp and rejects the test
+  override in a normal production build. This gap is not proven to cause the
+  owner-readiness timeout.
 - The test source now includes a four-command FIFO sequence with ACK revision and
   queue-order assertions plus an owner-restart case that requires
   `delivery_unknown` and blocks blind replay. Those assertions were **not
@@ -213,6 +229,8 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-27 | beta | Add fail-closed Play app-data isolation to G3 and record the continued pre-HELLO timeout | based on 5351a18 | Codex |
+| 0.2.3b | 2026-09-27 | beta | Record the unisolated Tauri app-data boundary and gate further paired runs on a disposable test-only data path | based on 5351a18 | Codex |
 | 0.2.2b | 2026-09-27 | beta | Record FIFO/restart test additions and cold owner-registration readiness failure; keep G3 partial | based on daa2867 | Codex |
 | 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
 | 0.2.0b | 2026-09-26 | beta | Record G0-G2 completion and G3 native parity NOT_RUN status while preserving Studio playback | S2 7c30ea1; S3 235875b/362bbd0 | Codex |

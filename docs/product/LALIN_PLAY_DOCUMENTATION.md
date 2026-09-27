@@ -1,7 +1,7 @@
 ---
-version: "0.2.4b"
+version: "0.2.5b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T02:44:46+07:00,Codex"
+last_update: "2026-09-27T06:56:17+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -140,23 +140,25 @@ The S2/S3 implementation PRs are merged. The current `main` and
 `daa2867be389851a91bbd18fb86e896836e69975`.
 
 Follow-up coverage was added for sender-side FIFO under deferred ACKs, a native
-four-command FIFO sequence, and owner restart with no blind replay. Sender tests
-passed **3/3**; the Studio native library suite passed **6/6** with the real
-paired test ignored by default; the expanded Rust test compiled; Play frontend
-and release builds passed; `cargo fmt --check` passed.
+four-command FIFO sequence, owner restart with no blind replay, and disposable
+Tauri app-data isolation. Play native tests passed **31/31** with and without
+the `g3-test-app-data-dir` feature; the test-feature release build passed.
+Sender FIFO tests passed **3/3**; Studio native tests passed **6/6** with the
+paired test ignored by default; the expanded Rust test compiled and formatting
+checks passed.
 
-The expanded ignored paired test did not pass: the debug app timed out without
-a Vite server, and the release app timed out before the Studio client received
-HELLO/STATE. A manually launched release app using a disposable WebView2 profile
-stayed responsive, but the expected handoff owner was not observed. The attempt
-therefore does not verify the new FIFO/restart assertions or any added parity
-gate. The confirmed failure boundary is that the owner-registration path did
-not become reachable to the paired sender; the exact failing step between
-React mount, Tauri event/API bridge, command authorization and native pipe
-creation is unconfirmed. See the
+The expanded ignored paired test still does not pass with both WebView2 profile
+and Play app-data isolated: it timed out after **31.26 seconds** before HELLO/STATE
+while the Play process remained alive. The FIFO/restart assertions were not
+reached. Source review found that earlier attempts isolated only WebView2; a
+fail-closed test-only app-data path is now implemented. That safety fix did not
+resolve the readiness timeout. The exact failing step between React mount,
+Tauri event/API bridge, command authorization and native pipe creation remains
+unconfirmed. See the
 [registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
 
-G3 remains **PARTIAL**. The implementation follow-up is local and unmerged.
+G3 remains **PARTIAL**. The implementation follow-up is in draft PR #25 and
+unmerged.
 Ordinary Studio playback remains enabled; no Play parity, source removal, or
 release acceptance is claimed.
 
@@ -178,6 +180,15 @@ release acceptance is claimed.
 | Execution DAG | 0.2.1b → 0.2.2b |
 | Documentation register | 0.2.3b → 0.2.4b |
 | Handoff registration readiness RCA | New 0.1.0b |
+| Studio and Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 isolation follow-up
+
+| Document | Before → after |
+|---|---|
+| Execution DAG | 0.2.2b → 0.2.4b |
+| Documentation register | 0.2.4b → 0.2.5b |
+| Handoff registration readiness RCA | 0.1.0b → 0.1.2b |
 | Studio and Play application versions | No change |
 ## Current documentation version diff — 2026-09-26
 
@@ -248,6 +259,7 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-09-27 | beta | Add test-only app-data isolation evidence and keep the isolated paired handoff gate open | based on 5351a18 | Codex |
 | 0.2.4b | 2026-09-27 | beta | Record G3 owner-registration readiness failure and keep Studio playback enabled | based on daa2867 | Codex |
 | 0.2.3b | 2026-09-27 | beta | Record isolated native cold/warm delivery and ACK/STATE reconciliation while preserving open parity gates | based on ed20af8 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile recovered S2 migration and S3 handoff implementation status with exact local checks and open parity gates | S2 7c30ea1; S3 235875b | Codex |

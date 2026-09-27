@@ -5,7 +5,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 const MAX_MIGRATION_BYTES: usize = 16 * 1024 * 1024;
 const MAX_JOURNAL_BYTES: u64 = 72 * 1024 * 1024;
@@ -207,7 +207,7 @@ pub struct UndoStatus {
 }
 
 fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let directory = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let directory = crate::play_app_data_dir(app)?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     Ok(directory)
 }
