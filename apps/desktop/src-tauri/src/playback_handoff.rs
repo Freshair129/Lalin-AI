@@ -1629,6 +1629,51 @@ mod tests {
             if warm_launches.get() != 0 {
                 return Err("warm handoff unexpectedly launched another Play process".into());
             }
+
+            let invalid_id = "00000000-0000-4000-8000-000000000106";
+            let (mut invalid_pipe, _) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Ok::<(), String>(()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            let (invalid_owner, _) = handshake(&mut invalid_pipe)?;
+            if invalid_owner != after_restart.owner_session {
+                return Err("Play owner changed before the invalid-path check".into());
+            }
+            let invalid_file = HandoffFile {
+                path: "https://example.invalid/audio.wav".into(),
+                title: Some("G3 invalid remote URL".into()),
+            };
+            write_frame(
+                &mut invalid_pipe,
+                &CommandFrame {
+                    frame_type: "COMMAND",
+                    protocol: PROTOCOL,
+                    protocol_version: PROTOCOL_VERSION,
+                    request_id: invalid_id,
+                    owner_session: &invalid_owner,
+                    action: "add-to-queue",
+                    file: &invalid_file,
+                },
+            )?;
+            let invalid_response = read_value(&mut invalid_pipe, ACK_TIMEOUT)?;
+            if invalid_response.get("type").and_then(Value::as_str) != Some("ERROR")
+                || invalid_response.get("code").and_then(Value::as_str) != Some("invalid_file_path")
+            {
+                return Err(
+                    "Play receiver did not reject the invalid G3 path over the pipe".into(),
+                );
+            }
+            drop(invalid_pipe);
+            let after_invalid = read_playback_state(&client)?
+                .ok_or("Play state disappeared after invalid-path rejection")?;
+            if after_invalid.owner_session != after_restart.owner_session
+                || after_invalid.revision != after_restart.revision
+                || after_invalid.snapshot != after_restart.snapshot
+            {
+                return Err("invalid-path rejection changed Play playback state".into());
+            }
             Ok(())
         })();
 

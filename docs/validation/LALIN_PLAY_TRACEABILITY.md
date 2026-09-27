@@ -1,7 +1,7 @@
 ---
-version: "0.2.3b"
+version: "0.2.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T08:13:29+07:00,Codex"
+last_update: "2026-09-27T09:01:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -38,7 +38,7 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
 | State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery and selected storage-failure tests; process-crash and remaining storage-failure coverage open |
 | Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases and selected native write-failure tests; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
-| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE reconciliation, duplicate handling, ordered four-file queue and owner restart; concurrent-client FIFO, unauthorized/cross-session cases and audible parity NOT_VERIFIED |
+| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE reconciliation, duplicate handling, ordered four-file queue, owner restart, and live invalid-URL receiver rejection with unchanged STATE; concurrent-client FIFO, unauthorized/cross-session cases and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
@@ -62,7 +62,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
-| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate suppression, sequential four-file queue order and owner restart without blind replay | Concurrent-client ordering, cross-session/unauthorized and remote rejection, invalid/mapped-drive/reparse runtime cases, ACK loss across process interruption, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
+| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate suppression, sequential four-file queue order, owner restart without blind replay, and receiver rejection of a URL-shaped invalid path over the live pipe with unchanged STATE | Concurrent-client ordering, cross-session/unauthorized and remote rejection, UNC/mapped-drive/reparse runtime cases, ACK loss across process interruption, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
 | PLAY-07 | State, Native | F + S2 journal-phase recovery, selected write-failure fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Process termination, corruption, power-loss durability and remaining storage-failure coverage |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Process-crash recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
@@ -129,6 +129,7 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-27 | beta | Trace live invalid-path receiver rejection as paired G3 evidence and preserve remaining gates | based on b90ffaed | Codex |
 | 0.2.3b | 2026-09-27 | beta | Trace passing isolated paired G3 lifecycle cases separately from remaining security and playback parity gates | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 migration and S3 handoff traceability while preserving live parity gates | 7c30ea1 / 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Trace native journal-phase recovery, selected write-failure evidence and open runtime gates | based on 411d2ed | LALIN |

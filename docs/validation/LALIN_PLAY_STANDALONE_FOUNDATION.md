@@ -1,7 +1,7 @@
 ---
-version: "0.2.3b"
+version: "0.2.4b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T08:13:29+07:00,Codex"
+last_update: "2026-09-27T09:01:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,19 +95,20 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential four-file queue order and owner restart; concurrent-client security cases and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery, duplicate handling, sequential four-file queue order, owner restart, and live invalid-URL receiver rejection with unchanged STATE; concurrent-client security cases and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
-Next work is actual S2 process-termination/restart verification and remaining
+Remaining work includes actual S2 process-termination/restart verification and
 journal/history write failures, plus S3 concurrent-client ordering,
-unauthorized/cross-session and remote rejection, invalid/mapped-drive/reparse
+unauthorized/cross-session and remote rejection, UNC/mapped-drive/reparse
 runtime cases, ACK loss across process interruption, Studio/API exit during
-active playback and audible parity. Studio playback stays available until parity
-is proven. S4–S7 remain gated by ADR-004.
+active playback and audible parity. The paired URL-shaped invalid-path case now
+passes but does not close those filesystem/runtime gates. Studio playback stays
+available until parity is proven. S4–S7 remain gated by ADR-004.
 An interrupted import restores through the Play-owned journal on next launch; the
 prior Studio sources and user state remain intact. Temporary isolated build files and fixture are ignored under `runtime/`
 and `.smoke/`; they were retained, not committed or deleted.
@@ -170,7 +171,7 @@ WebView2 and app-data directories under system temp. The ignored Studio test
 passed **1/1** with this command from `apps/desktop`:
 
 ```powershell
-cargo test --offline --manifest-path src-tauri/Cargo.toml playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate -- --ignored --nocapture
+cargo test --offline --manifest-path src-tauri/Cargo.toml playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate -- --ignored --exact --test-threads=1 --nocapture
 ```
 
 Play Rust tests with `--features g3-test-app-data-dir` passed **31/31**;
@@ -187,10 +188,35 @@ during playback and audible parity remain open. The startup RCA records why the
 earlier test artifact did not run the frontend and the FIFO fixture corrections.
 Normal Studio playback remains enabled.
 
+## G3 receiver invalid-path follow-up — 2026-09-27
+
+After the owner restart, the ignored paired Windows test sends
+`https://example.invalid/audio.wav` as a raw `COMMAND` over the live same-logon
+Play pipe. Play returns `ERROR/invalid_file_path`. A fresh STATE query confirms the owner
+session, revision and complete playback snapshot remain unchanged. The
+URL-shaped path is rejected before filesystem/network lookup.
+
+The paired test passed **1/1** with this case. Studio native tests passed **6/6**
+with the paired test ignored in the ordinary suite; Play native tests with
+`g3-test-app-data-dir` passed **31/31**. Both Rust formatting checks and
+`git diff --check` passed. The isolated Tauri CLI Play executable was built with a
+relative embedded frontend and the fail-closed app-data feature. The run used
+an empty disposable WebView2 profile, separate test-only app-data, and a
+120-second silent WAV under system temp; the test process exited and the
+disposable paths were removed.
+
+This proves only receiver rejection of the URL-shaped invalid path. UNC or
+mapped-drive/reparse runtime behavior, cross-session/unauthorized and remote
+client rejection, concurrent ordering, ACK loss across process interruption,
+Studio/API exit during playback and audible parity remain unverified. See the
+[receiver path-rejection RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md).
+Keep ordinary Studio playback enabled.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-27 | beta | Add paired invalid-path receiver evidence and retain remaining S3 parity gates | based on b90ffaed | Codex |
 | 0.2.3b | 2026-09-27 | beta | Add isolated paired lifecycle evidence while keeping audio parity and remaining S3 acceptance gates open | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 and S3 local implementation checks and preserve native lifecycle/parity gates | 7c30ea1 / 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Add synthetic journal-phase recovery and selected native write-failure evidence | based on 411d2ed | LALIN |

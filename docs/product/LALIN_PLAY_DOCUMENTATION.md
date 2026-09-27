@@ -1,7 +1,7 @@
 ---
-version: "0.2.6b"
+version: "0.2.7b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T08:13:29+07:00,Codex"
+last_update: "2026-09-27T09:01:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 31/31; earlier S2-only Rust 23/23 and focused UI/build checks are recorded in the linked report; process-crash recovery and actual Studio transfer remain NOT_RUN |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md) and [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) | Isolated Windows paired cold/warm delivery, ACK/STATE recovery, duplicate handling, ordered queue fixture and owner restart pass; concurrent-client security cases, process-interrupted ACK loss, active playback parity and audible parity remain NOT_VERIFIED |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md) and [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) | Isolated Windows paired cold/warm delivery, ACK/STATE recovery, duplicate handling, ordered queue fixture, owner restart, and live receiver rejection of an invalid URL path with unchanged STATE pass; concurrent-client security cases, process-interrupted ACK loss, active playback parity and audible parity remain NOT_VERIFIED |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -192,12 +192,32 @@ beside its raw-path temp fixture, asserts their canonical parent is system temp,
 and removes them after the child exits. Studio's canonical local-file validation
 was not relaxed.
 
-G3 is **PARTIAL**, not playback parity. Cross-session/unauthorized and remote
-client rejection, invalid-path and mapped-drive/reparse runtime cases, ACK loss
-across process interruption, Studio/API exit during active playback and audible
-parity remain unverified. PR #25 is open and draft. Keep ordinary Studio
-playback enabled; do not merge or remove its playback owner until full parity is
-proven.
+At that earlier paired run, G3 remained **PARTIAL**, not playback parity.
+Cross-session/unauthorized and remote-client rejection, invalid-path and
+mapped-drive/reparse runtime cases, ACK loss across process interruption,
+Studio/API exit during active playback and audible parity were still open.
+PR #25 is open and draft. Keep ordinary Studio playback enabled; do not merge or
+remove its playback owner until full parity is proven.
+
+## G3 receiver invalid-path follow-up — 2026-09-27
+
+After the owner restart, the paired test sends
+`https://example.invalid/audio.wav` as a raw `COMMAND` over the live same-logon
+Play pipe. Play returned
+`ERROR/invalid_file_path`; a fresh STATE query confirmed owner, revision and the
+complete playback snapshot were unchanged. This URL-shaped path is rejected
+before filesystem/network lookup. The isolated paired Windows test passed **1/1**
+with the new case; Studio native tests passed **6/6** with the paired test
+ignored, and Play native tests with `g3-test-app-data-dir` passed **31/31**.
+Rust formatting checks and `git diff --check` passed. The Play executable was
+built through Tauri CLI with a relative embedded frontend and the fail-closed
+`g3-test-app-data-dir` feature.
+
+Cross-session/unauthorized and remote-client rejection, concurrent independent
+client ordering, mapped-drive/reparse runtime behavior, ACK loss across process
+interruption, Studio/API exit during active playback and audible parity remain
+open. The [receiver path-rejection RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md)
+records the prior coverage gap. Normal Studio playback remains enabled.
 
 ## Current documentation version diff — 2026-09-27 G3 paired lifecycle
 
@@ -208,6 +228,18 @@ proven.
 | Handoff registration readiness RCA | 0.1.2b → 0.1.3b |
 | Foundation evidence | 0.2.2b → 0.2.3b |
 | Traceability matrix | 0.2.2b → 0.2.3b |
+| Studio and Play application versions | No change |
+
+## Current documentation version diff — 2026-09-27 G3 receiver path rejection
+
+| Document | Before → after |
+|---|---|
+| Execution DAG | 0.2.5b → 0.2.6b |
+| Documentation register | 0.2.6b → 0.2.7b |
+| Receiver invalid-path runtime RCA | New 0.1.0b |
+| Handoff registration readiness RCA | 0.1.3b → 0.1.4b |
+| Foundation evidence | 0.2.3b → 0.2.4b |
+| Traceability matrix | 0.2.3b → 0.2.4b |
 | Studio and Play application versions | No change |
 
 ## Previous documentation version diff — 2026-09-27
@@ -307,6 +339,7 @@ separate commit/push request. Historical runtime reports retain their own hashes
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.7b | 2026-09-27 | beta | Record native receiver invalid-path rejection and unchanged STATE while retaining parity gates | based on b90ffaed | Codex |
 | 0.2.6b | 2026-09-27 | beta | Record embedded-asset startup diagnosis and passing isolated paired lifecycle while keeping the parity gate open | based on 9e0cb06 | Codex |
 | 0.2.5b | 2026-09-27 | beta | Add test-only app-data isolation evidence and keep the isolated paired handoff gate open | based on 5351a18 | Codex |
 | 0.2.4b | 2026-09-27 | beta | Record G3 owner-registration readiness failure and keep Studio playback enabled | based on daa2867 | Codex |

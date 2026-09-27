@@ -1,7 +1,7 @@
 ---
-version: "0.2.5b"
+version: "0.2.6b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T08:13:29+07:00,Codex"
+last_update: "2026-09-27T09:01:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -264,6 +264,37 @@ gates. Record export, PR, merge and release states independently.
   successful paired boundary, earlier test-build/fixture causes and remaining
   gates. PR #25 is still open and draft; no merge or release is claimed.
 
+## Execution status — 2026-09-27 G3 receiver path-rejection follow-up
+
+- **Acceptance gap and cause:** the prior paired run exercised valid local-file
+  commands only. Studio and Play validator unit tests existed independently,
+  but no paired test had sent an invalid path through the live Play pipe. See
+  the [receiver path-rejection RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md).
+- **Paired Windows test — PASS for this case:** the ignored
+  `playback_handoff::tests::paired_windows_cold_and_warm_handoff_ack_state_and_duplicate`
+  test passed **1/1**. After the owner restart, Studio sent
+  `https://example.invalid/audio.wav` directly as a `COMMAND` over the
+  same-logon named pipe. Play replied `ERROR` with `invalid_file_path`; a fresh
+  STATE query confirmed owner, revision and the full snapshot were unchanged.
+  The URL is rejected as a non-absolute Windows filesystem path before any
+  filesystem/network lookup. The isolated Play executable used
+  `g3-test-app-data-dir`; the silent WAV, profile and app-data paths were direct
+  children of system temp, and the disposable directories were removed after
+  the process exited.
+- **Regression checks:** Studio native tests passed **6/6** (the paired test is
+  ignored in the ordinary suite); Play native tests with
+  `g3-test-app-data-dir` passed **31/31**. Rust formatting checks and
+  `git diff --check` passed.
+- **G3 remains PARTIAL:** this closes only receiver runtime rejection of a URL
+  shaped as an invalid local path. Concurrent independent-client ordering,
+  unauthorized/cross-session and remote-client rejection, mapped-drive/reparse
+  runtime behavior, ACK loss across process interruption, Studio/API exit during
+  active playback and audible parity remain unverified. Preserve Studio
+  playback; this control-plane result does not prove audio parity.
+- **G4 — evidence updated locally:** this DAG, the status register, foundation,
+  traceability and new acceptance-gap RCA record the result. PR #25 remains
+  open and draft; no merge or release is claimed.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -278,6 +309,7 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.6b | 2026-09-27 | beta | Record live receiver rejection of an invalid URL path with unchanged STATE; keep remaining parity gates open | based on b90ffaed | Codex |
 | 0.2.5b | 2026-09-27 | beta | Record successful isolated cold/warm paired lifecycle, FIFO fixture fix and remaining parity gates | based on 9e0cb06 | Codex |
 | 0.2.4b | 2026-09-27 | beta | Add fail-closed Play app-data isolation to G3 and record the continued pre-HELLO timeout | based on 5351a18 | Codex |
 | 0.2.3b | 2026-09-27 | beta | Record the unisolated Tauri app-data boundary and gate further paired runs on a disposable test-only data path | based on 5351a18 | Codex |

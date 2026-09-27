@@ -1,7 +1,7 @@
 ---
-version: "0.1.3b"
+version: "0.1.4b"
 created_at: "2026-09-27T02:44:46+07:00,Codex,daa2867"
-last_update: "2026-09-27T08:13:29+07:00,Codex"
+last_update: "2026-09-27T09:01:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,10 +95,11 @@ WebView2 profile under system temp. Keep native startup stage traces gated by
 assertions and keep canonical-path checks active. Continue to require the Studio
 sender to receive matching HELLO/ACK/STATE before marking paired delivery
 passed. Concurrent independent-client FIFO, cross-session/unauthorized and
-remote rejection, invalid-path runtime cases, ACK loss across process
-interruption, mapped-drive/reparse runtime cases, Studio/API exit during active
-playback and audible parity remain unverified. Keep ordinary Studio playback
-enabled until those full acceptance gates pass.
+remote rejection, UNC/mapped-drive/reparse runtime cases, ACK loss across
+process interruption, Studio/API exit during active playback and audible parity
+remain unverified. The paired test now covers rejection of one URL-shaped path;
+see the [invalid-path coverage RCA](2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md).
+Keep ordinary Studio playback enabled until those full acceptance gates pass.
 
 ## Resolution and validation
 
@@ -112,10 +113,12 @@ It verified cold launch, warm Play Next/Add to Queue, matching ACK/STATE,
 ACK-disconnect reconciliation, duplicate suppression, ordered unique-path queue
 entries and owner restart without blind replay. The native control-plane pair
 is therefore verified for these cases; concurrent clients, unauthorized or
-cross-session attempts, remote/invalid path runtime cases, process-interrupted
-ACK loss, mapped-drive/reparse runtime cases, Studio/API exit during playback
-and audible parity remain **NOT_VERIFIED**. G3 remains PARTIAL; Studio playback
-stays enabled and no merge or parity acceptance is claimed.
+cross-session attempts, remote rejection, UNC/mapped-drive/reparse runtime
+cases, process-interrupted ACK loss, Studio/API exit during playback and audible
+parity remain **NOT_VERIFIED**. A later paired run verifies URL-shaped invalid
+path rejection without state change; see the [invalid-path coverage RCA](2026-09-27-lalin-play-handoff-invalid-path-runtime-coverage.md).
+G3 remains PARTIAL; Studio playback stays enabled and no merge or parity
+acceptance is claimed.
 
 Earlier unisolated manual diagnostics may have accessed the normal Play
 app-data path; its contents were not inspected, and whether those attempts
@@ -126,6 +129,7 @@ test-feature app-data directories and do not inspect or remove normal user data.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.4b | 2026-09-27 | beta | Record later paired invalid-path rejection evidence and narrow the remaining runtime gate | based on b90ffaed | Codex |
 | 0.1.3b | 2026-09-27 | beta | Confirm test asset-loading cause for reproduced startup timeout and record passing isolated paired lifecycle; retain remaining parity gates | based on 9e0cb06 | Codex |
 | 0.1.2b | 2026-09-27 | beta | Add fail-closed temporary app-data isolation and record the still-unresolved paired timeout | based on 5351a18 | Codex |
 | 0.1.1b | 2026-09-27 | beta | Separate the unconfirmed pipe timeout from the confirmed paired-test app-data isolation defect | based on 5351a18 | Codex |
