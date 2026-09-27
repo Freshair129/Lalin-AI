@@ -1,7 +1,7 @@
 ---
-version: "0.2.12b"
+version: "0.2.13b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T11:12:00+07:00,Codex"
+last_update: "2026-09-27T11:42:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -411,6 +411,23 @@ rejection, mapped-drive/reparse runtime cases, Studio/API exit during active
 playback and audible parity remain open. S2 process-crash/power-loss recovery and
 remaining native write-failure gates are open. Preserve Studio playback.
 
+## Execution status — 2026-09-27 S2 child-process termination
+
+The Play native migration test launched an ignored child test driver, waited for
+each durable fixture checkpoint, forcibly terminated that process, then ran the
+same directory-level startup recovery used before store initialization. The five
+checkpoints were Prepared, catalog written while still Prepared, Applied,
+Committed and Acknowledged. Recovery restored the prior catalog for the first
+three; it retained the new catalog for Committed and Acknowledged and removed
+the acknowledged journal.
+
+The focused test passed **1/1**. The full Play Rust suite passed **32 tests**
+with one test-only child driver ignored by default; `cargo fmt -- --check`
+passed. This does not exercise a restarted desktop binary or WebView, power loss,
+the remaining journal/history write failures or a live Studio-to-Play transfer.
+G3's remote/session security and audible parity gates remain open. Preserve
+Studio playback.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -425,6 +442,7 @@ remaining native write-failure gates are open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.13b | 2026-09-27 | beta | Verify directory-level S2 recovery after forced child-process termination at five checkpoints; retain runtime and parity gates | based on e2bd20a | Codex |
 | 0.2.12b | 2026-09-27 | beta | Verify the local Windows named-pipe ACL denies a restricted client without the allowed logon SID; retain cross-session and playback gates | based on 988a3e4 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Verify paired lost-ACK command application before owner restart and block replay in the new session; retain playback parity gates | based on 17a5c96 | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add paired lost-ACK query/state reconciliation against the live owner; keep interruption and parity gates open | based on cee5e93 | Codex |

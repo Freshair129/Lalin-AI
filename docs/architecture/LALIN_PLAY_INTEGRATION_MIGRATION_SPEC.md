@@ -1,7 +1,7 @@
 ---
-version: "0.2.10b"
+version: "0.2.11b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:12:00+07:00,Codex"
+last_update: "2026-09-27T11:42:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -235,12 +235,15 @@ selection; duplicate queue entries and export IDs; write failure at each phase;
 restart recovery before store initialization; apply→undo queue/EQ/catalog parity;
 undo-disabled-after-catalog-change; retained Studio state; and no autoplay.
 S2 queue/EQ migration and bounded undo are implemented locally; schema parity,
-focused rollback/undo tests, synthetic native restart-phase coverage and selected write-failure tests
-are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
-Process-crash restart recovery, power-loss durability, remaining native write
-failures (including journal creation and import-history persistence), and an
-actual Studio-to-Play transfer remain unverified. Named-pipe Studio handoff and
-media relink remain separate gates.
+focused rollback/undo tests, synthetic native restart-phase coverage, and selected
+write-failure tests are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
+A test-binary child process was terminated at five journal/catalog checkpoints;
+directory-level recovery restored the expected catalog state before UI
+initialization. This does not test restarting the Play desktop/WebView or
+power-loss durability. Remaining native write failures (including journal
+creation and import-history persistence) and an actual Studio-to-Play transfer
+remain unverified. Named-pipe Studio handoff and media relink remain separate
+gates.
 
 Implementation boundary: Studio export reads the live Play store in the running
 Studio app. Standalone import reads/writes its own active `localStorage` through
@@ -251,6 +254,8 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.11b | 2026-09-27 | beta | Record test-binary termination at five S2 checkpoints and directory-level restart recovery; retain power-loss and transfer gates | based on e2bd20a | Codex |
+| 0.2.10b | 2026-09-27 | beta | Record local Windows pipe ACL denial for a restricted token; retain cross-session and playback parity gates | based on 988a3e4 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Record paired applied-command/lost-ACK owner-restart no-replay evidence; retain security and playback-parity gates | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Verify live ACK-loss query/state recovery while the owner remains active; preserve process-interruption and parity gates | based on cee5e93 | Codex |
 | 0.2.7b | 2026-09-27 | beta | Record live rejection of UNC-shaped handoff input before lookup; retain remote-client and parity gates | based on cee5e93 | Codex |

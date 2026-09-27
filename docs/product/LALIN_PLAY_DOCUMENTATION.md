@@ -1,7 +1,7 @@
 ---
-version: "0.2.13b"
+version: "0.2.14b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T11:12:00+07:00,Codex"
+last_update: "2026-09-27T11:42:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -44,7 +44,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Video / Compact / fullscreen | [CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md), [CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md), [Sitemap](../design/LALIN_SITEMAP_SOT.md) | Approved, implemented locally |
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
-| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 31/31; earlier S2-only Rust 23/23 and focused UI/build checks are recorded in the linked report; process-crash recovery and actual Studio transfer remain NOT_RUN |
+| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 32 passed/1 ignored; child-process termination at five checkpoints and directory-level recovery pass; power-loss, remaining writes and actual Studio transfer remain open |
 | S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md) and [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, and local restricted-token ACL denial pass; different-logon-session and remote pipe-client rejection, mapped/reparse runtime cases and Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
@@ -60,7 +60,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 - **candidate** = รายละเอียดหรือ release gates ที่ยังรออนุมัติตาม R5; approved S2/S3 code remains subject to runtime acceptance.
 - **BLOCKED** ใน checklist = ต้องเติม decision/evidence ก่อนผ่าน gate ไม่ใช่รายงานว่า agent ทำงานต่อไม่ได้.
 
-ลำดับ: verify remaining S2 crash/recovery and write-failure cases plus S3 remote/security, Studio/API exit during playback, audible parity and relink acceptance →
+ลำดับ: verify remaining S2 power-loss and write-failure cases plus S3 remote/security, Studio/API exit during playback, audible parity and relink acceptance →
 license/provenance + S4 export → S5 clean-checkout/regression → S6 scoped removal →
 S7 installer/update. แยก authorization สำหรับ remote creation, deletion,
 merge และ publication จากการอนุมัติเอกสารเสมอ
@@ -250,9 +250,11 @@ rejection, mapped-drive/reparse runtime paths (including a reparse target
 resolving to UNC), Studio/API exit during active playback and audible parity
 remain unverified. The paired test now covers a command applied before its ACK
 is read, followed by owner restart, delivery_unknown and blocked replay.
-S2 process-crash/power-loss recovery and remaining storage-write cases are
-also open. PR #25 remains draft pending those gates. Keep ordinary Studio
-playback enabled; no playback parity, source removal or release is claimed.
+S2 child-process termination at five journal/catalog checkpoints now recovers to
+the expected catalog before store initialization. Power-loss durability and
+remaining storage-write cases are still open. PR #25 remains draft pending those
+gates. Keep ordinary Studio playback enabled; no playback parity, source removal
+or release is claimed.
 
 ## G3 lost ACK across Play owner restart — 2026-09-27
 
@@ -466,10 +468,38 @@ playback and audible parity remain open. Studio playback stays enabled.
 | Traceability matrix | 0.2.9b → 0.2.10b |
 | Studio and Play application versions | No change |
 
+## S2 child-process termination recovery — 2026-09-27
+
+The native migration test forcibly terminated a child test-binary process at
+Prepared, catalog-written-before-Applied, Applied, Committed and Acknowledged.
+Directory-level startup recovery restored the old catalog in the first three
+cases, retained the committed catalog in the last two, and removed the
+acknowledged journal. The focused test passed **1/1**; the full Play Rust suite
+passed **32 tests** with one test-only driver ignored by default, and
+`cargo fmt -- --check` passed.
+
+This proves only test-binary process-termination handling in a temporary
+directory. It does not restart the Play desktop/WebView or establish power-loss
+durability. Remaining native write failures and actual Studio-to-Play transfer
+are open. Studio playback remains available until parity is proven.
+
+## Current documentation version diff — 2026-09-27 S2 recovery test
+
+| Document | Before → after |
+|---|---|
+| Integration/migration spec | 0.2.10b → 0.2.11b |
+| Execution DAG | 0.2.12b → 0.2.13b |
+| Documentation register | 0.2.13b → 0.2.14b |
+| Foundation evidence | 0.2.10b → 0.2.11b |
+| Traceability matrix | 0.2.10b → 0.2.11b |
+| S2 migration evidence | 0.1.3b → 0.1.4b |
+| Studio and Play application versions | No change |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.14b | 2026-09-27 | beta | Record five-checkpoint S2 child-process recovery evidence and exact open power-loss/live-transfer gates | based on e2bd20a | Codex |
 | 0.2.13b | 2026-09-27 | beta | Record local restricted-logon SID ACL denial and retain cross-session and playback gates | based on 988a3e4 | Codex |
 | 0.2.12b | 2026-09-27 | beta | Record paired lost-ACK owner-restart/no-replay evidence and remaining parity gates | based on 17a5c96 | Codex |
 | 0.2.11b | 2026-09-27 | beta | Record paired lost-ACK QUERY/STATE recovery while the owner is live; retain interruption and parity gates | based on cee5e93 | Codex |

@@ -1137,6 +1137,7 @@ fn valid_iso_timestamp(value: &str) -> bool {
 mod tests {
     use super::*;
     use std::io::Write;
+    use std::time::Duration;
 
     fn fixture_envelope(path: &Path) -> MigrationEnvelope {
         let path_text = path.to_string_lossy().into_owned();
@@ -1504,6 +1505,118 @@ mod tests {
                     matches!(phase, Phase::Prepared | Phase::Applied)
                 );
             }
+        }
+    }
+
+    #[test]
+    fn migration_recovers_after_child_process_termination() {
+        let (old, new) = fixture_libraries();
+        let cases = [
+            ("prepared", old.clone()),
+            ("catalog_written", old.clone()),
+            ("applied", old.clone()),
+            ("committed", new.clone()),
+            ("acknowledged", new),
+        ];
+
+        for (crash_point, expected_library) in cases {
+            let directory = tempfile::tempdir().unwrap();
+            let ready = directory.path().join("process-ready");
+            let mut child = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--ignored",
+                    "--exact",
+                    "migration::tests::migration_process_restart_driver",
+                    "--nocapture",
+                ])
+                .env("LALIN_PLAY_MIGRATION_CRASH_DIR", directory.path())
+                .env("LALIN_PLAY_MIGRATION_CRASH_POINT", crash_point)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+                .unwrap();
+            let termination = (|| -> Result<(), String> {
+                let deadline = std::time::Instant::now() + Duration::from_secs(10);
+                while !ready.exists() {
+                    if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
+                        return Err(format!(
+                            "migration child exited before crash point {crash_point}: {status}"
+                        ));
+                    }
+                    if std::time::Instant::now() >= deadline {
+                        return Err(format!(
+                            "migration child did not reach crash point {crash_point}"
+                        ));
+                    }
+                    std::thread::sleep(Duration::from_millis(5));
+                }
+
+                child.kill().map_err(|error| error.to_string())?;
+                let status = child.wait().map_err(|error| error.to_string())?;
+                if status.success() {
+                    return Err(format!(
+                        "migration child exited normally at crash point {crash_point}"
+                    ));
+                }
+                Ok(())
+            })();
+            if termination.is_err() {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+            assert!(
+                termination.is_ok(),
+                "failed to terminate migration child at {crash_point}: {}",
+                termination.unwrap_err()
+            );
+            restore_library_before_ui_from_directory(directory.path()).unwrap();
+            assert_library_file(directory.path(), &expected_library);
+            if crash_point == "acknowledged" {
+                assert!(load_journal(directory.path()).unwrap().is_none());
+            } else {
+                assert!(load_journal(directory.path()).unwrap().is_some());
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "launched by migration_recovers_after_child_process_termination"]
+    fn migration_process_restart_driver() {
+        let directory = PathBuf::from(
+            std::env::var_os("LALIN_PLAY_MIGRATION_CRASH_DIR")
+                .expect("parent test supplies an isolated migration directory"),
+        );
+        let crash_point = std::env::var("LALIN_PLAY_MIGRATION_CRASH_POINT")
+            .expect("parent test supplies a crash point");
+        let (old, new) = fixture_libraries();
+        let mut current = old.clone();
+        let mut journal = fixture_journal(&old, &new, Phase::Prepared);
+        save_json(&library_file_path(&directory), &old).unwrap();
+        save_journal(&directory, &journal).unwrap();
+
+        match crash_point.as_str() {
+            "prepared" => {}
+            "catalog_written" => {
+                save_json(&library_file_path(&directory), &new).unwrap();
+            }
+            "applied" => {
+                apply_journal_to_library(&directory, &mut current, &mut journal).unwrap();
+            }
+            "committed" | "acknowledged" => {
+                apply_journal_to_library(&directory, &mut current, &mut journal).unwrap();
+                mark_journal_committed(&directory, &mut journal).unwrap();
+                record_import_commit(&directory, &journal).unwrap();
+                if crash_point == "acknowledged" {
+                    journal.phase = Phase::Acknowledged;
+                    save_journal(&directory, &journal).unwrap();
+                }
+            }
+            _ => panic!("unknown migration crash point: {crash_point}"),
+        }
+
+        fs::write(directory.join("process-ready"), b"ready").unwrap();
+        loop {
+            std::thread::sleep(Duration::from_secs(1));
         }
     }
 

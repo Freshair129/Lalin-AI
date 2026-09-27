@@ -1,7 +1,7 @@
 ---
-version: "0.2.10b"
+version: "0.2.11b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T11:12:00+07:00,Codex"
+last_update: "2026-09-27T11:42:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -93,7 +93,7 @@ output settings and dark native controls.
 | Gate | Status |
 |---|---|
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
-| Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; focused tests and selected synthetic native phase/write failures pass; process-crash recovery, remaining writes and live transfer NOT RUN |
+| Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; child-process termination at five transaction checkpoints and directory-level recovery pass; power-loss, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
 | Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; different-logon-session, remote-client, mapped-drive/reparse runtime behavior and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
@@ -102,8 +102,8 @@ output settings and dark native controls.
 | Removing original Studio Play, native Arrange/Cast regression smoke | NOT RUN; original implementation and shared consumers preserved |
 | NSIS install/uninstall, signed updater, GitHub release | NOT RUN; updater stays unavailable |
 
-Remaining work includes actual S2 process-termination/restart verification and
-journal/history write failures, plus S3 different-logon-session and
+Remaining work includes S2 power-loss durability and journal/history write
+failures, plus S3 different-logon-session and
 remote pipe-client rejection, UNC/mapped-drive/reparse runtime cases,
 Studio/API exit during
 active playback and audible parity. The paired URL-shaped invalid-path case now
@@ -292,10 +292,26 @@ Cross-session and remote rejection, mapped-drive/reparse runtime cases, Studio/A
 exit during active playback, audible parity, S2 process-crash/power-loss recovery
 and remaining native write-failure cases remain open. Preserve Studio playback.
 
+## S2 child-process termination recovery — 2026-09-27
+
+The Play native test launched a separate test-binary child and forcibly ended it
+at Prepared, catalog-written-before-Applied, Applied, Committed and Acknowledged
+checkpoints. Directory-level recovery restored the old catalog for the first
+three states, retained the committed catalog for the last two, and removed the
+acknowledged journal. The focused test passed **1/1**; the full Play Rust suite
+passed **32 tests** with its test-only child driver ignored by default. `cargo fmt
+-- --check` passed.
+
+This does not restart the packaged Play app or its WebView and does not prove
+power-loss durability. Journal creation/import-history failure coverage, live
+Studio-to-Play transfer, Studio/API exit during playback and audible parity
+remain open. Preserve Studio playback.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.11b | 2026-09-27 | beta | Add five-checkpoint child-process termination and directory-level S2 recovery evidence; retain power-loss, transfer and parity gates | based on e2bd20a | Codex |
 | 0.2.10b | 2026-09-27 | beta | Add local Windows ACL denial evidence for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |
 | 0.2.9b | 2026-09-27 | beta | Add paired evidence that an applied lost-ACK command is not replayed after Play owner restart; retain audible parity and remaining security gates | based on 17a5c96 | Codex |
 | 0.2.8b | 2026-09-27 | beta | Add paired lost-ACK recovery and same-ID no-duplicate evidence; preserve owner-restart and audible parity gates | based on cee5e93 | Codex |
