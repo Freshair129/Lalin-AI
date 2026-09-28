@@ -1,7 +1,7 @@
 ---
-version: "0.2.1b"
+version: "0.2.2b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T00:56:22+07:00,Codex"
+last_update: "2026-09-28T08:20:56+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -108,6 +108,25 @@ The Studio route stays enabled unless all applicable checks pass and playback
 parity is observed. If a native paired-process or audible check cannot run, mark
 it **NOT_RUN**, keep Studio playback, and report the exact missing evidence.
 
+The remote-client probe helper is `tools/verify/lalin-play-remote-pipe-client.ps1`.
+In the integration candidate checkout, run the ignored server-side probe while
+the second Windows host runs the client with the fresh host and nonce printed by
+the server:
+
+```powershell
+cargo test --offline --manifest-path apps\play-desktop\src-tauri\Cargo.toml --features g3-test-app-data-dir remote_named_pipe_client_from_another_host_is_denied -- --ignored --nocapture --test-threads=1
+$repoRoot = 'F:\lalin' # Change this if the checkout is in another location.
+$pipeHost = Read-Host 'Host printed by the running server test'
+$nonce = Read-Host 'Nonce printed by the running server test'
+powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repoRoot 'tools\verify\lalin-play-remote-pipe-client.ps1') -PipeHost $pipeHost -Nonce $nonce
+```
+
+Remote rejection is proven only when the client control connection succeeds,
+the target connection returns Win32 error 5, the server accepts the matching
+result, and the server-side test passes. A missing client file or a server
+timeout is not denial evidence; the remote-client gate remains open until that
+full result is recorded.
+
 ### G4 — evidence handoff
 
 Update the Play status/traceability documents with code SHAs, actual test
@@ -182,6 +201,7 @@ gates. Record export, PR, merge and release states independently.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-09-28 | beta | Document the remote named-pipe probe helper and its pass criteria without closing G3 | based on daa2867 | Codex |
 | 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
 | 0.2.0b | 2026-09-26 | beta | Record G0-G2 completion and G3 native parity NOT_RUN status while preserving Studio playback | S2 7c30ea1; S3 235875b/362bbd0 | Codex |
 | 0.1.0b | 2026-09-26 | beta | Define parallel S2/S3 implementation lanes and serial integration/parity gates | based on 43121cc | Codex |
