@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$genericReadWrite = [uint32]3221225472
 
 if (-not ('LalinPlayRemotePipeProbeNative' -as [type])) {
     Add-Type -TypeDefinition @'
@@ -34,7 +35,7 @@ public static class LalinPlayRemotePipeProbeNative
 function Open-ProbePipe([string]$Path) {
     $handle = [LalinPlayRemotePipeProbeNative]::CreateFile(
         $Path,
-        [uint32]0xC0000000,
+        $genericReadWrite,
         [uint32]0,
         [IntPtr]::Zero,
         [uint32]3,
@@ -69,7 +70,7 @@ finally {
 
 $targetHandle = [LalinPlayRemotePipeProbeNative]::CreateFile(
     "$pipePrefix.target",
-    [uint32]0xC0000000,
+    $genericReadWrite,
     [uint32]0,
     [IntPtr]::Zero,
     [uint32]3,

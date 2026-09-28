@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-28T08:20:56+07:00,Codex"
+last_update: "2026-09-28T08:36:04+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -197,10 +197,22 @@ gates. Record export, PR, merge and release states independently.
 - Documentation separates implementation, automated checks and native runtime
   acceptance; no release or extraction gate is claimed complete prematurely.
 
+## Execution status — 2026-09-28
+
+- **G3 — remote-client probe failed before pipe contact:** the Windows client
+  exited with code 1 while converting the `0xC0000000` desired-access mask to
+  `UInt32` (`-1073741824` was reported). It produced no `control=connected`
+  result; the server-side probe timed out after 180.02 seconds. This run provides
+  no remote-rejection evidence. See the
+  [probe conversion RCA](../../.brain/rca/2026-09-28-lalin-play-remote-probe-uint32-cast.md).
+- G3 remains **PARTIAL**; keep ordinary Studio playback enabled until the
+  remote rejection and remaining parity checks are proven.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-09-28 | beta | Record the remote probe's UInt32 conversion failure and keep G3 open | based on 19e2ddf | Codex |
 | 0.2.2b | 2026-09-28 | beta | Document the remote named-pipe probe helper and its pass criteria without closing G3 | based on daa2867 | Codex |
 | 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
 | 0.2.0b | 2026-09-26 | beta | Record G0-G2 completion and G3 native parity NOT_RUN status while preserving Studio playback | S2 7c30ea1; S3 235875b/362bbd0 | Codex |
