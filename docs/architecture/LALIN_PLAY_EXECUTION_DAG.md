@@ -1,7 +1,7 @@
 ---
-version: "0.2.3b"
+version: "0.2.4b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-28T08:36:04+07:00,Codex"
+last_update: "2026-09-29T07:41:20+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -208,10 +208,27 @@ gates. Record export, PR, merge and release states independently.
 - G3 remains **PARTIAL**; keep ordinary Studio playback enabled until the
   remote rejection and remaining parity checks are proven.
 
+## Execution status — 2026-09-29
+
+- **G3 — remote-client probe blocked before control-pipe connection:** the
+  corrected client passed the unsigned-mask check but failed opening the remote
+  control pipe with “The specified network name is no longer available.” It
+  produced no `control=connected` result; the server-side probe timed out after
+  180.02 seconds.
+- Read-only diagnostics from the client resolved `DESKTOP-VETATMQ` to
+  `192.168.1.100`, but TCP/445 from `192.168.1.135` failed and ping timed out.
+  On the server, `LanmanServer` was running, TCP/445 had a listener, and the
+  loopback 445 check passed. This confirms the remote SMB path was unavailable
+  during this run; the specific network cause is undetermined. No firewall or
+  credential settings were changed.
+- The target pipe was not reached, so this is not remote-rejection evidence.
+  G3 remains **PARTIAL**; ordinary Studio playback stays enabled.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-09-29 | beta | Record that the corrected remote client could not reach SMB TCP/445; keep G3 open | based on f5a8045 | Codex |
 | 0.2.3b | 2026-09-28 | beta | Record the remote probe's UInt32 conversion failure and keep G3 open | based on 19e2ddf | Codex |
 | 0.2.2b | 2026-09-28 | beta | Document the remote named-pipe probe helper and its pass criteria without closing G3 | based on daa2867 | Codex |
 | 0.2.1b | 2026-09-27 | beta | Record the real Windows cold/warm paired handoff and ACK/STATE reconciliation pass while keeping parity gates open | based on ed20af8 | Codex |
