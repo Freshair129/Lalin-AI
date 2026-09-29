@@ -1,7 +1,7 @@
 ---
-version: "0.2.24b"
+version: "0.2.25b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-30T03:32:01+07:00,Codex"
+last_update: "2026-09-30T03:49:54+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -537,6 +537,27 @@ account and firewall rule after the attempt.
 
 G3 remains **PARTIAL**. Preserve Studio playback.
 
+## Execution status — 2026-09-30 G3 cross-host pipe denial
+
+The ignored Windows test `remote_named_pipe_client_from_another_host_is_denied`
+was rerun on `DESKTOP-VETATMQ` with nonce
+`56904.1790714802010176400`. The second Windows host connected to the positive
+control pipe and submitted the result frame accepted by the server test as
+`control=0;target=5`: remote control access succeeded and opening the protected
+target pipe returned `ERROR_ACCESS_DENIED` (Win32 5). The test then opened the
+target pipe locally on the server and passed. Result: **1 passed, 0 failed** in
+72.74 seconds. This closes the cross-host remote-pipe-denial subgate for the
+tested Windows hosts and account.
+
+The successful retry followed creation of the approved temporary standard
+account on `DESKTOP-VETATMQ`; earlier SMB authentication failures were caused by
+that account being absent on the server. Remove the temporary account and the
+scoped `LalinPlayProbe445From192.168.1.33` firewall rule after verification.
+
+G3 remains **PARTIAL**: an interactive different-logon-session attempt,
+mapped-drive/reparse runtime fixtures, Studio/API exit during active playback,
+and audible playback parity remain open. Preserve ordinary Studio playback.
+
 ## Execution status — 2026-09-29 local lifecycle and migration rerun
 
 The Play Rust suite with `g3-test-app-data-dir` passed **35/35** with **5
@@ -584,6 +605,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.25b | 2026-09-30 | beta | Pass the paired cross-host named-pipe denial probe with positive control and local-access check; retain other G3 gates | based on 0c83509 | Codex |
 | 0.2.24b | 2026-09-30 | beta | Record repeated SMB login failure and verify the temporary probe account is absent on the server; retain G3 PARTIAL | based on 6671cbc | Codex |
 | 0.2.23b | 2026-09-30 | beta | Record current TCP reachability and repeated pre-pipe SMB authentication failure; retain G3 PARTIAL | based on 4981958 | Codex |
 | 0.2.22b | 2026-09-29 | beta | Record current Play native suite, loopback SMB denial, Studio handoff unit tests and format checks; keep cross-host and parity gates open | based on ba5780b | Codex |

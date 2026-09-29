@@ -57,3 +57,15 @@ placed in the script, repository, or chat. Keep G3 open unless the control pipe
 connects, the target returns Win32 error 5, the server accepts the matching
 result, and the server-side test passes. Remove the temporary account and
 scoped firewall rule after the attempt.
+
+## Resolution — 2026-09-30
+
+The temporary standard account was created on `DESKTOP-VETATMQ`. The next paired
+probe used nonce `56904.1790714802010176400`; the server-side ignored test passed
+in 72.74 seconds. Its assertion accepted the remote result `control=0;target=5`,
+then verified that a local client could still open the protected target pipe.
+This confirms the earlier authentication failures were precondition failures
+because the account was absent, and validates cross-host remote-pipe denial for
+this Windows pair. The broader G3 gate remains partial because interactive
+cross-session and playback-parity evidence is still open. Clean up the temporary
+account and scoped firewall rule.

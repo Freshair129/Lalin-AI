@@ -1,7 +1,7 @@
 ---
-version: "0.2.19b"
+version: "0.2.20b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T14:03:11+07:00,Codex"
+last_update: "2026-09-30T03:49:54+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, and loopback SMB/UNC remote denial with positive controls pass; cross-host listener timed out before a client result; mapped/reparse tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, and cross-host pipe denial with positive control (Win32 5) plus same-host access pass; mapped/reparse tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -60,7 +60,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 - **candidate** = รายละเอียดหรือ release gates ที่ยังรออนุมัติตาม R5; approved S2/S3 code remains subject to runtime acceptance.
 - **BLOCKED** ใน checklist = ต้องเติม decision/evidence ก่อนผ่าน gate ไม่ใช่รายงานว่า agent ทำงานต่อไม่ได้.
 
-ลำดับ: verify remaining S2 power-loss and write-failure cases plus S3 remote/security, Studio/API exit during playback, audible parity and relink acceptance →
+ลำดับ: verify remaining S2 power-loss and write-failure cases plus S3 separate-session/mapped-reparse, Studio/API exit during playback, audible parity and relink acceptance →
 license/provenance + S4 export → S5 clean-checkout/regression → S6 scoped removal →
 S7 installer/update. แยก authorization สำหรับ remote creation, deletion,
 merge และ publication จากการอนุมัติเอกสารเสมอ
@@ -577,10 +577,30 @@ are open. Studio playback remains available until parity is proven.
 | S2 migration evidence | 0.1.5b → 0.1.6b |
 | Studio and Play application versions | No change |
 
+## Current cross-host denial status — 2026-09-30
+
+The opt-in Windows cross-host test passed on `DESKTOP-VETATMQ` with a second
+Windows host. The server accepted the positive-control connection and exact
+result `control=0;target=5`, then confirmed same-host access to the protected
+target pipe still worked. This proves the remote-pipe-denial subgate for the
+tested pair; it does not close G3. A separate interactive logon session,
+mapped/reparse runtime cases, Studio/API exit during playback and audible parity
+remain open. Keep ordinary Studio playback enabled.
+
+## Current documentation version diff — 2026-09-30 G3 cross-host denial
+
+| Document | Before → after |
+|---|---|
+| Documentation register | 0.2.19b → 0.2.20b |
+| Execution DAG | 0.2.24b → 0.2.25b |
+| SMB authentication RCA | Added verified resolution and remaining G3 gates |
+| Studio and Play application versions | No change |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.20b | 2026-09-30 | beta | Record cross-host remote-pipe denial with positive control and same-host access; retain playback-parity gates | based on 0c83509 | Codex |
 | 0.2.19b | 2026-09-27 | beta | Record second-host listener timeout without claiming remote rejection; retain mapped/reparse and playback gates | based on ef5f87b | Codex |
 | 0.2.18b | 2026-09-27 | beta | Prepare the second-host named-pipe probe and record mapped/reparse tests as compiled but NOT_RUN | based on 3bb4414 | Codex |
 | 0.2.17b | 2026-09-27 | beta | Record loopback SMB/UNC remote-client denial with positive controls; retain cross-session and playback gates | based on a75c540 | Codex |
