@@ -1,7 +1,7 @@
 ---
-version: "0.2.22b"
+version: "0.2.23b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-29T23:12:46+07:00,Codex"
+last_update: "2026-09-30T03:15:35+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -537,6 +537,23 @@ account and firewall rule after the attempt.
 
 G3 remains **PARTIAL**. Preserve Studio playback.
 
+## Execution status — 2026-09-30 G3 authenticated transport retry
+
+From PC-2 (`192.168.1.33`), `Test-NetConnection 192.168.1.34 -Port 445`
+passed to PC-1 (`DESKTOP-VETATMQ`, `192.168.1.34`). The ignored server probe
+was run from the `codex/lalin-play-g3-followup` worktree at
+`49819587a461aa0b26d1610c78ba72264aadc9fa` and printed nonce
+`51460.1790712491037627000`. The client script then failed opening the remote
+control pipe with “The user name or password is incorrect” before
+`control=connected`; the server received no result and timed out after
+180.01 seconds. TCP reachability therefore passes, while SMB authentication
+still blocks the pipe test; this is not remote-rejection evidence.
+
+The approved temporary standard account is still unprovisioned. G3 remains
+**PARTIAL**. Provision the account on PC-1 from an administrator shell, use
+`runas /netonly` on PC-2 for the paired retry, then remove the temporary account
+and scoped firewall rule. Preserve Studio playback.
+
 ## Execution status — 2026-09-29 local lifecycle and migration rerun
 
 The Play Rust suite with `g3-test-app-data-dir` passed **35/35** with **5
@@ -565,6 +582,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.23b | 2026-09-30 | beta | Record current TCP reachability and repeated pre-pipe SMB authentication failure; retain G3 PARTIAL | based on 4981958 | Codex |
 | 0.2.22b | 2026-09-29 | beta | Record current Play native suite, loopback SMB denial, Studio handoff unit tests and format checks; keep cross-host and parity gates open | based on ba5780b | Codex |
 | 0.2.21b | 2026-09-29 | beta | Merge current main transport diagnostics with detailed G3 lifecycle history and record the secure SMB-account retry gate | based on 312ec0b | Codex |
 | 0.2.20b | 2026-09-29 | beta | Record approved temporary standard SMB account as the next G3 gate; require local secure password entry and retain PARTIAL status | based on fe9e3fc | Codex |

@@ -19,6 +19,11 @@ was interrupted after the client failure.
   `$genericReadWrite = [uint32]3221225472`.
 - The client failed in `Open-ProbePipe` before the positive-control connection;
   there was no target Win32 error 5 and no server result frame.
+- A fresh paired attempt on 2026-09-30 used PC-1 `192.168.1.34` and PC-2
+  `192.168.1.33`. TCP/445 succeeded, but the client again received “The user
+  name or password is incorrect” before `control=connected`. Server nonce
+  `51460.1790712491037627000` expired after the test's 180.01-second wait with
+  no result frame.
 
 ## Root Cause
 
