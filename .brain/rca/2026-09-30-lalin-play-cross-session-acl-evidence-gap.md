@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-30T04:04:24+07:00,Codex"
-last_update: "2026-09-30T04:27:25+07:00,Codex"
+last_update: "2026-09-30T04:43:13+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -31,6 +31,13 @@ Windows logon session is denied by the production named-pipe ACL.
   `DESKTOP-VETATMQ\pc` with Win32 1326 before the PowerShell client started;
   the server received no result frame and timed out. A read-only host check
   found the intended temporary account `LalinPipeProbe0930` absent.
+- Source review found the probe client closed its control pipe immediately
+  after sending the marker. The server then inspects the client session and
+  logon SIDs through that connection, creating a disconnect race separate from
+  the observed credential failure.
+- A later temporary-account creation attempt was rejected by
+  `New-LocalUser` because its description exceeded the 48-character limit; a
+  subsequent read-only check confirmed no probe account was created.
 
 ## Root Cause
 
@@ -54,12 +61,15 @@ desktop session; enter its password only in the local Windows prompt. Have the
 server verify that the client logon SID differs while the Windows desktop
 session matches. Require control-pipe success, target
 `ERROR_ACCESS_DENIED` (5), and a same-logon target positive control. Keep the
-existing production ACL unchanged. G3 remains open until that paired probe
-passes.
+client control connection open until the result is sent, so the server can
+inspect the client identity before disconnect. Keep the existing production
+ACL unchanged. G3 remains open until that paired probe passes.
 
 ## Latest attempt
 
 Win32 1326 occurred during `runas` authentication, before pipe contact. The
 server timeout is consequently a coordination/credential setup failure, not an
 ACL result. Recreate and verify the temporary standard account before retrying;
-do not reuse the rejected `pc` credential or claim that ACL denial passed.
+do not reuse the rejected `pc` credential or claim that ACL denial passed. The
+probe now retains its control connection through result delivery; that corrected
+flow still needs its paired Windows runtime test.

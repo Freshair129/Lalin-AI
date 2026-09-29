@@ -50,19 +50,9 @@ function Open-ProbePipe([string]$Path) {
 
 $pipePrefix = "\\.\pipe\ai.lalin.play.handoff.v1.cross-session-$Nonce"
 $controlHandle = Open-ProbePipe "$pipePrefix.control"
-try {
-    $controlStream = [IO.FileStream]::new($controlHandle, [IO.FileAccess]::Write)
-    try {
-        $controlStream.WriteByte([byte][char]'C')
-        $controlStream.Flush()
-    }
-    finally {
-        $controlStream.Dispose()
-    }
-}
-finally {
-    $controlHandle.Dispose()
-}
+$controlStream = [IO.FileStream]::new($controlHandle, [IO.FileAccess]::Write)
+$controlStream.WriteByte([byte][char]'C')
+$controlStream.Flush()
 
 $targetHandle = [LalinPlayCrossSessionPipeNative]::CreateFile(
     "$pipePrefix.target",
@@ -103,6 +93,7 @@ finally {
     $resultHandle.Dispose()
 }
 
+$controlStream.Dispose()
 Write-Output "CROSS_SESSION_PROBE_RESULT control=connected target_win32_error=$targetError"
 if ($targetError -ne 5) {
     [Console]::Error.WriteLine("Expected ERROR_ACCESS_DENIED (5) for the different-logon target pipe; received $targetError.")
