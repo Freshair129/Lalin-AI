@@ -494,6 +494,29 @@ Separate interactive logon session, mapped-drive/reparse runtime cases,
 Studio/API exit during playback and audible parity remain open. Preserve Studio
 playback.
 
+## Execution status — 2026-09-29 G3 authenticated transport retry
+
+The server-side rule scoped to TCP/445, local `192.168.1.100`, remote
+`192.168.1.135`, and Private profile was verified enabled and enforced on
+`DESKTOP-VETATMQ`. The client `DESKTOP-8UR61U8` then passed
+`Test-NetConnection` to TCP/445. The corrected client probe version was present,
+but opening the remote control pipe failed with “The user name or password is
+incorrect” before `control=connected`. The server test received no result frame
+and was interrupted after the client failure. This is SMB authentication
+failure, not remote-pipe rejection evidence; the account or policy reason is
+unknown. The user approved a temporary standard local account for a retry, but
+it is not provisioned yet. The current server shell is not elevated, so account
+creation must run locally on `DESKTOP-VETATMQ` from an administrator PowerShell.
+
+Risk classification: **HIGH**, because this execution validates a security
+boundary using a temporary remote identity and a scoped firewall rule. This
+retry made no product-source changes. Once the account exists, use `runas /netonly` on the
+client so its password is entered only at the local prompt, then repeat the
+server test with a fresh nonce. Remove the temporary account and firewall rule
+after the attempt.
+
+G3 remains **PARTIAL**. Preserve Studio playback.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -508,6 +531,8 @@ playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.20b | 2026-09-29 | beta | Record approved temporary standard SMB account as the next G3 gate; require local secure password entry and retain PARTIAL status | based on fe9e3fc | Codex |
+| 0.2.19b | 2026-09-29 | beta | Record TCP reachability followed by pre-pipe SMB authentication failure; keep remote rejection and parity gates open | based on fe9e3fc | Codex |
 | 0.2.18b | 2026-09-27 | beta | Record timed-out cross-host listener without claiming remote rejection; retain mapped/reparse and playback gates | based on ef5f87b | Codex |
 | 0.2.17b | 2026-09-27 | beta | Prepare opt-in second-host named-pipe probe and record mapped/reparse runtime tests as compiled but NOT_RUN | based on 3bb4414 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Verify loopback SMB/UNC denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |
