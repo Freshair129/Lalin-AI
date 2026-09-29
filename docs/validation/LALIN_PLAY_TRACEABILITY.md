@@ -1,7 +1,7 @@
 ---
-version: "0.2.17b"
+version: "0.2.18b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-30T04:27:25+07:00,Codex"
+last_update: "2026-09-30T06:33:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -127,27 +127,32 @@ the generated Studio doc graph is not proof of these 33 criteria.
 
 ## Separate-logon-session ACL acceptance — 2026-09-30
 
-The ignored test `different_logon_session_is_denied_by_the_pipe_acl` started
-on `DESKTOP-VETATMQ` with nonce `56404.1790716718225412900`. The user ran the
-printed `runas` command with `DESKTOP-VETATMQ\pc`; Windows rejected the
-credentials with Win32 1326 before the PowerShell probe connected. The server
-received no result frame and timed out after 180 seconds. The pipe ACL result
-is **NOT_RUN**. A read-only host check found `LalinPipeProbe0930` absent; retry
-after verifying a temporary standard local account on the server host.
+The ignored Windows test different_logon_session_is_denied_by_the_pipe_acl
+ran on DESKTOP-VETATMQ with nonce 31196.1790723880181644200. The temporary
+standard account DESKTOP-VETATMQ\LalinPipeProbe0930 supplied an interactive
+token with Logon SID S-1-5-5-0-1801444461, different from the owner
+S-1-5-5-0-685957;
+its SessionId was 1, matching the server process. The client opened the authenticated control pipe, then its
+target-pipe open returned Win32 5 (ERROR_ACCESS_DENIED), sending
+control=0;target=5. The server also confirmed the owner logon could still open
+the protected target pipe.
 
-The full Rust suite passed **35 tests, 0 failed, 6 ignored**. The opt-in test
-compiled, `cargo fmt -- --check` passed, and the PowerShell client parsed; none
-of those checks is a cross-session ACL runtime result.
+The exact command
+cargo test --offline --manifest-path apps/play-desktop/src-tauri/Cargo.toml --lib different_logon_session_is_denied_by_the_pipe_acl -- --ignored --nocapture --test-threads=1
+passed 1/1 in 129.83 seconds. The client pipe opens ran under the alternate
+interactive token via thread impersonation; a different user SID alone was
+not treated as proof. This closes the separate-logon-session ACL gate for the
+tested local Windows host. Cross-host denial is separately PASS.
 
-Cross-host denial remains separately **PASS** for the tested pair. Mapped-drive
-and reparse runtime tests remain **NOT_RUN**. Studio/API exit during active
-playback and audible parity remain **NOT_VERIFIED**. Keep Studio playback
-enabled.
+Mapped-drive/reparse runtime cases and Studio/API exit during active playback
+remain NOT_RUN; audible playback parity remains NOT_VERIFIED. G3 remains
+PARTIAL, and Studio playback stays enabled.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.18b | 2026-09-30 | beta | Pass same-session distinct-Logon-SID named-pipe ACL probe with denied target and owner positive control; preserve playback parity gates | based on c669602 | Codex |
 | 0.2.17b | 2026-09-30 | beta | Record the separate-logon runas credential failure without claiming pipe ACL evidence | based on 20516d0 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Trace compiled cross-host and mapped/reparse probes as NOT_RUN; update integrated test count | based on 3bb4414 | Codex |

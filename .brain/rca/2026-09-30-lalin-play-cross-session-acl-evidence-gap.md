@@ -1,7 +1,7 @@
 ---
-version: "0.1.2b"
+version: "0.1.3b"
 created_at: "2026-09-30T04:04:24+07:00,Codex"
-last_update: "2026-09-30T04:43:13+07:00,Codex"
+last_update: "2026-09-30T06:33:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,62 +14,69 @@ attributes:
 
 ## Symptom
 
-The Lalin Play G3 record does not yet prove that a client in a different
-Windows logon session is denied by the production named-pipe ACL.
+G3 initially lacked runtime evidence that a client carrying a different Windows
+logon SID could connect to the authenticated control pipe but not the owner-only
+target pipe.
 
 ## Evidence
 
-- The approved S3 contract restricts the pipe DACL to the current logon SID and
-  requires the client to belong to the owner's logon session.
-- `pipe_acl_and_same_logon_first_frame_are_enforced` verifies that a restricted
-  token without the logon SID is denied, then verifies a normal same-logon HELLO.
-- That test does not start a process under a distinct Windows logon SID.
-- `same_logon_client` checks Windows session IDs and impersonated logon SIDs, so
-  a separate-logon-session probe can verify the real boundary independently.
-- On 2026-09-30, the server-side ignored test waited 180 seconds for nonce
-  `56404.1790716718225412900`. `runas` rejected the supplied credentials for
-  `DESKTOP-VETATMQ\pc` with Win32 1326 before the PowerShell client started;
-  the server received no result frame and timed out. A read-only host check
-  found the intended temporary account `LalinPipeProbe0930` absent.
-- Source review found the probe client closed its control pipe immediately
-  after sending the marker. The server then inspects the client session and
-  logon SIDs through that connection, creating a disconnect race separate from
-  the observed credential failure.
-- A later temporary-account creation attempt was rejected by
-  `New-LocalUser` because its description exceeded the 48-character limit; a
-  subsequent read-only check confirmed no probe account was created.
+- The production pipe DACL remains restricted to the current logon SID.
+  pipe_acl_and_same_logon_first_frame_are_enforced covers a restricted token
+  missing that SID and the normal same-logon HELLO, but does not create a
+  different logon SID.
+- The first manual runas attempt used DESKTOP-VETATMQ\pc; Windows returned
+  Win32 1326 before the client connected. That attempt produced no ACL result.
+- A temporary standard account, DESKTOP-VETATMQ\LalinPipeProbe0930, was
+  created locally and verified non-administrator. Start-Process -Credential
+  changed the user SID but returned the owner Logon SID
+  S-1-5-5-0-685957; this was not accepted as a cross-logon probe.
+- A one-shot elevated probe obtained an interactive token with LogonUser,
+  verified the owner Logon SID S-1-5-5-0-685957 differed from the probe SID
+  S-1-5-5-0-1801444461, and impersonated it only
+  while opening the test pipes. The owner server process was in Terminal Services session 1,
+  and the alternate token TokenSessionId was 1. For nonce 31196.1790723880181644200,
+  the
+  pipe client connected to control, received Win32 5 (ERROR_ACCESS_DENIED)
+  opening target, and sent control=0;target=5.
+- Exact server command:
+  cargo test --offline --manifest-path apps/play-desktop/src-tauri/Cargo.toml --lib different_logon_session_is_denied_by_the_pipe_acl -- --ignored --nocapture --test-threads=1
+  passed 1/1 in 129.83 seconds. The test then confirmed the owner logon
+  could still open the protected target pipe.
 
 ## Root Cause
 
-This is an acceptance-evidence gap, not a confirmed ACL defect. The existing
-negative client is a restricted token created from the test process token; it
-does not model a new Windows logon session. Therefore the current test cannot
-establish the complete same-logon DACL boundary against a real `runas` client.
+The original gap was in the test setup, not a confirmed ACL defect. The first
+runas attempt supplied credentials Windows rejected. The subsequent
+Start-Process -Credential attempt changed the account SID but reused the
+owner Logon SID, so it could not prove the separate-logon boundary. The
+interactive token from LogonUser plus thread impersonation supplied the
+distinct logon SID while keeping the pipe client process in the owner's
+Terminal Services session.
 
 ## Why the issue escaped detection
 
-The ACL unit test covered a token missing the allowed SID and the normal local
-client, while the paired process tests exercise the expected same-user route.
-Neither created an independent logon session on the same Windows desktop.
+The ignored Windows test requires a second logon SID in the same Terminal
+Services session. Existing ACL tests used a restricted token or the owner token;
+neither reproduced that combination. The first manual command also failed
+before pipe contact, while the alternate-account process launcher appeared
+usable until its Logon SID was compared with the owner's.
 
 ## Proposed prevention
 
-Add an opt-in local Windows probe with authenticated control/result pipes and a
-target pipe restricted to the server's current logon SID. Launch the client via
-`runas` under a verified temporary standard local account in the same Windows
-desktop session; enter its password only in the local Windows prompt. Have the
-server verify that the client logon SID differs while the Windows desktop
-session matches. Require control-pipe success, target
-`ERROR_ACCESS_DENIED` (5), and a same-logon target positive control. Keep the
-client control connection open until the result is sent, so the server can
-inspect the client identity before disconnect. Keep the existing production
-ACL unchanged. G3 remains open until that paired probe passes.
+Keep the production ACL unchanged. For this opt-in acceptance case, require
+the server to verify all of the following in one run: the control pipe connects,
+the client Logon SID differs from the owner, the client process has the same
+Terminal Services session ID, the target open returns Win32 5, and the owner
+can still open the target. Do not count a different user SID alone as proof of a
+different logon session. Preserve the test transcript and nonce with the
+traceability record.
 
-## Latest attempt
+## Latest result
 
-Win32 1326 occurred during `runas` authentication, before pipe contact. The
-server timeout is consequently a coordination/credential setup failure, not an
-ACL result. Recreate and verify the temporary standard account before retrying;
-do not reuse the rejected `pc` credential or claim that ACL denial passed. The
-probe now retains its control connection through result delivery; that corrected
-flow still needs its paired Windows runtime test.
+The separate-logon ACL gate passed on DESKTOP-VETATMQ using the verified
+interactive token. The temporary account and its unloaded Windows profile
+were removed after the test. No password was written to the repository.
+Cross-host denial remains a
+separate passed gate. Mapped-drive/reparse runtime coverage, Studio/API exit
+during active playback and audible playback parity remain open; keep Studio
+playback enabled.

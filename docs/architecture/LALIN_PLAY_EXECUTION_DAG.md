@@ -1,7 +1,7 @@
 ---
-version: "0.2.26b"
+version: "0.2.27b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-30T04:27:25+07:00,Codex"
+last_update: "2026-09-30T06:33:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -611,6 +611,23 @@ runtime test remains ignored until the paired account/client run. `cargo fmt
 PARTIAL; mapped-drive/reparse runtime cases, Studio/API exit during active
 playback and audible parity remain open. Preserve Studio playback.
 
+## Execution status — 2026-09-30 G3 separate-logon-session ACL pass
+
+The ignored Windows test different_logon_session_is_denied_by_the_pipe_acl
+passed on DESKTOP-VETATMQ with nonce 31196.1790723880181644200. A verified
+temporary standard account supplied an interactive token with Logon SID S-1-5-5-0-1801444461, different from owner SID S-1-5-5-0-685957.
+The alternate token carried SessionId 1, matching the server process. The client connected to the authenticated control pipe;
+opening the owner-only target pipe returned Win32 5 (ERROR_ACCESS_DENIED).
+It sent control=0;target=5, and the server's owner-token positive control also
+passed.
+
+The exact command
+cargo test --offline --manifest-path apps/play-desktop/src-tauri/Cargo.toml --lib different_logon_session_is_denied_by_the_pipe_acl -- --ignored --nocapture --test-threads=1
+passed 1/1 in 129.83 seconds. The pipe opens used the alternate interactive
+token through thread impersonation. G3 remains PARTIAL: mapped-drive/reparse
+runtime cases, Studio/API exit during active playback and audible playback
+parity remain open. Keep Studio playback enabled.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -625,6 +642,7 @@ playback and audible parity remain open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.27b | 2026-09-30 | beta | Verify same-session distinct-Logon-SID named-pipe ACL denial and owner positive control; retain remaining parity gates | based on c669602 | Codex |
 | 0.2.26b | 2026-09-30 | beta | Record separate-logon probe blocked by local runas credentials; require verified temporary standard account and keep G3 partial | based on 20516d0 | Codex |
 | 0.2.25b | 2026-09-30 | beta | Pass the paired cross-host named-pipe denial probe with positive control and local-access check; retain other G3 gates | based on 0c83509 | Codex |
 | 0.2.24b | 2026-09-30 | beta | Record repeated SMB login failure and verify the temporary probe account is absent on the server; retain G3 PARTIAL | based on 6671cbc | Codex |
