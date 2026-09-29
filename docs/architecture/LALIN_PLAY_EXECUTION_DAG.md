@@ -218,16 +218,22 @@ gates. Record export, PR, merge and release states independently.
 - Read-only diagnostics from the client resolved `DESKTOP-VETATMQ` to
   `192.168.1.100`, but TCP/445 from `192.168.1.135` failed and ping timed out.
   On the server, `LanmanServer` was running, TCP/445 had a listener, and the
-  loopback 445 check passed. This confirms the remote SMB path was unavailable
-  during this run; the specific network cause is undetermined. No firewall or
-  credential settings were changed.
+  loopback 445 check passed. The Private profile uses inbound default Block;
+  the built-in `FPS-SMB-In-TCP` rule was disabled, and ActiveStore had no enabled
+  inbound TCP/445 allow rule. This identifies the server firewall policy as a
+  configured SMB ingress blocker; external routing or client isolation was not
+  ruled out. No firewall or credential settings were changed.
 - The target pipe was not reached, so this is not remote-rejection evidence.
   G3 remains **PARTIAL**; ordinary Studio playback stays enabled.
+- A retry needs a temporary inbound TCP/445 allow rule scoped to local
+  `192.168.1.100`, remote `192.168.1.135`, and the Private profile. Verify both
+  addresses before adding it and remove the rule immediately after the probe.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-09-29 | beta | Identify the server SMB ingress policy blocker and record the scoped retry conditions; keep G3 open | based on 4455414 | Codex |
 | 0.2.4b | 2026-09-29 | beta | Record that the corrected remote client could not reach SMB TCP/445; keep G3 open | based on f5a8045 | Codex |
 | 0.2.3b | 2026-09-28 | beta | Record the remote probe's UInt32 conversion failure and keep G3 open | based on 19e2ddf | Codex |
 | 0.2.2b | 2026-09-28 | beta | Document the remote named-pipe probe helper and its pass criteria without closing G3 | based on daa2867 | Codex |
