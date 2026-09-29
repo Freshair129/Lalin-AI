@@ -24,28 +24,36 @@ was interrupted after the client failure.
   name or password is incorrect” before `control=connected`. Server nonce
   `51460.1790712491037627000` expired after the test's 180.01-second wait with
   no result frame.
+- A second `runas /netonly` attempt used
+  `DESKTOP-VETATMQ\LalinPipeProbe0930` and nonce
+  `70924.1790713462556106500`, but SMB returned the same authentication error
+  before pipe contact and the server timed out after 180.01 seconds. A
+  read-only `Get-LocalUser` check on `DESKTOP-VETATMQ` returned
+  `ACCOUNT_NOT_FOUND_ON_THIS_HOST` for that account.
 
 ## Root Cause
 
-The current client process credentials were rejected by SMB authentication
-before the named pipe could be opened. This explains the observed failure
-boundary. The specific account or server policy responsible for the rejection
-is unknown. The user has approved a temporary standard local test account, but
-it has not been provisioned; the active server shell is not elevated.
+The second retry submitted an account name that did not exist on the SMB server
+`DESKTOP-VETATMQ`, as confirmed by the server-side `Get-LocalUser` check. SMB
+therefore rejected the login before the named pipe could be opened. Where that
+account was created, if anywhere, is unknown. The server shell is not elevated,
+so the approved temporary standard account must be created locally on the
+server by an administrator.
 
 ## Why the issue escaped detection
 
 Previous local and loopback checks did not require a second machine to
-authenticate to the server over SMB. Earlier cross-host runs stopped before
-TCP/445 was reachable, so this authentication boundary was only exposed after
-the transport path was opened.
+authenticate to the server over SMB. The retry also launched `runas /netonly`
+before confirming that the named account existed on the server; a TCP/445
+success check does not validate SMB credentials.
 
 ## Proposed prevention
 
-Provision the approved standard local test account from an administrator shell
-on the server, entering its password through a secure local prompt. Launch the
-client probe with `runas /netonly` so the password is not placed in the script,
-repository, or chat. Keep the G3 gate open unless the control pipe connects,
-the target returns Win32 error 5, the server accepts the matching result, and
-the server-side test passes. Remove the temporary account and scoped firewall
-rule after the attempt.
+Verify with `Get-LocalUser` that the approved standard local test account exists
+and is enabled on the server before launching the server probe. Create it from
+an administrator shell on the server, entering its password through a secure
+local prompt. Launch the client with `runas /netonly` so the password is not
+placed in the script, repository, or chat. Keep G3 open unless the control pipe
+connects, the target returns Win32 error 5, the server accepts the matching
+result, and the server-side test passes. Remove the temporary account and
+scoped firewall rule after the attempt.

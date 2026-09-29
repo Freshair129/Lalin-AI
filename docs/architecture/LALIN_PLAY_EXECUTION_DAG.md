@@ -1,7 +1,7 @@
 ---
-version: "0.2.23b"
+version: "0.2.24b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-30T03:15:35+07:00,Codex"
+last_update: "2026-09-30T03:32:01+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -537,23 +537,6 @@ account and firewall rule after the attempt.
 
 G3 remains **PARTIAL**. Preserve Studio playback.
 
-## Execution status — 2026-09-30 G3 authenticated transport retry
-
-From PC-2 (`192.168.1.33`), `Test-NetConnection 192.168.1.34 -Port 445`
-passed to PC-1 (`DESKTOP-VETATMQ`, `192.168.1.34`). The ignored server probe
-was run from the `codex/lalin-play-g3-followup` worktree at
-`49819587a461aa0b26d1610c78ba72264aadc9fa` and printed nonce
-`51460.1790712491037627000`. The client script then failed opening the remote
-control pipe with “The user name or password is incorrect” before
-`control=connected`; the server received no result and timed out after
-180.01 seconds. TCP reachability therefore passes, while SMB authentication
-still blocks the pipe test; this is not remote-rejection evidence.
-
-The approved temporary standard account is still unprovisioned. G3 remains
-**PARTIAL**. Provision the account on PC-1 from an administrator shell, use
-`runas /netonly` on PC-2 for the paired retry, then remove the temporary account
-and scoped firewall rule. Preserve Studio playback.
-
 ## Execution status — 2026-09-29 local lifecycle and migration rerun
 
 The Play Rust suite with `g3-test-app-data-dir` passed **35/35** with **5
@@ -566,6 +549,25 @@ The Studio `playback_handoff::tests` suite passed **6/6** with the isolated
 paired Studio–Play process test ignored. Rust format checks passed for both
 Studio and Play. These local results do not close the second-host rejection,
 separate-session, mapped/reparse fixture, or audible playback parity gates.
+Preserve Studio playback.
+
+## Execution status — 2026-09-30 G3 authenticated transport retries
+
+From PC-2 (`192.168.1.33`), `Test-NetConnection 192.168.1.34 -Port 445`
+passed to PC-1 (`DESKTOP-VETATMQ`, `192.168.1.34`). The server probe printed
+fresh nonces `51460.1790712491037627000` and
+`70924.1790713462556106500` on two attempts. The client failed opening the
+remote control pipe with “The user name or password is incorrect” before
+`control=connected` on both attempts; each server test received no result frame
+and timed out after 180.01 seconds. Neither attempt proves remote-pipe denial.
+
+For the second attempt, PC-2 used `runas /netonly` with account
+`DESKTOP-VETATMQ\LalinPipeProbe0930`. A read-only check on PC-1 returned
+`ACCOUNT_NOT_FOUND_ON_THIS_HOST` for that account. The SMB server therefore
+does not have the submitted local identity; confirm and create the temporary
+standard account on PC-1 from an administrator shell, then verify it with
+`Get-LocalUser` before starting another timed probe. G3 remains **PARTIAL**.
+Remove the temporary account and scoped firewall rule after the paired test.
 Preserve Studio playback.
 
 ## Definition of done for this execution
@@ -582,6 +584,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.24b | 2026-09-30 | beta | Record repeated SMB login failure and verify the temporary probe account is absent on the server; retain G3 PARTIAL | based on 6671cbc | Codex |
 | 0.2.23b | 2026-09-30 | beta | Record current TCP reachability and repeated pre-pipe SMB authentication failure; retain G3 PARTIAL | based on 4981958 | Codex |
 | 0.2.22b | 2026-09-29 | beta | Record current Play native suite, loopback SMB denial, Studio handoff unit tests and format checks; keep cross-host and parity gates open | based on ba5780b | Codex |
 | 0.2.21b | 2026-09-29 | beta | Merge current main transport diagnostics with detailed G3 lifecycle history and record the secure SMB-account retry gate | based on 312ec0b | Codex |
