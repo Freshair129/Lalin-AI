@@ -647,11 +647,13 @@ pub fn register_handoff_owner(
     owner_session: String,
     snapshot: HandoffSnapshot,
 ) -> Result<(), String> {
+    crate::g3_test_trace(&app, "handoff_registration_invoked");
     require_main_window(&window)?;
     if !is_uuid(&owner_session) {
         return Err("owner session ไม่ถูกต้อง".into());
     }
     validate_snapshot(&snapshot)?;
+    crate::g3_test_trace(&app, "handoff_snapshot_validated");
     {
         let mut core = service
             .core
@@ -684,10 +686,12 @@ pub fn register_handoff_owner(
                     return Err(error);
                 }
             };
+            crate::g3_test_trace(&app, "handoff_pipe_created");
             let service_state = service.inner().clone();
+            let server_app = app.clone();
             if let Err(error) = std::thread::Builder::new()
                 .name("lalin-play-handoff".into())
-                .spawn(move || windows_pipe::serve(app, service_state, name, first))
+                .spawn(move || windows_pipe::serve(server_app, service_state, name, first))
             {
                 service.server_started.store(false, Ordering::SeqCst);
                 if let Ok(mut core) = service.core.lock() {
@@ -702,6 +706,7 @@ pub fn register_handoff_owner(
             return Err("Native Studio handoff รองรับเฉพาะ Windows".into());
         }
     }
+    crate::g3_test_trace(&app, "handoff_receiver_ready");
     Ok(())
 }
 
@@ -1014,19 +1019,19 @@ mod windows_pipe {
         Ok(unsafe { File::from_raw_handle(handle as RawHandle) })
     }
 
-    pub fn serve(app: AppHandle, service: HandoffService, name: Vec<u16>, first: File) {
-        let mut next = Some(first);
+    pub fn serve(app: AppHandle, service: HandoffService, name: Vec<u16>, mut pipe: File) {
         loop {
-            let mut pipe = match next.take() {
-                Some(pipe) => pipe,
-                None => match create_server_pipe(&name, false) {
-                    Ok(pipe) => pipe,
-                    Err(_) => return,
-                },
-            };
             let raw = pipe.as_raw_handle();
             let connect = unsafe { ConnectNamedPipe(raw.cast(), null_mut::<OVERLAPPED>()) };
             if connect == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                unsafe {
+                    DisconnectNamedPipe(raw.cast());
+                }
+                drop(pipe);
+                pipe = match create_server_pipe(&name, false) {
+                    Ok(pipe) => pipe,
+                    Err(_) => return,
+                };
                 continue;
             }
             let first_frame = match read_initial_authorized_frame(&mut pipe) {
@@ -1038,7 +1043,7 @@ mod windows_pipe {
                     continue;
                 }
             };
-            let _ = serve_connection(&app, &service, pipe, first_frame);
+            let _ = serve_connection(&app, &service, &mut pipe, first_frame);
         }
     }
 
@@ -1081,49 +1086,48 @@ mod windows_pipe {
     fn serve_connection(
         app: &AppHandle,
         service: &HandoffService,
-        mut pipe: File,
+        pipe: &mut File,
         first: Vec<u8>,
     ) -> Result<(), String> {
-        let message: ClientMessage = match serde_json::from_slice(&first) {
-            Ok(message) => message,
-            Err(_) => {
-                return Err("malformed_frame".into());
-            }
-        };
-        let responses = match process_message(app, service, message) {
-            Ok(responses) => responses,
-            Err(error) => {
-                return Err(error);
-            }
-        };
-        for response in responses {
-            write_value(&mut pipe, &response)?;
-        }
-
-        // A connection performs one request after HELLO. The single server loop
-        // serializes all mutations; the Studio client serializes burst sends.
-        let command = read_frame(&mut pipe, ACK_TIMEOUT).ok();
-        if let Some(command) = command {
-            let message: ClientMessage = match serde_json::from_slice(&command) {
+        let raw = pipe.as_raw_handle();
+        let result = (|| -> Result<(), String> {
+            let message: ClientMessage = match serde_json::from_slice(&first) {
                 Ok(message) => message,
                 Err(_) => {
-                    return write_error(&mut pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง");
+                    return Err("malformed_frame".into());
                 }
             };
-            match process_message(app, service, message) {
-                Ok(responses) => {
-                    for response in responses {
-                        write_value(&mut pipe, &response)?;
-                    }
-                }
-                Err(code) => write_error(&mut pipe, &code, "ไม่สามารถยืนยันคำสั่ง handoff ได้")?,
+            let responses = process_message(app, service, message)?;
+            for response in responses {
+                write_value(pipe, &response)?;
             }
-        }
-        let _ = unsafe { FlushFileBuffers(pipe.as_raw_handle().cast()) };
+
+            // A connection performs one request after HELLO. Reusing this pipe
+            // instance keeps a warm owner continuously discoverable.
+            let command = read_frame(pipe, ACK_TIMEOUT).ok();
+            if let Some(command) = command {
+                let message: ClientMessage = match serde_json::from_slice(&command) {
+                    Ok(message) => message,
+                    Err(_) => {
+                        return write_error(pipe, "malformed_frame", "คำสั่ง handoff มีรูปแบบไม่ถูกต้อง");
+                    }
+                };
+                match process_message(app, service, message) {
+                    Ok(responses) => {
+                        for response in responses {
+                            write_value(pipe, &response)?;
+                        }
+                    }
+                    Err(code) => write_error(pipe, &code, "ไม่สามารถยืนยันคำสั่ง handoff ได้")?,
+                }
+            }
+            Ok(())
+        })();
+        let _ = unsafe { FlushFileBuffers(raw.cast()) };
         unsafe {
-            DisconnectNamedPipe(pipe.as_raw_handle().cast());
+            DisconnectNamedPipe(raw.cast());
         }
-        Ok(())
+        result
     }
 
     fn write_error(pipe: &mut File, code: &str, message: &str) -> Result<(), String> {
@@ -1204,7 +1208,15 @@ mod windows_pipe {
         use std::ptr::null;
         use std::time::{SystemTime, UNIX_EPOCH};
         use windows_sys::Win32::{
-            Foundation::{ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, GENERIC_READ, GENERIC_WRITE},
+            Foundation::{
+                ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, GENERIC_READ,
+                GENERIC_WRITE,
+            },
+            Security::{
+                CreateRestrictedToken, DuplicateTokenEx, ImpersonateLoggedOnUser,
+                SecurityImpersonation, TokenImpersonation, DISABLE_MAX_PRIVILEGE,
+                SID_AND_ATTRIBUTES, TOKEN_DUPLICATE, TOKEN_IMPERSONATE,
+            },
             Storage::FileSystem::{CreateFileW, FILE_ATTRIBUTE_NORMAL, OPEN_EXISTING},
             System::Pipes::WaitNamedPipeW,
         };
@@ -1245,6 +1257,8 @@ mod windows_pipe {
                 .recv_timeout(Duration::from_secs(1))
                 .expect("server thread should begin listening");
 
+            assert_restricted_logon_client_is_denied(&name);
+
             let mut client = connect_test_client(&name);
             let hello = serde_json::json!({
                 "type": "HELLO",
@@ -1253,6 +1267,519 @@ mod windows_pipe {
             });
             write_value(&mut client, &hello).unwrap();
             assert_eq!(server.join().unwrap(), hello);
+        }
+
+        #[test]
+        #[ignore = "requires SMB Server and loopback named-pipe access"]
+        fn remote_named_pipe_client_is_denied_with_local_positive_control() {
+            assert_ne!(
+                server_pipe_mode() & PIPE_REJECT_REMOTE_CLIENTS,
+                0,
+                "the target pipe must enable remote-client rejection"
+            );
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let control_name = format!("{PIPE_NAME_PREFIX}.remote-control.{nonce}")
+                .encode_utf16()
+                .chain([0])
+                .collect::<Vec<_>>();
+            let control_pipe = create_test_pipe_with_dacl(
+                &control_name,
+                "D:P(A;;GA;;;AU)",
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+            );
+            let remote_control = remote_pipe_path(&control_name);
+            let remote_control_client = open_pipe_client(&remote_control).unwrap_or_else(|error| {
+                panic!("loopback SMB named-pipe positive control failed: {error}")
+            });
+            let control_raw = control_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "loopback SMB control client should connect to a pipe without remote rejection"
+            );
+            unsafe {
+                CloseHandle(remote_control_client);
+            }
+            drop(control_pipe);
+
+            let target_name = format!("{PIPE_NAME_PREFIX}.remote-target.{nonce}")
+                .encode_utf16()
+                .chain([0])
+                .collect::<Vec<_>>();
+            let remote_target = remote_pipe_path(&target_name);
+            // Keep the DACL identical to the control so this probe isolates the server mode flag.
+            let target_pipe =
+                create_test_pipe_with_dacl(&target_name, "D:P(A;;GA;;;AU)", server_pipe_mode());
+            let remote_result = open_pipe_client(&remote_target);
+            assert_eq!(
+                remote_result.err(),
+                Some(ERROR_ACCESS_DENIED),
+                "a client using the UNC/SMB path must be denied by the protected handoff pipe"
+            );
+            drop(target_pipe);
+
+            let local_pipe =
+                create_test_pipe_with_dacl(&target_name, "D:P(A;;GA;;;AU)", server_pipe_mode());
+            let local_client = connect_test_client(&target_name);
+            drop(local_client);
+            drop(local_pipe);
+        }
+
+        #[test]
+        #[ignore = "requires a second Windows host running the repository PowerShell probe"]
+        fn remote_named_pipe_client_from_another_host_is_denied() {
+            assert_ne!(
+                server_pipe_mode() & PIPE_REJECT_REMOTE_CLIENTS,
+                0,
+                "the target pipe must enable remote-client rejection"
+            );
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let test_pipe_name = |role: &str| {
+                format!("{PIPE_NAME_PREFIX}.remote-host-{nonce}.{role}")
+                    .encode_utf16()
+                    .chain([0])
+                    .collect::<Vec<_>>()
+            };
+            let dacl = "D:P(A;;GA;;;AU)";
+            let mode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
+            let control_pipe = create_test_pipe_with_dacl(&test_pipe_name("control"), dacl, mode);
+            let target_name = test_pipe_name("target");
+            let target_pipe = create_test_pipe_with_dacl(&target_name, dacl, server_pipe_mode());
+            let result_pipe = create_test_pipe_with_dacl(&test_pipe_name("result"), dacl, mode);
+
+            let host = std::env::var("COMPUTERNAME")
+                .expect("Windows should provide the named-pipe server host name");
+            println!("REMOTE_PIPE_PROBE_READY host={host} nonce={nonce}");
+            println!(
+                "On another Windows host run tools/verify/lalin-play-remote-pipe-client.ps1 with the host and nonce above."
+            );
+
+            let (result_tx, result_rx) = std::sync::mpsc::sync_channel(1);
+            let server = std::thread::spawn(move || {
+                let mut control_pipe = control_pipe;
+                let control_raw = control_pipe.as_raw_handle();
+                let connected =
+                    unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+                if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                    let _ = result_tx.send(Err("remote positive-control pipe did not connect"));
+                    return;
+                }
+                let mut marker = [0u8; 1];
+                if control_pipe.read_exact(&mut marker).is_err() || marker != [b'C'] {
+                    let _ = result_tx.send(Err("remote positive-control marker is invalid"));
+                    return;
+                }
+
+                let mut result_pipe = result_pipe;
+                let result_raw = result_pipe.as_raw_handle();
+                let connected =
+                    unsafe { ConnectNamedPipe(result_raw.cast(), null_mut::<OVERLAPPED>()) };
+                if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                    let _ = result_tx.send(Err("remote result pipe did not connect"));
+                    return;
+                }
+                let mut payload = [0u8; 64];
+                if result_pipe.read_exact(&mut payload).is_err() {
+                    let _ = result_tx.send(Err("remote result payload was incomplete"));
+                    return;
+                }
+                let result = String::from_utf8_lossy(&payload)
+                    .trim_matches('\0')
+                    .to_string();
+                let _ = result_tx.send(Ok(result));
+            });
+
+            let result = result_rx
+                .recv_timeout(Duration::from_secs(180))
+                .expect("run the remote PowerShell client before the 180-second test deadline")
+                .expect("remote positive-control and result pipes should connect");
+            assert_eq!(result, "control=0;target=5");
+            server.join().unwrap();
+
+            let local_client = connect_test_client(&target_name);
+            let target_raw = target_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(target_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "a local client should still open the pipe protected from remote clients"
+            );
+            drop(local_client);
+            drop(target_pipe);
+        }
+
+        #[test]
+        #[ignore = "requires a second Windows logon session running the repository PowerShell probe"]
+        fn different_logon_session_is_denied_by_the_pipe_acl() {
+            let server_sid = current_logon_sid().expect("owner logon SID should be available");
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let test_pipe_name = |role: &str| {
+                format!("{PIPE_NAME_PREFIX}.cross-session-{nonce}.{role}")
+                    .encode_utf16()
+                    .chain([0])
+                    .collect::<Vec<_>>()
+            };
+            let mode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
+            let control_pipe =
+                create_test_pipe_with_dacl(&test_pipe_name("control"), "D:P(A;;GA;;;AU)", mode);
+            let target_name = test_pipe_name("target");
+            let target_pipe = create_test_pipe_with_dacl(
+                &target_name,
+                &sddl_for_logon_sid(&server_sid),
+                server_pipe_mode(),
+            );
+            let result_pipe =
+                create_test_pipe_with_dacl(&test_pipe_name("result"), "D:P(A;;GA;;;AU)", mode);
+
+            let host = std::env::var("COMPUTERNAME")
+                .expect("Windows should provide the named-pipe server host name");
+            let account = format!(
+                "{}\\{}",
+                std::env::var("USERDOMAIN").unwrap_or_else(|_| ".".into()),
+                std::env::var("USERNAME").expect("Windows should provide the current user name")
+            );
+            let probe_account = format!("{host}\\LalinPipeProbe0930");
+            let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("..")
+                .join("..")
+                .join("tools")
+                .join("verify")
+                .join("lalin-play-cross-session-pipe-client.ps1")
+                .canonicalize()
+                .expect("cross-session client probe script should exist");
+            let script_path = script.display().to_string();
+            let script_path = script_path.strip_prefix(r"\\?\").unwrap_or(&script_path);
+            println!(
+                "CROSS_SESSION_PROBE_READY host={host} owner_user={account} probe_user={probe_account} nonce={nonce}"
+            );
+            println!(
+                "Run in a separate logon session: runas /user:{probe_account} \"powershell.exe -NoProfile -ExecutionPolicy Bypass -File {} -Nonce {nonce}\"",
+                script_path
+            );
+
+            let (result_tx, result_rx) = std::sync::mpsc::sync_channel(1);
+            let server_sid_for_thread = server_sid.clone();
+            let server = std::thread::spawn(move || {
+                let result = (|| -> Result<String, &'static str> {
+                    let mut control_pipe = control_pipe;
+                    let control_raw = control_pipe.as_raw_handle();
+                    let connected =
+                        unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+                    if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                        return Err("cross-session positive-control pipe did not connect");
+                    }
+                    let mut marker = [0u8; 1];
+                    if control_pipe.read_exact(&mut marker).is_err() || marker != [b'C'] {
+                        return Err("cross-session positive-control marker is invalid");
+                    }
+
+                    let mut client_session = 0u32;
+                    let mut server_session = 0u32;
+                    if unsafe {
+                        GetNamedPipeClientSessionId(control_raw.cast(), &mut client_session)
+                    } == 0
+                        || unsafe {
+                            GetNamedPipeServerSessionId(control_raw.cast(), &mut server_session)
+                        } == 0
+                        || client_session != server_session
+                    {
+                        return Err("probe must use a different logon in the same Windows session");
+                    }
+                    let client_sid = client_logon_sid(control_raw)
+                        .map_err(|_| "could not read the probe client's logon SID")?;
+                    if client_sid == server_sid_for_thread {
+                        return Err(
+                            "probe reused the owner logon SID instead of a new logon session",
+                        );
+                    }
+
+                    let mut result_pipe = result_pipe;
+                    let result_raw = result_pipe.as_raw_handle();
+                    let connected =
+                        unsafe { ConnectNamedPipe(result_raw.cast(), null_mut::<OVERLAPPED>()) };
+                    if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                        return Err("cross-session result pipe did not connect");
+                    }
+                    let mut payload = [0u8; 64];
+                    if result_pipe.read_exact(&mut payload).is_err() {
+                        return Err("cross-session result payload was incomplete");
+                    }
+                    Ok(String::from_utf8_lossy(&payload)
+                        .trim_matches('\0')
+                        .to_string())
+                })();
+                let _ = result_tx.send(result);
+            });
+
+            let result = result_rx
+                .recv_timeout(Duration::from_secs(180))
+                .expect("run the cross-session PowerShell client before the 180-second deadline")
+                .expect("cross-session positive-control and result pipes should connect");
+            assert_eq!(result, "control=0;target=5");
+            server.join().unwrap();
+
+            let local_client = connect_test_client(&target_name);
+            let target_raw = target_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(target_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "the owner's logon session should still open the protected target pipe"
+            );
+            drop(local_client);
+            drop(target_pipe);
+        }
+
+        fn client_logon_sid(pipe: HANDLE) -> Result<String, String> {
+            if unsafe { ImpersonateNamedPipeClient(pipe) } == 0 {
+                return Err("unable to impersonate the connected pipe client".into());
+            }
+            let mut token: HANDLE = null_mut();
+            let opened =
+                unsafe { OpenThreadToken(GetCurrentThread(), TOKEN_ACCESS, 1, &mut token) } != 0;
+            let reverted = unsafe { RevertToSelf() } != 0;
+            if !reverted {
+                return Err("unable to revert from the connected pipe client".into());
+            }
+            if !opened {
+                return Err("unable to inspect the connected pipe client token".into());
+            }
+            let sid = logon_sid_from_token(token);
+            unsafe {
+                CloseHandle(token);
+            }
+            sid
+        }
+
+        fn create_test_pipe_with_dacl(name: &[u16], sddl: &str, mode: u32) -> File {
+            let sddl = sddl.encode_utf16().chain([0]).collect::<Vec<_>>();
+            let mut descriptor = null_mut();
+            assert_ne!(
+                unsafe {
+                    ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                        sddl.as_ptr(),
+                        SDDL_REVISION_1,
+                        &mut descriptor,
+                        null_mut(),
+                    )
+                },
+                0,
+                "test pipe DACL should be valid"
+            );
+            let attributes = SECURITY_ATTRIBUTES {
+                nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+                lpSecurityDescriptor: descriptor,
+                bInheritHandle: 0,
+            };
+            let handle = unsafe {
+                CreateNamedPipeW(
+                    name.as_ptr(),
+                    PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                    mode,
+                    1,
+                    PIPE_CAP as u32,
+                    PIPE_CAP as u32,
+                    0,
+                    &attributes,
+                )
+            };
+            unsafe {
+                LocalFree(descriptor.cast());
+            }
+            assert!(
+                handle != INVALID_HANDLE_VALUE && !handle.is_null(),
+                "loopback SMB control pipe should be created"
+            );
+            unsafe { File::from_raw_handle(handle as RawHandle) }
+        }
+
+        fn remote_pipe_path(name: &[u16]) -> Vec<u16> {
+            let length = name
+                .iter()
+                .position(|value| *value == 0)
+                .unwrap_or(name.len());
+            let local_name = String::from_utf16(&name[..length])
+                .expect("local test pipe name should be valid UTF-16");
+            let suffix = local_name
+                .strip_prefix(r"\\.\pipe\")
+                .expect("test pipe should use the local named-pipe namespace");
+            format!(r"\\localhost\pipe\{suffix}")
+                .encode_utf16()
+                .chain([0])
+                .collect()
+        }
+
+        fn open_pipe_client(name: &[u16]) -> Result<HANDLE, u32> {
+            let handle = unsafe {
+                CreateFileW(
+                    name.as_ptr(),
+                    GENERIC_READ | GENERIC_WRITE,
+                    0,
+                    null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    null_mut(),
+                )
+            };
+            if handle == INVALID_HANDLE_VALUE || handle.is_null() {
+                Err(unsafe { GetLastError() })
+            } else {
+                Ok(handle)
+            }
+        }
+
+        fn assert_restricted_logon_client_is_denied(name: &[u16]) {
+            let token = restricted_token_without_logon_sid();
+            assert_ne!(unsafe { ImpersonateLoggedOnUser(token) }, 0);
+
+            let deadline = Instant::now() + Duration::from_secs(3);
+            let acl_result = loop {
+                let handle = unsafe {
+                    CreateFileW(
+                        name.as_ptr(),
+                        GENERIC_READ | GENERIC_WRITE,
+                        0,
+                        null(),
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        null_mut(),
+                    )
+                };
+                if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                    unsafe {
+                        CloseHandle(handle);
+                    }
+                    break Err("restricted client unexpectedly opened the pipe".to_owned());
+                }
+
+                let error = unsafe { GetLastError() };
+                if error == ERROR_ACCESS_DENIED {
+                    break Ok(());
+                }
+                if error != ERROR_PIPE_BUSY && error != ERROR_FILE_NOT_FOUND {
+                    break Err(format!(
+                        "unexpected restricted named-pipe client error: {error}"
+                    ));
+                }
+                if Instant::now() >= deadline {
+                    break Err("timed out waiting for restricted client ACL decision".into());
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            };
+
+            let reverted = unsafe { RevertToSelf() } != 0;
+            unsafe {
+                CloseHandle(token);
+            }
+            assert!(reverted, "test thread impersonation must be reverted");
+            assert!(
+                acl_result.is_ok(),
+                "a client without the pipe logon SID must be denied: {}",
+                acl_result.unwrap_err()
+            );
+        }
+
+        fn restricted_token_without_logon_sid() -> HANDLE {
+            let mut source = null_mut();
+            assert_ne!(
+                unsafe {
+                    OpenProcessToken(
+                        GetCurrentProcess(),
+                        TOKEN_DUPLICATE | TOKEN_QUERY,
+                        &mut source,
+                    )
+                },
+                0
+            );
+
+            let mut needed = 0u32;
+            unsafe {
+                GetTokenInformation(source, TokenLogonSid, null_mut(), 0, &mut needed);
+            }
+            assert!(needed > 0, "current logon SID must be available");
+            let mut groups_buffer = vec![0u8; needed as usize];
+            assert_ne!(
+                unsafe {
+                    GetTokenInformation(
+                        source,
+                        TokenLogonSid,
+                        groups_buffer.as_mut_ptr().cast(),
+                        needed,
+                        &mut needed,
+                    )
+                },
+                0
+            );
+            let groups = unsafe { &*(groups_buffer.as_ptr().cast::<TOKEN_GROUPS>()) };
+            let entries = unsafe {
+                std::slice::from_raw_parts(groups.Groups.as_ptr(), groups.GroupCount as usize)
+            };
+            let logon_sid = entries
+                .iter()
+                .find(|entry| entry.Attributes & 0xc000_0000 == 0xc000_0000)
+                .expect("current token must contain its logon SID");
+            let sid_to_disable = SID_AND_ATTRIBUTES {
+                Sid: logon_sid.Sid,
+                Attributes: 0,
+            };
+
+            let mut restricted = null_mut();
+            assert_ne!(
+                unsafe {
+                    CreateRestrictedToken(
+                        source,
+                        DISABLE_MAX_PRIVILEGE,
+                        1,
+                        &sid_to_disable,
+                        0,
+                        null(),
+                        0,
+                        null(),
+                        &mut restricted,
+                    )
+                },
+                0
+            );
+            let mut impersonation = null_mut();
+            let duplicated = unsafe {
+                DuplicateTokenEx(
+                    restricted,
+                    TOKEN_QUERY | TOKEN_IMPERSONATE,
+                    null(),
+                    SecurityImpersonation,
+                    TokenImpersonation,
+                    &mut impersonation,
+                )
+            } != 0;
+            unsafe {
+                CloseHandle(restricted);
+                CloseHandle(source);
+            }
+            assert!(duplicated, "restricted client token must be impersonable");
+            impersonation
         }
 
         fn connect_test_client(name: &[u16]) -> File {
@@ -1452,5 +1979,45 @@ mod tests {
         assert!(!is_local_windows_drive_type(DRIVE_REMOTE));
         assert!(!is_local_windows_drive_type(DRIVE_UNKNOWN));
         assert!(!is_local_windows_drive_type(DRIVE_NO_ROOT_DIR));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires an isolated SMB mapped-drive media fixture"]
+    fn mapped_network_drive_media_is_rejected_at_runtime() {
+        let local = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_LOCAL_MEDIA")
+                .expect("local positive-control fixture is required"),
+        );
+        let mapped = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_MAPPED_MEDIA")
+                .expect("mapped-drive fixture is required"),
+        );
+        assert!(validate_media_file(local.to_str().expect("local path should be Unicode")).is_ok());
+        assert_eq!(
+            validate_media_file(mapped.to_str().expect("mapped path should be Unicode"))
+                .unwrap_err(),
+            "ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires a local reparse fixture resolving to SMB mapped-drive media"]
+    fn reparse_path_to_mapped_network_media_is_rejected_at_runtime() {
+        let local = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_LOCAL_MEDIA")
+                .expect("local positive-control fixture is required"),
+        );
+        let reparse = std::path::PathBuf::from(
+            std::env::var_os("LALIN_PLAY_TEST_REPARSE_MEDIA")
+                .expect("reparse-point fixture is required"),
+        );
+        assert!(validate_media_file(local.to_str().expect("local path should be Unicode")).is_ok());
+        assert_eq!(
+            validate_media_file(reparse.to_str().expect("reparse path should be Unicode"))
+                .unwrap_err(),
+            "ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive"
+        );
     }
 }

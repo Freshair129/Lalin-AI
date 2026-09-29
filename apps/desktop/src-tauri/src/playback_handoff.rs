@@ -351,6 +351,28 @@ fn send_playback_with_launcher(
     connect_attempts: usize,
     launch: impl FnOnce(&Path) -> Result<(), String>,
 ) -> Result<PlaybackReply, String> {
+    send_playback_with_launcher_checked(
+        client,
+        request_id,
+        action,
+        file,
+        expected_executable,
+        connect_attempts,
+        || Ok(()),
+        launch,
+    )
+}
+
+fn send_playback_with_launcher_checked(
+    client: &StudioHandoffClient,
+    request_id: String,
+    action: String,
+    file: HandoffFile,
+    expected_executable: PathBuf,
+    connect_attempts: usize,
+    mut check_owner: impl FnMut() -> Result<(), String>,
+    launch: impl FnOnce(&Path) -> Result<(), String>,
+) -> Result<PlaybackReply, String> {
     if !is_uuid(&request_id) {
         return Err("รหัส handoff ไม่ถูกต้อง".into());
     }
@@ -375,10 +397,11 @@ fn send_playback_with_launcher(
         return Err("delivery_unknown: ตรวจผลคำสั่งก่อนหน้าก่อนส่งคำสั่งใหม่".into());
     }
     let name = windows_pipe::pipe_name()?;
-    let (mut pipe, _cold_launch) = connect_with_launch(
+    let (mut pipe, _cold_launch) = connect_with_launch_checked(
         || windows_pipe::open_client(&name, &expected_executable),
         || launch(&expected_executable),
         || std::thread::sleep(Duration::from_millis(100)),
+        || check_owner(),
         connect_attempts,
     )?;
     let (owner_session, _initial_state) = handshake(&mut pipe)?;
@@ -503,9 +526,9 @@ fn spawn_play(executable: &Path) -> Result<(), String> {
 }
 
 fn connect_with_launch<T, C, L, W>(
-    mut connect: C,
+    connect: C,
     launch: L,
-    mut wait: W,
+    wait: W,
     attempts: usize,
 ) -> Result<(T, bool), String>
 where
@@ -513,12 +536,29 @@ where
     L: FnOnce() -> Result<(), String>,
     W: FnMut(),
 {
+    connect_with_launch_checked(connect, launch, wait, || Ok(()), attempts)
+}
+
+fn connect_with_launch_checked<T, C, L, W, H>(
+    mut connect: C,
+    launch: L,
+    mut wait: W,
+    mut check_owner: H,
+    attempts: usize,
+) -> Result<(T, bool), String>
+where
+    C: FnMut() -> Result<Option<T>, String>,
+    L: FnOnce() -> Result<(), String>,
+    W: FnMut(),
+    H: FnMut() -> Result<(), String>,
+{
     if let Some(pipe) = connect()? {
         return Ok((pipe, false));
     }
     launch()?;
     for _ in 0..attempts {
         wait();
+        check_owner()?;
         if let Some(pipe) = connect()? {
             return Ok((pipe, true));
         }
@@ -747,6 +787,7 @@ mod windows_pipe {
     };
 
     const PIPE_PREFIX: &str = r"\\.\pipe\ai.lalin.play.handoff.v1";
+    const PIPE_BUSY_TIMEOUT: Duration = Duration::from_secs(12);
 
     pub fn is_local_drive(root: &str) -> bool {
         let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
@@ -823,33 +864,51 @@ mod windows_pipe {
     }
 
     pub fn open_client(name: &[u16], expected_executable: &Path) -> Result<Option<File>, String> {
-        let handle = unsafe {
-            CreateFileW(
-                name.as_ptr(),
-                GENERIC_READ | GENERIC_WRITE,
-                0,
-                null(),
-                OPEN_EXISTING,
-                FILE_ATTRIBUTE_NORMAL,
-                null_mut(),
-            )
-        };
-        if handle == INVALID_HANDLE_VALUE || handle.is_null() {
+        let deadline = Instant::now() + PIPE_BUSY_TIMEOUT;
+        let mut saw_busy = false;
+        loop {
+            let handle = unsafe {
+                CreateFileW(
+                    name.as_ptr(),
+                    GENERIC_READ | GENERIC_WRITE,
+                    0,
+                    null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    null_mut(),
+                )
+            };
+            if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                let pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
+                verify_server(pipe.as_raw_handle().cast(), expected_executable)?;
+                return Ok(Some(pipe));
+            }
+
             let error = unsafe { GetLastError() };
             if error == ERROR_PIPE_BUSY {
-                unsafe {
-                    WaitNamedPipeW(name.as_ptr(), 250);
+                saw_busy = true;
+                let remaining = deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err("named pipe Lalin Play ยังคงไม่พร้อมหลังรอ owner เดิม".into());
                 }
-                return Ok(None);
+                let wait_ms = remaining.as_millis().clamp(1, 250) as u32;
+                unsafe {
+                    WaitNamedPipeW(name.as_ptr(), wait_ms);
+                }
+                continue;
             }
             if error == ERROR_FILE_NOT_FOUND {
-                return Ok(None);
+                if !saw_busy {
+                    return Ok(None);
+                }
+                if Instant::now() >= deadline {
+                    return Err("named pipe Lalin Play หายไประหว่างรอ owner เดิม".into());
+                }
+                std::thread::sleep(Duration::from_millis(10));
+                continue;
             }
             return Err("named pipe Lalin Play ถูกปฏิเสธหรือไม่ปลอดภัย".into());
         }
-        let pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
-        verify_server(pipe.as_raw_handle().cast(), expected_executable)?;
-        Ok(Some(pipe))
     }
 
     fn verify_server(pipe: HANDLE, expected_executable: &Path) -> Result<(), String> {
@@ -1108,7 +1167,7 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
-    #[ignore = "requires an isolated Windows session, built Play app, and silent WAV fixture"]
+    #[ignore = "requires an isolated Windows session, G3 test-feature Play app, silent WAV, and empty disposable WebView2/app-data directories"]
     fn paired_windows_cold_and_warm_handoff_ack_state_and_duplicate() {
         let executable = std::env::var_os("LALIN_PLAY_EXECUTABLE")
             .map(PathBuf::from)
@@ -1121,6 +1180,56 @@ mod tests {
             media.is_absolute() && media.is_file(),
             "silent WAV fixture must be an absolute local file path"
         );
+        let profile_dir = std::env::var_os("LALIN_G3_PROFILE_DIR")
+            .map(PathBuf::from)
+            .expect("set LALIN_G3_PROFILE_DIR to a disposable WebView2 profile directory");
+        let app_data_dir = std::env::var_os("LALIN_G3_APP_DATA_DIR")
+            .map(PathBuf::from)
+            .expect("set LALIN_G3_APP_DATA_DIR to a disposable Play app-data directory");
+        let profile_dir =
+            std::fs::canonicalize(profile_dir).expect("disposable WebView2 profile must exist");
+        let temp_root = std::env::temp_dir()
+            .canonicalize()
+            .expect("system temp directory must exist");
+        let media_parent = media
+            .parent()
+            .expect("silent WAV fixture must have a parent");
+        assert_eq!(
+            media_parent
+                .canonicalize()
+                .expect("silent WAV parent must exist"),
+            temp_root,
+            "silent WAV fixture must be a direct child of the system temp directory"
+        );
+        let app_data_parent = app_data_dir
+            .parent()
+            .and_then(|parent| parent.canonicalize().ok())
+            .expect("disposable Play app-data parent must exist");
+        assert!(
+            app_data_dir.is_absolute()
+                && app_data_parent == temp_root
+                && app_data_dir
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.starts_with("lalin-play-g3-appdata-")),
+            "Play app-data must be a named direct child of the system temp directory"
+        );
+        assert!(
+            !app_data_dir.exists(),
+            "Play app-data directory must be empty and absent before the run"
+        );
+        assert_eq!(
+            profile_dir.parent(),
+            Some(temp_root.as_path()),
+            "WebView2 test profile must be a dedicated direct child of the system temp directory"
+        );
+        assert!(
+            std::fs::read_dir(&profile_dir)
+                .expect("WebView2 test profile must be readable")
+                .next()
+                .is_none(),
+            "WebView2 test profile must be empty before the run"
+        );
         let client = StudioHandoffClient::default();
         let name =
             windows_pipe::pipe_name().expect("current logon session should have a pipe name");
@@ -1131,35 +1240,70 @@ mod tests {
                 .is_none(),
             "refusing to stop or reuse a Play process that was already running"
         );
+        let processes = Command::new("tasklist")
+            .args(["/FI", "IMAGENAME eq lalin-play.exe", "/FO", "CSV", "/NH"])
+            .output()
+            .expect("tasklist must be available for isolated Play process detection");
+        assert!(
+            processes.status.success(),
+            "tasklist failed before G3 launch"
+        );
+        let has_existing_play = String::from_utf8_lossy(&processes.stdout)
+            .lines()
+            .filter_map(|line| line.split(',').next())
+            .any(|name| {
+                name.trim_matches('"')
+                    .eq_ignore_ascii_case("lalin-play.exe")
+            });
+        assert!(
+            !has_existing_play,
+            "close the existing Lalin Play process before the isolated test; it will not be stopped or reused"
+        );
+        eprintln!("G3 isolated Play app-data: {}", app_data_dir.display());
 
-        let mut child = None;
+        let child = std::cell::RefCell::new(None::<std::process::Child>);
         let cold_launches = std::cell::Cell::new(0);
         let warm_launches = std::cell::Cell::new(0);
+        let mut burst_media_paths = Vec::new();
         let result = (|| -> Result<(), String> {
             let play_id = "00000000-0000-4000-8000-000000000101";
             let play_file = HandoffFile {
                 path: media.to_string_lossy().into_owned(),
                 title: Some("G3 cold play".into()),
             };
-            let first = send_playback_with_launcher(
+            let first = send_playback_with_launcher_checked(
                 &client,
                 play_id.into(),
                 "play".into(),
                 play_file.clone(),
                 executable.clone(),
                 CONNECT_ATTEMPTS * 3,
+                || {
+                    if let Some(process) = child.borrow_mut().as_mut() {
+                        if let Some(status) = process
+                            .try_wait()
+                            .map_err(|_| "could not inspect the isolated Play process")?
+                        {
+                            return Err(format!(
+                                "isolated Play process exited before pipe readiness ({status})"
+                            ));
+                        }
+                    }
+                    Ok(())
+                },
                 |path| {
                     cold_launches.set(cold_launches.get() + 1);
-                    child = Some(
-                        Command::new(path)
-                            .env_remove("TAURI_CONFIG")
-                            .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
-                            .stdin(Stdio::null())
-                            .stdout(Stdio::null())
-                            .stderr(Stdio::null())
-                            .spawn()
-                            .map_err(|_| "ไม่สามารถเปิด Lalin Play สำหรับ G3 test ได้")?,
-                    );
+                    let process = Command::new(path)
+                        .env_remove("TAURI_CONFIG")
+                        .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                        .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
+                        .env("LALIN_PLAY_G3_APP_DATA_DIR", &app_data_dir)
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .spawn()
+                        .map_err(|_| "ไม่สามารถเปิด Lalin Play สำหรับ G3 test ได้")?;
+                    *child.borrow_mut() = Some(process);
                     Ok(())
                 },
             )?;
@@ -1169,6 +1313,7 @@ mod tests {
             require_applied_reply(&first, play_id, &first.ack.owner_session, 0)?;
 
             if child
+                .borrow_mut()
                 .as_mut()
                 .and_then(|process| process.try_wait().ok().flatten())
                 .is_some()
@@ -1249,16 +1394,7 @@ mod tests {
                     file: &lost_file,
                 },
             )?;
-            let lost_ack: PlaybackAck =
-                serde_json::from_value(read_value(&mut lost_pipe, ACK_TIMEOUT)?).map_err(|_| {
-                    "G3 test expected a committed ACK before dropping STATE".to_string()
-                })?;
-            if lost_ack.request_id != lost_id
-                || lost_ack.owner_session != first.ack.owner_session
-                || lost_ack.result != "applied"
-            {
-                return Err("G3 test did not receive the expected committed ACK".into());
-            }
+            // Simulate the sender losing its ACK after the command frame was written.
             drop(lost_pipe);
 
             let recovered =
@@ -1269,9 +1405,6 @@ mod tests {
                 &first.ack.owner_session,
                 queued.ack.revision,
             )?;
-            if recovered.ack.revision != lost_ack.revision {
-                return Err("reconciled ACK revision did not match the committed command".into());
-            }
             let before_duplicate = read_playback_state(&client)?
                 .ok_or("Play state disappeared before duplicate reconciliation")?;
             if before_duplicate.owner_session != first.ack.owner_session {
@@ -1296,7 +1429,7 @@ mod tests {
                 &first.ack.owner_session,
                 queued.ack.revision,
             )?;
-            if duplicate.ack.revision != lost_ack.revision {
+            if duplicate.ack.revision != recovered.ack.revision {
                 return Err("duplicate request changed its original ACK revision".into());
             }
             let after_duplicate = read_playback_state(&client)?
@@ -1306,18 +1439,437 @@ mod tests {
             {
                 return Err("duplicate request changed reconciled playback state".into());
             }
+
+            let mut burst_results = Vec::new();
+            let mut previous_revision = after_duplicate.revision;
+            let burst_nonce = format!(
+                "{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_err(|_| "G3 test clock is unavailable")?
+                    .as_nanos()
+            );
+            for index in 0..4 {
+                let burst_id = format!("00000000-0000-4000-8000-{:012x}", 200 + index);
+                let title = format!("lalin-play-g3-fifo-{burst_nonce}-{index}");
+                let burst_media = media_parent.join(format!("{title}.wav"));
+                if burst_media.exists() {
+                    return Err("G3 FIFO fixture path already exists".into());
+                }
+                std::fs::copy(&media, &burst_media)
+                    .map_err(|_| "could not prepare a unique G3 FIFO media fixture")?;
+                burst_media_paths.push(burst_media.clone());
+                let burst = send_playback_with_launcher(
+                    &client,
+                    burst_id.clone(),
+                    "add-to-queue".into(),
+                    HandoffFile {
+                        path: burst_media.to_string_lossy().into_owned(),
+                        title: Some(title.clone()),
+                    },
+                    executable.clone(),
+                    CONNECT_ATTEMPTS * 3,
+                    |_| {
+                        warm_launches.set(warm_launches.get() + 1);
+                        Err("FIFO sequence must keep the warm Play owner".into())
+                    },
+                )?;
+                require_applied_reply(
+                    &burst,
+                    &burst_id,
+                    &first.ack.owner_session,
+                    previous_revision,
+                )?;
+                if burst.ack.revision <= previous_revision {
+                    return Err("FIFO sequence ACK revisions did not advance in order".into());
+                }
+                previous_revision = burst.ack.revision;
+                burst_results.push((title, burst.ack.revision));
+            }
+            let burst_state = read_playback_state(&client)?
+                .ok_or("Play state disappeared after the FIFO burst")?;
+            if burst_state.owner_session != first.ack.owner_session
+                || burst_state.snapshot.queue.len() < burst_results.len()
+            {
+                return Err("FIFO sequence did not retain the warm Play queue".into());
+            }
+            let expected_burst_titles = burst_results
+                .iter()
+                .map(|(title, _)| title.as_str())
+                .collect::<Vec<_>>();
+            let actual_burst_titles = burst_state.snapshot.queue
+                [burst_state.snapshot.queue.len() - burst_results.len()..]
+                .iter()
+                .map(|item| item.title.as_str())
+                .collect::<Vec<_>>();
+            if actual_burst_titles != expected_burst_titles {
+                return Err("FIFO sequence queue order did not match ACK order".into());
+            }
+
+            let before_concurrent = burst_state;
+            let (mut occupied_pipe, cold) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Err::<(), String>("the existing Play owner must not be relaunched".into()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            if cold {
+                return Err("concurrent-client setup did not reuse the warm Play owner".into());
+            }
+            let (occupied_owner, _) = handshake(&mut occupied_pipe)?;
+            if occupied_owner != first.ack.owner_session {
+                return Err("Play owner changed before concurrent-client delivery".into());
+            }
+
+            let concurrent_nonce = format!("{burst_nonce}-concurrent");
+            let mut concurrent_commands = Vec::new();
+            for index in 0..4 {
+                let request_id = format!("00000000-0000-4000-8000-{:012x}", 300 + index);
+                let title = format!("lalin-play-g3-concurrent-{concurrent_nonce}-{index}");
+                let media_path = media_parent.join(format!("{title}.wav"));
+                if media_path.exists() {
+                    return Err("G3 concurrent fixture path already exists".into());
+                }
+                std::fs::copy(&media, &media_path)
+                    .map_err(|_| "could not prepare a unique concurrent G3 media fixture")?;
+                burst_media_paths.push(media_path.clone());
+                concurrent_commands.push((request_id, title, media_path));
+            }
+
+            let start = std::sync::Arc::new(std::sync::Barrier::new(concurrent_commands.len()));
+            let launch_count = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let (started_tx, started_rx) = std::sync::mpsc::channel();
+            let (finished_tx, finished_rx) = std::sync::mpsc::channel();
+            let mut senders = Vec::new();
+            for (request_id, title, media_path) in concurrent_commands {
+                let start = std::sync::Arc::clone(&start);
+                let launch_count = std::sync::Arc::clone(&launch_count);
+                let started_tx = started_tx.clone();
+                let finished_tx = finished_tx.clone();
+                let executable = executable.clone();
+                let owner_session = first.ack.owner_session.clone();
+                let minimum_revision = before_concurrent.revision;
+                senders.push(std::thread::spawn(move || {
+                    let client = StudioHandoffClient::default();
+                    start.wait();
+                    let _ = started_tx.send(());
+                    let reply = send_playback_with_launcher(
+                        &client,
+                        request_id.clone(),
+                        "add-to-queue".into(),
+                        HandoffFile {
+                            path: media_path.to_string_lossy().into_owned(),
+                            title: Some(title.clone()),
+                        },
+                        executable,
+                        CONNECT_ATTEMPTS * 3,
+                        move |_| {
+                            launch_count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                            Err("busy Play pipe must not invoke the cold-launch callback".into())
+                        },
+                    )
+                    .and_then(|reply| {
+                        require_applied_reply(
+                            &reply,
+                            &request_id,
+                            &owner_session,
+                            minimum_revision,
+                        )?;
+                        Ok(reply)
+                    });
+                    let _ = finished_tx.send((request_id, title, reply));
+                }));
+            }
+            drop(started_tx);
+            drop(finished_tx);
+            for _ in 0..senders.len() {
+                started_rx
+                    .recv_timeout(Duration::from_secs(3))
+                    .map_err(|_| "concurrent Studio clients did not reach their start barrier")?;
+            }
+            if let Ok((request_id, _, reply)) = finished_rx.recv_timeout(Duration::from_millis(600))
+            {
+                let outcome = match reply {
+                    Ok(reply) => format!("unexpected early ACK revision {}", reply.ack.revision),
+                    Err(error) => error,
+                };
+                return Err(format!(
+                    "client {request_id} completed while the existing Play pipe was occupied: {outcome}"
+                ));
+            }
+            drop(occupied_pipe);
+
+            let mut concurrent_results = Vec::with_capacity(senders.len());
+            for _ in 0..senders.len() {
+                let (request_id, title, reply) = finished_rx
+                    .recv_timeout(Duration::from_secs(30))
+                    .map_err(|_| {
+                        "concurrent Studio handoff did not finish after the pipe became free"
+                    })?;
+                let reply = reply.map_err(|error| {
+                    format!("concurrent Studio handoff {request_id} failed: {error}")
+                })?;
+                concurrent_results.push((request_id, title, reply));
+            }
+            for sender in senders {
+                sender
+                    .join()
+                    .map_err(|_| "concurrent Studio sender thread panicked")?;
+            }
+            if launch_count.load(std::sync::atomic::Ordering::SeqCst) != 0 {
+                return Err("concurrent warm handoffs attempted to relaunch Play".into());
+            }
+
+            concurrent_results.sort_by_key(|(_, _, reply)| reply.ack.revision);
+            let mut previous_revision = before_concurrent.revision;
+            for (request_id, _, reply) in &concurrent_results {
+                require_applied_reply(
+                    reply,
+                    request_id,
+                    &first.ack.owner_session,
+                    previous_revision,
+                )?;
+                if reply.ack.revision <= previous_revision {
+                    return Err("concurrent ACK revisions were not unique and increasing".into());
+                }
+                previous_revision = reply.ack.revision;
+            }
+
+            let concurrent_state = read_playback_state(&client)?
+                .ok_or("Play state disappeared after concurrent handoffs")?;
+            let expected_concurrent_titles = concurrent_results
+                .iter()
+                .map(|(_, title, _)| title.as_str())
+                .collect::<Vec<_>>();
+            let actual_concurrent_titles = concurrent_state
+                .snapshot
+                .queue
+                .iter()
+                .skip(before_concurrent.snapshot.queue.len())
+                .map(|item| item.title.as_str())
+                .collect::<Vec<_>>();
+            if concurrent_state.owner_session != first.ack.owner_session
+                || concurrent_state.revision != previous_revision
+                || concurrent_state.snapshot.queue.len()
+                    != before_concurrent.snapshot.queue.len() + concurrent_results.len()
+                || concurrent_state.snapshot.queue[..before_concurrent.snapshot.queue.len()]
+                    != before_concurrent.snapshot.queue
+                || actual_concurrent_titles != expected_concurrent_titles
+            {
+                return Err(
+                    "concurrent queue order did not match the applied ACK revision order".into(),
+                );
+            }
+
+            let restart_id = "00000000-0000-4000-8000-000000000105";
+            let (mut restart_pipe, cold) = connect_with_launch(
+                || windows_pipe::open_client(&name, &executable),
+                || Ok::<(), String>(()),
+                || std::thread::sleep(Duration::from_millis(100)),
+                CONNECT_ATTEMPTS,
+            )?;
+            if cold {
+                return Err("Play owner disappeared before the restart check".into());
+            }
+            let (restart_owner, restart_before) = handshake(&mut restart_pipe)?;
+            if restart_owner != first.ack.owner_session {
+                return Err("Play owner changed before the restart check".into());
+            }
+            let restart_file = HandoffFile {
+                path: media.to_string_lossy().into_owned(),
+                title: Some("G3 restart uncertain delivery".into()),
+            };
+            write_frame(
+                &mut restart_pipe,
+                &CommandFrame {
+                    frame_type: "COMMAND",
+                    protocol: PROTOCOL,
+                    protocol_version: PROTOCOL_VERSION,
+                    request_id: restart_id,
+                    owner_session: &restart_owner,
+                    action: "add-to-queue",
+                    file: &restart_file,
+                },
+            )?;
+            drop(restart_pipe);
+            let applied_before_restart = read_playback_state(&client)?
+                .ok_or("Play state disappeared before the simulated owner interruption")?;
+            let baseline_queue = &restart_before.snapshot.queue;
+            if applied_before_restart.owner_session != restart_owner {
+                return Err("Play owner changed while checking the lost ACK".into());
+            }
+            if applied_before_restart.snapshot.queue.len() != baseline_queue.len() + 1
+                || applied_before_restart.snapshot.queue[..baseline_queue.len()]
+                    != baseline_queue[..]
+            {
+                return Err(format!(
+                    "Play STATE did not append one item after the lost ACK (baseline {}, actual {})",
+                    baseline_queue.len(),
+                    applied_before_restart.snapshot.queue.len()
+                ));
+            }
+            *client
+                .uncertain
+                .lock()
+                .map_err(|_| "Studio handoff state ใช้งานไม่ได้")? = Some(UncertainCommand {
+                request_id: restart_id.into(),
+                owner_session: restart_owner.clone(),
+            });
+
+            if let Some(mut process) = child.borrow_mut().take() {
+                if process
+                    .try_wait()
+                    .map_err(|_| "could not inspect the isolated Play owner")?
+                    .is_none()
+                {
+                    process
+                        .kill()
+                        .map_err(|_| "could not stop the isolated Play owner")?;
+                }
+                process
+                    .wait()
+                    .map_err(|_| "could not wait for the isolated Play owner to stop")?;
+            }
+            let process = Command::new(&executable)
+                .env_remove("TAURI_CONFIG")
+                .env_remove("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                .env("WEBVIEW2_USER_DATA_FOLDER", &profile_dir)
+                .env("LALIN_PLAY_G3_APP_DATA_DIR", &app_data_dir)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .map_err(|_| "could not restart the isolated Play owner")?;
+            *child.borrow_mut() = Some(process);
+            let restart_deadline = std::time::Instant::now() + Duration::from_secs(60);
+            let restarted_state = loop {
+                if std::time::Instant::now() >= restart_deadline {
+                    return Err("restarted Play owner did not publish READY/STATE in time".into());
+                }
+                if let Ok(Some(state)) = read_playback_state(&client) {
+                    if state.owner_session != restart_owner {
+                        break state;
+                    }
+                }
+                std::thread::sleep(Duration::from_millis(100));
+            };
+            let queue_before_reconcile = restarted_state.snapshot.queue.clone();
+            match reconcile_pending(&client) {
+                Err(error) if error.starts_with("delivery_unknown") => {}
+                _ => return Err("owner restart must leave the prior delivery unknown".into()),
+            }
+            let pending = client
+                .uncertain
+                .lock()
+                .map_err(|_| "Studio handoff state ใช้งานไม่ได้")?
+                .clone();
+            if !pending.as_ref().is_some_and(|value| {
+                value.request_id == restart_id && value.owner_session == restart_owner
+            }) {
+                return Err("owner restart cleared an unreconciled command".into());
+            }
+
+            let restart_launches = std::cell::Cell::new(0);
+            match send_playback_with_launcher(
+                &client,
+                restart_id.into(),
+                "add-to-queue".into(),
+                restart_file,
+                executable.clone(),
+                CONNECT_ATTEMPTS,
+                |_| {
+                    restart_launches.set(restart_launches.get() + 1);
+                    Err("uncertain command must not be replayed after owner restart".into())
+                },
+            ) {
+                Err(error) if error.starts_with("delivery_unknown") => {}
+                _ => return Err("Studio must block replay after the owner session changes".into()),
+            }
+            let after_restart = read_playback_state(&client)?
+                .ok_or("restarted Play state disappeared after blocked replay")?;
+            if after_restart.owner_session != restarted_state.owner_session
+                || after_restart.snapshot.queue != queue_before_reconcile
+                || restart_launches.get() != 0
+            {
+                return Err("uncertain delivery changed the restarted Play state".into());
+            }
             if warm_launches.get() != 0 {
                 return Err("warm handoff unexpectedly launched another Play process".into());
+            }
+
+            for (invalid_id, invalid_path, invalid_title) in [
+                (
+                    "00000000-0000-4000-8000-000000000106",
+                    "https://example.invalid/audio.wav",
+                    "G3 invalid remote URL",
+                ),
+                (
+                    "00000000-0000-4000-8000-000000000107",
+                    r"\\server\share\audio.wav",
+                    "G3 invalid UNC path",
+                ),
+            ] {
+                let (mut invalid_pipe, cold) = connect_with_launch(
+                    || windows_pipe::open_client(&name, &executable),
+                    || Ok::<(), String>(()),
+                    || std::thread::sleep(Duration::from_millis(100)),
+                    CONNECT_ATTEMPTS,
+                )?;
+                if cold {
+                    return Err("invalid-path check unexpectedly used the cold-launch path".into());
+                }
+                let (invalid_owner, _) = handshake(&mut invalid_pipe)?;
+                if invalid_owner != after_restart.owner_session {
+                    return Err("Play owner changed before the invalid-path check".into());
+                }
+                let invalid_file = HandoffFile {
+                    path: invalid_path.into(),
+                    title: Some(invalid_title.into()),
+                };
+                write_frame(
+                    &mut invalid_pipe,
+                    &CommandFrame {
+                        frame_type: "COMMAND",
+                        protocol: PROTOCOL,
+                        protocol_version: PROTOCOL_VERSION,
+                        request_id: invalid_id,
+                        owner_session: &invalid_owner,
+                        action: "add-to-queue",
+                        file: &invalid_file,
+                    },
+                )?;
+                let invalid_response = read_value(&mut invalid_pipe, ACK_TIMEOUT)?;
+                if invalid_response.get("type").and_then(Value::as_str) != Some("ERROR")
+                    || invalid_response.get("code").and_then(Value::as_str)
+                        != Some("invalid_file_path")
+                {
+                    return Err(
+                        "Play receiver did not reject the invalid G3 path over the pipe".into(),
+                    );
+                }
+                drop(invalid_pipe);
+                let after_invalid = read_playback_state(&client)?
+                    .ok_or("Play state disappeared after invalid-path rejection")?;
+                if after_invalid.owner_session != after_restart.owner_session
+                    || after_invalid.revision != after_restart.revision
+                    || after_invalid.snapshot != after_restart.snapshot
+                {
+                    return Err("invalid-path rejection changed Play playback state".into());
+                }
             }
             Ok(())
         })();
 
-        if let Some(mut process) = child {
+        if let Some(mut process) = child.into_inner() {
             let _ = process.kill();
             let _ = process.wait();
         }
+        for path in burst_media_paths {
+            let _ = std::fs::remove_file(path);
+        }
         result.expect(
-            "paired Windows native handoff must pass cold, warm, ACK, STATE, and replay checks",
+            "paired Windows native handoff must pass cold, warm, FIFO, concurrent-client, ACK, STATE, and replay checks",
         );
     }
 

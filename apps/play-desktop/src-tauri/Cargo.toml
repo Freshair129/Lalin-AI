@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Lalin Play local media player"
 edition = "2021"
 
+[features]
+g3-test-app-data-dir = []
+
 [lib]
 name = "lalin_play_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]

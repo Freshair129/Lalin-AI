@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.18b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-30T06:33:36+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -36,9 +36,9 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Preview | `src/components/CompactTransport.tsx`, `src/playback/framePreview.ts`, `src/styles.css` | `src/components/CompactTransport.test.tsx`, `src/playback/framePreview.test.ts`: drag/hover, disposal, latest work, cache limit, errors/timeouts, controls |
 | Skip | `src/playback/relativeSeek.ts`, CompactTransport and Native | `src/playback/relativeSeek.test.ts`; CompactTransport live-clock/disabled tests; App native ACK/error tests |
 | Video | `src/components/VideoStage.tsx`, Owner, UI and Native | App persistent-host/mixed-media tests; Rust kind/backward tests |
-| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery and selected storage-failure tests; process-crash and remaining storage-failure coverage open |
-| Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases and selected native write-failure tests; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
-| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Local path/drive validation, same-logon ACL construction, FIFO, owner/session ACK/STATE reconciliation and cold/warm decision tests; live process pair, unauthorized connection and audible parity NOT_VERIFIED |
+| State | `src/playlists.ts`, Owner, `src/components/PlaybackSettings.tsx`, UI | App versioned-playlist/opt-in tests; S2 phase recovery, five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write failures; power-loss and other storage failures open |
+| Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases, five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write failures; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
+| Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE recovery after a dropped command ACK, same-ID duplicate handling, sequential four-file queue, four independent concurrent senders ordered by ACK revision, busy-pipe wait without cold launch, owner restart after a lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED`; opt-in SMB loopback positive control succeeds and the same-DACL pipe with remote rejection denies the UNC path; cross-host listener timed out before a client result; mapped/reparse runtime tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during playback and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
@@ -47,10 +47,11 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | V | [Local video](LALIN_PLAY_LOCAL_VIDEO.md) | 30 frontend/6 Rust, MP4/WebM/silent-video captures; physical A/V limits |
 | C | [Minimal Compact](LALIN_PLAY_MINIMAL_COMPACT.md) | 40 frontend/6 Rust, preview/auto-hide/minimum captures; touch/DPI limits |
 | X | [Fullscreen/skip](LALIN_PLAY_FULLSCREEN_SKIP.md) | 48 frontend/7 Rust, native fullscreen/bounds/±10, WebM preview and muted WAV |
-| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 31/31, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; live parity NOT_RUN |
+| I | [Integrated foundation](LALIN_PLAY_STANDALONE_FOUNDATION.md) | Studio 6/6 + Play 23/23 frontend, Play Rust 35 passed/5 ignored with G3 test feature, Studio handoff Rust 6/6, API 10/10; both builds and Rust format checks pass; paired lifecycle and opt-in loopback SMB denial pass; cross-host listener timed out before a client result; mapped/reparse runtime tests compile but are NOT_RUN; full playback parity NOT_VERIFIED |
 
-Earlier evidence remains tied to its own source/binary hash. The final 48/7 suite
-was also rerun before commit; no newer native runtime claim is made by this audit.
+Earlier evidence remains tied to its own source/binary hash. The isolated paired
+G3 run is a separate current runtime result; it does not update the older 48/7
+suite's provenance or establish full Studio/Play playback parity.
 
 ## Product requirements (PRD)
 
@@ -61,10 +62,10 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
-| PLAY-06 | Single-instance plus native handoff | Local sender/receiver, canonical local path and mapped-drive checks, FIFO and ACK/STATE reconciliation implemented; focused cold/warm tests pass | Live process-pair delivery, cross-session/unauthorized connection attempts, ACK-loss interruption, Studio/API exit and audible parity NOT_VERIFIED; CLI forwarding remains absent |
-| PLAY-07 | State, Native | F + S2 journal-phase recovery, selected write-failure fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Process termination, corruption, power-loss durability and remaining storage-failure coverage |
+| PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, lost-ACK QUERY/STATE recovery while the owner is live, same-ID duplicate suppression, sequential four-file ordering, four independent concurrent clients with queue order matching unique increasing ACK revisions, no cold launch while the pipe is occupied, owner restart after lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED`; opt-in SMB loopback positive control succeeds and the protected pipe denies that same UNC path | Cross-host listener timed out before a client result; mapped-drive/reparse runtime tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
+| PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
-| PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Process-crash recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
+| PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
 | PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
 
 ## Video requirements (CR-003)
@@ -104,7 +105,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 
 | SRS family | Standalone mapping | Evidence boundary |
 |---|---|---|
-| FR-16 | PLAY-01..09, V01..10, C01..13 | Normal Studio playback remains on the Studio owner; explicit standalone actions use S3 handoff. Paired delivery/parity remains unverified |
+| FR-16 | PLAY-01..09, V01..10, C01..13 | Normal Studio playback remains on the Studio owner; explicit standalone actions use S3 handoff. Selected paired delivery cases pass; full playback parity remains unverified |
 | FR-16W | PLAY-03/05/06, Owner/TV/Native | Hardware media keys/output loss/SMTC need native standalone proof |
 | FR-17 | PLAY-03/04/07, EQ | Automated graph/preset proof exists; mastering remains separate |
 | FR-18 | TV, ADR-004 retained presentation | TV input unit tests do not certify native gamepad; Compact fullscreen is not TV parity |
@@ -114,7 +115,7 @@ was also rerun before commit; no newer native runtime claim is made by this audi
 
 | Priority | Work | Requirement / next evidence owner |
 |---|---|---|
-| Before split | Relink, actual S2 import/undo and crash recovery, live S3 IPC/ACL/reconciliation/parity | PLAY-06/08/09; implementer + independent test reviewer |
+| Before split | Relink, actual S2 import/undo and crash recovery, remaining S3 security/playback parity | PLAY-06/08/09; implementer + independent test reviewer |
 | Before native acceptance | Paused-resize/end-frame issues, device loss, A/V sync, DPI/multimonitor/touch/gamepad | V05/06, C02/07/12/13; Windows QA with user audible confirmation |
 | Before export | Independent clean checkout and license/notices | ADR S4/S5; source owner + export reviewer |
 | Before release | Installer/uninstaller, signed update A→B, security and state recovery | PLAY-10; release operator + product approval |
@@ -124,10 +125,49 @@ environment and outcome; attach native evidence when required. Adding a row or
 test name alone does not close a gate. This matrix is manually maintained;
 the generated Studio doc graph is not proof of these 33 criteria.
 
+## Separate-logon-session ACL acceptance — 2026-09-30
+
+The ignored Windows test different_logon_session_is_denied_by_the_pipe_acl
+ran on DESKTOP-VETATMQ with nonce 31196.1790723880181644200. The temporary
+standard account DESKTOP-VETATMQ\LalinPipeProbe0930 supplied an interactive
+token with Logon SID S-1-5-5-0-1801444461, different from the owner
+S-1-5-5-0-685957;
+its SessionId was 1, matching the server process. The client opened the authenticated control pipe, then its
+target-pipe open returned Win32 5 (ERROR_ACCESS_DENIED), sending
+control=0;target=5. The server also confirmed the owner logon could still open
+the protected target pipe.
+
+The exact command
+cargo test --offline --manifest-path apps/play-desktop/src-tauri/Cargo.toml --lib different_logon_session_is_denied_by_the_pipe_acl -- --ignored --nocapture --test-threads=1
+passed 1/1 in 129.83 seconds. The client pipe opens ran under the alternate
+interactive token via thread impersonation; a different user SID alone was
+not treated as proof. This closes the separate-logon-session ACL gate for the
+tested local Windows host. Cross-host denial is separately PASS.
+
+Mapped-drive/reparse runtime cases and Studio/API exit during active playback
+remain NOT_RUN; audible playback parity remains NOT_VERIFIED. G3 remains
+PARTIAL, and Studio playback stays enabled.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.18b | 2026-09-30 | beta | Pass same-session distinct-Logon-SID named-pipe ACL probe with denied target and owner positive control; preserve playback parity gates | based on c669602 | Codex |
+| 0.2.17b | 2026-09-30 | beta | Record the separate-logon runas credential failure without claiming pipe ACL evidence | based on 20516d0 | Codex |
+| 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
+| 0.2.15b | 2026-09-27 | beta | Trace compiled cross-host and mapped/reparse probes as NOT_RUN; update integrated test count | based on 3bb4414 | Codex |
+| 0.2.14b | 2026-09-27 | beta | Trace loopback SMB/UNC remote-client denial with remote-route and local-access positive controls; retain separate-session/parity gates | based on a75c540 | Codex |
+| 0.2.13b | 2026-09-27 | beta | Trace retryable undo-snapshot write failure alongside initial journal/history and process-recovery cases | based on e843e1c | Codex |
+| 0.2.12b | 2026-09-27 | beta | Trace initial journal-creation and retryable import-history failure tests; retain power-loss and live-transfer gaps | based on 75c2001 | Codex |
+| 0.2.11b | 2026-09-27 | beta | Trace S2 recovery after child-process termination at five checkpoints; retain power-loss and live-transfer gaps | based on e2bd20a | Codex |
+| 0.2.10b | 2026-09-27 | beta | Trace local Windows ACL denial for a restricted logon token; retain cross-session and audible-parity gates | based on 988a3e4 | Codex |
+| 0.2.9b | 2026-09-27 | beta | Trace paired process-interrupted lost-ACK handling and no replay after owner restart; retain security and audible parity gaps | based on 17a5c96 | Codex |
+| 0.2.8b | 2026-09-27 | beta | Trace paired dropped-ACK reconciliation for a live owner and retain process-interruption/parity gaps | based on cee5e93 | Codex |
+| 0.2.7b | 2026-09-27 | beta | Trace live URL/UNC-shaped receiver rejection with unchanged STATE; preserve session-security and playback parity gaps | based on cee5e93 | Codex |
+| 0.2.6b | 2026-09-27 | beta | Record successful paired G3 rerun against rebuilt final pipe-recovery source; preserve security and parity gaps | based on 1084d5e | Codex |
+| 0.2.5b | 2026-09-27 | beta | Trace the busy-pipe lifecycle fix and concurrent paired-client ACK/queue ordering while retaining remaining G3 gates | based on 1084d5e | Codex |
+| 0.2.4b | 2026-09-27 | beta | Trace live invalid-path receiver rejection as paired G3 evidence and preserve remaining gates | based on b90ffaed | Codex |
+| 0.2.3b | 2026-09-27 | beta | Trace passing isolated paired G3 lifecycle cases separately from remaining security and playback parity gates | based on 9e0cb06 | Codex |
 | 0.2.2b | 2026-09-26 | beta | Reconcile S2 migration and S3 handoff traceability while preserving live parity gates | 7c30ea1 / 235875b | Codex |
 | 0.2.1b | 2026-09-25 | beta | Trace native journal-phase recovery, selected write-failure evidence and open runtime gates | based on 411d2ed | LALIN |
 | 0.2.0b | 2026-09-25 | beta | Trace approved S2 exporter/importer, rollback tests and remaining runtime gates | based on 411d2ed | LALIN |
