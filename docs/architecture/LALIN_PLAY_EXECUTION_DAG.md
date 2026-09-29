@@ -1,7 +1,7 @@
 ---
-version: "0.2.21b"
+version: "0.2.22b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-29T22:56:41+07:00,Codex"
+last_update: "2026-09-29T23:12:46+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -537,6 +537,20 @@ account and firewall rule after the attempt.
 
 G3 remains **PARTIAL**. Preserve Studio playback.
 
+## Execution status — 2026-09-29 local lifecycle and migration rerun
+
+The Play Rust suite with `g3-test-app-data-dir` passed **35/35** with **5
+ignored**. The ignored loopback SMB test was then run separately and passed
+**1/1**, including its positive control. The mapped-drive/reparse runtime
+fixtures, second-host probe and migration child driver remain ignored by design
+or require their fixtures/driver.
+
+The Studio `playback_handoff::tests` suite passed **6/6** with the isolated
+paired Studio–Play process test ignored. Rust format checks passed for both
+Studio and Play. These local results do not close the second-host rejection,
+separate-session, mapped/reparse fixture, or audible playback parity gates.
+Preserve Studio playback.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -551,6 +565,7 @@ G3 remains **PARTIAL**. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.22b | 2026-09-29 | beta | Record current Play native suite, loopback SMB denial, Studio handoff unit tests and format checks; keep cross-host and parity gates open | based on ba5780b | Codex |
 | 0.2.21b | 2026-09-29 | beta | Merge current main transport diagnostics with detailed G3 lifecycle history and record the secure SMB-account retry gate | based on 312ec0b | Codex |
 | 0.2.20b | 2026-09-29 | beta | Record approved temporary standard SMB account as the next G3 gate; require local secure password entry and retain PARTIAL status | based on fe9e3fc | Codex |
 | 0.2.19b | 2026-09-29 | beta | Record TCP reachability followed by pre-pipe SMB authentication failure; keep remote rejection and parity gates open | based on fe9e3fc | Codex |
