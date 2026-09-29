@@ -1,7 +1,7 @@
 ---
-version: "0.2.16b"
+version: "0.2.17b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T14:03:11+07:00,Codex"
+last_update: "2026-09-30T04:27:25+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -125,10 +125,30 @@ environment and outcome; attach native evidence when required. Adding a row or
 test name alone does not close a gate. This matrix is manually maintained;
 the generated Studio doc graph is not proof of these 33 criteria.
 
+## Separate-logon-session ACL acceptance — 2026-09-30
+
+The ignored test `different_logon_session_is_denied_by_the_pipe_acl` started
+on `DESKTOP-VETATMQ` with nonce `56404.1790716718225412900`. The user ran the
+printed `runas` command with `DESKTOP-VETATMQ\pc`; Windows rejected the
+credentials with Win32 1326 before the PowerShell probe connected. The server
+received no result frame and timed out after 180 seconds. The pipe ACL result
+is **NOT_RUN**. A read-only host check found `LalinPipeProbe0930` absent; retry
+after verifying a temporary standard local account on the server host.
+
+The full Rust suite passed **35 tests, 0 failed, 6 ignored**. The opt-in test
+compiled, `cargo fmt -- --check` passed, and the PowerShell client parsed; none
+of those checks is a cross-session ACL runtime result.
+
+Cross-host denial remains separately **PASS** for the tested pair. Mapped-drive
+and reparse runtime tests remain **NOT_RUN**. Studio/API exit during active
+playback and audible parity remain **NOT_VERIFIED**. Keep Studio playback
+enabled.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.17b | 2026-09-30 | beta | Record the separate-logon runas credential failure without claiming pipe ACL evidence | based on 20516d0 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Trace compiled cross-host and mapped/reparse probes as NOT_RUN; update integrated test count | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Trace loopback SMB/UNC remote-client denial with remote-route and local-access positive controls; retain separate-session/parity gates | based on a75c540 | Codex |

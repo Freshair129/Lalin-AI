@@ -1,7 +1,7 @@
 ---
-version: "0.2.20b"
+version: "0.2.21b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-30T03:49:54+07:00,Codex"
+last_update: "2026-09-30T04:27:25+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -45,7 +45,7 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
 | S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, and cross-host pipe denial with positive control (Win32 5) plus same-host access pass; mapped/reparse tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [cross-session ACL RCA](../../.brain/rca/2026-09-30-lalin-play-cross-session-acl-evidence-gap.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, and cross-host pipe denial with positive control (Win32 5) plus same-host access pass; the separate-logon attempt failed at `runas` with Win32 1326 before pipe contact; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
@@ -596,10 +596,37 @@ remain open. Keep ordinary Studio playback enabled.
 | SMB authentication RCA | Added verified resolution and remaining G3 gates |
 | Studio and Play application versions | No change |
 
+## Current separate-logon-session attempt — 2026-09-30
+
+The server test on `DESKTOP-VETATMQ` waited 180 seconds for a separate-logon
+client. `runas /user:DESKTOP-VETATMQ\pc` returned Win32 1326 before launching
+the client; the server received no frame and timed out. This is a credential
+setup failure, not evidence for or against the named-pipe ACL. The previously
+used `LalinPipeProbe0930` account is absent from the host. Create and verify a
+temporary standard local account before retrying. G3 remains PARTIAL; preserve
+ordinary Studio playback until parity is proven.
+
+After pointing the ready command at the dedicated probe account, the Play Rust
+suite passed **35/35** with **6 ignored**. Formatting, test-binary compilation,
+and PowerShell parsing passed. The interactive ACL case is one of the ignored
+tests and remains **NOT_RUN** until the local account launches the client.
+
+## Current documentation version diff — 2026-09-30 separate-logon attempt
+
+| Document | Before → after |
+|---|---|
+| Documentation register | 0.2.20b → 0.2.21b |
+| Execution DAG | 0.2.25b → 0.2.26b |
+| Traceability matrix | 0.2.16b → 0.2.17b |
+| Standalone foundation evidence | 0.2.16b → 0.2.17b |
+| Cross-session ACL RCA | 0.1.0b → 0.1.1b |
+| Studio and Play application versions | No change |
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.21b | 2026-09-30 | beta | Record runas credential failure before pipe contact and retain G3 playback gates | based on 20516d0 | Codex |
 | 0.2.20b | 2026-09-30 | beta | Record cross-host remote-pipe denial with positive control and same-host access; retain playback-parity gates | based on 0c83509 | Codex |
 | 0.2.19b | 2026-09-27 | beta | Record second-host listener timeout without claiming remote rejection; retain mapped/reparse and playback gates | based on ef5f87b | Codex |
 | 0.2.18b | 2026-09-27 | beta | Prepare the second-host named-pipe probe and record mapped/reparse tests as compiled but NOT_RUN | based on 3bb4414 | Codex |

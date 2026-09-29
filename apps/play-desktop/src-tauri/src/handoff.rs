@@ -1423,6 +1423,157 @@ mod windows_pipe {
             drop(target_pipe);
         }
 
+        #[test]
+        #[ignore = "requires a second Windows logon session running the repository PowerShell probe"]
+        fn different_logon_session_is_denied_by_the_pipe_acl() {
+            let server_sid = current_logon_sid().expect("owner logon SID should be available");
+            let nonce = format!(
+                "{}.{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            );
+            let test_pipe_name = |role: &str| {
+                format!("{PIPE_NAME_PREFIX}.cross-session-{nonce}.{role}")
+                    .encode_utf16()
+                    .chain([0])
+                    .collect::<Vec<_>>()
+            };
+            let mode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
+            let control_pipe =
+                create_test_pipe_with_dacl(&test_pipe_name("control"), "D:P(A;;GA;;;AU)", mode);
+            let target_name = test_pipe_name("target");
+            let target_pipe = create_test_pipe_with_dacl(
+                &target_name,
+                &sddl_for_logon_sid(&server_sid),
+                server_pipe_mode(),
+            );
+            let result_pipe =
+                create_test_pipe_with_dacl(&test_pipe_name("result"), "D:P(A;;GA;;;AU)", mode);
+
+            let host = std::env::var("COMPUTERNAME")
+                .expect("Windows should provide the named-pipe server host name");
+            let account = format!(
+                "{}\\{}",
+                std::env::var("USERDOMAIN").unwrap_or_else(|_| ".".into()),
+                std::env::var("USERNAME").expect("Windows should provide the current user name")
+            );
+            let probe_account = format!("{host}\\LalinPipeProbe0930");
+            let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("..")
+                .join("..")
+                .join("tools")
+                .join("verify")
+                .join("lalin-play-cross-session-pipe-client.ps1")
+                .canonicalize()
+                .expect("cross-session client probe script should exist");
+            let script_path = script.display().to_string();
+            let script_path = script_path.strip_prefix(r"\\?\").unwrap_or(&script_path);
+            println!(
+                "CROSS_SESSION_PROBE_READY host={host} owner_user={account} probe_user={probe_account} nonce={nonce}"
+            );
+            println!(
+                "Run in a separate logon session: runas /user:{probe_account} \"powershell.exe -NoProfile -ExecutionPolicy Bypass -File {} -Nonce {nonce}\"",
+                script_path
+            );
+
+            let (result_tx, result_rx) = std::sync::mpsc::sync_channel(1);
+            let server_sid_for_thread = server_sid.clone();
+            let server = std::thread::spawn(move || {
+                let result = (|| -> Result<String, &'static str> {
+                    let mut control_pipe = control_pipe;
+                    let control_raw = control_pipe.as_raw_handle();
+                    let connected =
+                        unsafe { ConnectNamedPipe(control_raw.cast(), null_mut::<OVERLAPPED>()) };
+                    if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                        return Err("cross-session positive-control pipe did not connect");
+                    }
+                    let mut marker = [0u8; 1];
+                    if control_pipe.read_exact(&mut marker).is_err() || marker != [b'C'] {
+                        return Err("cross-session positive-control marker is invalid");
+                    }
+
+                    let mut client_session = 0u32;
+                    let mut server_session = 0u32;
+                    if unsafe {
+                        GetNamedPipeClientSessionId(control_raw.cast(), &mut client_session)
+                    } == 0
+                        || unsafe {
+                            GetNamedPipeServerSessionId(control_raw.cast(), &mut server_session)
+                        } == 0
+                        || client_session != server_session
+                    {
+                        return Err("probe must use a different logon in the same Windows session");
+                    }
+                    let client_sid = client_logon_sid(control_raw)
+                        .map_err(|_| "could not read the probe client's logon SID")?;
+                    if client_sid == server_sid_for_thread {
+                        return Err(
+                            "probe reused the owner logon SID instead of a new logon session",
+                        );
+                    }
+
+                    let mut result_pipe = result_pipe;
+                    let result_raw = result_pipe.as_raw_handle();
+                    let connected =
+                        unsafe { ConnectNamedPipe(result_raw.cast(), null_mut::<OVERLAPPED>()) };
+                    if connected == 0 && unsafe { GetLastError() } != ERROR_PIPE_CONNECTED {
+                        return Err("cross-session result pipe did not connect");
+                    }
+                    let mut payload = [0u8; 64];
+                    if result_pipe.read_exact(&mut payload).is_err() {
+                        return Err("cross-session result payload was incomplete");
+                    }
+                    Ok(String::from_utf8_lossy(&payload)
+                        .trim_matches('\0')
+                        .to_string())
+                })();
+                let _ = result_tx.send(result);
+            });
+
+            let result = result_rx
+                .recv_timeout(Duration::from_secs(180))
+                .expect("run the cross-session PowerShell client before the 180-second deadline")
+                .expect("cross-session positive-control and result pipes should connect");
+            assert_eq!(result, "control=0;target=5");
+            server.join().unwrap();
+
+            let local_client = connect_test_client(&target_name);
+            let target_raw = target_pipe.as_raw_handle();
+            let connected =
+                unsafe { ConnectNamedPipe(target_raw.cast(), null_mut::<OVERLAPPED>()) };
+            assert!(
+                connected != 0 || unsafe { GetLastError() } == ERROR_PIPE_CONNECTED,
+                "the owner's logon session should still open the protected target pipe"
+            );
+            drop(local_client);
+            drop(target_pipe);
+        }
+
+        fn client_logon_sid(pipe: HANDLE) -> Result<String, String> {
+            if unsafe { ImpersonateNamedPipeClient(pipe) } == 0 {
+                return Err("unable to impersonate the connected pipe client".into());
+            }
+            let mut token: HANDLE = null_mut();
+            let opened =
+                unsafe { OpenThreadToken(GetCurrentThread(), TOKEN_ACCESS, 1, &mut token) } != 0;
+            let reverted = unsafe { RevertToSelf() } != 0;
+            if !reverted {
+                return Err("unable to revert from the connected pipe client".into());
+            }
+            if !opened {
+                return Err("unable to inspect the connected pipe client token".into());
+            }
+            let sid = logon_sid_from_token(token);
+            unsafe {
+                CloseHandle(token);
+            }
+            sid
+        }
+
         fn create_test_pipe_with_dacl(name: &[u16], sddl: &str, mode: u32) -> File {
             let sddl = sddl.encode_utf16().chain([0]).collect::<Vec<_>>();
             let mut descriptor = null_mut();

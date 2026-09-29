@@ -1,7 +1,7 @@
 ---
-version: "0.2.16b"
+version: "0.2.17b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-27T14:03:11+07:00,Codex"
+last_update: "2026-09-30T04:27:25+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -354,10 +354,24 @@ power-loss durability. Other untested native write failures, live Studio-to-Play
 transfer, Studio/API exit during playback and audible parity remain open.
 Preserve Studio playback.
 
+## Separate-logon-session ACL acceptance attempt — 2026-09-30
+
+The ignored Windows probe waited for a client under a different logon SID in
+the same desktop session. `runas /user:DESKTOP-VETATMQ\pc` returned Win32 1326
+before the client script opened the control pipe. The server received no
+result and timed out after 180 seconds; this is not ACL evidence. The
+`LalinPipeProbe0930` local account is absent. Retry only after creating and
+verifying a temporary standard account on the server host. The full Play Rust
+suite passed **35/35** with **6 ignored**; formatting, test-binary compilation
+and PowerShell parsing passed. Cross-host pipe denial passed separately;
+mapped/reparse runtime cases, Studio/API exit during active playback and audible
+parity remain open. Preserve Studio playback.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.17b | 2026-09-30 | beta | Record the runas credential failure and keep separate-logon ACL acceptance open | based on 20516d0 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Prepare a second-host named-pipe probe and record unrun mapped/reparse runtime tests | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Record loopback SMB/UNC remote-client denial with positive controls; retain separate-session and playback gates | based on a75c540 | Codex |

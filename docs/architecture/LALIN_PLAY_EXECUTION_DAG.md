@@ -1,7 +1,7 @@
 ---
-version: "0.2.25b"
+version: "0.2.26b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-30T03:49:54+07:00,Codex"
+last_update: "2026-09-30T04:27:25+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -591,6 +591,26 @@ standard account on PC-1 from an administrator shell, then verify it with
 Remove the temporary account and scoped firewall rule after the paired test.
 Preserve Studio playback.
 
+## Execution status — 2026-09-30 G3 different-logon-session probe attempt
+
+The ignored Windows test `different_logon_session_is_denied_by_the_pipe_acl`
+started on `DESKTOP-VETATMQ` with nonce
+`56404.1790716718225412900` and waited 180 seconds for its client. The client
+was launched with `runas /user:DESKTOP-VETATMQ\pc`; Windows returned `1326`
+(`The user name or password is incorrect`) before the PowerShell probe started.
+The server received no result frame and the test timed out. This attempt did not
+open a pipe and provides no ACL result.
+
+A read-only check on the host found that `LalinPipeProbe0930` is absent. Retry
+only after creating and verifying a temporary standard local account on the
+server host, then use that account with `runas` in the same desktop session.
+The ignored test now prints that probe account in its ready command. The full
+Play Rust suite passed **35 tests, 0 failed, 6 ignored**; the cross-session
+runtime test remains ignored until the paired account/client run. `cargo fmt
+-- --check`, test-binary compilation and PowerShell parsing passed. G3 remains
+PARTIAL; mapped-drive/reparse runtime cases, Studio/API exit during active
+playback and audible parity remain open. Preserve Studio playback.
+
 ## Definition of done for this execution
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
@@ -605,6 +625,7 @@ Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.26b | 2026-09-30 | beta | Record separate-logon probe blocked by local runas credentials; require verified temporary standard account and keep G3 partial | based on 20516d0 | Codex |
 | 0.2.25b | 2026-09-30 | beta | Pass the paired cross-host named-pipe denial probe with positive control and local-access check; retain other G3 gates | based on 0c83509 | Codex |
 | 0.2.24b | 2026-09-30 | beta | Record repeated SMB login failure and verify the temporary probe account is absent on the server; retain G3 PARTIAL | based on 6671cbc | Codex |
 | 0.2.23b | 2026-09-30 | beta | Record current TCP reachability and repeated pre-pipe SMB authentication failure; retain G3 PARTIAL | based on 4981958 | Codex |
