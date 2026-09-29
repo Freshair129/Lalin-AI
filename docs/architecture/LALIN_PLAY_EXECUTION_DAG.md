@@ -1,7 +1,7 @@
 ---
-version: "0.2.18b"
+version: "0.2.21b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-27T14:03:11+07:00,Codex"
+last_update: "2026-09-29T22:56:41+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -494,6 +494,26 @@ Separate interactive logon session, mapped-drive/reparse runtime cases,
 Studio/API exit during playback and audible parity remain open. Preserve Studio
 playback.
 
+## Execution status — 2026-09-28 G3 remote probe conversion failure
+
+The second-host probe stopped before pipe contact because PowerShell could not
+convert the signed value `-1073741824` to `UInt32` for the desired-access mask.
+No `control=connected` result or remote-rejection evidence was produced. The
+client was corrected to use `$genericReadWrite = [uint32]3221225472`.
+
+## Execution status — 2026-09-29 G3 SMB ingress diagnostic
+
+The first corrected cross-host retry failed before `control=connected` with
+“The specified network name is no longer available.” The client resolved
+`DESKTOP-VETATMQ` to `192.168.1.100`, while TCP/445 from `192.168.1.135` failed.
+The server's `LanmanServer` service and TCP/445 listener were active, but the
+Private profile had inbound default Block and no enabled ActiveStore TCP/445
+allow rule. This identified a configured server firewall blocker without
+excluding external routing or client isolation. The user later added the
+scoped rule for the server address, client address and Private profile; the
+rule was subsequently verified enabled and enforced, and the client passed
+TCP/445 before the authenticated retry below.
+
 ## Execution status — 2026-09-29 G3 authenticated transport retry
 
 The server-side rule scoped to TCP/445, local `192.168.1.100`, remote
@@ -510,10 +530,10 @@ creation must run locally on `DESKTOP-VETATMQ` from an administrator PowerShell.
 
 Risk classification: **HIGH**, because this execution validates a security
 boundary using a temporary remote identity and a scoped firewall rule. This
-retry made no product-source changes. Once the account exists, use `runas /netonly` on the
-client so its password is entered only at the local prompt, then repeat the
-server test with a fresh nonce. Remove the temporary account and firewall rule
-after the attempt.
+retry made no product-source changes. Once the account exists, use
+`runas /netonly` on the client so its password is entered only at the local
+prompt, then repeat the server test with a fresh nonce. Remove the temporary
+account and firewall rule after the attempt.
 
 G3 remains **PARTIAL**. Preserve Studio playback.
 
@@ -531,6 +551,7 @@ G3 remains **PARTIAL**. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.21b | 2026-09-29 | beta | Merge current main transport diagnostics with detailed G3 lifecycle history and record the secure SMB-account retry gate | based on 312ec0b | Codex |
 | 0.2.20b | 2026-09-29 | beta | Record approved temporary standard SMB account as the next G3 gate; require local secure password entry and retain PARTIAL status | based on fe9e3fc | Codex |
 | 0.2.19b | 2026-09-29 | beta | Record TCP reachability followed by pre-pipe SMB authentication failure; keep remote rejection and parity gates open | based on fe9e3fc | Codex |
 | 0.2.18b | 2026-09-27 | beta | Record timed-out cross-host listener without claiming remote rejection; retain mapped/reparse and playback gates | based on ef5f87b | Codex |
