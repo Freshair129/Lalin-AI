@@ -60,6 +60,14 @@ ProgressFn = Callable[["Job", float, str], Awaitable[None]]
 JobTask = Callable[["Job", ProgressFn], Awaitable[dict]]
 
 
+class JobTaskError(Exception):
+    """Task failure that still has a structured result for the job owner."""
+
+    def __init__(self, message: str, result: dict) -> None:
+        super().__init__(message)
+        self.result = result
+
+
 class JobManager:
     def __init__(
         self,
@@ -201,6 +209,11 @@ class JobManager:
             job.progress = 1.0
             job.status = "done"
             job.message = "เสร็จสมบูรณ์"
+        except JobTaskError as e:
+            job.result = e.result
+            job.status = "error"
+            job.error = str(e)
+            job.message = f"ผิดพลาด: {e}"
         except Exception as e:  # noqa: BLE001
             job.status = "error"
             job.error = str(e)

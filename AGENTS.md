@@ -150,6 +150,7 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-10-15 | beta | Add opt-in per-job TTS GPU model release receipt for issue #26 | based on 64212b1 | LALIN |
 | 0.2.2b | 2026-09-20 | beta | Link complete Play document register and clarify candidate execution boundaries | based on f5a6681 | LALIN |
 | 0.2.1b | 2026-09-20 | beta | Link approved fullscreen/relative-seek evidence and clarify Full distinction | based on 8429010 | LALIN |
 | 0.2.0b | 2026-09-20 | beta | Add approved minimal Compact and preview-only decoder boundary with native evidence | based on 8429010 | LALIN |

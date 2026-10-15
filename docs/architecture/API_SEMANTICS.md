@@ -59,6 +59,25 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 - `resource` เป็น contract จาก call site (`cpu`/`gpu`) — GPU FIFO concurrency 1; CPU job ไม่รอ GPU lock
 - GPU job ที่ free VRAM ต่ำกว่า configured measured threshold คงสถานะ `queued` พร้อมข้อความ `รอ GPU: VRAM ว่างยังไม่พอ`
 
+## tts.py — ขอคืน GPU model ต่อ job ([FR-02](../product/SRS.md))
+
+- `POST /tts` เพิ่ม `release_gpu_model` (boolean, default `false`) โดย response ทันทีคงเป็น `{job_id}`;
+  ผลของ `GET /jobs/{id}` และ WebSocket snapshot เพิ่ม `result.gpu_release` หลัง TTS task จัดการเสร็จ
+- `result` สำเร็จมี `{output: <absolute path>, gpu_release: {requested, model, status, reason}}`;
+  `output` ใช้ชื่อไฟล์ท้าย path กับ `GET /files/download/{name}` หรือ `/files/export/{name}`
+- `model` คือ engine ที่ใช้จริง (`f5` หรือ `xtts`; ภาษาไทยบังคับ `f5` เช่นเดิม) และ `status` เป็น
+  `not_requested`, `not_applicable`, `preexisting_model_retained`, `released` หรือ `unknown`.
+  เมื่อ TTS ล้มเหลว job เป็น `error` แต่ยังมี `result.output=null` และ receipt เพื่อให้ caller ตรวจผล cleanup ได้
+- เมื่อเปิด flag งานจะตรวจ cache ของ engine ที่เลือก **หลังได้ GPU FIFO lock และก่อนสังเคราะห์**.
+  cache ที่มีอยู่ก่อนงานจะคงไว้ (`preexisting_model_retained`); ถ้าเครื่องตั้ง TTS เป็น CPU จะตอบ
+  `not_applicable` โดยไม่ล้าง cache
+- โมเดลที่งานนี้โหลดเองจะถูกถอดเฉพาะ singleton ของ engine นั้น แล้ว synchronize, collect, empty CUDA cache,
+  synchronize และตรวจ cache กับ live CUDA allocation เทียบ baseline ก่อนเริ่มงาน. `released` หมายถึงตรวจผ่าน;
+  ถ้างานไม่สร้าง cache จะรายงาน `not_applicable` ก็ต่อเมื่อ cleanup และตรวจ allocation ผ่านแบบเดียวกัน;
+  อุปกรณ์/ค่า baseline ใช้ไม่ได้หรือการตรวจไม่ผ่านจะคืน `unknown` พร้อม `reason` ที่เป็นรหัสสั้น
+- job จะเปลี่ยนเป็น terminal หลัง receipt ถูกกำหนดแล้ว. การตรวจนี้ครอบคลุมโมเดลที่ Lalin cache ไว้และ
+  allocation ของ PyTorch ใน process เดียวกัน; มันไม่ได้เป็นการยืนยันการปล่อย VRAM ของ process อื่น
+
 ## voices.py — คลังเสียง ([FR-01](../product/SRS.md))
 
 - **consent-first:** `POST /voices` ที่ `consent=false` ตอบ `422` — ห้ามสร้าง voice profile โดยไม่ยืนยันสิทธิ์

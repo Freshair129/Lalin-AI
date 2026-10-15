@@ -10,6 +10,8 @@
 # @req NFR-01 — เป้า inference <= 15 วินาที/ประโยคบน GPU (NFR-01.2)
 from __future__ import annotations
 
+import gc
+import importlib
 from pathlib import Path
 
 from ..config import get_settings
@@ -17,6 +19,175 @@ from ..runtime_devices import resolve_tts_runtime
 
 _f5 = None
 _xtts = None
+
+
+def selected_engine(language: str, engine: str | None = None) -> str:
+    """Return the engine the synthesis path will actually use."""
+    selected = engine or get_settings().tts_engine
+    if language == "th" and selected == "xtts":
+        return "f5"
+    return selected
+
+
+def has_cached_model(engine: str) -> bool:
+    if engine == "f5":
+        return _f5 is not None
+    if engine == "xtts":
+        return _xtts is not None
+    raise ValueError(f"unsupported TTS engine: {engine}")
+
+
+def cached_model_identity(engine: str) -> int | None:
+    """Return an identity token without keeping another strong model reference."""
+    if engine == "f5":
+        model = _f5
+    elif engine == "xtts":
+        model = _xtts
+    else:
+        raise ValueError(f"unsupported TTS engine: {engine}")
+    return id(model) if model is not None else None
+
+
+def cuda_memory_allocated(*, torch_module=None) -> int | None:
+    """Synchronize and snapshot current-device live allocations for release checks."""
+    if torch_module is None:
+        try:
+            torch_module = importlib.import_module("torch")
+        except ImportError:
+            return None
+    cuda = getattr(torch_module, "cuda", None)
+    if cuda is None or not cuda.is_available():
+        return None
+    cuda.synchronize()
+    return int(cuda.memory_allocated())
+
+
+def verify_no_model_loaded_by_job(
+    engine: str,
+    baseline_allocated: int | None,
+    *,
+    torch_module=None,
+    collect=gc.collect,
+) -> dict[str, str | None]:
+    """Verify a failed/short-circuited load left neither cache nor new CUDA allocations."""
+    if has_cached_model(engine):
+        return {"status": "unknown", "reason": "model_cache_still_populated"}
+
+    cuda = None
+    cuda_ready = False
+    verification_error = None
+    if torch_module is None:
+        try:
+            torch_module = importlib.import_module("torch")
+        except ImportError:
+            verification_error = "cuda_runtime_unavailable"
+
+    if torch_module is not None:
+        try:
+            cuda = getattr(torch_module, "cuda", None)
+            cuda_ready = cuda is not None and bool(cuda.is_available())
+            if not cuda_ready:
+                verification_error = "cuda_runtime_unavailable"
+            else:
+                cuda.synchronize()
+        except Exception:  # noqa: BLE001
+            verification_error = "cuda_release_verification_failed"
+
+    try:
+        collect()
+    except Exception:  # noqa: BLE001
+        verification_error = verification_error or "cuda_release_verification_failed"
+
+    if cuda_ready:
+        try:
+            cuda.empty_cache()
+            cuda.synchronize()
+        except Exception:  # noqa: BLE001
+            verification_error = verification_error or "cuda_release_verification_failed"
+
+    try:
+        if has_cached_model(engine):
+            return {"status": "unknown", "reason": "model_cache_still_populated"}
+        if verification_error is not None:
+            return {"status": "unknown", "reason": verification_error}
+        if baseline_allocated is None:
+            return {"status": "unknown", "reason": "cuda_baseline_unavailable"}
+        if int(cuda.memory_allocated()) > baseline_allocated:
+            return {"status": "unknown", "reason": "cuda_allocations_above_baseline"}
+        return {"status": "not_applicable", "reason": "model_not_loaded_by_job"}
+    except Exception:  # noqa: BLE001
+        return {"status": "unknown", "reason": "cuda_release_verification_failed"}
+
+
+def release_cached_model(
+    engine: str,
+    expected_identity: int,
+    baseline_allocated: int | None,
+    *,
+    torch_module=None,
+    collect=gc.collect,
+) -> dict[str, str | None]:
+    """Drop only the expected Lalin cache entry and verify CUDA live memory."""
+    global _f5, _xtts
+
+    if cached_model_identity(engine) != expected_identity:
+        return {"status": "unknown", "reason": "model_cache_changed"}
+
+    cuda = None
+    cuda_ready = False
+    verification_error = None
+    if torch_module is None:
+        try:
+            torch_module = importlib.import_module("torch")
+        except ImportError:
+            verification_error = "cuda_runtime_unavailable"
+
+    if torch_module is not None:
+        try:
+            cuda = getattr(torch_module, "cuda", None)
+            cuda_ready = cuda is not None and bool(cuda.is_available())
+            if not cuda_ready:
+                verification_error = "cuda_runtime_unavailable"
+            else:
+                cuda.synchronize()
+        except Exception:  # noqa: BLE001
+            verification_error = "cuda_release_verification_failed"
+
+    # Check identity again immediately before clearing in case another caller
+    # changed the module cache while CUDA synchronization ran.
+    if cached_model_identity(engine) != expected_identity:
+        return {"status": "unknown", "reason": "model_cache_changed"}
+    if engine == "f5":
+        _f5 = None
+    elif engine == "xtts":
+        _xtts = None
+    else:
+        return {"status": "unknown", "reason": "unsupported_engine"}
+
+    try:
+        collect()
+    except Exception:  # noqa: BLE001
+        verification_error = verification_error or "cuda_release_verification_failed"
+
+    if cuda_ready:
+        try:
+            cuda.empty_cache()
+            cuda.synchronize()
+        except Exception:  # noqa: BLE001
+            verification_error = verification_error or "cuda_release_verification_failed"
+
+    try:
+        if has_cached_model(engine):
+            return {"status": "unknown", "reason": "model_cache_still_populated"}
+        if verification_error is not None:
+            return {"status": "unknown", "reason": verification_error}
+        if baseline_allocated is None:
+            return {"status": "unknown", "reason": "cuda_baseline_unavailable"}
+        if int(cuda.memory_allocated()) > baseline_allocated:
+            return {"status": "unknown", "reason": "cuda_allocations_above_baseline"}
+        return {"status": "released", "reason": None}
+    except Exception:  # noqa: BLE001
+        return {"status": "unknown", "reason": "cuda_release_verification_failed"}
 
 
 # ════════════════════════════════════════════════════════════
@@ -119,11 +290,7 @@ def synthesize(
     ref_audio = ตัวอย่างเสียงที่จะโคลน (สำคัญที่สุด, 6-15 วินาทีกำลังดี)
     """
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-    engine = engine or get_settings().tts_engine
-
-    # ไทย → บังคับใช้ F5 เสมอ (XTTS ไม่รองรับไทย)
-    if language == "th" and engine == "xtts":
-        engine = "f5"
+    engine = selected_engine(language, engine)
 
     if engine == "f5":
         return _f5_synth(text, ref_audio, ref_text, out_path, speed)

@@ -40,6 +40,10 @@ class TTSRequest(BaseModel):
     )
     language: str = "th"  # th | en
     speed: float = 1.0
+    release_gpu_model: bool = Field(
+        default=False,
+        description="ล้างโมเดล TTS ที่งานนี้โหลดเองหลังสังเคราะห์ และคืน receipt ในผล job",
+    )
 
 
 # ── Dubbing ─────────────────────────────────────────────────
