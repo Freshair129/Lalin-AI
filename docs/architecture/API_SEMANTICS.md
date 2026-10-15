@@ -102,7 +102,8 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 - CPU/RAM มาจาก `psutil` ถ้าติดตั้ง; ไม่มีก็ `null`
 - GPU/VRAM อ่านจาก `sys.modules.get("torch")` — **ไม่ cold-import torch** จาก poll ทุกไม่กี่วินาที · ก่อน audio pipeline โหลด torch ค่าเหล่านี้จึงเป็น `null` โดยตั้งใจ
 - `runtime.devices.tts/asr` แยก `requested` จาก `effective`; ก่อน pipeline resolve ค่า effective เป็น `null` และ fallback CPU รายงาน `reason=cuda_unavailable` (ASR CPU ใช้ `int8`)
-- `activity` = job **ล่าสุด**ที่ยัง `queued`/`running` (สแกนย้อนจากท้ายรายการ) — ไม่มีงานค้างก็เป็น `null` ทุก field
+- `activity` = job **ล่าสุด**ที่ยัง `queued`/`running` (สแกนย้อนจากท้ายรายการ) — ไม่มีงานค้างจะได้
+  `state="idle"`; `job_id`, `label` และ `progress` เป็น `null` เพื่อให้ client แยก idle จาก status ที่อ่านไม่ได้
 
 ## endpoint ที่เพิ่มในของเดิม
 

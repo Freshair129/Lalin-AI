@@ -85,7 +85,7 @@ async def runtime_status(request: Request):
         "activity": {
             "job_id": active.id if active else None,
             "label": active.message or active.kind if active else None,
-            "state": active.status if active else None,
+            "state": active.status if active else "idle",
             "progress": active.progress if active else None,
         },
     }
