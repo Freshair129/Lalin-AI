@@ -72,8 +72,11 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
   cache ที่มีอยู่ก่อนงานจะคงไว้ (`preexisting_model_retained`); ถ้าเครื่องตั้ง TTS เป็น CPU จะตอบ
   `not_applicable` โดยไม่ล้าง cache
 - โมเดลที่งานนี้โหลดเองจะถูกถอดเฉพาะ singleton ของ engine นั้น แล้ว synchronize, collect, empty CUDA cache,
-  synchronize และตรวจ cache กับ live CUDA allocation เทียบ baseline ก่อนเริ่มงาน. `released` หมายถึงตรวจผ่าน;
-  ถ้างานไม่สร้าง cache จะรายงาน `not_applicable` ก็ต่อเมื่อ cleanup และตรวจ allocation ผ่านแบบเดียวกัน;
+  synchronize และตรวจ cache กับ live CUDA allocation เทียบ baseline ก่อนเริ่มงาน. `released` หมายถึงถอด
+  singleton แล้วและ allocation เหลือไม่เกิน 128 MiB เหนือ baseline เพื่อรองรับ CUDA runtime allocation
+  ขนาดเล็ก; receipt ระบุ `cuda_runtime_residual_within_tolerance` เมื่อใช้ขอบเขตนี้. ผู้เรียกยังต้อง
+  ตรวจ free VRAM จาก GPU coordinator ก่อนส่งงานถัดไป. ถ้างานไม่สร้าง cache จะรายงาน `not_applicable`
+  ก็ต่อเมื่อ cleanup และตรวจ allocation ผ่านแบบเดียวกัน;
   อุปกรณ์/ค่า baseline ใช้ไม่ได้หรือการตรวจไม่ผ่านจะคืน `unknown` พร้อม `reason` ที่เป็นรหัสสั้น
 - job จะเปลี่ยนเป็น terminal หลัง receipt ถูกกำหนดแล้ว. การตรวจนี้ครอบคลุมโมเดลที่ Lalin cache ไว้และ
   allocation ของ PyTorch ใน process เดียวกัน; มันไม่ได้เป็นการยืนยันการปล่อย VRAM ของ process อื่น

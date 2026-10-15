@@ -150,6 +150,7 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-10-15 | beta | Accept bounded CUDA allocator residual after releasing the TTS singleton; document coordinator verification and validate against a real local F5-TTS GPU job | based on f918b09 | LALIN |
 | 0.2.3b | 2026-10-15 | beta | Add opt-in TTS GPU release receipts and explicit idle runtime status for issue #26 | based on 64212b1 | LALIN |
 | 0.2.2b | 2026-09-20 | beta | Link complete Play document register and clarify candidate execution boundaries | based on f5a6681 | LALIN |
 | 0.2.1b | 2026-09-20 | beta | Link approved fullscreen/relative-seek evidence and clarify Full distinction | based on 8429010 | LALIN |

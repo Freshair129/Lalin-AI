@@ -19,6 +19,7 @@ from ..runtime_devices import resolve_tts_runtime
 
 _f5 = None
 _xtts = None
+CUDA_RELEASE_RESIDUAL_TOLERANCE_BYTES = 128 * 1024 * 1024
 
 
 def selected_engine(language: str, engine: str | None = None) -> str:
@@ -112,7 +113,10 @@ def verify_no_model_loaded_by_job(
             return {"status": "unknown", "reason": verification_error}
         if baseline_allocated is None:
             return {"status": "unknown", "reason": "cuda_baseline_unavailable"}
-        if int(cuda.memory_allocated()) > baseline_allocated:
+        if (
+            int(cuda.memory_allocated())
+            > baseline_allocated + CUDA_RELEASE_RESIDUAL_TOLERANCE_BYTES
+        ):
             return {"status": "unknown", "reason": "cuda_allocations_above_baseline"}
         return {"status": "not_applicable", "reason": "model_not_loaded_by_job"}
     except Exception:  # noqa: BLE001
@@ -183,9 +187,12 @@ def release_cached_model(
             return {"status": "unknown", "reason": verification_error}
         if baseline_allocated is None:
             return {"status": "unknown", "reason": "cuda_baseline_unavailable"}
-        if int(cuda.memory_allocated()) > baseline_allocated:
+        allocated = int(cuda.memory_allocated())
+        residual = allocated - baseline_allocated
+        if residual > CUDA_RELEASE_RESIDUAL_TOLERANCE_BYTES:
             return {"status": "unknown", "reason": "cuda_allocations_above_baseline"}
-        return {"status": "released", "reason": None}
+        reason = "cuda_runtime_residual_within_tolerance" if residual > 0 else None
+        return {"status": "released", "reason": reason}
     except Exception:  # noqa: BLE001
         return {"status": "unknown", "reason": "cuda_release_verification_failed"}
 

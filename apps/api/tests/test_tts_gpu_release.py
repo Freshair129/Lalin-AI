@@ -269,7 +269,7 @@ def test_release_cached_model_reports_unknown_when_cuda_memory_stays_above_basel
             pass
 
         def memory_allocated(self):
-            return 101
+            return 100 + tts.CUDA_RELEASE_RESIDUAL_TOLERANCE_BYTES + 1
 
     class FakeTorch:
         cuda = FakeCuda()
@@ -285,6 +285,38 @@ def test_release_cached_model_reports_unknown_when_cuda_memory_stays_above_basel
         "reason": "cuda_allocations_above_baseline",
     }
     assert tts._xtts is None
+
+
+def test_release_cached_model_accepts_small_cuda_runtime_residual(monkeypatch):
+    from app.pipelines import tts
+
+    class FakeCuda:
+        def is_available(self):
+            return True
+
+        def synchronize(self):
+            pass
+
+        def empty_cache(self):
+            pass
+
+        def memory_allocated(self):
+            return 100 + 64 * 1024 * 1024
+
+    class FakeTorch:
+        cuda = FakeCuda()
+
+    monkeypatch.setattr(tts, "_f5", object())
+    identity = tts.cached_model_identity("f5")
+    receipt = tts.release_cached_model(
+        "f5", identity, 100, torch_module=FakeTorch(), collect=lambda: None
+    )
+
+    assert receipt == {
+        "status": "released",
+        "reason": "cuda_runtime_residual_within_tolerance",
+    }
+    assert tts._f5 is None
 
 
 def test_release_cached_model_drops_owned_singleton_even_if_cuda_is_unavailable(
@@ -355,7 +387,7 @@ def test_no_model_loaded_requires_cuda_cleanup_and_baseline_verification(monkeyp
         "sync", "collect", "empty_cache", "sync", "memory_allocated"
     ]
 
-    torch.cuda.allocated = 101
+    torch.cuda.allocated = 100 + tts.CUDA_RELEASE_RESIDUAL_TOLERANCE_BYTES + 1
     receipt = tts.verify_no_model_loaded_by_job(
         "f5", 100, torch_module=torch, collect=collect
     )
