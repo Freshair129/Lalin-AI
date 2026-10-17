@@ -5,7 +5,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 const MAX_MIGRATION_BYTES: usize = 16 * 1024 * 1024;
 const MAX_JOURNAL_BYTES: u64 = 72 * 1024 * 1024;
@@ -207,7 +207,7 @@ pub struct UndoStatus {
 }
 
 fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let directory = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let directory = crate::play_app_data_dir(app)?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     Ok(directory)
 }
@@ -892,15 +892,18 @@ pub fn recover_play_migration(
     app: AppHandle,
     state: tauri::State<'_, LibraryState>,
 ) -> Result<Option<MigrationRecovery>, String> {
+    crate::g3_test_trace(&app, "migration_recovery_invoked");
     let directory = data_dir(&app)?;
     let mut current = state.0.lock().map_err(|e| e.to_string())?;
     let Some(mut journal) = load_journal(&directory)? else {
+        crate::g3_test_trace(&app, "migration_recovery_complete_no_journal");
         return Ok(None);
     };
     if journal.phase == Phase::Acknowledged {
         finalize_acknowledged_journal(&directory, &journal)?;
         fs::remove_file(journal_path(&directory))
             .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+        crate::g3_test_trace(&app, "migration_recovery_complete_acknowledged");
         return Ok(None);
     }
     let committed = journal.phase == Phase::Committed;
@@ -908,6 +911,7 @@ pub fn recover_play_migration(
     if committed && journal.action == TransactionAction::Import {
         record_import_commit(&directory, &journal)?;
     }
+    crate::g3_test_trace(&app, "migration_recovery_complete");
     Ok(Some(recovery_from(journal, committed)))
 }
 
@@ -1133,6 +1137,7 @@ fn valid_iso_timestamp(value: &str) -> bool {
 mod tests {
     use super::*;
     use std::io::Write;
+    use std::time::Duration;
 
     fn fixture_envelope(path: &Path) -> MigrationEnvelope {
         let path_text = path.to_string_lossy().into_owned();
@@ -1504,6 +1509,118 @@ mod tests {
     }
 
     #[test]
+    fn migration_recovers_after_child_process_termination() {
+        let (old, new) = fixture_libraries();
+        let cases = [
+            ("prepared", old.clone()),
+            ("catalog_written", old.clone()),
+            ("applied", old.clone()),
+            ("committed", new.clone()),
+            ("acknowledged", new),
+        ];
+
+        for (crash_point, expected_library) in cases {
+            let directory = tempfile::tempdir().unwrap();
+            let ready = directory.path().join("process-ready");
+            let mut child = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--ignored",
+                    "--exact",
+                    "migration::tests::migration_process_restart_driver",
+                    "--nocapture",
+                ])
+                .env("LALIN_PLAY_MIGRATION_CRASH_DIR", directory.path())
+                .env("LALIN_PLAY_MIGRATION_CRASH_POINT", crash_point)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+                .unwrap();
+            let termination = (|| -> Result<(), String> {
+                let deadline = std::time::Instant::now() + Duration::from_secs(10);
+                while !ready.exists() {
+                    if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
+                        return Err(format!(
+                            "migration child exited before crash point {crash_point}: {status}"
+                        ));
+                    }
+                    if std::time::Instant::now() >= deadline {
+                        return Err(format!(
+                            "migration child did not reach crash point {crash_point}"
+                        ));
+                    }
+                    std::thread::sleep(Duration::from_millis(5));
+                }
+
+                child.kill().map_err(|error| error.to_string())?;
+                let status = child.wait().map_err(|error| error.to_string())?;
+                if status.success() {
+                    return Err(format!(
+                        "migration child exited normally at crash point {crash_point}"
+                    ));
+                }
+                Ok(())
+            })();
+            if termination.is_err() {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+            assert!(
+                termination.is_ok(),
+                "failed to terminate migration child at {crash_point}: {}",
+                termination.unwrap_err()
+            );
+            restore_library_before_ui_from_directory(directory.path()).unwrap();
+            assert_library_file(directory.path(), &expected_library);
+            if crash_point == "acknowledged" {
+                assert!(load_journal(directory.path()).unwrap().is_none());
+            } else {
+                assert!(load_journal(directory.path()).unwrap().is_some());
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "launched by migration_recovers_after_child_process_termination"]
+    fn migration_process_restart_driver() {
+        let directory = PathBuf::from(
+            std::env::var_os("LALIN_PLAY_MIGRATION_CRASH_DIR")
+                .expect("parent test supplies an isolated migration directory"),
+        );
+        let crash_point = std::env::var("LALIN_PLAY_MIGRATION_CRASH_POINT")
+            .expect("parent test supplies a crash point");
+        let (old, new) = fixture_libraries();
+        let mut current = old.clone();
+        let mut journal = fixture_journal(&old, &new, Phase::Prepared);
+        save_json(&library_file_path(&directory), &old).unwrap();
+        save_journal(&directory, &journal).unwrap();
+
+        match crash_point.as_str() {
+            "prepared" => {}
+            "catalog_written" => {
+                save_json(&library_file_path(&directory), &new).unwrap();
+            }
+            "applied" => {
+                apply_journal_to_library(&directory, &mut current, &mut journal).unwrap();
+            }
+            "committed" | "acknowledged" => {
+                apply_journal_to_library(&directory, &mut current, &mut journal).unwrap();
+                mark_journal_committed(&directory, &mut journal).unwrap();
+                record_import_commit(&directory, &journal).unwrap();
+                if crash_point == "acknowledged" {
+                    journal.phase = Phase::Acknowledged;
+                    save_journal(&directory, &journal).unwrap();
+                }
+            }
+            _ => panic!("unknown migration crash point: {crash_point}"),
+        }
+
+        fs::write(directory.join("process-ready"), b"ready").unwrap();
+        loop {
+            std::thread::sleep(Duration::from_secs(1));
+        }
+    }
+
+    #[test]
     fn apply_catalog_write_failure_keeps_prepared_state() {
         let directory = tempfile::tempdir().unwrap();
         let (old, new) = fixture_libraries();
@@ -1523,6 +1640,78 @@ mod tests {
         assert_eq!(
             load_journal(directory.path()).unwrap().unwrap().phase,
             Phase::Prepared
+        );
+    }
+
+    #[test]
+    fn initial_journal_write_failure_leaves_no_persisted_journal() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Prepared);
+        save_json(&library_file_path(directory.path()), &old).unwrap();
+        fs::create_dir(journal_path(directory.path()).with_extension("json.tmp")).unwrap();
+
+        assert!(save_journal(directory.path(), &journal).is_err());
+
+        assert!(load_journal(directory.path()).unwrap().is_none());
+        assert_library_file(directory.path(), &old);
+    }
+
+    #[test]
+    fn failed_import_history_write_can_be_retried_without_duplicate() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Committed);
+        save_json(&library_file_path(directory.path()), &new).unwrap();
+        save_journal(directory.path(), &journal).unwrap();
+        let blocked_history_temp = history_path(directory.path()).with_extension("json.tmp");
+        fs::create_dir(&blocked_history_temp).unwrap();
+
+        assert!(record_import_commit(directory.path(), &journal).is_err());
+
+        assert!(undo_snapshot_path(directory.path()).is_file());
+        assert!(!history_path(directory.path()).is_file());
+        assert_eq!(
+            load_journal(directory.path()).unwrap().unwrap().phase,
+            Phase::Committed
+        );
+
+        fs::remove_dir(blocked_history_temp).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+
+        assert_eq!(
+            load_history(directory.path()).unwrap().export_ids,
+            vec![journal.export_id]
+        );
+    }
+
+    #[test]
+    fn failed_undo_snapshot_write_can_be_retried() {
+        let directory = tempfile::tempdir().unwrap();
+        let (old, new) = fixture_libraries();
+        let journal = fixture_journal(&old, &new, Phase::Committed);
+        save_json(&library_file_path(directory.path()), &new).unwrap();
+        save_journal(directory.path(), &journal).unwrap();
+        let blocked_snapshot_temp = undo_snapshot_path(directory.path()).with_extension("json.tmp");
+        fs::create_dir(&blocked_snapshot_temp).unwrap();
+
+        assert!(record_import_commit(directory.path(), &journal).is_err());
+
+        assert!(!undo_snapshot_path(directory.path()).is_file());
+        assert!(!history_path(directory.path()).is_file());
+        assert_eq!(
+            load_journal(directory.path()).unwrap().unwrap().phase,
+            Phase::Committed
+        );
+
+        fs::remove_dir(blocked_snapshot_temp).unwrap();
+        record_import_commit(directory.path(), &journal).unwrap();
+
+        assert!(undo_snapshot_path(directory.path()).is_file());
+        assert_eq!(
+            load_history(directory.path()).unwrap().export_ids,
+            vec![journal.export_id]
         );
     }
 

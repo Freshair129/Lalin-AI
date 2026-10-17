@@ -74,14 +74,42 @@ describe("native Studio-to-Play sender", () => {
     expect(native.invoke).not.toHaveBeenCalled();
   });
 
-  it("serializes explicit standalone handoff actions and sends only backend-resolved local paths", async () => {
+  it("holds later standalone handoffs until each earlier native ACK completes", async () => {
+    let releasePlay!: () => void;
+    let releasePlayNext!: () => void;
+    const playGate = new Promise<void>((resolve) => { releasePlay = resolve; });
+    const playNextGate = new Promise<void>((resolve) => { releasePlayNext = resolve; });
+    const handoffActions: string[] = [];
+    native.invoke.mockImplementation(async (command: string, args: any) => {
+      if (command === "handoff_playback") {
+        handoffActions.push(args.action);
+        if (args.action === "play") await playGate;
+        if (args.action === "play-next") await playNextGate;
+        return reply(args.requestId, args.file.title);
+      }
+      if (command === "get_playback_state") return null;
+      return undefined;
+    });
+
     requestStandalonePlayback({ type: "PLAY", item: item("first") });
     requestStandalonePlayback({ type: "PLAY_NEXT", item: item("second") });
     requestStandalonePlayback({ type: "ADD_TO_QUEUE", item: item("third") });
 
-    await vi.waitFor(() => {
-      expect(native.invoke.mock.calls.filter(([name]) => name === "handoff_playback")).toHaveLength(3);
-    });
+    try {
+      await vi.waitFor(() => expect(handoffActions).toEqual(["play"]));
+      expect(handoffActions).toHaveLength(1);
+
+      releasePlay();
+      await vi.waitFor(() => expect(handoffActions).toEqual(["play", "play-next"]));
+      expect(handoffActions).toHaveLength(2);
+
+      releasePlayNext();
+      await vi.waitFor(() => expect(handoffActions).toEqual(["play", "play-next", "add-to-queue"]));
+    } finally {
+      releasePlay();
+      releasePlayNext();
+    }
+
     const sent = native.invoke.mock.calls
       .filter(([name]) => name === "handoff_playback")
       .map(([, args]) => args);

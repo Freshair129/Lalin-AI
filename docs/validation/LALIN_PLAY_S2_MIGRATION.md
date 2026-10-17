@@ -1,7 +1,7 @@
 ---
-version: "0.1.3b"
+version: "0.1.6b"
 created_at: "2026-09-25T19:25:00+07:00,LALIN,411d2ed"
-last_update: "2026-09-26T20:50:38+07:00,Codex"
+last_update: "2026-09-27T11:59:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -70,19 +70,30 @@ desktop build or clean-machine qualification.
 - A committed import stores the prior queue/EQ/resume values and catalog for one
   explicit undo. Undo reuses the transaction journal, restores prior state without
   deleting source files, and becomes unavailable if the catalog changed later.
-- Synthetic native write failures cover catalog apply, Applied/Committed journal
-  markers, rollback catalog restore, startup catalog restore and ready-to-ack
-  persistence. Tests verify that the durable journal remains retryable and the
-  app-owned catalog is reconciled before UI startup.
+- Synthetic native write failures cover initial journal creation, catalog apply,
+  Applied/Committed journal markers, rollback catalog restore, startup catalog
+  restore, ready-to-ack persistence, undo-snapshot persistence and import-history
+  persistence. Both commit-record failures leave the committed journal retryable;
+  history retry also records the export ID exactly once.
 
 ## Remaining verification
 
-No native app was launched for an end-to-end Studio-to-Play transfer or interactive
-undo. Process termination at each transaction phase, power-loss durability, native failures at
-all remaining writes (including journal creation and import-history persistence),
-a repeated-export UI flow, actual Studio-state retention, and clean-machine
-packaging remain `NOT_RUN`. The temporary-directory fault tests do not establish
-runtime crash recovery on a deployed binary.
+The native test binary was forcibly terminated at five transaction checkpoints:
+Prepared, new catalog written while the journal remained Prepared, Applied,
+Committed, and Acknowledged. Directory-level startup recovery restored the old
+catalog for the first three checkpoints and retained the committed catalog for
+the last two; acknowledged-journal removal was verified. The focused subprocess
+test passed 1/1. Two additional storage-failure tests verify that a failed first
+journal write creates no journal, failed undo-snapshot persistence remains
+retryable, and failed import-history persistence can be retried without
+duplicating its export ID. The complete Play Rust suite passed 35 tests with one
+test-only restart driver ignored by default.
+
+This is test-binary process-termination evidence only. No Play desktop binary or
+WebView was restarted, and it does not establish power-loss durability. An
+end-to-end Studio-to-Play transfer or interactive undo, power-loss durability,
+other native write failures not covered above, a repeated-export UI flow, actual
+Studio-state retention, and clean-machine packaging remain `NOT_RUN`.
 The broader Studio IPC, media relink, repository extraction and release gates are
 separate from this migration implementation.
 
@@ -90,6 +101,9 @@ separate from this migration implementation.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.6b | 2026-09-27 | beta | Cover retry after undo-snapshot write failure alongside initial journal/history failures and process-restart checkpoints | based on e843e1c | Codex |
+| 0.1.5b | 2026-09-27 | beta | Cover initial journal-creation and retryable import-history failures alongside five child-process recovery checkpoints | based on 75c2001 | Codex |
+| 0.1.4b | 2026-09-27 | beta | Verify directory-level S2 recovery after child-process termination at five transaction checkpoints; retain power-loss and live-transfer gates | based on e2bd20a | Codex |
 | 0.1.3b | 2026-09-26 | beta | Reject mapped network drives and document deterministic S2 validation coverage | based on 1d30d44 | Codex |
 | 0.1.2b | 2026-09-26 | beta | Add journaled last-import undo tests and current branch verification evidence | based on 58f6b67 | Codex |
 | 0.1.1b | 2026-09-25 | beta | Add synthetic native journal-phase restart/write-failure coverage and committed frontend recovery evidence | based on 411d2ed | LALIN |
