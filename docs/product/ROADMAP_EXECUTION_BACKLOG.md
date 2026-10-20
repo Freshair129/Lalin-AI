@@ -1,7 +1,7 @@
 ---
 version: "0.2.1b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-10-20T20:34:00+07:00,Codex"
+last_update: "2026-10-20T20:35:00+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -127,7 +127,7 @@ attributes:
 - benchmark vs current psola path
 - acceptance thresholds for large pitch shift
 
-สถานะ: `offline benchmark complete; conditional candidate for real-vocal A/B; production integration is on hold`
+สถานะ: `offline benchmark complete in PR #31; conditional candidate for real-vocal A/B; production integration is on hold`
 
 ผลที่ตัดสินใจได้ตอนนี้:
 
@@ -250,7 +250,7 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Track A ปิดถึง Slice C แล้วใน PR #30. Track B / Slice B1 มี benchmark และ decision artifact แล้ว โดยยังคง production hold ไว้จนผ่าน real-vocal A/B. งานถัดไปตามลำดับคือ:
+PR #31 มี evidence ของ Slice B1 พร้อม review แล้ว. หลัง merge ให้เดินหน้าตามลำดับด้วย:
 
 `Slice B2 — piecewise beat-warp design, drift detection, and timeline preview contract`
 

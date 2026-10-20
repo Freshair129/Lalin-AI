@@ -2,7 +2,7 @@
 version: "0.1.0b"
 created_at: "2026-10-20T20:34:00+07:00,Codex"
 last_update: "2026-10-20T20:34:00+07:00,Codex"
-status: "offline evaluation complete; real-vocal listening gate remains open"
+status: "PR #31 open; offline evaluation complete; real-vocal listening gate remains open"
 attributes:
   domain: "validation"
   doc_type: "benchmark-evidence"
