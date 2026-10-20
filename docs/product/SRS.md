@@ -1,7 +1,7 @@
 ---
-version: "1.5.0b"
+version: "1.5.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "under review"
 superseded_by: null
 attributes:
@@ -145,6 +145,10 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 |----|----------|----------|
 | FR-03.1 | ระบบต้องรองรับการอัปโหลดไฟล์เสียง/วิดีโอเป็นแหล่งต้นฉบับ | Must |
 | FR-03.2 | ระบบต้องถอดเสียงต้นฉบับเป็นข้อความ (ASR) พร้อม timestamps ระดับ segment | Must |
+| FR-03.2a | ผู้ใช้เปิดดูผล ASR transcript ก่อนเริ่ม render dubbing ได้ | Must |
+| FR-03.2b | Transcript UI แสดงข้อความและเวลาเริ่ม/จบของแต่ละ segment | Must |
+| FR-03.2c | Transcript analysis ทำงานเป็น job แยกจาก dubbing render และคืนผลใน job result | Must |
+| FR-03.2d | เมื่อเลือก source คนละไฟล์ UI ต้องระบุ transcript เดิมว่า stale และไม่เปิดดาวน์โหลด subtitle ของผลเก่าเป็นไฟล์ปัจจุบัน | Must |
 | FR-03.3 | ระบบต้องตรวจจับภาษาต้นฉบับอัตโนมัติ หรือรับค่าจากผู้ใช้ | Must |
 | FR-03.4 | ระบบต้องแปลข้อความแต่ละ segment ผ่าน Brain (LLM) เมื่อเปิด translate | Must |
 | FR-03.5 | ระบบต้องสังเคราะห์เสียงพากย์ด้วย voice cloning สำหรับแต่ละ segment | Must |
@@ -435,6 +439,7 @@ Play. Local file support does not promise a universal decoder, streaming or DIAL
 | NFR-04.2 | ทุกฟีเจอร์หลักต้องเข้าถึงได้ภายใน ≤ 3 คลิก |
 | NFR-04.3 | Progress bar ต้องแสดงเปอร์เซ็นต์ + ข้อความสถานะ |
 | NFR-04.4 | ผลลัพธ์ต้องเล่นฟัง + ดาวน์โหลดได้ในหน้าเดียวกัน |
+| NFR-04.5 | Transcript list ต้องอ่าน timestamp/ข้อความได้ และแจ้งชัดเมื่อ source ปัจจุบันไม่ตรงกับผลวิเคราะห์ |
 
 ### NFR-05: Portability
 
@@ -501,6 +506,7 @@ Play. Local file support does not promise a universal decoder, streaming or DIAL
 | GET | `/files/export/{name}` | query `fmt` = `wav`\|`mp3` (ค่าเริ่มต้น `wav`) | FileResponse | ส่งออกผลลัพธ์; `mp3` = แปลง 320k ด้วย ffmpeg ฝังในตัว — FR-07 |
 | POST | `/tts` | `{text, voice_id?, language, speed?}` | `{job_id}` | สร้างเสียง |
 | POST | `/dubbing` | `{source_audio, voice_id, target_lang, translate, source_lang?}` | `{job_id}` | พากย์ |
+| POST | `/dubbing/analyze` | `{source_audio, source_lang?}` | `{job_id}` | ASR-only transcript job; result มีภาษาที่ตรวจพบ, segment timestamps และ SRT/VTT artifact — FR-03.2a-d |
 | POST | `/dubbing/refine` | `{text, target_sec, tone?}` (`tone` = `formal`\|`casual`) | `{refined}` | เกลาบทหนึ่งบรรทัดให้พูดพอดีช่องเวลา — FR-03; สมอง error → คืนข้อความเดิม |
 | POST | `/mastering` | `{source_audio, reference_audio?, target_lufs, target_format}` | `{job_id}` | มาสเตอร์ |
 | POST | `/music/remix` | `{source_audio, beat_audio, target_lufs?=-14, do_autotune?=true, autotune_strength?=1.0, key_override?, do_fx?=true, phrase_bars?=0, offset_ms?, reverb?=0.16, delay?=0.12, stem_gains?}` | `{job_id}` | Remix — FR-04b · `offset_ms=null` = หา phase อัตโนมัติ · `stem_gains=null` = ข้าม 4-stem (เร็วกว่า) |
@@ -533,7 +539,7 @@ Play. Local file support does not promise a universal decoder, streaming or DIAL
 
 **สัญญาของโปรไฟล์ backend:** `/speech/config` รายงาน `asr_available`/`tts_available` จาก `app.state.backend_profile` — โปรไฟล์ `lite` จะปฏิเสธการสลับ ASR ด้วย `{ok: false, error: "asr_unavailable_in_lite"}` (HTTP ยังเป็น `200`)
 
-**Job flow:** endpoint ที่คืน `job_id` (`/tts`, `/dubbing`, `/mastering`, `/music/remix`, `/music/export`) ติดตามต่อผ่าน WS §5.2 — FR-06
+**Job flow:** endpoint ที่คืน `job_id` (`/tts`, `/dubbing`, `/dubbing/analyze`, `/mastering`, `/music/remix`, `/music/export`) ติดตามต่อผ่าน WS §5.2 — FR-06
 
 ### 5.2 WebSocket Protocol
 
@@ -636,4 +642,5 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.5.1b | 2026-10-20 | under review | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | pending PR | Codex |
 | 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |

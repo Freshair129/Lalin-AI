@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-07-06T04:08:00+07:00,ATHER"
-status: "candidate"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
+status: "beta"
 attributes:
   doc_type: "execution-backlog"
   domain: "roadmap"
@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `next`
+สถานะ: `active — Slice A approved; implementation in branch`
 
 เหตุผล:
 
@@ -78,13 +78,14 @@ attributes:
 - transcript UI
 - canonical doc sync
 
-สถานะ: `proposal ready`
+สถานะ: `approved; implemented and automated checks pass in branch codex/dubbing-pro-slice-a-20261020; pending PR review/merge and live-ASR verification`
 
 เอกสาร:
 
 - `PROPOSED_V03_DUBBING_PRO.md`
 - `PROPOSED_V03_DUBBING_PRO_SLICE_A.md`
 - `PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`
 
 #### Slice B
 
@@ -233,16 +234,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-ถ้าจะเดินต่อโดยไม่เปลี่ยนลำดับ:
+Slice A ได้รับอนุมัติและ implement ใน branch แล้ว. ขั้นถัดไป:
 
-`Approve Slice A`
+`Review/merge Slice A; then request separate approval for Slice B`
 
-แล้วลงมือ:
-
-1. `POST /dubbing/analyze`
-2. transcript tab UI
-3. stale transcript handling
-4. doc truth sync หลังโค้ดผ่าน
+Slice B ยังไม่อนุมัติ; live ASR quality/device verification เป็น gate แยกจาก automated tests.
 
 ---
 
@@ -251,4 +247,5 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
+- `+` บันทึก approval และสถานะ implementation ของ Slice A โดยคง Slice B/C เป็นงานที่ยังไม่อนุมัติ
 
