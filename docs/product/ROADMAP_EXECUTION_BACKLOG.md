@@ -1,5 +1,5 @@
 ---
-version: "0.2.1b"
+version: "0.2.2b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
 last_update: "2026-10-20T20:35:00+07:00,Codex"
 status: "beta"
@@ -143,7 +143,17 @@ attributes:
 - drift detection definition
 - timeline preview contract for warped segments
 
-สถานะ: `not started`
+สถานะ: `design complete in PR #32 (stacked on B1 PR #31); implementation not started`
+
+เอกสาร: `MUSIC-PHASE-C-SLICE-B2-DESIGN.md`
+
+ข้อกำหนดสำคัญก่อนเริ่ม implementation:
+
+- คง global-only/manual-offset path เดิมเป็น default
+- วิเคราะห์ drift หลังแยก constant phase offset ออกจาก residual timing error
+- เสนอ warp เมื่อ confidence และจำนวน anchor ถึงเกณฑ์; ต้องให้ผู้ใช้ยอมรับก่อน render
+- preview audio, timeline marker map, และ final render ต้องผูกกับ immutable map revision
+- ตรวจ B1 merge และ review threshold/preview lifecycle ก่อนเริ่ม implementation
 
 #### Slice B3
 
@@ -250,11 +260,12 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-PR #31 มี evidence ของ Slice B1 พร้อม review แล้ว. หลัง merge ให้เดินหน้าตามลำดับด้วย:
+PR #31 ของ Slice B1 ยังเปิดอยู่; B2 design ถูกเตรียมแบบ stacked เพื่อไม่รวมสอง slice.
+หลัง PR #31 merge และ B2 design ผ่านการ review ให้ดำเนินงานตามลำดับด้วย:
 
-`Slice B2 — piecewise beat-warp design, drift detection, and timeline preview contract`
+`Slice B2 implementation — validate drift thresholds and implement the accepted preview contract`
 
-Slice B2 เป็นงานออกแบบและนิยามเกณฑ์; ไม่ควรเริ่ม implementation ของ warping ก่อนยืนยันว่า drift detection และ preview contract แก้ปัญหาจริงได้. Track A runtime UAT gates ยังคงแยกอยู่.
+Slice B2 design กำหนด global-only fallback และ gated warp candidate; อย่าเริ่ม implementation ก่อนยืนยันว่า drift detection และ preview contract แก้ปัญหาจริงได้. Track A runtime UAT gates ยังคงแยกอยู่.
 
 ---
 

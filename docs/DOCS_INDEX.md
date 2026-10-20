@@ -1,5 +1,5 @@
 ---
-version: "0.10.13b"
+version: "0.10.14b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
 last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "beta"
@@ -99,6 +99,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/product/REQ-PRP-LALIN-WORKER-ADAPTER.md`: handoff back to PRP — five decisions (PRP-DEC-01..05) that must close before the M4 RuntimeInvoker adapter can be written, each with Lalin's recommendation; plus the contract facts a coordinator must honour (D15/D16/D18, no transport retry).
 - `docs/product/SRS.md`
 - `docs/product/ROADMAP_MUSIC.md`
+- `docs/product/MUSIC-PHASE-C-SLICE-B2-DESIGN.md`: proposed piecewise beat-warp map, provisional drift thresholds, stale-safe preview/render contract; implementation remains gated.
 - `docs/product/LOCAL_MODEL_LEDGER.md`
 - `docs/product/COMPETITIVE_BRIEF.md`
 - `docs/product/ROADMAP_EXECUTION_BACKLOG.md`
@@ -167,6 +168,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.14b | 2026-10-20 | beta | Index Slice B2 beat-warp design and keep implementation gates explicit | PR #32 (stacked on PR #31) | Codex |
 | 0.10.13b | 2026-10-20 | beta | Index approved manual-only Dubbing Pro Slice B scope and validation record | 65df361 (PR #29, draft) | Codex |
 | 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | 1ef64f0 (PR #29, draft) | Codex |
 | 0.10.11b | 2026-09-26 | beta | Index the approved Play execution DAG, S2/S3 contract and implementation evidence, and both local-path RCAs | S2 7c30ea1; S3 235875b/362bbd0; base 43121cc | Codex |
