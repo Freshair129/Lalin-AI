@@ -26,9 +26,12 @@ export function DubbingPanel() {
   const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
   const [speakerSlots, setSpeakerSlots] = useState<SpeakerSlot[]>([]);
   const [segmentSpeakers, setSegmentSpeakers] = useState<Record<string, string>>({});
+  const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
   const [speakerStateJobId, setSpeakerStateJobId] = useState<string | null>(null);
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
+  const { job: clipsJob, busy: exportingClips, start: startClipExport } = useJob("dubbing-clips");
+  const { job: voiceoverJob, busy: generatingVoiceover, start: startVoiceover } = useJob("dubbing-voiceover");
 
   // ── เกลาบทให้พอดีเวลา (copilot แยก ไม่ผูกกับ job พากย์หลัก) ──
   const [refineText, setRefineText] = useState("");
@@ -63,6 +66,10 @@ export function DubbingPanel() {
     setTranscript(completed);
     window.localStorage.setItem("lalin:dubbing:transcript-job", analyzeJob.id);
   }, [analyzeJob]);
+
+  useEffect(() => {
+    setSelectedSegmentIds([]);
+  }, [transcript?.jobId]);
 
   useEffect(() => {
     if (!transcript?.jobId) return;
@@ -180,6 +187,33 @@ export function DubbingPanel() {
     }));
   };
 
+  const runClipExport = () => {
+    if (!transcript?.jobId || transcript.sourceAudio !== source || selectedSegmentIds.length === 0) return;
+    startClipExport(() => dubbing.exportClips({
+      analysis_job_id: transcript.jobId!,
+      segment_ids: selectedSegmentIds,
+    }));
+  };
+
+  const runVoiceover = () => {
+    if (!transcript?.jobId || transcript.sourceAudio !== source || selectedSegmentIds.length === 0) return;
+    const selected = transcript.segments.filter((segment) => selectedSegmentIds.includes(segment.id));
+    const usedSpeakerIds = new Set(selected.map((segment) => segmentSpeakers[segment.id]));
+    startVoiceover(() => dubbing.voiceover({
+      analysis_job_id: transcript.jobId!,
+      segment_ids: selected.map((segment) => segment.id),
+      segment_speakers: selected.map((segment) => ({
+        segment_id: segment.id,
+        speaker_id: segmentSpeakers[segment.id],
+      })),
+      speaker_voices: speakerSlots
+        .filter((speaker) => usedSpeakerIds.has(speaker.id))
+        .map((speaker) => ({ speaker_id: speaker.id, voice_id: speaker.voiceId })),
+      target_lang: targetLang,
+      translate,
+    }));
+  };
+
   const addSpeaker = () => {
     if (speakerSlots.length >= 32) return;
     const id = `spk_${Math.random().toString(36).slice(2, 10)}`;
@@ -255,6 +289,11 @@ export function DubbingPanel() {
   const addToTimeline = () => {
     const output = job?.result?.output;
     if (!output) return;
+    addOutputToTimeline(output);
+    setAddedMsg(true);
+  };
+
+  const addOutputToTimeline = (output: string) => {
     const track = engine.project.tracks.find((t) => t.id === "vocal") ?? engine.project.tracks[0];
     if (!track) return;
     const start = track.clips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
@@ -262,7 +301,6 @@ export function DubbingPanel() {
     const clip = makeClip(id, "#9b6cf0");
     clip.start = start;
     engine.addClip(track.id, clip);
-    setAddedMsg(true);
   };
 
   return (
@@ -458,6 +496,11 @@ export function DubbingPanel() {
         }
         targetLang={targetLang}
         translate={translate}
+        selectedSegmentIds={selectedSegmentIds}
+        clipsJob={clipsJob}
+        exportingClips={exportingClips}
+        voiceoverJob={voiceoverJob}
+        generatingVoiceover={generatingVoiceover}
         onAnalyze={runAnalyze}
         onAddSpeaker={addSpeaker}
         onUpdateSpeaker={updateSpeaker}
@@ -466,6 +509,16 @@ export function DubbingPanel() {
           setSegmentSpeakers((current) => ({ ...current, [segmentId]: speakerId }));
         }}
         onRender={runMultiSpeaker}
+        onToggleSegment={(segmentId, selected) => {
+          setSelectedSegmentIds((current) => selected
+            ? current.includes(segmentId) ? current : [...current, segmentId]
+            : current.filter((id) => id !== segmentId));
+        }}
+        onSelectAllSegments={() => setSelectedSegmentIds(transcript?.segments.map((segment) => segment.id) ?? [])}
+        onClearSegmentSelection={() => setSelectedSegmentIds([])}
+        onExportClips={runClipExport}
+        onVoiceover={runVoiceover}
+        onAddOutputToTimeline={addOutputToTimeline}
         active={mode === "transcript"}
       />
     </div>

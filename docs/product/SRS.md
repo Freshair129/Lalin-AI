@@ -152,6 +152,9 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | FR-03.2e | ผู้ใช้กำหนด speaker label ให้แต่ละ transcript segment ได้ด้วยตนเองก่อน render | Must |
 | FR-03.2f | ผู้ใช้ map speaker แต่ละคนกับ voice profile ที่มีอยู่; render ต้องปฏิเสธ assignment หรือ voice ที่ขาด/ไม่ตรง | Must |
 | FR-03.2g | Multi-speaker render ใช้ transcript จาก analyze job ที่สำเร็จโดยไม่รัน ASR ซ้ำ และแสดง progress ผ่าน job/WebSocket เดิม | Must |
+| FR-03.2h | ผู้ใช้เลือก transcript segment หนึ่งช่วงหรือหลายช่วงเพื่อส่งออกเป็น WAV; segment ที่ติดกันรวมเป็นคลิปเดียว และ SRT/VTT snippet ต้องปรับ timestamp ให้เริ่มจากคลิปที่เวลา 0 | Must |
+| FR-03.2i | ผู้ใช้สร้าง short voice-over จากข้อความของ segment ที่เลือก โดยใช้ speaker/voice mapping ที่กำหนดไว้; voice-over ต้องเรียงเสียงต่อกันและมี SRT/VTT snippet | Must |
+| FR-03.2j | ผู้ใช้ preview และ download คลิปหรือ voice-over และเพิ่มไฟล์เสียงผลลัพธ์ลง Timeline จาก DubbingPanel ได้ | Must |
 | FR-03.3 | ระบบต้องตรวจจับภาษาต้นฉบับอัตโนมัติ หรือรับค่าจากผู้ใช้ | Must |
 | FR-03.4 | ระบบต้องแปลข้อความแต่ละ segment ผ่าน Brain (LLM) เมื่อเปิด translate | Must |
 | FR-03.5 | ระบบต้องสังเคราะห์เสียงพากย์ด้วย voice cloning สำหรับแต่ละ segment | Must |
@@ -647,6 +650,7 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 1.5.2b | 2026-10-20 | under review | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | 65df361 (PR #29, draft) | Codex |
-| 1.5.1b | 2026-10-20 | under review | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, draft) | Codex |
+| 1.5.3b | 2026-10-20 | under review | Add approved Dubbing Pro Slice C clip export and mapped short voice-over requirements | Slice C branch | Codex |
+| 1.5.2b | 2026-10-20 | beta | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | 65df361 (PR #29, merged as 60c66c4) | Codex |
+| 1.5.1b | 2026-10-20 | beta | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |
 | 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |

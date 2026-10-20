@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -347,6 +348,215 @@ async def run_multispeaker_dubbing(
 
     await say(1.0, "เสร็จสิ้น")
     return result
+
+
+async def run_clip_export(
+    *,
+    source_audio: str,
+    groups: list[list[dict]],
+    report=None,
+) -> dict:
+    """Export each contiguous selection as a WAV with a rebased subtitle snippet."""
+    outputs_dir = get_settings().outputs_dir
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    artifact_id = short_id()
+    clips: list[dict] = []
+    created_paths: list[Path] = []
+
+    async def say(progress: float, message: str) -> None:
+        if report:
+            await report(progress, message)
+
+    try:
+        for index, group in enumerate(groups, start=1):
+            start = float(group[0]["start"])
+            end = float(group[-1]["end"])
+            clip_id = f"{artifact_id}_{index:02d}"
+            output = outputs_dir / f"dubbing_clip_{clip_id}.wav"
+            subtitle_segments = [
+                {
+                    "start": max(0.0, float(segment["start"]) - start),
+                    "end": max(0.0, float(segment["end"]) - start),
+                    "original": str(segment["text"]).strip(),
+                }
+                for segment in group
+            ]
+            subtitle_srt = f"dubbing_clip_{clip_id}.srt"
+            subtitle_vtt = f"dubbing_clip_{clip_id}.vtt"
+            created_paths.extend(
+                (output, outputs_dir / subtitle_srt, outputs_dir / subtitle_vtt)
+            )
+            await say(
+                0.1 + 0.75 * ((index - 1) / len(groups)),
+                f"กำลังส่งออกคลิป {index}/{len(groups)}…",
+            )
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(
+                None, _extract_audio_clip, source_audio, start, end, str(output)
+            )
+            await loop.run_in_executor(
+                None, write_srt, subtitle_segments, str(outputs_dir / subtitle_srt)
+            )
+            await loop.run_in_executor(
+                None, write_vtt, subtitle_segments, str(outputs_dir / subtitle_vtt)
+            )
+            clips.append({
+                "output": str(output),
+                "subtitle_srt": subtitle_srt,
+                "subtitle_vtt": subtitle_vtt,
+                "segment_ids": [str(segment["id"]) for segment in group],
+                "start": start,
+                "end": end,
+                "duration": end - start,
+                "text": " ".join(str(segment["text"]).strip() for segment in group),
+            })
+    except Exception:
+        for path in created_paths:
+            path.unlink(missing_ok=True)
+        raise
+
+    await say(1.0, "ส่งออกคลิปและคำบรรยายเสร็จแล้ว")
+    return {"clips": clips, "clip_count": len(clips)}
+
+
+async def run_short_voiceover(
+    *,
+    segments: list[SpeakerSegment],
+    speaker_voices: dict[str, tuple[str, str]],
+    detected_language: str | None,
+    target_lang: str = "ไทย",
+    translate: bool = True,
+    tts_language: str = "th",
+    report=None,
+) -> dict:
+    """Synthesize selected transcript segments as a compact, multi-speaker VO."""
+    settings = get_settings()
+    settings.outputs_dir.mkdir(parents=True, exist_ok=True)
+    output_id = short_id()
+    output_path = settings.outputs_dir / f"dubbing_voiceover_{output_id}.wav"
+    subtitle_srt = f"dubbing_voiceover_{output_id}.srt"
+    subtitle_vtt = f"dubbing_voiceover_{output_id}.vtt"
+    subtitle_paths = [settings.outputs_dir / subtitle_srt, settings.outputs_dir / subtitle_vtt]
+    brain = get_brain() if translate else None
+
+    async def say(progress: float, message: str) -> None:
+        if report:
+            await report(progress, message)
+
+    try:
+        from pydub import AudioSegment
+
+        rendered: list[AudioSegment] = []
+        subtitle_segments: list[dict] = []
+        with tempfile.TemporaryDirectory(prefix=f"vo_{output_id}_", dir=settings.outputs_dir) as work_dir:
+            total = len(segments)
+            for index, segment in enumerate(segments):
+                text = segment.text.strip()
+                if translate:
+                    await say(
+                        0.08 + 0.65 * (index / max(total, 1)),
+                        f"กำลังแปลและสร้างเสียงช่วง {index + 1}/{total}…",
+                    )
+                    text = await brain.translate(
+                        text, target_lang=target_lang, source_lang=detected_language
+                    )
+                    text = (text or "").strip() or segment.text.strip()
+                else:
+                    await say(
+                        0.08 + 0.65 * (index / max(total, 1)),
+                        f"กำลังสร้างเสียงช่วง {index + 1}/{total}…",
+                    )
+
+                raw_path = str(Path(work_dir) / f"voiceover_{index:04d}.wav")
+                voice_ref, voice_ref_text = speaker_voices[segment.speaker_id]
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(
+                    None,
+                    lambda value=text, dest=raw_path, ref=voice_ref, ref_text=voice_ref_text: (
+                        tts.synthesize(
+                            value,
+                            dest,
+                            ref_audio=ref,
+                            ref_text=ref_text,
+                            language=tts_language,
+                        )
+                    ),
+                )
+                voice = await loop.run_in_executor(None, AudioSegment.from_wav, raw_path)
+                if rendered:
+                    previous = rendered[0]
+                    voice = voice.set_frame_rate(previous.frame_rate)
+                    voice = voice.set_channels(previous.channels)
+                    voice = voice.set_sample_width(previous.sample_width)
+                start = sum(len(item) for item in rendered) + max(0, len(rendered)) * 120
+                subtitle_segments.append({
+                    "start": start / 1000,
+                    "end": (start + len(voice)) / 1000,
+                    "original": segment.text.strip(),
+                    "translated": text if translate else segment.text.strip(),
+                })
+                rendered.append(voice)
+
+        await say(0.82, "กำลังรวมเสียง voice-over…")
+        combined = AudioSegment.empty()
+        for index, voice in enumerate(rendered):
+            if index:
+                combined += AudioSegment.silent(duration=120, frame_rate=rendered[0].frame_rate)
+            combined += voice
+        await asyncio.get_running_loop().run_in_executor(
+            None, lambda: combined.export(str(output_path), format="wav")
+        )
+        await say(0.93, "กำลังสร้างคำบรรยาย voice-over…")
+        await asyncio.get_running_loop().run_in_executor(
+            None, write_srt, subtitle_segments, str(subtitle_paths[0])
+        )
+        await asyncio.get_running_loop().run_in_executor(
+            None, write_vtt, subtitle_segments, str(subtitle_paths[1])
+        )
+    except Exception:
+        output_path.unlink(missing_ok=True)
+        for path in subtitle_paths:
+            path.unlink(missing_ok=True)
+        raise
+
+    duration = sum(segment["end"] - segment["start"] for segment in subtitle_segments)
+    duration += max(0, len(subtitle_segments) - 1) * 0.12
+    await say(1.0, "voice-over เสร็จแล้ว")
+    return {
+        "output": str(output_path),
+        "subtitle_srt": subtitle_srt,
+        "subtitle_vtt": subtitle_vtt,
+        "segments": len(segments),
+        "duration": duration,
+        "translated": translate,
+        "target_lang": target_lang,
+        "selected_segment_ids": [segment.id for segment in segments],
+    }
+
+
+def _extract_audio_clip(
+    source_audio: str,
+    start: float,
+    end: float,
+    out_path: str,
+) -> str:
+    """Extract a bounded mono WAV range from an uploaded audio or video source."""
+    import imageio_ffmpeg
+
+    configure_ffmpeg()
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    subprocess.run(
+        [
+            ffmpeg, "-y", "-ss", f"{start:.3f}", "-i", source_audio,
+            "-t", f"{end - start:.3f}", "-map", "0:a:0", "-vn",
+            "-ac", "1", "-ar", "24000", "-c:a", "pcm_s16le", out_path,
+        ],
+        capture_output=True,
+        check=True,
+    )
+    if not Path(out_path).is_file():
+        raise RuntimeError("ffmpeg ไม่ได้สร้างไฟล์คลิปเสียง")
+    return out_path
 
 
 def _mux_audio_into_video(video_path: str, audio_path: str, out_path: str) -> bool:

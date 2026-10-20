@@ -2145,12 +2145,25 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 }
 .dubbing-transcript__row {
   display: grid;
-  grid-template-columns: minmax(135px, auto) minmax(130px, 180px) minmax(0, 1fr);
+  grid-template-columns: 22px minmax(135px, auto) minmax(130px, 180px) minmax(0, 1fr);
   gap: 12px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-soft);
 }
 .dubbing-transcript__row:last-child { border-bottom: 0; }
+.dubbing-transcript__checkbox { align-self: center; }
+.dubbing-transcript__selection-actions,
+.dubbing-clips__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 8px;
+}
+.dubbing-transcript__selection-actions h4,
+.dubbing-clips__heading h4 { margin: 0 0 4px; }
+.dubbing-transcript__selection-actions .hint,
+.dubbing-clips__heading .hint { margin: 0; }
 .dubbing-transcript__time { color: var(--accent); font-variant-numeric: tabular-nums; font-size: 12px; }
 .dubbing-transcript__row p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .dubbing-transcript__speaker { margin: 0; }
@@ -2193,11 +2206,28 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .dubbing-render-result { margin: 14px 0; }
 .dubbing-render-result__output { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .dubbing-render-result__output audio { width: min(100%, 420px); }
+.dubbing-clips {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.dubbing-clip-result {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.dubbing-clip-result p { margin: 0; white-space: pre-wrap; }
+.dubbing-clip-result audio { width: min(100%, 420px); }
 
 @media (max-width: 600px) {
   .dubbing-transcript__heading { flex-direction: column; }
   .dubbing-transcript__summary { grid-template-columns: 1fr; }
   .dubbing-transcript__row { grid-template-columns: 1fr; gap: 8px; }
+  .dubbing-transcript__selection-actions,
+  .dubbing-clips__heading { align-items: flex-start; flex-direction: column; }
   .dubbing-speakers__heading,
   .dubbing-multispeaker { align-items: flex-start; flex-direction: column; }
   .dubbing-speakers__row { align-items: stretch; flex-direction: column; }

@@ -124,6 +124,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 - `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`: approved transcript analyze/UI Slice A implementation, backend/frontend automated checks and explicit live-ASR/native verification limits.
 - `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`: manual speaker assignment and multi-voice render implementation evidence, compile/build status, and remaining live/native gates.
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-C.md`: selected transcript clip export, compact mapped voice-over, generated subtitle snippets, and automated verification evidence.
 - `docs/validation/SPRINT*_VALIDATION.md`
 - `docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md`: TV Mode unit, browser and native evidence with hardware limits.
 - `docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md`: regression, build and isolated browser/native debug fixture evidence; broad MVP/release gates remain separate.
