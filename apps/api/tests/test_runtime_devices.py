@@ -58,6 +58,22 @@ def test_runtime_status_reports_unresolved_devices_without_importing_torch(clien
     assert "torch" not in sys.modules
 
 
+def test_runtime_status_explicitly_reports_idle_when_no_job_is_active(client, monkeypatch):
+    from app.routers import health
+
+    monkeypatch.setattr(health.jobs, "list", lambda: [])
+
+    response = client.get("/runtime/status")
+
+    assert response.status_code == 200
+    assert response.json()["activity"] == {
+        "job_id": None,
+        "label": None,
+        "state": "idle",
+        "progress": None,
+    }
+
+
 def test_resolving_asr_records_cpu_int8_in_runtime_registry():
     from app.runtime_devices import device_registry, resolve_asr_runtime
 

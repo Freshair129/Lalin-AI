@@ -1,8 +1,8 @@
 ---
 version: "0.1.0b"
 created_at: "2026-07-06T03:59:00+07:00,ATHER"
-last_update: "2026-07-06T03:59:00+07:00,ATHER"
-status: "candidate"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
+status: "approved"
 attributes:
   doc_type: "feature-spec"
   domain: "documentation-impact"
@@ -29,7 +29,7 @@ attributes:
 
 1. `docs/product/PRD.md`
 2. `docs/product/SRS.md`
-3. `docs/archive/UI_SITEMAP.md`
+3. `docs/design/LALIN_DUBBING_TAB_SPEC.md` (current Dubbing UI SOT; the archived `UI_SITEMAP.md` is not the current design source)
 
 ---
 
@@ -145,7 +145,7 @@ attributes:
 
 ---
 
-## Proposed Diff — UI_SITEMAP
+## Proposed Diff — Current Dubbing UI Spec
 
 ### 1. DubbingPanel section
 
@@ -231,9 +231,9 @@ attributes:
 
 ## Reviewer Shortcut
 
-ถ้าคุณจะ approve แบบสั้นที่สุด สามารถ approve ได้ในระดับนี้:
+Approval ที่บันทึกไว้:
 
-`Approve Slice A only: transcript analyze + transcript UI + canonical doc sync after code`
+`Approve Slice A only: transcript analyze + transcript UI + canonical doc sync after code` — approved 2026-10-20.
 
 ---
 
@@ -242,5 +242,3 @@ attributes:
 - `+` เพิ่ม packet อธิบายผลกระทบต่อ canonical docs
 - `+` แยกชัดว่าหลัง approval อะไร “แก้ได้” และอะไร “ยังไม่ควรอ้างว่าเสร็จ”
 - `+` ลดความเสี่ยงที่ implementation จะล้ำเกิน scope ที่อนุมัติ
-
-Please review and approve this documentation. I will generate the code once approved.

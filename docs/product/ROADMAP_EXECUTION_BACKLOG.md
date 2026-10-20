@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.2b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-07-06T04:08:00+07:00,ATHER"
-status: "candidate"
+last_update: "2026-10-20T20:35:00+07:00,Codex"
+status: "beta"
 attributes:
   doc_type: "execution-backlog"
   domain: "roadmap"
@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `next`
+สถานะ: `closed through Slice C; PR #30 merged as 8df8c073eeab07f87a6fa70875bb321e8ecbe672`
 
 เหตุผล:
 
@@ -78,34 +78,42 @@ attributes:
 - transcript UI
 - canonical doc sync
 
-สถานะ: `proposal ready`
+สถานะ: `approved; implemented and merged in PR #29 (merge commit 60c66c4); live-ASR verification remains pending`
 
 เอกสาร:
 
 - `PROPOSED_V03_DUBBING_PRO.md`
 - `PROPOSED_V03_DUBBING_PRO_SLICE_A.md`
 - `PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`
 
 #### Slice B
 
-- speaker labels
-- voice-per-speaker mapping
-- multi-speaker render payload
+- manual speaker labels on transcript segments
+- voice-per-speaker mapping from existing voice profiles
+- multi-speaker render job reusing the completed analyze transcript
 
-สถานะ: `not approved`
+สถานะ: `approved (manual-only); implemented and merged in PR #29 (merge commit 60c66c4); automatic diarization remains out of scope`
+
+เอกสาร:
+
+- `PROPOSED_V03_DUBBING_PRO_SLICE_B.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`
 
 #### Slice C
 
-- clip export from transcript
-- short voice-over from selected transcript
+- select one or more transcript segments; export each contiguous selection as WAV with rebased SRT/VTT snippets
+- generate a compact short voice-over from selected transcript using existing manual speaker/voice mappings
+- preview, download, and add exported audio to the Dubbing timeline
+- no transcript text editing, automatic diarization, or social publishing
 
-สถานะ: `not approved`
+สถานะ: `approved and merged in PR #30 (merge commit 8df8c073eeab07f87a6fa70875bb321e8ecbe672); live ASR/TTS, GPU render, and native desktop UAT remain separate gates`
 
 ---
 
 ### Track B — Music Phase C
 
-สถานะ: `after Track A`
+สถานะ: `active after Track A closure`
 
 เหตุผล:
 
@@ -119,7 +127,15 @@ attributes:
 - benchmark vs current psola path
 - acceptance thresholds for large pitch shift
 
-สถานะ: `not started`
+สถานะ: `offline benchmark complete in PR #31; conditional candidate for real-vocal A/B; production integration is on hold`
+
+ผลที่ตัดสินใจได้ตอนนี้:
+
+- pyworld ผ่าน provisional objective gates ทั้ง 4 ช่วงที่ทดสอบ (−8, −4, +4, +8 semitones)
+- psola ผ่าน 7/8; ไม่ผ่าน formant-drift p95 ที่ +8 semitones (26.95% เทียบเกณฑ์ ≤10%)
+- pyworld ที่ +8 semitones วัด formant-drift p95 8.49% บน synthetic input
+- ยังไม่ย้ายเข้า production จนกว่าจะมี blinded A/B จากเสียงร้องจริงที่มีสิทธิ์และตรวจ license set ครบ
+- หลักฐาน: `docs/validation/2026-10-20-MUSIC-PHASE-C-SLICE-B1.md`
 
 #### Slice B2
 
@@ -127,7 +143,17 @@ attributes:
 - drift detection definition
 - timeline preview contract for warped segments
 
-สถานะ: `not started`
+สถานะ: `design complete in PR #32 (stacked on B1 PR #31); implementation not started`
+
+เอกสาร: `MUSIC-PHASE-C-SLICE-B2-DESIGN.md`
+
+ข้อกำหนดสำคัญก่อนเริ่ม implementation:
+
+- คง global-only/manual-offset path เดิมเป็น default
+- วิเคราะห์ drift หลังแยก constant phase offset ออกจาก residual timing error
+- เสนอ warp เมื่อ confidence และจำนวน anchor ถึงเกณฑ์; ต้องให้ผู้ใช้ยอมรับก่อน render
+- preview audio, timeline marker map, และ final render ต้องผูกกับ immutable map revision
+- ตรวจ B1 merge และ review threshold/preview lifecycle ก่อนเริ่ม implementation
 
 #### Slice B3
 
@@ -184,6 +210,7 @@ attributes:
 
 - `Track A / Slice A` before `Track A / Slice B`
 - `Track A / Slice A` before `Track A / Slice C`
+- `Track A / Slice B` before `Track A / Slice C` voice-over mapping
 
 ### Soft Dependencies
 
@@ -220,7 +247,7 @@ attributes:
 
 Roadmap จะถือว่า “ใกล้เสร็จจริง” เมื่อ:
 
-1. Track A ปิดอย่างน้อยถึง Slice B
+1. Track A ปิดอย่างน้อยถึง Slice C
 2. Track B มี decision อย่างน้อย 1 ชิ้นว่า implement หรือ reject ด้วย evidence
 3. Track C มี feasibility decision อย่างน้อย 1 ชิ้น ไม่ปล่อยเป็น checkbox ลอย
 
@@ -233,16 +260,12 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-ถ้าจะเดินต่อโดยไม่เปลี่ยนลำดับ:
+PR #31 ของ Slice B1 ยังเปิดอยู่; B2 design ถูกเตรียมแบบ stacked เพื่อไม่รวมสอง slice.
+หลัง PR #31 merge และ B2 design ผ่านการ review ให้ดำเนินงานตามลำดับด้วย:
 
-`Approve Slice A`
+`Slice B2 implementation — validate drift thresholds and implement the accepted preview contract`
 
-แล้วลงมือ:
-
-1. `POST /dubbing/analyze`
-2. transcript tab UI
-3. stale transcript handling
-4. doc truth sync หลังโค้ดผ่าน
+Slice B2 design กำหนด global-only fallback และ gated warp candidate; อย่าเริ่ม implementation ก่อนยืนยันว่า drift detection และ preview contract แก้ปัญหาจริงได้. Track A runtime UAT gates ยังคงแยกอยู่.
 
 ---
 
@@ -251,4 +274,6 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
+- `+` บันทึกว่า Slice A/B merge แล้ว และ Slice C ได้รับอนุมัติให้ implement แบบ manual mapping
+- `+` ปิด Track A ถึง Slice C และเพิ่มผล benchmark/decision evidence สำหรับ Track B Slice B1
 

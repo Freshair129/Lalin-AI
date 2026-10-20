@@ -1,0 +1,223 @@
+{
+  "benchmark": "music-phase-c-slice-b1",
+  "created_at_utc": "2026-10-20T13:36:18Z",
+  "runtime": {
+    "python": "3.11.17",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "numpy": "2.2.1",
+    "soundfile": "0.13.0",
+    "pyworld": "0.3.5",
+    "psola": "0.0.1",
+    "praat_parselmouth": "0.4.7"
+  },
+  "input": {
+    "type": "deterministic synthetic vowel-like vocal; no user or third-party recording",
+    "sample_rate_hz": 44100,
+    "duration_s": 3.2,
+    "sha256": "fc718ad0fd8b53fc92c558e1a2731535b49ad3f5a527cef99a90bc8e8b15c5a1",
+    "source_f0_median_hz": 188.08897840507674,
+    "source_voiced_frame_recall_pct": 100.0,
+    "sections": [
+      {
+        "label": "ah",
+        "start_s": 0.0,
+        "end_s": 0.8,
+        "formants_hz": [
+          730.0,
+          1090.0,
+          2440.0,
+          3500.0
+        ]
+      },
+      {
+        "label": "eh",
+        "start_s": 0.8,
+        "end_s": 1.6,
+        "formants_hz": [
+          530.0,
+          1840.0,
+          2480.0,
+          3500.0
+        ]
+      },
+      {
+        "label": "ee",
+        "start_s": 1.6,
+        "end_s": 2.4000000000000004,
+        "formants_hz": [
+          270.0,
+          2290.0,
+          3010.0,
+          3700.0
+        ]
+      },
+      {
+        "label": "oo",
+        "start_s": 2.4000000000000004,
+        "end_s": 3.2,
+        "formants_hz": [
+          300.0,
+          870.0,
+          2240.0,
+          3300.0
+        ]
+      }
+    ]
+  },
+  "configuration": {
+    "frame_period_ms": 5.0,
+    "f0_floor_hz": 70.0,
+    "f0_ceil_hz": 550.0,
+    "semitone_shifts": [
+      -8,
+      -4,
+      4,
+      8
+    ],
+    "thresholds": {
+      "pitch_error_p95_cents_max": 50.0,
+      "voiced_frame_recall_min_pct": 98.0,
+      "mean_formant_drift_pct_max": 5.0,
+      "p95_formant_drift_pct_max": 10.0,
+      "formant_envelope_rms_db_max": 6.0,
+      "duration_drift_pct_max": 1.0
+    },
+    "spectral_envelope_metric": "independent cepstral lifter; 80ms frames; quefrency cutoff 1/350s",
+    "timing_note": "Mono processor-call RTF only. The shared source F0 contour is extracted once outside the timer; pyworld calls include CheapTrick/D4C plus synthesis, while psola.vocode includes Praat manipulation analysis. Not an end-to-end stereo app latency comparison."
+  },
+  "methods": {
+    "pyworld": {
+      "-8": {
+        "method": "pyworld",
+        "shift_semitones": -8,
+        "processing_seconds": 0.5829496999940602,
+        "real_time_factor": 0.18217178124814382,
+        "audio_file": "music-b1-pyworld-shift--8st.wav",
+        "audio_sha256": "4dfb351274f05d71f523b81e90572f069caec374ddf78374157733671d485f3a",
+        "pitch_error_p95_cents": 3.3014662234696224,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.15589569160996686,
+        "output_duration_s": 3.204988662131519,
+        "mean_formant_drift_pct": 1.1924276982177935,
+        "p95_formant_drift_pct": 3.0529509100937675,
+        "formant_envelope_rms_db": 1.1660736263761313,
+        "objective_thresholds_pass": true
+      },
+      "-4": {
+        "method": "pyworld",
+        "shift_semitones": -4,
+        "processing_seconds": 0.5995613999984926,
+        "real_time_factor": 0.18736293749952893,
+        "audio_file": "music-b1-pyworld-shift--4st.wav",
+        "audio_sha256": "e58d9c279ed83b1212539349ea764dd988918cf63424ebe59deeddf768215a49",
+        "pitch_error_p95_cents": 4.256152484492195,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.15589569160996686,
+        "output_duration_s": 3.204988662131519,
+        "mean_formant_drift_pct": 1.0220901139603036,
+        "p95_formant_drift_pct": 2.609930570166211,
+        "formant_envelope_rms_db": 0.908413386858183,
+        "objective_thresholds_pass": true
+      },
+      "+4": {
+        "method": "pyworld",
+        "shift_semitones": 4,
+        "processing_seconds": 0.6364065999950981,
+        "real_time_factor": 0.19887706249846815,
+        "audio_file": "music-b1-pyworld-shift-+4st.wav",
+        "audio_sha256": "9783212c515911355a853abc085e95348b4b13157b1524ecad891d698b08de49",
+        "pitch_error_p95_cents": 7.313948890009198,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.15589569160996686,
+        "output_duration_s": 3.204988662131519,
+        "mean_formant_drift_pct": 1.6261690081879498,
+        "p95_formant_drift_pct": 6.289659224441833,
+        "formant_envelope_rms_db": 1.4888877299439882,
+        "objective_thresholds_pass": true
+      },
+      "+8": {
+        "method": "pyworld",
+        "shift_semitones": 8,
+        "processing_seconds": 0.6707511999993585,
+        "real_time_factor": 0.20960974999979953,
+        "audio_file": "music-b1-pyworld-shift-+8st.wav",
+        "audio_sha256": "f2d33abb4b94827020eb9fa4ab0c80b22a37c71d7caf3fa7ed66b6eb18aee031",
+        "pitch_error_p95_cents": 6.485583425816845,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.15589569160996686,
+        "output_duration_s": 3.204988662131519,
+        "mean_formant_drift_pct": 3.1019592056695187,
+        "p95_formant_drift_pct": 8.492014742014742,
+        "formant_envelope_rms_db": 2.0314345460248817,
+        "objective_thresholds_pass": true
+      }
+    },
+    "psola": {
+      "-8": {
+        "method": "psola",
+        "shift_semitones": -8,
+        "processing_seconds": 0.10800659999949858,
+        "real_time_factor": 0.033752062499843305,
+        "audio_file": "music-b1-psola-shift--8st.wav",
+        "audio_sha256": "23b1b2fdf07c0a9d21b2a7bed91fa901cc035b0c88bbf0255004284451fe145c",
+        "pitch_error_p95_cents": 5.060068887326972,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.0,
+        "output_duration_s": 3.2,
+        "mean_formant_drift_pct": 0.8675278781182703,
+        "p95_formant_drift_pct": 2.867662528929097,
+        "formant_envelope_rms_db": 1.6531036372276817,
+        "objective_thresholds_pass": true
+      },
+      "-4": {
+        "method": "psola",
+        "shift_semitones": -4,
+        "processing_seconds": 0.08734389999881387,
+        "real_time_factor": 0.027294968749629334,
+        "audio_file": "music-b1-psola-shift--4st.wav",
+        "audio_sha256": "84a64e12844f8c8f7cf00b0d99e42c518a1459a5d3e3b922679ea218e7e432de",
+        "pitch_error_p95_cents": 6.592277272837927,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.0,
+        "output_duration_s": 3.2,
+        "mean_formant_drift_pct": 0.6968060903540743,
+        "p95_formant_drift_pct": 2.4777413308341147,
+        "formant_envelope_rms_db": 1.5542257302674303,
+        "objective_thresholds_pass": true
+      },
+      "+4": {
+        "method": "psola",
+        "shift_semitones": 4,
+        "processing_seconds": 0.09751530000357889,
+        "real_time_factor": 0.030473531251118402,
+        "audio_file": "music-b1-psola-shift-+4st.wav",
+        "audio_sha256": "b23203c705424bbc0634b73b73a088915205443b3d32e751a314688699d81f92",
+        "pitch_error_p95_cents": 8.986385081473017,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.0,
+        "output_duration_s": 3.2,
+        "mean_formant_drift_pct": 3.020899903200365,
+        "p95_formant_drift_pct": 9.472964443509362,
+        "formant_envelope_rms_db": 2.1378079906276284,
+        "objective_thresholds_pass": true
+      },
+      "+8": {
+        "method": "psola",
+        "shift_semitones": 8,
+        "processing_seconds": 0.0880882999917958,
+        "real_time_factor": 0.027527593747436185,
+        "audio_file": "music-b1-psola-shift-+8st.wav",
+        "audio_sha256": "8be76dfc2a3e62114b5b3a30b243f40c2016786e741f33492db1c63e5a4b104d",
+        "pitch_error_p95_cents": 10.418349830695773,
+        "voiced_frame_recall_pct": 100.0,
+        "duration_drift_pct": 0.0,
+        "output_duration_s": 3.2,
+        "mean_formant_drift_pct": 7.147755868399534,
+        "p95_formant_drift_pct": 26.953491096532336,
+        "formant_envelope_rms_db": 2.7174378667956836,
+        "objective_thresholds_pass": false
+      }
+    }
+  },
+  "caveat": "Objective measures and generated A/B renders do not establish perceptual preference on real singing vocals; listen to real licensed vocal sources before production adoption."
+}
