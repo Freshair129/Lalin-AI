@@ -418,3 +418,52 @@ def test_job_manager_persists_structured_result_on_task_failure():
     job = asyncio.run(scenario())
     assert job.status == "error"
     assert job.result == {"output": None, "gpu_release": {"status": "released"}}
+
+
+def test_terminal_job_state_waits_for_release_receipt(tmp_path):
+    import asyncio
+    import json
+
+    from app.jobs.manager import JobManager, is_terminal_status
+
+    async def scenario():
+        storage_path = tmp_path / "jobs.json"
+        manager = JobManager(storage_path, gpu_cleanup=lambda: None)
+        job = manager.create("tts", resource="gpu")
+        events = manager.subscribe(job.id)
+        release_started = asyncio.Event()
+        finish_release = asyncio.Event()
+        receipt = {
+            "requested": True,
+            "model": "f5",
+            "status": "released",
+            "reason": None,
+        }
+
+        async def task(_job, _report):
+            release_started.set()
+            await finish_release.wait()
+            return {"output": "out.wav", "gpu_release": receipt}
+
+        run_task = asyncio.create_task(manager.run(job, task))
+        await asyncio.wait_for(release_started.wait(), timeout=1)
+
+        assert job.status == "running"
+        persisted = json.loads(storage_path.read_text(encoding="utf-8"))
+        assert persisted["jobs"][0]["status"] == "running"
+        observed = []
+        while not events.empty():
+            observed.append(events.get_nowait())
+        assert all(not is_terminal_status(event["status"]) for event in observed)
+
+        finish_release.set()
+        await run_task
+
+        terminal_event = events.get_nowait()
+        assert terminal_event["status"] == "done"
+        assert terminal_event["result"]["gpu_release"] == receipt
+        persisted = json.loads(storage_path.read_text(encoding="utf-8"))
+        assert persisted["jobs"][0]["status"] == "done"
+        assert persisted["jobs"][0]["result"]["gpu_release"] == receipt
+
+    asyncio.run(scenario())
