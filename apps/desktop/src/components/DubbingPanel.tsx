@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import { dubbing, files, jobs, voices as voicesApi, type Job, type Voice } from "../api";
 import { useJob } from "../useJob";
 import { JobProgress } from "./JobProgress";
-import { DubbingTranscriptPanel, type TranscriptResult } from "./DubbingTranscriptPanel";
+import {
+  DubbingTranscriptPanel,
+  type SpeakerSlot,
+  type TranscriptResult,
+} from "./DubbingTranscriptPanel";
 import { useEngine } from "../store/engineContext";
 import { makeClip } from "../timeline/clipModel";
 
@@ -18,7 +22,11 @@ export function DubbingPanel() {
   const [uploading, setUploading] = useState(false);
   const { job, busy, start } = useJob("dubbing");
   const { job: analyzeJob, busy: analyzing, start: startAnalyze } = useJob("dubbing-analyze");
+  const { job: renderJob, busy: rendering, start: startRender } = useJob("dubbing-render");
   const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
+  const [speakerSlots, setSpeakerSlots] = useState<SpeakerSlot[]>([]);
+  const [segmentSpeakers, setSegmentSpeakers] = useState<Record<string, string>>({});
+  const [speakerStateJobId, setSpeakerStateJobId] = useState<string | null>(null);
   const engine = useEngine();
   const [addedMsg, setAddedMsg] = useState(false);
 
@@ -56,6 +64,73 @@ export function DubbingPanel() {
     window.localStorage.setItem("lalin:dubbing:transcript-job", analyzeJob.id);
   }, [analyzeJob]);
 
+  useEffect(() => {
+    if (!transcript?.jobId) return;
+    const defaultSpeaker: SpeakerSlot = {
+      id: "spk_a",
+      label: "Speaker A",
+      voiceId: voiceId || voices[0]?.id || "",
+    };
+    let nextSpeakers = [defaultSpeaker];
+    let nextAssignments = Object.fromEntries(
+      transcript.segments.map((segment) => [segment.id, defaultSpeaker.id]),
+    );
+
+    try {
+      const saved = JSON.parse(
+        window.localStorage.getItem(speakerStorageKey(transcript.jobId)) ?? "null",
+      ) as { speakers?: unknown; assignments?: unknown } | null;
+      if (saved && Array.isArray(saved.speakers) && saved.speakers.length > 0) {
+        const restored = saved.speakers.filter(isSpeakerSlot).map((speaker) => ({
+          ...speaker,
+          voiceId: voices.length === 0 || voices.some((voice) => voice.id === speaker.voiceId)
+            ? speaker.voiceId
+            : "",
+        }));
+        if (restored.length > 0) {
+          const validIds = new Set(restored.map((speaker) => speaker.id));
+          const restoredAssignments = saved.assignments as Record<string, unknown> | null;
+          const assignments = Object.fromEntries(transcript.segments.map((segment) => {
+            const speakerId = restoredAssignments?.[segment.id];
+            return [segment.id, typeof speakerId === "string" && validIds.has(speakerId)
+              ? speakerId
+              : restored[0].id];
+          }));
+          nextSpeakers = restored;
+          nextAssignments = assignments;
+        }
+      }
+    } catch {
+      // mapping ที่บันทึกไว้ไม่ถูกต้องจะเริ่มด้วย Speaker A ใหม่
+    }
+
+    setSpeakerSlots(nextSpeakers);
+    setSegmentSpeakers(nextAssignments);
+    setSpeakerStateJobId(transcript.jobId);
+  }, [transcript?.jobId]);
+
+  useEffect(() => {
+    const defaultVoiceId = voiceId || voices[0]?.id;
+    if (!defaultVoiceId) return;
+    setSpeakerSlots((current) => current.map((speaker) => (
+      voices.some((voice) => voice.id === speaker.voiceId)
+        ? speaker
+        : { ...speaker, voiceId: defaultVoiceId }
+    )));
+  }, [voiceId, voices]);
+
+  useEffect(() => {
+    if (!transcript?.jobId || speakerStateJobId !== transcript.jobId) return;
+    try {
+      window.localStorage.setItem(
+        speakerStorageKey(transcript.jobId),
+        JSON.stringify({ speakers: speakerSlots, assignments: segmentSpeakers }),
+      );
+    } catch {
+      // mapping ยังคงใช้ได้ในหน้าปัจจุบันแม้ localStorage เขียนไม่ได้
+    }
+  }, [transcript?.jobId, speakerStateJobId, speakerSlots, segmentSpeakers]);
+
   const onFile = async (f: File | null) => {
     if (!f) return;
     setUploading(true);
@@ -84,6 +159,67 @@ export function DubbingPanel() {
     setMode("transcript");
     startAnalyze(() => dubbing.analyze({ source_audio: source }));
   };
+
+  const runMultiSpeaker = () => {
+    if (!transcript?.jobId || transcript.sourceAudio !== source || !canRenderMultiSpeaker) return;
+    const analysisJobId = transcript.jobId;
+    const usedSpeakerIds = new Set(
+      transcript.segments.map((segment) => segmentSpeakers[segment.id]),
+    );
+    startRender(() => dubbing.render({
+      analysis_job_id: analysisJobId,
+      segment_speakers: transcript.segments.map((segment) => ({
+        segment_id: segment.id,
+        speaker_id: segmentSpeakers[segment.id],
+      })),
+      speaker_voices: speakerSlots
+        .filter((speaker) => usedSpeakerIds.has(speaker.id))
+        .map((speaker) => ({ speaker_id: speaker.id, voice_id: speaker.voiceId })),
+      target_lang: targetLang,
+      translate,
+    }));
+  };
+
+  const addSpeaker = () => {
+    if (speakerSlots.length >= 32) return;
+    const id = `spk_${Math.random().toString(36).slice(2, 10)}`;
+    setSpeakerSlots((current) => [
+      ...current,
+      { id, label: `Speaker ${speakerLabel(current.length)}`, voiceId: voiceId || voices[0]?.id || "" },
+    ]);
+  };
+
+  const updateSpeaker = (speakerId: string, patch: Partial<SpeakerSlot>) => {
+    setSpeakerSlots((current) => current.map((speaker) => (
+      speaker.id === speakerId ? { ...speaker, ...patch } : speaker
+    )));
+  };
+
+  const removeSpeaker = (speakerId: string) => {
+    if (speakerSlots.length <= 1) return;
+    const fallback = speakerSlots.find((speaker) => speaker.id !== speakerId);
+    if (!fallback) return;
+    setSpeakerSlots((current) => current.filter((speaker) => speaker.id !== speakerId));
+    setSegmentSpeakers((current) => Object.fromEntries(
+      Object.entries(current).map(([segmentId, assignedSpeaker]) => [
+        segmentId,
+        assignedSpeaker === speakerId ? fallback.id : assignedSpeaker,
+      ]),
+    ));
+  };
+
+  const canRenderMultiSpeaker = !!transcript
+    && transcript.segments.length > 0
+    && transcript.segments.every((segment) => {
+      const speakerId = segmentSpeakers[segment.id];
+      return !!speakerId && speakerSlots.some((speaker) => speaker.id === speakerId);
+    })
+    && new Set(transcript.segments.map((segment) => segmentSpeakers[segment.id])).size > 0
+    && [...new Set(transcript.segments.map((segment) => segmentSpeakers[segment.id]))]
+      .every((speakerId) => {
+        const mappedVoiceId = speakerSlots.find((speaker) => speaker.id === speakerId)?.voiceId;
+        return !!mappedVoiceId && voices.some((voice) => voice.id === mappedVoiceId);
+      });
 
   // เรียกสมองให้เกลาบทให้ความยาวคำพูดพอดีกับช่องเวลา
   const runRefine = async () => {
@@ -308,7 +444,28 @@ export function DubbingPanel() {
         analyzing={analyzing}
         job={analyzeJob}
         transcript={transcript}
+        voices={voices}
+        speakerSlots={speakerSlots}
+        segmentSpeakers={segmentSpeakers}
+        renderJob={renderJob}
+        rendering={rendering}
+        renderDisabled={
+          !canRenderMultiSpeaker
+          || transcript?.sourceAudio !== source
+          || uploading
+          || analyzing
+          || rendering
+        }
+        targetLang={targetLang}
+        translate={translate}
         onAnalyze={runAnalyze}
+        onAddSpeaker={addSpeaker}
+        onUpdateSpeaker={updateSpeaker}
+        onRemoveSpeaker={removeSpeaker}
+        onAssignSpeaker={(segmentId, speakerId) => {
+          setSegmentSpeakers((current) => ({ ...current, [segmentId]: speakerId }));
+        }}
+        onRender={runMultiSpeaker}
         active={mode === "transcript"}
       />
     </div>
@@ -338,6 +495,7 @@ function transcriptFromJob(job: Job | null): TranscriptResult | null {
   ));
 
   return {
+    jobId: job.id,
     sourceAudio,
     detectedLanguage: typeof result.detected_language === "string" ? result.detected_language : null,
     segmentCount: segments.length,
@@ -348,4 +506,27 @@ function transcriptFromJob(job: Job | null): TranscriptResult | null {
     subtitleSrt: typeof result.subtitle_srt === "string" ? result.subtitle_srt : null,
     subtitleVtt: typeof result.subtitle_vtt === "string" ? result.subtitle_vtt : null,
   };
+}
+
+function speakerStorageKey(jobId: string) {
+  return `lalin:dubbing:speakers:${jobId}`;
+}
+
+function isSpeakerSlot(value: unknown): value is SpeakerSlot {
+  if (!value || typeof value !== "object") return false;
+  const slot = value as Partial<SpeakerSlot>;
+  return typeof slot.id === "string" && slot.id.length > 0
+    && typeof slot.label === "string"
+    && typeof slot.voiceId === "string";
+}
+
+function speakerLabel(index: number): string {
+  let value = index + 1;
+  let label = "";
+  while (value > 0) {
+    value -= 1;
+    label = String.fromCharCode(65 + (value % 26)) + label;
+    value = Math.floor(value / 26);
+  }
+  return label;
 }

@@ -104,7 +104,16 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 - Analyze path ทำเฉพาะ ASR: ไม่แปล ไม่เรียก TTS และไม่แก้ flow ของ `POST /dubbing`.
 - `job.result` เก็บ `source_audio`, `detected_language`, `segment_count`, `duration_sec`, `transcript.segments[]` (`id`, `start`, `end`, `text`) และชื่อไฟล์ `subtitle_srt`/`subtitle_vtt` ใน `outputs/`. Blank text ถูกตัดออก; timestamp ที่ไม่ finite, ติดลบ หรือ `end < start` ทำให้ job เป็น `error`.
 - ไฟล์ SRT/VTT ใช้ `GET /files/download/{name}`. ผล transcript คงอยู่ใน durable `jobs.json`; UI จำ job ล่าสุดด้วย job ID แล้วเทียบ `source_audio` กับไฟล์ที่เลือกเพื่อแจ้ง stale.
-- Transcript นี้ยังไม่ถูกส่งต่อให้ `POST /dubbing`; ปุ่ม render เดิมถอดเสียงใน pipeline ของตัวเองจนกว่าจะมี slice เชื่อมต่อในอนาคต.
+- ปุ่ม `POST /dubbing` เดิมยังคงถอดเสียงใน pipeline ของตัวเองและใช้ voice เดียว เพื่อรักษา quick flow เดิม.
+
+## dubbing.py — manual speaker mapping และ render (Slice B)
+
+- `POST /dubbing/render` รับ `analysis_job_id`, `segment_speakers[]`, `speaker_voices[]`, `target_lang` และ `translate`; ไม่รับข้อความหรือ timestamp จาก client.
+- Route ต้องพบ analyze job ชนิด `dubbing-analyze` ที่สำเร็จแล้ว, source upload ที่ยังอยู่, assignment ครบทุก segment และ voice profile สำหรับ speaker ที่ถูกใช้; job ที่ไม่พร้อมตอบ `409`, payload/mapping ที่ไม่ตรงตอบ `422`.
+- Render อ่าน segment IDs, text, timestamps, source filename, detected language และ duration จากผล analyze ที่ persist ใน `jobs.json`; จึงไม่เรียก ASR ซ้ำ. การระบุ source ไม่ตรงกับ analyze job ทำไม่ได้ผ่าน contract นี้. ผล render เก็บ `analysis_job_id`, `source_audio`, `speaker_voice_map` และ segment IDs/speaker IDs เพื่อระบุที่มาของเสียง.
+- `dubbing-render` ทำ translate (เมื่อเปิด), TTS ด้วย reference voice ของแต่ละ speaker, fit ตาม timestamp, overlay ลง timeline และสร้าง SRT/VTT; วิดีโอพยายาม mux เสียงใหม่กลับเข้าไฟล์ตามพฤติกรรมเดิม.
+- Resource ของ job พิจารณาจาก TTS device และใช้ GPU FIFO เดิม. Endpoint `POST /dubbing` ไม่เปลี่ยนและยังรองรับ single-speaker flow.
+- Speaker labeling เป็น manual-only; ไม่มี diarization provider หรือการแก้ข้อความ transcript ใน Slice B.
 
 ## health.py — `/health` + `/runtime/status`
 
@@ -124,6 +133,7 @@ Base: `http://127.0.0.1:8756` · WS: `ws://127.0.0.1:8756`
 | `GET /files/input/{name}` | เสิร์ฟต้นฉบับจาก `uploads/` ให้ frontend วาด waveform ([FR-07](../product/SRS.md)) |
 | `GET /files/export/{name}` | `fmt=mp3` แปลง 320k ด้วย ffmpeg ฝังในตัว แล้ว**เขียนไฟล์ .mp3 ข้าง ๆ ต้นฉบับ** (ไม่ลบทิ้ง) |
 | `POST /dubbing/analyze` | ASR-only job `dubbing-analyze`; เก็บ transcript/timestamps ใน job result และเขียน SRT/VTT artifacts ก่อน job สำเร็จ ([FR-03.2a-d](../product/SRS.md)) |
+| `POST /dubbing/render` | job `dubbing-render`; รับ assignment/map แล้วดึง transcript จาก analyze job ที่สำเร็จ ไม่รัน ASR ซ้ำ; ตรวจ speaker และ voice mapping ก่อน spawn |
 | `POST /dubbing/refine` | สมอง error → **คืนข้อความเดิม** ไม่ throw (เป็นตัวช่วยเสริม ไม่ควรทำให้ flow ล้ม) ([FR-03](../product/SRS.md)) |
 | `POST /music/export` | เบค master FX เป็น **job**; ผลลัพธ์ `{output: "<ชื่อไฟล์>"}` ([FR-04b](../product/SRS.md)) |
 

@@ -45,8 +45,9 @@ describe("DubbingTranscriptPanel", () => {
       />,
     );
 
-    expect(screen.getByRole("status").textContent).toContain("interview.wav");
-    expect(screen.getByRole("status").textContent).toContain("replacement.wav");
+    const staleNotice = screen.getByText(/ผลด้านล่างเป็นของไฟล์/);
+    expect(staleNotice.textContent).toContain("interview.wav");
+    expect(staleNotice.textContent).toContain("replacement.wav");
     expect(screen.queryByRole("link", { name: "⬇ SRT" })).toBeNull();
     expect(screen.queryByRole("link", { name: "⬇ VTT" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "วิเคราะห์ Transcript" }));
@@ -77,5 +78,43 @@ describe("DubbingTranscriptPanel", () => {
       />,
     );
     expect(screen.getByRole("button", { name: "กำลังวิเคราะห์…" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("assigns transcript segments to speakers and renders when voice mappings are complete", () => {
+    const onAssignSpeaker = vi.fn();
+    const onRender = vi.fn();
+    render(
+      <DubbingTranscriptPanel
+        source="interview.wav"
+        uploading={false}
+        analyzing={false}
+        job={null}
+        transcript={transcript}
+        voices={[
+          { id: "voice_a", name: "เสียง A", language: "th", ref_text: "" },
+          { id: "voice_b", name: "เสียง B", language: "th", ref_text: "" },
+        ]}
+        speakerSlots={[
+          { id: "spk_a", label: "ผู้พูด A", voiceId: "voice_a" },
+          { id: "spk_b", label: "ผู้พูด B", voiceId: "voice_b" },
+        ]}
+        segmentSpeakers={{ seg_000001: "spk_a" }}
+        renderDisabled={false}
+        targetLang="English"
+        onAnalyze={() => undefined}
+        onAssignSpeaker={onAssignSpeaker}
+        onRender={onRender}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole("combobox", { name: "ผู้พูดของช่วงที่ 1" }), {
+      target: { value: "spk_b" },
+    });
+    expect(onAssignSpeaker).toHaveBeenCalledWith("seg_000001", "spk_b");
+
+    const renderButton = screen.getByRole("button", { name: "▶ สร้างเสียงพากย์" });
+    expect(renderButton.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(renderButton);
+    expect(onRender).toHaveBeenCalledTimes(1);
   });
 });

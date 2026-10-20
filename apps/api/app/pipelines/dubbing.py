@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..brain import get_brain
@@ -30,6 +31,15 @@ VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
 
 # อัตราคำพูดไทยโดยประมาณ (ตัวอักษร/วินาที) ไว้ประเมินว่าประโยคยาวเกินช่องเวลาไหม
 _THAI_CHARS_PER_SEC = 12.0
+
+
+@dataclass(frozen=True)
+class SpeakerSegment:
+    id: str
+    start: float
+    end: float
+    text: str
+    speaker_id: str
 
 
 async def refine_line_for_duration(
@@ -203,6 +213,132 @@ async def run_dubbing(
         )
         if muxed:
             result["video_output"] = video_out
+        else:
+            result["video_mux_error"] = (
+                "ไม่สามารถรวมเสียงกลับเข้าไฟล์วิดีโอได้ (ffmpeg ไม่พร้อมใช้งาน) "
+                "— ได้เฉพาะไฟล์เสียงพากย์เท่านั้น"
+            )
+
+    await say(1.0, "เสร็จสิ้น")
+    return result
+
+
+async def run_multispeaker_dubbing(
+    *,
+    source_audio: str,
+    segments: list[SpeakerSegment],
+    duration: float,
+    detected_language: str | None,
+    speaker_voices: dict[str, tuple[str, str]],
+    target_lang: str = "ไทย",
+    translate: bool = True,
+    tts_language: str = "th",
+    report=None,
+) -> dict:
+    """Render an analyzed transcript using the selected voice for each speaker."""
+    settings = get_settings()
+    loop = asyncio.get_running_loop()
+
+    async def say(progress: float, message: str) -> None:
+        if report:
+            await report(progress, message)
+
+    await say(0.05, "กำลังเตรียม transcript สำหรับพากย์หลายผู้พูด")
+    work = settings.outputs_dir / f"dub_{short_id()}"
+    work.mkdir(parents=True, exist_ok=True)
+    clips: list[tuple[float, str]] = []
+    subtitle_segments: list[dict] = []
+    rendered_segments: list[dict] = []
+    brain = get_brain()
+    total = len(segments)
+
+    for index, segment in enumerate(segments):
+        base = 0.10 + 0.80 * (index / max(total, 1))
+        text = segment.text.strip()
+        if not text:
+            continue
+
+        if translate:
+            await say(base, f"แปลและพากย์ช่วง {index + 1}/{total}…")
+            text = await brain.translate(
+                text, target_lang=target_lang, source_lang=detected_language
+            )
+        await say(base + 0.02, f"พากย์ช่วง {index + 1}/{total} ({segment.speaker_id})…")
+
+        subtitle_segments.append({
+            "start": segment.start,
+            "end": segment.end,
+            "original": segment.text.strip(),
+            "translated": text if translate else segment.text.strip(),
+        })
+
+        voice_ref, voice_ref_text = speaker_voices[segment.speaker_id]
+        raw = str(work / f"seg_{index:04d}_raw.wav")
+        await loop.run_in_executor(
+            None,
+            lambda t=text, o=raw, ref=voice_ref, ref_text=voice_ref_text: tts.synthesize(
+                t, o, ref_audio=ref, ref_text=ref_text, language=tts_language
+            ),
+        )
+
+        fitted = str(work / f"seg_{index:04d}.wav")
+        await loop.run_in_executor(
+            None, fit_duration, raw, segment.end - segment.start, fitted
+        )
+        clips.append((segment.start, fitted))
+        rendered_segments.append({
+            "id": segment.id,
+            "start": segment.start,
+            "end": segment.end,
+            "speaker_id": segment.speaker_id,
+        })
+
+    await say(0.92, "รวมเสียงหลายผู้พูดลงไทม์ไลน์…")
+    output_id = short_id()
+    output_path = str(settings.outputs_dir / f"dubbed_{output_id}.wav")
+    total_ms = int(duration * 1000) + 500
+    await loop.run_in_executor(
+        None, overlay_on_timeline, clips, total_ms, output_path
+    )
+
+    await say(0.95, "สร้างไฟล์ซับไตเติล…")
+    subtitle_srt = f"dubbed_{output_id}.srt"
+    subtitle_vtt = f"dubbed_{output_id}.vtt"
+    try:
+        await loop.run_in_executor(
+            None, write_srt, subtitle_segments,
+            str(settings.outputs_dir / subtitle_srt),
+        )
+        await loop.run_in_executor(
+            None, write_vtt, subtitle_segments,
+            str(settings.outputs_dir / subtitle_vtt),
+        )
+    except Exception:  # noqa: BLE001 — ซับพังไม่ควรทำให้ job พากย์ล้ม
+        (settings.outputs_dir / subtitle_srt).unlink(missing_ok=True)
+        (settings.outputs_dir / subtitle_vtt).unlink(missing_ok=True)
+        subtitle_srt = None
+        subtitle_vtt = None
+
+    result: dict = {
+        "output": output_path,
+        "segments": len(clips),
+        "rendered_segments": rendered_segments,
+        "speaker_count": len({segment.speaker_id for segment in segments}),
+        "detected_language": detected_language,
+        "duration": duration,
+        "translated": translate,
+        "target_lang": target_lang,
+        "subtitle_srt": subtitle_srt,
+        "subtitle_vtt": subtitle_vtt,
+    }
+
+    if Path(source_audio).suffix.lower() in VIDEO_EXTS:
+        await say(0.97, "รวมเสียงพากย์กลับเข้าไฟล์วิดีโอ…")
+        video_output = str(settings.outputs_dir / f"dubbed_{output_id}.mp4")
+        if await loop.run_in_executor(
+            None, _mux_audio_into_video, source_audio, output_path, video_output
+        ):
+            result["video_output"] = video_output
         else:
             result["video_mux_error"] = (
                 "ไม่สามารถรวมเสียงกลับเข้าไฟล์วิดีโอได้ (ffmpeg ไม่พร้อมใช้งาน) "

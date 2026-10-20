@@ -1,5 +1,5 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
 last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "beta"
@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `active — Slice A approved; implementation in branch`
+สถานะ: `active — Slice A implemented; Slice B manual-only approved and in branch`
 
 เหตุผล:
 
@@ -89,11 +89,16 @@ attributes:
 
 #### Slice B
 
-- speaker labels
-- voice-per-speaker mapping
-- multi-speaker render payload
+- manual speaker labels on transcript segments
+- voice-per-speaker mapping from existing voice profiles
+- multi-speaker render job reusing the completed analyze transcript
 
-สถานะ: `not approved`
+สถานะ: `approved (manual-only); implementation in branch; automatic diarization remains out of scope`
+
+เอกสาร:
+
+- `PROPOSED_V03_DUBBING_PRO_SLICE_B.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`
 
 #### Slice C
 
@@ -234,11 +239,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Slice A ได้รับอนุมัติและ implement แล้ว; Draft PR #29 เปิดรอ review. ขั้นถัดไป:
+Slice A implement แล้วและ Slice B แบบ manual-only ได้รับอนุมัติ; ทั้งคู่ทำบน branch ของ Draft PR #29. ขั้นถัดไป:
 
-`Review/merge Slice A; then request separate approval for Slice B`
+`Review/merge Slice A + B; then request separate approval for Slice C`
 
-Slice B ยังไม่อนุมัติ; live ASR quality/device verification เป็น gate แยกจาก automated tests.
+Slice C ยังไม่อนุมัติ; live ASR/audio quality และ native desktop verification ยังเป็น gate แยก.
 
 ---
 
@@ -247,5 +252,5 @@ Slice B ยังไม่อนุมัติ; live ASR quality/device verific
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
-- `+` บันทึก approval และสถานะ implementation ของ Slice A โดยคง Slice B/C เป็นงานที่ยังไม่อนุมัติ
+- `+` บันทึก approval และสถานะ implementation ของ Slice A/B; Slice C ยังไม่อนุมัติ
 

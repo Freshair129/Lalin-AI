@@ -1,5 +1,5 @@
 ---
-version: "1.5.1b"
+version: "1.5.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "under review"
@@ -149,9 +149,13 @@ G-Music เป็นแอปพลิเคชันเดสก์ท็อป
 | FR-03.2b | Transcript UI แสดงข้อความและเวลาเริ่ม/จบของแต่ละ segment | Must |
 | FR-03.2c | Transcript analysis ทำงานเป็น job แยกจาก dubbing render และคืนผลใน job result | Must |
 | FR-03.2d | เมื่อเลือก source คนละไฟล์ UI ต้องระบุ transcript เดิมว่า stale และไม่เปิดดาวน์โหลด subtitle ของผลเก่าเป็นไฟล์ปัจจุบัน | Must |
+| FR-03.2e | ผู้ใช้กำหนด speaker label ให้แต่ละ transcript segment ได้ด้วยตนเองก่อน render | Must |
+| FR-03.2f | ผู้ใช้ map speaker แต่ละคนกับ voice profile ที่มีอยู่; render ต้องปฏิเสธ assignment หรือ voice ที่ขาด/ไม่ตรง | Must |
+| FR-03.2g | Multi-speaker render ใช้ transcript จาก analyze job ที่สำเร็จโดยไม่รัน ASR ซ้ำ และแสดง progress ผ่าน job/WebSocket เดิม | Must |
 | FR-03.3 | ระบบต้องตรวจจับภาษาต้นฉบับอัตโนมัติ หรือรับค่าจากผู้ใช้ | Must |
 | FR-03.4 | ระบบต้องแปลข้อความแต่ละ segment ผ่าน Brain (LLM) เมื่อเปิด translate | Must |
 | FR-03.5 | ระบบต้องสังเคราะห์เสียงพากย์ด้วย voice cloning สำหรับแต่ละ segment | Must |
+| FR-03.5a | Multi-speaker render ต้องใช้ voice profile ที่ map ให้ speaker ของ segment นั้น | Must |
 | FR-03.6 | ระบบต้องยืด/หดเสียงพากย์ให้ตรงกับระยะเวลา segment ต้นฉบับ (รักษาระดับเสียง) | Must |
 | FR-03.7 | ระบบต้องมิกซ์ segments ทั้งหมดลง timeline เดียวตามตำแหน่งเวลาต้นฉบับ | Must |
 | FR-03.8 | ระบบต้องรายงาน progress ทีละ segment ผ่าน WebSocket | Must |
@@ -507,6 +511,7 @@ Play. Local file support does not promise a universal decoder, streaming or DIAL
 | POST | `/tts` | `{text, voice_id?, language, speed?}` | `{job_id}` | สร้างเสียง |
 | POST | `/dubbing` | `{source_audio, voice_id, target_lang, translate, source_lang?}` | `{job_id}` | พากย์ |
 | POST | `/dubbing/analyze` | `{source_audio, source_lang?}` | `{job_id}` | ASR-only transcript job; result มีภาษาที่ตรวจพบ, segment timestamps และ SRT/VTT artifact — FR-03.2a-d |
+| POST | `/dubbing/render` | `{analysis_job_id, segment_speakers[], speaker_voices[], target_lang, translate}` | `{job_id}` | พากย์จาก transcript ที่วิเคราะห์แล้ว โดย map voice ต่อ speaker; ไม่รัน ASR ซ้ำ — FR-03.2e-g |
 | POST | `/dubbing/refine` | `{text, target_sec, tone?}` (`tone` = `formal`\|`casual`) | `{refined}` | เกลาบทหนึ่งบรรทัดให้พูดพอดีช่องเวลา — FR-03; สมอง error → คืนข้อความเดิม |
 | POST | `/mastering` | `{source_audio, reference_audio?, target_lufs, target_format}` | `{job_id}` | มาสเตอร์ |
 | POST | `/music/remix` | `{source_audio, beat_audio, target_lufs?=-14, do_autotune?=true, autotune_strength?=1.0, key_override?, do_fx?=true, phrase_bars?=0, offset_ms?, reverb?=0.16, delay?=0.12, stem_gains?}` | `{job_id}` | Remix — FR-04b · `offset_ms=null` = หา phase อัตโนมัติ · `stem_gains=null` = ข้าม 4-stem (เร็วกว่า) |
@@ -642,5 +647,6 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.5.2b | 2026-10-20 | under review | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | pending (PR #29, draft) | Codex |
 | 1.5.1b | 2026-10-20 | under review | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, draft) | Codex |
 | 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |
