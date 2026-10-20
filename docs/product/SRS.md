@@ -650,7 +650,7 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 1.5.3b | 2026-10-20 | under review | Add approved Dubbing Pro Slice C clip export and mapped short voice-over requirements | Draft PR #30 | Codex |
+| 1.5.3b | 2026-10-20 | beta | Add approved Dubbing Pro Slice C clip export and mapped short voice-over requirements | PR #30, merged as `8df8c073eeab07f87a6fa70875bb321e8ecbe672` | Codex |
 | 1.5.2b | 2026-10-20 | beta | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | 65df361 (PR #29, merged as 60c66c4) | Codex |
 | 1.5.1b | 2026-10-20 | beta | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |
 | 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |

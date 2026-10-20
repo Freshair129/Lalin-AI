@@ -1,7 +1,7 @@
 ---
 version: "0.2.1b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-10-20T00:00:00+07:00,Codex"
+last_update: "2026-10-20T20:34:00+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `active — Slice A/B merged; Slice C approved and in implementation`
+สถานะ: `closed through Slice C; PR #30 merged as 8df8c073eeab07f87a6fa70875bb321e8ecbe672`
 
 เหตุผล:
 
@@ -107,13 +107,13 @@ attributes:
 - preview, download, and add exported audio to the Dubbing timeline
 - no transcript text editing, automatic diarization, or social publishing
 
-สถานะ: `approved on 2026-10-20; implementation in Draft PR #30`
+สถานะ: `approved and merged in PR #30 (merge commit 8df8c073eeab07f87a6fa70875bb321e8ecbe672); live ASR/TTS, GPU render, and native desktop UAT remain separate gates`
 
 ---
 
 ### Track B — Music Phase C
 
-สถานะ: `after Track A`
+สถานะ: `active after Track A closure`
 
 เหตุผล:
 
@@ -127,7 +127,15 @@ attributes:
 - benchmark vs current psola path
 - acceptance thresholds for large pitch shift
 
-สถานะ: `not started`
+สถานะ: `offline benchmark complete; conditional candidate for real-vocal A/B; production integration is on hold`
+
+ผลที่ตัดสินใจได้ตอนนี้:
+
+- pyworld ผ่าน provisional objective gates ทั้ง 4 ช่วงที่ทดสอบ (−8, −4, +4, +8 semitones)
+- psola ผ่าน 7/8; ไม่ผ่าน formant-drift p95 ที่ +8 semitones (26.95% เทียบเกณฑ์ ≤10%)
+- pyworld ที่ +8 semitones วัด formant-drift p95 8.49% บน synthetic input
+- ยังไม่ย้ายเข้า production จนกว่าจะมี blinded A/B จากเสียงร้องจริงที่มีสิทธิ์และตรวจ license set ครบ
+- หลักฐาน: `docs/validation/2026-10-20-MUSIC-PHASE-C-SLICE-B1.md`
 
 #### Slice B2
 
@@ -242,11 +250,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Slice A และ B ถูกรวมใน PR #29 แล้ว; Slice C ได้รับอนุมัติ, implement และเปิดเป็น Draft PR #30 แล้ว. ขั้นถัดไป:
+Track A ปิดถึง Slice C แล้วใน PR #30. Track B / Slice B1 มี benchmark และ decision artifact แล้ว โดยยังคง production hold ไว้จนผ่าน real-vocal A/B. งานถัดไปตามลำดับคือ:
 
-`Review Draft PR #30 and merge when approved`
+`Slice B2 — piecewise beat-warp design, drift detection, and timeline preview contract`
 
-การทดสอบ ASR/TTS ด้วยเสียงจริง, GPU render และ native desktop UAT ยังเป็น gate แยก.
+Slice B2 เป็นงานออกแบบและนิยามเกณฑ์; ไม่ควรเริ่ม implementation ของ warping ก่อนยืนยันว่า drift detection และ preview contract แก้ปัญหาจริงได้. Track A runtime UAT gates ยังคงแยกอยู่.
 
 ---
 
@@ -256,4 +264,5 @@ Slice A และ B ถูกรวมใน PR #29 แล้ว; Slice C ได
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
 - `+` บันทึกว่า Slice A/B merge แล้ว และ Slice C ได้รับอนุมัติให้ implement แบบ manual mapping
+- `+` ปิด Track A ถึง Slice C และเพิ่มผล benchmark/decision evidence สำหรับ Track B Slice B1
 
