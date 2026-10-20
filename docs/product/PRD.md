@@ -1,7 +1,7 @@
 ---
-version: "1.4.2b"
+version: "1.4.4b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -115,10 +115,11 @@ API, MCP และ contracts เป็นส่วนประกอบของ
 | รายการ | รายละเอียด |
 |--------|------------|
 | **อินพุต** | ไฟล์เสียง/วิดีโอ |
-| **กระบวนการ** | ASR (ถอดเสียง) → แปลภาษาด้วย AI → โคลนเสียงทีละ segment → ปรับจังหวะให้ตรง → มิกซ์ timeline |
+| **Analyze path** | อัปโหลด → ASR → ดู transcript พร้อม timestamps และส่งออก SRT/VTT ก่อนเริ่มพากย์ (Slice A) |
+| **Render path** | ทางลัดเดิมยังทำ ASR → แปล → TTS ด้วย voice เดียว; transcript flow เลือกกำหนด speaker/voice ต่อ segment แล้ว render จากผล analyze เดิมได้ (Slice B) |
 | **ถอดเสียง** | faster-whisper — ค่าเริ่มต้น `large-v3`; เลือก `base`, `small`, `medium`, `large-v3` หรือ `turbo` ได้ใน full local runtime |
 | **แปลภาษา** | ผ่าน Brain (Ollama/Cloud), temperature 0.3 |
-| **โคลนเสียง** | เลือกเสียงจากคลัง |
+| **โคลนเสียง** | เลือกเสียงจากคลัง; manual speaker mapping ใช้ voice profile แยกตาม speaker โดยผู้ใช้กำหนดเอง |
 | **ปรับจังหวะ** | ยืด/หดเสียงให้ตรงกับ segment ต้นฉบับ (รักษาระดับเสียง) |
 | **เอาต์พุต** | WAV (เสียงพากย์ใหม่บน timeline เดิม) |
 
@@ -284,6 +285,10 @@ PLAY-10 เป็น release gate แยกและต้องรายงา�
 → ฟัง/ดาวน์โหลดเสียงพากย์
 ```
 
+ทาง transcript-first เพิ่มขั้นเลือกได้: `อัปโหลด → Transcript → วิเคราะห์ → กำหนด speaker/voice → render`.
+การวิเคราะห์เป็น ASR job แยก; Slice B ใช้ผล analyze เดิมและไม่รัน ASR ซ้ำ ส่วนปุ่มพากย์เดิมยังคง single-speaker flow ของตัวเอง.
+จาก transcript เดิม ผู้ใช้เลือกหลายช่วงเพื่อส่งออก WAV แยกตามช่วงที่ติดกันพร้อม SRT/VTT snippet หรือสร้าง short voice-over ตาม speaker/voice mapping ที่ตั้งไว้ แล้ว preview, download หรือเพิ่มเสียงลง Timeline ได้.
+
 ### Flow 3: มาสเตอร์เพลง
 ```
 เปิดแอป → Mastering → อัปโหลดเพลง → (อัปโหลดเพลงอ้างอิง ถ้ามี)
@@ -343,11 +348,17 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 ### v0.3.0 (อนาคต)
 - [ ] รองรับ macOS / Linux
 - [ ] Voice fine-tuning (เทรนเสียงเพิ่ม)
-- [ ] Multi-speaker dubbing (หลายตัวละคร)
+- [x] Manual multi-speaker dubbing (Slice B merged in PR #29)
+- [ ] Transcript clip export and short voice-over (Slice C approved; implementation in progress)
+- [ ] Automatic speaker diarization (ยังไม่อยู่ใน Slice C)
 - [ ] Plugin system สำหรับ pipeline ใหม่
 - [ ] Voice profiles: การยินยอม, อัปโหลด/บันทึกจากไมโครโฟน, แก้ไขและ metadata ตลอด lifecycle
 - [ ] ตัวเลือกขนาด Whisper พร้อมสถานะ runtime และผลตอบกลับเมื่อสลับโมเดล
 - [ ] Agent Voice สำหรับ Mix Copilot ใน full local runtime
+
+**Dubbing Pro Slice A/B (2026-10-20):** PR #29 รวมแล้วใน merge commit `60c66c4`. Slice A เพิ่ม analyze/transcript; Slice B เพิ่ม manual speaker/voice mapping และ multi-speaker render. Automated checks ผ่านตาม validation report; live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
+
+**Dubbing Pro Slice C (2026-10-20):** ผู้ใช้อนุมัติ clip export จาก segment ที่เลือกพร้อม SRT/VTT snippet และ short voice-over จากข้อความ transcript ด้วย speaker/voice mapping เดิม รวม preview/download/เพิ่มลง Timeline. ไม่รวมแก้ข้อความ transcript, automatic diarization หรือ social publishing. Merged ใน PR #30 (merge commit `8df8c073eeab07f87a6fa70875bb321e8ecbe672`); live TTS และ native UAT ยังเป็น gates แยก.
 
 ---
 
@@ -366,6 +377,9 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.5b | 2026-10-20 | beta | Record approved Dubbing Pro Slice C clip export and mapped short voice-over scope | PR #30, merged as `8df8c073eeab07f87a6fa70875bb321e8ecbe672` | Codex |
+| 1.4.4b | 2026-10-20 | beta | Record approved manual-only Dubbing Pro Slice B scope | 65df361 (PR #29, merged as 60c66c4) | Codex |
+| 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |
 | 1.4.2b | 2026-09-20 | beta | Link current publication status and complete Play evidence/document map | based on f5a6681 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Record approved fullscreen/relative seek implementation and bounded local evidence | based on 8429010 | LALIN |
 | 1.4.0b | 2026-09-20 | candidate | Propose Compact fullscreen and relative seek requirements; retain approved preview baseline | based on 8429010 | LALIN |

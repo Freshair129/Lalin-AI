@@ -119,9 +119,9 @@ views:
     component: DubbingPanel.tsx
     status: done
     studio_dock: true            # StudioDock mount ล่างจอ
-    inputs: [source_file(audio|video), voice_id, target_lang, translate(bool)]
+    inputs: [source_file(audio|video), voice_id, target_lang, translate(bool), manual_speaker_assignments, speaker_voice_map]
     helper: เกลาบทให้พอดีเวลา — สมองเขียนประโยคใหม่ให้พูดทัน target_sec (tone formal|casual)
-    api: [POST /files/upload, POST /dubbing, POST /dubbing/refine]
+    api: [POST /files/upload, POST /dubbing, POST /dubbing/analyze, POST /dubbing/render, POST /dubbing/refine]
     output: JobProgress
 
   - id: arrange
@@ -331,6 +331,8 @@ api:
     # งาน ML (รันผ่าน jobs.spawn + WS progress)
     - {method: POST,   path: /tts,                 body: [text, voice_id, language, speed],         returns: job_id}
     - {method: POST,   path: /dubbing,             body: [source_audio, voice_id, target_lang, translate, source_lang], returns: job_id}
+    - {method: POST,   path: /dubbing/analyze,     body: [source_audio, source_lang],                returns: job_id}   # ASR-only; result carries timestamped transcript + SRT/VTT
+    - {method: POST,   path: /dubbing/render,      body: [analysis_job_id, segment_speakers, speaker_voices, target_lang, translate], returns: job_id}   # manual mapping; reuse analyzed transcript without ASR
     - {method: POST,   path: /dubbing/refine,      body: [text, target_sec, tone(formal|casual)],   returns: refined}   # เกลาบทให้พอดีเวลา (สมองพัง→คืนข้อความเดิม)
     - {method: POST,   path: /mastering,           body: [source_audio, reference_audio, target_lufs, target_format], returns: job_id}
     - {method: POST,   path: /music/remix,         body: [source_audio, beat_audio, do_autotune, autotune_strength, key_override, do_fx, phrase_bars, offset_ms, reverb, delay, target_lufs, stem_gains], returns: job_id}
@@ -387,7 +389,7 @@ api:
 pipelines:
   asr:        {file: pipelines/asr.py, engine: faster-whisper, out: "segments[start,end,text]"}
   tts:        {file: pipelines/tts.py, engines: [f5, xtts], rule: "th→f5 เสมอ"}
-  dubbing:    {file: pipelines/dubbing.py, flow: "ASR→translate→TTS→fit_duration→overlay", helper: refine_line_for_duration}
+  dubbing:    {file: pipelines/dubbing.py, flow: "ASR→translate→TTS→fit_duration→overlay", analyze: "routers/dubbing.py POST /dubbing/analyze is ASR-only", multi_speaker: "POST /dubbing/render reads completed analyze job and applies a manual speaker-to-voice map; no diarization", helper: refine_line_for_duration}
   mastering:  {file: pipelines/mastering.py, modes: [reference(matchering), auto(lufs)]}
   music:
     file: pipelines/music.py
