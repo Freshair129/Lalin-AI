@@ -164,7 +164,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | pending PR | Codex |
+| 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | 1ef64f0 (PR #29, draft) | Codex |
 | 0.10.11b | 2026-09-26 | beta | Index the approved Play execution DAG, S2/S3 contract and implementation evidence, and both local-path RCAs | S2 7c30ea1; S3 235875b/362bbd0; base 43121cc | Codex |
 | 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |
 | 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |

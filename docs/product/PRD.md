@@ -372,7 +372,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | pending PR | Codex |
+| 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | 1ef64f0 (PR #29, draft) | Codex |
 | 1.4.2b | 2026-09-20 | beta | Link current publication status and complete Play evidence/document map | based on f5a6681 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Record approved fullscreen/relative seek implementation and bounded local evidence | based on 8429010 | LALIN |
 | 1.4.0b | 2026-09-20 | candidate | Propose Compact fullscreen and relative seek requirements; retain approved preview baseline | based on 8429010 | LALIN |

@@ -78,7 +78,7 @@ attributes:
 - transcript UI
 - canonical doc sync
 
-สถานะ: `approved; implemented and automated checks pass in branch codex/dubbing-pro-slice-a-20261020; pending PR review/merge and live-ASR verification`
+สถานะ: `approved; implemented and automated checks pass; Draft PR #29 open; live-ASR verification remains pending`
 
 เอกสาร:
 
@@ -234,7 +234,7 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Slice A ได้รับอนุมัติและ implement ใน branch แล้ว. ขั้นถัดไป:
+Slice A ได้รับอนุมัติและ implement แล้ว; Draft PR #29 เปิดรอ review. ขั้นถัดไป:
 
 `Review/merge Slice A; then request separate approval for Slice B`
 

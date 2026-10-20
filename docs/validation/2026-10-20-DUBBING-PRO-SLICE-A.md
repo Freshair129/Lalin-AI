@@ -14,7 +14,7 @@ attributes:
 
 ## Status
 
-Approved Slice A is implemented in branch `codex/dubbing-pro-slice-a-20261020`. Automated backend and desktop checks pass. The branch has not been merged. Real-model ASR quality, GPU execution, and native desktop interaction have not been verified.
+Approved Slice A is implemented in branch `codex/dubbing-pro-slice-a-20261020`; [Draft PR #29](https://github.com/Freshair129/Lalin-AI/pull/29) is open, with implementation commit `1ef64f0`. Automated backend and desktop checks pass. The branch has not been merged. Real-model ASR quality, GPU execution, and native desktop interaction have not been verified.
 
 ## Implemented Scope
 
