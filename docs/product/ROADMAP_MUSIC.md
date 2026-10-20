@@ -6,17 +6,19 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.0.1 |
+| **Doc Version** | 1.0.3 |
 | **Status** | Active |
 | **Author** | Boss |
 | **Created** | 2026-06-28 |
-| **Last Updated** | 2026-08-09 |
+| **Last Updated** | 2026-10-20 |
 | **Approved By** | — |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-06-28 | Boss | ฉบับแรก (PoC ผ่านบน RTX 3060) |
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph — ตาราง license §4 ถูกอ้างโดย ai-system/ethics-governance.md |
+| 1.0.2 | 2026-10-20 | Codex | บันทึกผลประเมิน pyworld เทียบ psola แบบ synthetic และแก้ metadata license ของ psola ตาม upstream |
+| 1.0.3 | 2026-10-20 | Codex | เพิ่มลิงก์ Slice B2 design และระบุว่า piecewise warp ยังไม่ implement |
 
 ---
 
@@ -56,11 +58,11 @@ Suno เจนเพลง / เดโม่ตัวเอง  →  [G-Music]  
 
 | ปัญหา | สถานะ | ทางแก้ |
 |-------|-------|--------|
-| **Beat-sync ระดับโปร** | ⚠️ global phase ได้ แต่ drift/phrase ยังไม่จัด | **Manual nudge UI** (ให้คนเลื่อน ms + เลือกห้องเริ่ม) — DAW จริงก็ให้คนคุม |
-| Piecewise warp | ❌ artifact + พึ่ง beat detection ที่ไม่เสถียร | ยังไม่คุ้ม — ใช้ manual แทน |
+| **Beat-sync ระดับโปร** | ⚠️ global phase ได้ แต่ drift/phrase ยังไม่จัด | Manual nudge ใช้ได้; Slice B2 กำหนด drift gate และ timeline preview แล้ว แต่ยังไม่ implement |
+| Piecewise warp | ❌ ยังไม่มี local tempo map หรือ warp markers | ทำตาม design ที่ [Slice B2](MUSIC-PHASE-C-SLICE-B2-DESIGN.md) หลัง review thresholds, B1 merge, และ licensed-vocal A/B |
 | Key match minor↔major | ⚠️ detect ถูก แต่ force mode อาจเพี้ยน melody | ให้ผู้ใช้ override คีย์ได้ |
 | LUFS หลัง FX ตก / drift จาก target | ✅ ดีขึ้นแล้ว แต่ยังต้องยืนยัน acceptance window | ใช้ smoke gate ตรวจ output จริง พร้อม target/tolerance และ peak ceiling |
-| Formant ตอน pitch-shift มาก | ⚠️ เพี้ยน timbre เมื่อ shift > 4 semitone | pyworld (formant-preserving) ถ้าต้องการ |
+| Formant ตอน pitch-shift มาก | ⚠️ ผล benchmark synthetic ที่ +8 semitone: pyworld drift p95 8.49%, psola 26.95%; ยังไม่ได้ฟังกับเสียงร้องจริง | ทำ blinded A/B กับเสียงร้องที่มีสิทธิ์ก่อนเพิ่ม pyworld ในแอป — ดู [Slice B1 evidence](../validation/2026-10-20-MUSIC-PHASE-C-SLICE-B1.md) |
 | ค่า FX ตอนนี้ fix | ✅ ปรับได้แล้วทั้ง tune/reverb/delay | ต่อไปโฟกัส override คีย์ + phrase start |
 
 **บทเรียนสำคัญ:** auto beat-sync ที่ "เนียนเป๊ะ" เป็นปัญหายากที่สุด — DAW มืออาชีพ (Ableton Warp, Flex Time) ยังให้คนลาก marker เอง → **อย่าพยายาม automate 100%** ให้ auto เป็น "จุดเริ่มที่ดี" แล้วมี manual control
@@ -80,7 +82,7 @@ uv pip install demucs psola pedalboard
 | demucs | MIT | ✅ |
 | librosa / pyloudnorm / soundfile | ISC/MIT/BSD | ✅ |
 | matchering | GPLv3 | ⚠️ |
-| psola | MIT (แต่พึ่ง **parselmouth = GPL**) | ⚠️ |
+| psola | upstream package metadata ระบุ GPLv3 และติดตั้ง `praat-parselmouth` | ⚠️ |
 | pedalboard | GPLv3 | ⚠️ |
 
 ⚠️ **GPL contamination:** matchering, parselmouth(ผ่าน psola), pedalboard เป็น GPL → ถ้า bundle ขายตรงๆ โปรแกรมอาจติด GPL
@@ -168,7 +170,7 @@ uv pip install demucs psola pedalboard
 - ไม่มี regression กับเส้นทาง auto-sync เดิม
 
 ### 🔴 เฟส C — ขั้นสูง (ถ้าจำเป็น)
-- [ ] pyworld formant-preserving สำหรับ pitch-shift มากๆ
+- [ ] pyworld formant-preserving สำหรับ pitch-shift มากๆ — Slice B1 มีผล benchmark synthetic แล้ว; ยังไม่รวมใน production จนกว่าจะผ่าน A/B กับเสียงร้องจริง
 - [ ] Piecewise beat-warp (ถ้าจะสู้ drift จริง)
 - [ ] RVC singing voice conversion (consent-first + BYOM) — ดู §8
 
