@@ -17,17 +17,148 @@ from ..pipelines.asr import transcribe
 from ..pipelines.dubbing import (
     SpeakerSegment,
     refine_line_for_duration,
+    run_clip_export,
     run_dubbing,
     run_multispeaker_dubbing,
+    run_short_voiceover,
     write_srt,
     write_vtt,
 )
 from ..runtime_devices import resolve_asr_runtime, resolve_tts_runtime
-from ..schemas import DubbingRenderRequest, DubbingRequest
+from ..schemas import (
+    DubbingClipExportRequest,
+    DubbingRenderRequest,
+    DubbingRequest,
+    DubbingVoiceoverRequest,
+)
 from ..services import voices
 from .files import resolve_upload
 
 router = APIRouter(prefix="/dubbing", tags=["dubbing"])
+
+
+def _analysis_transcript(analysis_job_id: str):
+    analysis_job = jobs.get(analysis_job_id)
+    if not analysis_job:
+        raise HTTPException(404, "ไม่พบงานวิเคราะห์ transcript")
+    if analysis_job.kind != "dubbing-analyze":
+        raise HTTPException(422, "งานที่ระบุไม่ใช่งานวิเคราะห์ transcript")
+    if analysis_job.status != "done" or not isinstance(analysis_job.result, dict):
+        raise HTTPException(409, "งานวิเคราะห์ transcript ยังไม่สำเร็จ")
+
+    result = analysis_job.result
+    source_name = result.get("source_audio")
+    transcript = result.get("transcript")
+    raw_segments = transcript.get("segments") if isinstance(transcript, dict) else None
+    if (
+        not isinstance(source_name, str)
+        or not isinstance(raw_segments, list)
+        or not raw_segments
+    ):
+        raise HTTPException(422, "งานวิเคราะห์ไม่มี transcript ที่นำไปใช้ได้")
+
+    segments_by_id: dict[str, dict] = {}
+    previous_start = -1.0
+    for raw_segment in raw_segments:
+        if not isinstance(raw_segment, dict):
+            raise HTTPException(422, "ข้อมูล transcript ไม่ถูกต้อง")
+        segment_id = raw_segment.get("id")
+        text = raw_segment.get("text")
+        start = raw_segment.get("start")
+        end = raw_segment.get("end")
+        if (
+            not isinstance(segment_id, str)
+            or not segment_id
+            or segment_id in segments_by_id
+            or not isinstance(text, str)
+            or not text.strip()
+            or not isinstance(start, (int, float))
+            or not isinstance(end, (int, float))
+            or not math.isfinite(start)
+            or not math.isfinite(end)
+            or start < previous_start
+            or start < 0
+            or end <= start
+        ):
+            raise HTTPException(422, "ข้อมูล transcript มีช่วงเวลาหรือข้อความไม่ถูกต้อง")
+        previous_start = float(start)
+        segments_by_id[segment_id] = raw_segment
+
+    return (
+        analysis_job,
+        result,
+        source_name,
+        resolve_upload(source_name),
+        raw_segments,
+        segments_by_id,
+    )
+
+
+def _selected_segments(
+    raw_segments: list[dict],
+    segments_by_id: dict[str, dict],
+    segment_ids: list[str],
+):
+    if len(set(segment_ids)) != len(segment_ids):
+        raise HTTPException(422, "รายการ segment มีรายการซ้ำ")
+    if any(segment_id not in segments_by_id for segment_id in segment_ids):
+        raise HTTPException(422, "พบ segment ที่ไม่ได้อยู่ใน transcript นี้")
+    selected_ids = set(segment_ids)
+    return [segment for segment in raw_segments if segment["id"] in selected_ids]
+
+
+def _group_adjacent_segments(
+    raw_segments: list[dict],
+    selected_ids: set[str],
+) -> list[list[dict]]:
+    groups: list[list[dict]] = []
+    current: list[dict] = []
+    for segment in raw_segments:
+        if segment["id"] in selected_ids:
+            current.append(segment)
+        elif current:
+            groups.append(current)
+            current = []
+    if current:
+        groups.append(current)
+    return groups
+
+
+def _selected_voice_map(req, selected: list[dict], settings):
+    selected_ids = {segment["id"] for segment in selected}
+    assignments: dict[str, str] = {}
+    for item in req.segment_speakers:
+        if item.segment_id in assignments:
+            raise HTTPException(422, f"segment ถูกกำหนด speaker ซ้ำ: {item.segment_id}")
+        assignments[item.segment_id] = item.speaker_id
+    if set(assignments) != selected_ids:
+        raise HTTPException(422, "ต้องกำหนด speaker ให้ทุก segment ที่เลือก")
+
+    voice_ids_by_speaker: dict[str, str] = {}
+    for item in req.speaker_voices:
+        if item.speaker_id in voice_ids_by_speaker:
+            raise HTTPException(422, f"speaker ถูกกำหนด voice ซ้ำ: {item.speaker_id}")
+        voice_ids_by_speaker[item.speaker_id] = item.voice_id
+    assigned_speakers = set(assignments.values())
+    if set(voice_ids_by_speaker) != assigned_speakers:
+        raise HTTPException(422, "ต้องกำหนด voice ให้ speaker ที่เลือกใช้ทุกคน")
+
+    voice_root = settings.voices_dir.resolve()
+    speaker_voices: dict[str, tuple[str, str]] = {}
+    for speaker_id, voice_id in voice_ids_by_speaker.items():
+        try:
+            voice_ref, voice_ref_text = voices.resolve_ref(voice_id)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        except (KeyError, OSError) as exc:
+            raise HTTPException(422, f"voice profile ใช้งานไม่ได้: {voice_id}") from exc
+        if not isinstance(voice_ref, str) or not voice_ref:
+            raise HTTPException(422, f"voice profile ใช้งานไม่ได้: {voice_id}")
+        voice_path = Path(voice_ref).resolve()
+        if voice_path.parent != voice_root or not voice_path.is_file():
+            raise HTTPException(422, f"ไม่พบไฟล์เสียงของ voice profile: {voice_id}")
+        speaker_voices[speaker_id] = (str(voice_path), str(voice_ref_text or ""))
+    return assignments, voice_ids_by_speaker, speaker_voices
 
 
 class AnalyzeRequest(BaseModel):
@@ -274,6 +405,94 @@ async def render(req: DubbingRenderRequest):
         resolve_auto=lambda: resolve_tts_runtime(settings.tts_device),
     )
     job = jobs.spawn("dubbing-render", task, resource=tts_resource)
+    return {"job_id": job.id}
+
+
+@router.post("/clips")
+async def export_clips(req: DubbingClipExportRequest):
+    """ส่งออก segment ที่เลือกเป็นคลิป WAV แยกตามช่วงที่ติดกัน พร้อม SRT/VTT snippet."""
+    (
+        analysis_job,
+        _,
+        source_name,
+        source,
+        raw_segments,
+        segments_by_id,
+    ) = _analysis_transcript(req.analysis_job_id)
+    selected = _selected_segments(raw_segments, segments_by_id, req.segment_ids)
+    groups = _group_adjacent_segments(raw_segments, {segment["id"] for segment in selected})
+    if len(groups) > 100:
+        raise HTTPException(422, "ส่งออกได้ไม่เกิน 100 คลิปต่อ job")
+
+    async def task(job, report):
+        result = await run_clip_export(
+            source_audio=source,
+            groups=groups,
+            report=lambda progress, message: report(job, progress, message),
+        )
+        result["analysis_job_id"] = analysis_job.id
+        result["source_audio"] = source_name
+        return result
+
+    job = jobs.spawn("dubbing-clips", task, resource="cpu")
+    return {"job_id": job.id}
+
+
+@router.post("/voiceover")
+async def voiceover(req: DubbingVoiceoverRequest):
+    """สร้าง voice-over สั้นจากข้อความ transcript ที่เลือกและ mapping ของ Slice B."""
+    (
+        analysis_job,
+        analysis_result,
+        source_name,
+        _,
+        raw_segments,
+        segments_by_id,
+    ) = _analysis_transcript(req.analysis_job_id)
+    selected = _selected_segments(raw_segments, segments_by_id, req.segment_ids)
+    selected_duration = sum(float(segment["end"]) - float(segment["start"]) for segment in selected)
+    if selected_duration > 120:
+        raise HTTPException(422, "voice-over เลือกข้อความได้รวมไม่เกิน 120 วินาที")
+
+    settings = get_settings()
+    assignments, voice_ids_by_speaker, speaker_voices = _selected_voice_map(
+        req, selected, settings
+    )
+    segments = [
+        SpeakerSegment(
+            id=segment["id"],
+            start=float(segment["start"]),
+            end=float(segment["end"]),
+            text=segment["text"],
+            speaker_id=assignments[segment["id"]],
+        )
+        for segment in selected
+    ]
+    detected_language = analysis_result.get("detected_language")
+    if not isinstance(detected_language, str):
+        detected_language = None
+    tts_language = "th" if req.target_lang in ("ไทย", "th", "Thai") else "en"
+
+    async def task(job, report):
+        result = await run_short_voiceover(
+            segments=segments,
+            speaker_voices=speaker_voices,
+            detected_language=detected_language,
+            target_lang=req.target_lang,
+            translate=req.translate,
+            tts_language=tts_language,
+            report=lambda progress, message: report(job, progress, message),
+        )
+        result["analysis_job_id"] = analysis_job.id
+        result["source_audio"] = source_name
+        result["speaker_voice_map"] = voice_ids_by_speaker
+        return result
+
+    tts_resource = resource_for_requested_device(
+        settings.tts_device,
+        resolve_auto=lambda: resolve_tts_runtime(settings.tts_device),
+    )
+    job = jobs.spawn("dubbing-voiceover", task, resource=tts_resource)
     return {"job_id": job.id}
 
 

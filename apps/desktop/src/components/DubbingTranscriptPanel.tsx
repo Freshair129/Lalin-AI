@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { files, type Job, type Voice } from "../api";
 import { JobProgress } from "./JobProgress";
 
@@ -45,6 +46,17 @@ interface DubbingTranscriptPanelProps {
   onRemoveSpeaker?: (speakerId: string) => void;
   onAssignSpeaker?: (segmentId: string, speakerId: string) => void;
   onRender?: () => void;
+  selectedSegmentIds?: string[];
+  clipsJob?: Job | null;
+  exportingClips?: boolean;
+  voiceoverJob?: Job | null;
+  generatingVoiceover?: boolean;
+  onToggleSegment?: (segmentId: string, selected: boolean) => void;
+  onSelectAllSegments?: () => void;
+  onClearSegmentSelection?: () => void;
+  onExportClips?: () => void;
+  onVoiceover?: () => void;
+  onAddOutputToTimeline?: (output: string) => void;
   active?: boolean;
 }
 
@@ -68,8 +80,20 @@ export function DubbingTranscriptPanel({
   onRemoveSpeaker = () => {},
   onAssignSpeaker = () => {},
   onRender = () => {},
+  selectedSegmentIds = [],
+  clipsJob = null,
+  exportingClips = false,
+  voiceoverJob = null,
+  generatingVoiceover = false,
+  onToggleSegment = () => {},
+  onSelectAllSegments = () => {},
+  onClearSegmentSelection = () => {},
+  onExportClips = () => {},
+  onVoiceover = () => {},
+  onAddOutputToTimeline = () => {},
   active = true,
 }: DubbingTranscriptPanelProps) {
+  const [addedOutputs, setAddedOutputs] = useState<Record<string, boolean>>({});
   const stale = !!transcript && transcript.sourceAudio !== source;
   const canEditSpeakers = !!transcript && !stale && !analyzing;
   const usedSpeakerIds = new Set(
@@ -84,6 +108,40 @@ export function DubbingTranscriptPanel({
     const voiceId = speakerSlots.find((speaker) => speaker.id === speakerId)?.voiceId;
     return !voiceId || !voices.some((voice) => voice.id === voiceId);
   });
+  const selectedIdSet = new Set(selectedSegmentIds);
+  const selectedSegments = transcript?.segments.filter((segment) => selectedIdSet.has(segment.id)) ?? [];
+  const selectedDuration = selectedSegments.reduce((sum, segment) => sum + segment.end - segment.start, 0);
+  let selectedGroupCount = 0;
+  let inSelectedGroup = false;
+  for (const segment of transcript?.segments ?? []) {
+    if (selectedIdSet.has(segment.id)) {
+      if (!inSelectedGroup) selectedGroupCount += 1;
+      inSelectedGroup = true;
+    } else {
+      inSelectedGroup = false;
+    }
+  }
+  const selectedSpeakerIds = new Set(selectedSegments.map((segment) => segmentSpeakers[segment.id]).filter(Boolean));
+  const selectedHasMissingVoice = selectedSegments.some((segment) => {
+    const speakerId = segmentSpeakers[segment.id];
+    const speaker = speakerSlots.find((item) => item.id === speakerId);
+    return !speaker || !speaker.voiceId || !voices.some((voice) => voice.id === speaker.voiceId);
+  });
+  const selectionDisabled = stale || !source || uploading || analyzing || !transcript?.segments.length;
+  let clipDisabledReason: string | null = null;
+  if (selectionDisabled) clipDisabledReason = "วิเคราะห์ไฟล์ต้นฉบับปัจจุบันก่อนเลือกช่วง";
+  else if (selectedSegments.length === 0) clipDisabledReason = "เลือก transcript อย่างน้อยหนึ่งช่วงก่อนส่งออกคลิป";
+  else if (selectedGroupCount > 100) clipDisabledReason = "ส่งออกได้ไม่เกิน 100 คลิปต่อ job — เลือกช่วงที่ติดกันเพิ่มขึ้น";
+  let voiceoverDisabledReason: string | null = null;
+  if (selectionDisabled) voiceoverDisabledReason = "วิเคราะห์ไฟล์ต้นฉบับปัจจุบันก่อนเลือกช่วง";
+  else if (selectedSegments.length === 0) voiceoverDisabledReason = "เลือก transcript อย่างน้อยหนึ่งช่วงก่อนสร้าง voice-over";
+  else if (selectedDuration > 120) {
+    voiceoverDisabledReason = "voice-over เลือกข้อความได้รวมไม่เกิน 120 วินาที";
+  } else if (selectedSpeakerIds.size === 0) {
+    voiceoverDisabledReason = "เลือกผู้พูดให้ช่วงที่ต้องการก่อนสร้าง voice-over";
+  } else if (voices.length === 0 || selectedHasMissingVoice) {
+    voiceoverDisabledReason = "เลือก voice profile ให้ผู้พูดของช่วงที่เลือกก่อนสร้าง voice-over";
+  }
   let renderDisabledReason: string | null = null;
   if (stale || !source) renderDisabledReason = "วิเคราะห์ไฟล์ต้นฉบับปัจจุบันก่อน render";
   else if (uploading || analyzing) renderDisabledReason = "รอการอัปโหลดหรือวิเคราะห์ให้เสร็จก่อน";
@@ -205,9 +263,32 @@ export function DubbingTranscriptPanel({
                 )}
               </section>
 
+              <div className="dubbing-transcript__selection-actions">
+                <div>
+                  <h4>เลือกช่วงสำหรับคลิปและ voice-over</h4>
+                  <p className="hint">ช่วงที่เลือกติดกันจะรวมเป็นคลิปเดียว; ช่วงที่คั่นจะส่งออกเป็นคนละคลิป</p>
+                </div>
+                <div className="row">
+                  <button className="secondary" type="button" onClick={onSelectAllSegments} disabled={selectionDisabled}>
+                    เลือกทั้งหมด
+                  </button>
+                  <button className="secondary" type="button" onClick={onClearSegmentSelection} disabled={selectedSegmentIds.length === 0}>
+                    ล้างการเลือก
+                  </button>
+                </div>
+              </div>
+
               <div className="dubbing-transcript__list" role="list" aria-label="ช่วงข้อความถอดเสียง">
                 {transcript.segments.map((segment, index) => (
                   <div className="dubbing-transcript__row" role="listitem" key={segment.id}>
+                    <input
+                      className="dubbing-transcript__checkbox"
+                      type="checkbox"
+                      aria-label={`เลือกช่วงที่ ${index + 1} สำหรับคลิปและ voice-over`}
+                      checked={selectedIdSet.has(segment.id)}
+                      onChange={(event) => onToggleSegment(segment.id, event.target.checked)}
+                      disabled={selectionDisabled}
+                    />
                     <span className="dubbing-transcript__time">
                       {formatTimestamp(segment.start)} – {formatTimestamp(segment.end)}
                     </span>
@@ -228,6 +309,109 @@ export function DubbingTranscriptPanel({
                   </div>
                 ))}
               </div>
+
+              <section className="dubbing-clips" aria-label="ส่งออกคลิปและสร้าง voice-over">
+                <div className="dubbing-clips__heading">
+                  <div>
+                    <h4>คลิปและ voice-over</h4>
+                    <p className="hint">เลือกแล้ว {selectedSegments.length} ช่วง · {formatTimestamp(selectedDuration)}</p>
+                  </div>
+                  <div className="row">
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={onExportClips}
+                      disabled={!!clipDisabledReason || exportingClips}
+                    >
+                      {exportingClips ? "กำลังส่งออกคลิป…" : "⬇ ส่งออกคลิป + ซับ"}
+                    </button>
+                    <button
+                      className="primary"
+                      type="button"
+                      onClick={onVoiceover}
+                      disabled={!!voiceoverDisabledReason || generatingVoiceover}
+                    >
+                      {generatingVoiceover ? "กำลังสร้าง voice-over…" : "▶ สร้าง short voice-over"}
+                    </button>
+                  </div>
+                </div>
+                {clipDisabledReason && (
+                  <p className="hint" role="status">{clipDisabledReason}</p>
+                )}
+                {voiceoverDisabledReason && selectedSegments.length > 0 && (
+                  <p className="hint" role="status">{voiceoverDisabledReason}</p>
+                )}
+
+                {clipsJob && (
+                  <div className="dubbing-render-result">
+                    <h4>คลิปที่ส่งออก</h4>
+                    <JobProgress job={clipsJob} />
+                    {clipsJob.result?.analysis_job_id && clipsJob.result.analysis_job_id !== transcript.jobId && (
+                      <p className="dubbing-transcript__notice dubbing-transcript__notice--stale" role="status">
+                        คลิปนี้สร้างจาก transcript งานอื่น
+                      </p>
+                    )}
+                    {clipsJob.status === "done" && clipsJob.result?.clips?.map((clip, index) => (
+                      <article className="dubbing-clip-result" key={clip.output}>
+                        <strong>คลิป {index + 1} · {clip.segment_ids.length} ช่วง · {formatTimestamp(clip.duration)}</strong>
+                        <p>{clip.text}</p>
+                        <audio controls preload="metadata" src={files.downloadUrl(basename(clip.output))} />
+                        <div className="dubbing-transcript__downloads">
+                          <a className="dl" href={files.downloadUrl(basename(clip.output))} download>⬇ เสียง WAV</a>
+                          <a className="dl" href={files.downloadUrl(clip.subtitle_srt)} download>⬇ SRT snippet</a>
+                          <a className="dl" href={files.downloadUrl(clip.subtitle_vtt)} download>⬇ VTT snippet</a>
+                          <button
+                            className="secondary"
+                            type="button"
+                            onClick={() => {
+                              onAddOutputToTimeline(clip.output);
+                              setAddedOutputs((current) => ({ ...current, [clip.output]: true }));
+                            }}
+                            disabled={!!addedOutputs[clip.output]}
+                          >
+                            {addedOutputs[clip.output] ? "✓ เพิ่มใน Timeline แล้ว" : "＋ เพิ่มใน Timeline"}
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                {voiceoverJob && (
+                  <div className="dubbing-render-result">
+                    <h4>Short voice-over</h4>
+                    <JobProgress job={voiceoverJob} />
+                    {voiceoverJob.result?.analysis_job_id && voiceoverJob.result.analysis_job_id !== transcript.jobId && (
+                      <p className="dubbing-transcript__notice dubbing-transcript__notice--stale" role="status">
+                        voice-over นี้สร้างจาก transcript งานอื่น
+                      </p>
+                    )}
+                    {voiceoverJob.status === "done" && voiceoverJob.result?.output && (
+                      <div className="dubbing-clip-result">
+                        <div className="dubbing-transcript__downloads">
+                          {voiceoverJob.result.subtitle_srt && (
+                            <a className="dl" href={files.downloadUrl(voiceoverJob.result.subtitle_srt)} download>⬇ SRT snippet</a>
+                          )}
+                          {voiceoverJob.result.subtitle_vtt && (
+                            <a className="dl" href={files.downloadUrl(voiceoverJob.result.subtitle_vtt)} download>⬇ VTT snippet</a>
+                          )}
+                          <button
+                            className="secondary"
+                            type="button"
+                            onClick={() => {
+                              onAddOutputToTimeline(voiceoverJob.result!.output!);
+                              setAddedOutputs((current) => ({ ...current, [voiceoverJob.result!.output!]: true }));
+                            }}
+                            disabled={!!addedOutputs[voiceoverJob.result.output]}
+                          >
+                            {addedOutputs[voiceoverJob.result.output] ? "✓ เพิ่มใน Timeline แล้ว" : "＋ เพิ่มใน Timeline"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
 
               <div className="dubbing-multispeaker">
                 <div>

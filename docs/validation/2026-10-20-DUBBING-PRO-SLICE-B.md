@@ -2,7 +2,7 @@
 version: "0.1.0b"
 created_at: "2026-10-20T00:00:00+07:00,Codex"
 last_update: "2026-10-20T00:00:00+07:00,Codex"
-status: "candidate; API runtime verification pending"
+status: "merged; API and native runtime verification pending"
 superseded_by: null
 attributes:
   doc_type: "validation-report"
@@ -17,7 +17,9 @@ attributes:
 The user approved the manual-only slice on 2026-10-20: speaker assignment for
 each transcript segment, mapping used speakers to existing voice profiles, and
 rendering from the completed analyze job. Automatic diarization, text editing,
-clip export, and short voice-over remain out of scope.
+clip export, and short voice-over were outside this slice's scope.
+
+PR #29 was merged as commit `60c66c4` before Slice C work began.
 
 ## Implementation
 

@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `active — Slice A implemented; Slice B manual-only approved and in branch`
+สถานะ: `active — Slice A/B merged; Slice C approved and in implementation`
 
 เหตุผล:
 
@@ -78,7 +78,7 @@ attributes:
 - transcript UI
 - canonical doc sync
 
-สถานะ: `approved; implemented and automated checks pass; Draft PR #29 open; live-ASR verification remains pending`
+สถานะ: `approved; implemented and merged in PR #29 (merge commit 60c66c4); live-ASR verification remains pending`
 
 เอกสาร:
 
@@ -93,7 +93,7 @@ attributes:
 - voice-per-speaker mapping from existing voice profiles
 - multi-speaker render job reusing the completed analyze transcript
 
-สถานะ: `approved (manual-only); implementation in branch; automatic diarization remains out of scope`
+สถานะ: `approved (manual-only); implemented and merged in PR #29 (merge commit 60c66c4); automatic diarization remains out of scope`
 
 เอกสาร:
 
@@ -102,10 +102,12 @@ attributes:
 
 #### Slice C
 
-- clip export from transcript
-- short voice-over from selected transcript
+- select one or more transcript segments; export each contiguous selection as WAV with rebased SRT/VTT snippets
+- generate a compact short voice-over from selected transcript using existing manual speaker/voice mappings
+- preview, download, and add exported audio to the Dubbing timeline
+- no transcript text editing, automatic diarization, or social publishing
 
-สถานะ: `not approved`
+สถานะ: `approved on 2026-10-20; implementation in Draft PR #30`
 
 ---
 
@@ -190,6 +192,7 @@ attributes:
 
 - `Track A / Slice A` before `Track A / Slice B`
 - `Track A / Slice A` before `Track A / Slice C`
+- `Track A / Slice B` before `Track A / Slice C` voice-over mapping
 
 ### Soft Dependencies
 
@@ -226,7 +229,7 @@ attributes:
 
 Roadmap จะถือว่า “ใกล้เสร็จจริง” เมื่อ:
 
-1. Track A ปิดอย่างน้อยถึง Slice B
+1. Track A ปิดอย่างน้อยถึง Slice C
 2. Track B มี decision อย่างน้อย 1 ชิ้นว่า implement หรือ reject ด้วย evidence
 3. Track C มี feasibility decision อย่างน้อย 1 ชิ้น ไม่ปล่อยเป็น checkbox ลอย
 
@@ -239,11 +242,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Slice A implement แล้วและ Slice B แบบ manual-only ได้รับอนุมัติ; ทั้งคู่ทำบน branch ของ Draft PR #29. ขั้นถัดไป:
+Slice A และ B ถูกรวมใน PR #29 แล้ว; Slice C ได้รับอนุมัติ, implement และเปิดเป็น Draft PR #30 แล้ว. ขั้นถัดไป:
 
-`Review/merge Slice A + B; then request separate approval for Slice C`
+`Review Draft PR #30 and merge when approved`
 
-Slice C ยังไม่อนุมัติ; live ASR/audio quality และ native desktop verification ยังเป็น gate แยก.
+การทดสอบ ASR/TTS ด้วยเสียงจริง, GPU render และ native desktop UAT ยังเป็น gate แยก.
 
 ---
 
@@ -252,5 +255,5 @@ Slice C ยังไม่อนุมัติ; live ASR/audio quality แล�
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
-- `+` บันทึก approval และสถานะ implementation ของ Slice A/B; Slice C ยังไม่อนุมัติ
+- `+` บันทึกว่า Slice A/B merge แล้ว และ Slice C ได้รับอนุมัติให้ implement แบบ manual mapping
 

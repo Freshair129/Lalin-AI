@@ -81,6 +81,20 @@ class DubbingRenderRequest(BaseModel):
     translate: bool = True
 
 
+class DubbingClipExportRequest(BaseModel):
+    analysis_job_id: str = Field(min_length=1, max_length=128)
+    segment_ids: list[str] = Field(min_length=1, max_length=1000)
+
+
+class DubbingVoiceoverRequest(BaseModel):
+    analysis_job_id: str = Field(min_length=1, max_length=128)
+    segment_ids: list[str] = Field(min_length=1, max_length=100)
+    segment_speakers: list[DubbingSegmentSpeaker] = Field(min_length=1, max_length=100)
+    speaker_voices: list[DubbingSpeakerVoice] = Field(min_length=1, max_length=32)
+    target_lang: str = "ไทย"
+    translate: bool = True
+
+
 # ── Mastering ───────────────────────────────────────────────
 class MasteringRequest(BaseModel):
     source_audio: str = Field(description="ชื่อไฟล์ใน uploads/")
