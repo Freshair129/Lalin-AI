@@ -68,15 +68,16 @@ jobs:
       - name: Play frontend tests
         run: npm test --prefix apps/play-desktop
 
-      - name: Install API dependencies
-        run: python -m pip install -r apps/api/requirements.txt
+      - name: Build lite backend sidecar
+        shell: pwsh
+        run: ./tools/build/build_sidecar.ps1 -Profile lite -VenvPath "${{ github.workspace }}/apps/api/.venv-ci" -CreateIfMissing
 
       - name: Compile API
-        run: python -m compileall -q apps/api/app
+        run: ./apps/api/.venv-ci/Scripts/python.exe -m compileall -q apps/api/app
 
       - name: Backend tests
         working-directory: apps/api
-        run: python -m pytest
+        run: ./.venv-ci/Scripts/python.exe -m pytest
 
       - name: Check Tauri
         run: npm run check:tauri
