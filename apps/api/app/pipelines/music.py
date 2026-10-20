@@ -26,6 +26,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .music_warp import analyze_drift, estimate_beat_grid, warp_audio_piecewise
+
 from ..config import get_settings
 from ..utils.ids import short_id
 
@@ -325,8 +327,14 @@ def vocal_fx(vocal_stereo: np.ndarray, *, reverb: float = 0.16,
 # ════════════════════════════════════════════════════════════
 #  5) Beat-sync: หา phase offset อัตโนมัติ (BPM ตรง) — หรือกำหนดเอง
 # ════════════════════════════════════════════════════════════
-def auto_phase_offset(beat_path: str, source_path: str, bpm: float) -> int:
-    """คืน offset (samples) ที่ทำให้ onset grid ของ source ตรงกับ beat ที่สุด.
+def estimate_phase_alignment(
+    beat_path: str,
+    source_path: str,
+    bpm: float,
+    *,
+    manual_offset_samples: int | None = None,
+) -> tuple[int, float]:
+    """Return global phase in samples and normalized onset-correlation confidence.
 
     ใช้ source ที่มี beat เดิม (เช่นเพลงต้นฉบับก่อนแยก stem) เพื่อหา phase
     เพราะ vocal เปล่า onset ไม่ชัด
@@ -338,17 +346,33 @@ def auto_phase_offset(beat_path: str, source_path: str, bpm: float) -> int:
     ob = librosa.onset.onset_strength(y=yb, sr=SR, hop_length=hop)
     orf = librosa.onset.onset_strength(y=yr, sr=SR, hop_length=hop)
     L = min(len(ob), len(orf))
+    if L <= 1 or bpm <= 0:
+        return (int(manual_offset_samples or 0), 0.0)
     ob_ = ob[:L] - ob[:L].mean()
     orf_ = orf[:L] - orf[:L].mean()
     period = (60.0 / bpm) * SR / hop  # 1 จังหวะ = กี่ frame
+    denominator = float(np.linalg.norm(ob_) * np.linalg.norm(orf_))
+    if denominator <= 1e-9:
+        return (int(manual_offset_samples or 0), 0.0)
+    if manual_offset_samples is None:
+        candidates = np.linspace(0, period, 48, endpoint=False)
+    else:
+        candidates = [float(manual_offset_samples) / hop % period]
     best = None
-    for frac in np.linspace(0, period, 48, endpoint=False):
+    for frac in candidates:
         lag = int(round(frac))
         shifted = orf_ if lag == 0 else np.concatenate([np.zeros(lag), orf_])[:L]
-        score = float(np.dot(ob_, shifted))
+        score = float(np.dot(ob_, shifted)) / denominator
         if best is None or score > best[0]:
             best = (score, lag)
-    return int(best[1] * hop)
+    if manual_offset_samples is not None:
+        return int(manual_offset_samples), float(np.clip(best[0], 0.0, 1.0))
+    return int(best[1] * hop), float(np.clip(best[0], 0.0, 1.0))
+
+
+def auto_phase_offset(beat_path: str, source_path: str, bpm: float) -> int:
+    """Compatibility wrapper returning only the automatic phase offset."""
+    return estimate_phase_alignment(beat_path, source_path, bpm)[0]
 
 
 def _mix_with_offset(
@@ -462,6 +486,7 @@ def run_remix(
     key_override: str | None = None,
     do_fx: bool = True,
     phrase_bars: int = 0,
+    beats_per_bar: int = 4,
     offset_ms: float | None = None,   # None = auto phase-sync, ตัวเลข = กำหนดเอง
     beat_gain_db: float = -2.0,
     vocal_gain: float = 0.95,
@@ -469,6 +494,12 @@ def run_remix(
     delay: float = 0.12,
     stem_gains: dict[str, float] | None = None,   # {"vocals","drums","bass","other"} 0..1.5 ต่อ stem, ดีฟอลต์ 1.0
     progress=None,   # callable(frac: float, msg: str) — รายงานความคืบหน้า (optional)
+    warp_anchors: list[dict] | None = None,
+    work_dir: str | None = None,
+    output_path: str | None = None,
+    analysis_out: dict | None = None,
+    analysis_window_bars: int = 4,
+    analysis_hop_bars: int = 2,
 ) -> dict:
     """แยกเสียงร้องจาก source → autotune/FX → วางบน beat → มาสเตอร์.
 
@@ -487,7 +518,7 @@ def run_remix(
             progress(frac, msg)
 
     settings = get_settings()
-    work = settings.outputs_dir / f"remix_{short_id()}"
+    work = Path(work_dir) if work_dir else settings.outputs_dir / f"remix_{short_id()}"
     work.mkdir(parents=True, exist_ok=True)
 
     # เตรียมไฟล์ wav
@@ -540,16 +571,81 @@ def run_remix(
     # 6) ตัด silence หัว
     mono = librosa.to_mono(v)
     nz = np.where(np.abs(mono) > 0.01)[0]
+    trim_start_sec = 0.0
     if len(nz):
+        trim_start_sec = float(nz[0] / SR)
         v = v[:, nz[0]:]
 
     # 7) offset: auto phase-sync หรือกำหนดเอง
     phrase_bars = max(0, int(phrase_bars))
-    phrase_offset = int(phrase_bars * 4 * (60.0 / bpm_b) * SR)
+    beats_per_bar = max(1, int(beats_per_bar))
+    phrase_offset = int(phrase_bars * beats_per_bar * (60.0 / bpm_b) * SR)
     if offset_ms is None:
-        offset = auto_phase_offset(beat_wav, src_wav, bpm_b) + phrase_offset
+        phase_offset, phase_alignment_confidence = estimate_phase_alignment(beat_wav, src_wav, bpm_b)
     else:
-        offset = int(offset_ms / 1000.0 * SR) + phrase_offset
+        phase_offset = int(offset_ms / 1000.0 * SR)
+        if analysis_out is not None:
+            _, phase_alignment_confidence = estimate_phase_alignment(
+                beat_wav, src_wav, bpm_b, manual_offset_samples=phase_offset
+            )
+        else:
+            phase_alignment_confidence = 0.0
+    offset = phase_offset + phrase_offset
+
+    # Slice B2 local warp is applied only when a validated immutable map is sent.
+    if warp_anchors:
+        baseline_offset_sec = offset / SR
+        local_map = [
+            {
+                "input_time_sec": float(anchor["input_time_sec"]),
+                "timeline_time_sec": float(anchor["timeline_time_sec"]) - baseline_offset_sec,
+            }
+            for anchor in warp_anchors
+        ]
+        v = warp_audio_piecewise(v, local_map, sample_rate=SR)
+
+    if analysis_out is not None:
+        source_grid, source_grid_conf = estimate_beat_grid(src_wav, sample_rate=SR)
+        beat_grid, beat_grid_conf = estimate_beat_grid(beat_wav, sample_rate=SR)
+        source_grid = source_grid / ratio - trim_start_sec
+        source_grid = source_grid[source_grid >= 0]
+        alignment_confidence = phase_alignment_confidence
+        coarse_drift = analyze_drift(
+            source_grid,
+            beat_grid,
+            target_bpm=bpm_b,
+            beats_per_bar=beats_per_bar,
+            phase_offset_sec=phase_offset / SR,
+            phrase_offset_sec=phrase_offset / SR,
+            source_confidence=source_grid_conf,
+            destination_confidence=beat_grid_conf,
+            alignment_confidence=alignment_confidence,
+            window_bars=analysis_window_bars,
+            hop_bars=analysis_hop_bars,
+        )
+        # Auto mode uses the robust median beat residual to refine global phase.
+        # Manual offset remains authoritative and is never nudged implicitly.
+        phase_correction_ms = 0.0
+        if offset_ms is None and coarse_drift.reason != "ambiguous_beat_pairing" and coarse_drift.confidence >= 0.70:
+            phase_correction_ms = coarse_drift.phase_correction_ms
+            phase_offset += int(round(phase_correction_ms / 1000.0 * SR))
+            offset = phase_offset + phrase_offset
+        analysis_out.update({
+            "source_beats_sec": source_grid.tolist(),
+            "destination_beats_sec": beat_grid.tolist(),
+            "source_confidence": source_grid_conf,
+            "destination_confidence": beat_grid_conf,
+            "alignment_confidence": alignment_confidence,
+            "trim_start_sec": trim_start_sec,
+            "phase_offset_sec": phase_offset / SR,
+            "phase_correction_ms": phase_correction_ms,
+            "phrase_offset_sec": phrase_offset / SR,
+            "source_bpm": bpm_v,
+            "target_bpm": bpm_b,
+            "global_stretch_rate": ratio,
+            "beats_per_bar": beats_per_bar,
+            "duration_sec": v.shape[1] / SR,
+        })
 
     # 8) มิกซ์
     _p(0.9, "มิกซ์เสียงร้องกับ beat + มาสเตอร์…")
@@ -579,7 +675,8 @@ def run_remix(
     raw = mix.T
     norm, final_lufs = _master_to_target(raw, sample_rate=SR, target_lufs=target_lufs)
 
-    out_path = str(settings.outputs_dir / f"remix_{short_id()}.wav")
+    out_path = output_path or str(settings.outputs_dir / f"remix_{short_id()}.wav")
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     sf.write(out_path, norm, SR)
 
     return {
@@ -592,12 +689,17 @@ def run_remix(
         },
         "offset_ms": round(offset / SR * 1000, 1),
         "phrase_bars": phrase_bars,
+        "beats_per_bar": beats_per_bar,
+        "phase_offset_ms": round(phase_offset / SR * 1000, 1),
+        "phrase_offset_sec": round(phrase_offset / SR, 6),
+        "trim_start_sec": round(trim_start_sec, 6),
         "lufs": round(final_lufs, 1),
         "autotune": do_autotune,
         "autotune_strength": autotune_strength,
         "fx": do_fx,
         "stem_gains": stem_gains or None,
         "source_instrumental_layered": source_inst_active,
+        "warp_applied": bool(warp_anchors),
     }
 
 

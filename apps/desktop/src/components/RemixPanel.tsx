@@ -32,6 +32,44 @@ import { NodeDesigner, type CustomNodeConfig } from "./NodeDesigner";
 import { Splitter } from "./Splitter";
 import { StemMixer, DEFAULT_STEM_GAINS, type StemGains } from "./StemMixer";
 import { migrateSnapshot, SCHEMA_VERSION, type ProjectSnapshot } from "../timeline/migrate";
+
+type WarpPreviewAnchor = {
+  id: string;
+  input_time_sec: number;
+  timeline_time_sec: number;
+  drift_ms: number;
+  confidence: number;
+  origin: "auto" | "manual";
+};
+
+type WarpPreviewPayload = {
+  preview_id: string;
+  revision: number;
+  baseline: {
+    source_bpm: number;
+    target_bpm: number;
+    global_stretch_rate: number;
+    beats_per_bar: number;
+    phrase_bars: number;
+    phase_offset_ms: number;
+    phrase_offset_sec: number;
+  };
+  drift: {
+    status: string;
+    confidence: number;
+    anchor_count: number;
+    span_bars: number;
+    residual_p95_ms: number;
+    end_drift_ms: number;
+    max_abs_drift_ms: number;
+    max_local_stretch_pct: number;
+    reason?: string | null;
+  };
+  anchors: WarpPreviewAnchor[];
+  warp_candidate: { available: boolean; accepted: boolean; map_digest: string | null; reason: string | null };
+  render_map_digests: { global_only: string; warp_candidate: string | null };
+  audio_preview: { global_only_url: string; warp_candidate_url: string | null; temporary: boolean; expires_at: string };
+};
 import { StudioDock } from "./StudioDock";
 import { Icon } from "./icons";
 
@@ -170,9 +208,12 @@ export function RemixPanel() {
   );
 
   const { job, busy, start } = useJob("remix");
+  const { job: previewJob, busy: previewBusy, start: startPreview } = useJob("remix-preview");
 
   // ── clip engine (shared ทั้ง workspace ผ่าน EngineProvider) ──
   const engine = useEngine();
+  const [previewMode, setPreviewMode] = useState<"global_only" | "warp_candidate">("global_only");
+  const [manualAnchorValues, setManualAnchorValues] = useState<Record<string, number>>({});
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
   const customSeq = useRef(0);
   const loadingRef = useRef(false);
@@ -245,24 +286,115 @@ export function RemixPanel() {
     set(r.filename);
   };
 
+  const previewKeyRef = useRef<string | null>(null);
+  const previewInputKey = JSON.stringify({
+    source,
+    beat,
+    autotune,
+    autotuneStrength,
+    keyOverride,
+    fx,
+    reverb,
+    delay,
+    phraseBars,
+    offsetAuto,
+    offsetMs: offsetAuto ? null : offsetMs,
+    lufs,
+    beatsPerBar: engine.project.timeSig,
+    stemGains: stemGainsActive ? stemGains : null,
+  });
+  const preview = previewJob?.status === "done" && previewKeyRef.current === previewInputKey
+    ? previewJob.result as unknown as WarpPreviewPayload
+    : null;
+
+  const renderSettings = {
+    do_autotune: autotune,
+    autotune_strength: autotuneStrength,
+    key_override: keyOverride === "auto" ? null : keyOverride,
+    do_fx: fx,
+    reverb,
+    delay,
+    target_lufs: lufs,
+    stem_gains: stemGainsActive ? stemGains : null,
+  };
+
   const run = () =>
     start(() =>
       music.remix({
         source_audio: source,
         beat_audio: beat,
-        do_autotune: autotune,
-        autotune_strength: autotuneStrength,
-        key_override: keyOverride === "auto" ? null : keyOverride,
-        do_fx: fx,
+        ...renderSettings,
         phrase_bars: phraseBars,
+        beats_per_bar: engine.project.timeSig,
         offset_ms: offsetAuto ? null : offsetMs,
-        reverb,
-        delay,
-        target_lufs: lufs,
-        // ส่งเฉพาะตอนมีการปรับ fader จริง — ไม่งั้น backend ใช้เส้นทาง two-stems เดิม (เร็วกว่า)
-        stem_gains: stemGainsActive ? stemGains : undefined,
       })
     );
+
+  const analyzeAndPreview = () => {
+    if (!source || !beat) return;
+    previewKeyRef.current = previewInputKey;
+    setPreviewMode("global_only");
+    startPreview(() => music.preview({
+      contract_version: 1,
+      source_audio: source,
+      beat_audio: beat,
+      phrase_bars: phraseBars,
+      beats_per_bar: engine.project.timeSig,
+      offset_mode: offsetAuto ? "auto" : "manual",
+      offset_ms: offsetAuto ? null : offsetMs,
+      warp_mode: "suggest",
+      window_bars: 4,
+      hop_bars: 2,
+      render_settings: renderSettings,
+    }));
+  };
+
+  const renderPreview = (acceptWarp: boolean) => {
+    if (!preview || !source || !beat) return;
+    const mapDigest = acceptWarp
+      ? preview.render_map_digests.warp_candidate
+      : preview.render_map_digests.global_only;
+    if (!mapDigest) return;
+    start(() => music.remix({
+      source_audio: source,
+      beat_audio: beat,
+      ...renderSettings,
+      phrase_bars: phraseBars,
+      beats_per_bar: engine.project.timeSig,
+      offset_ms: offsetAuto ? null : offsetMs,
+      window_bars: 4,
+      hop_bars: 2,
+      preview_id: preview.preview_id,
+      preview_revision: preview.revision,
+      map_digest: mapDigest,
+      accept_warp: acceptWarp,
+    }));
+  };
+
+  const revisePreviewWithManualAnchors = () => {
+    if (!preview || !source || !beat || preview.anchors.length < 2) return;
+    previewKeyRef.current = previewInputKey;
+    startPreview(() => music.preview({
+      contract_version: 1,
+      source_audio: source,
+      beat_audio: beat,
+      phrase_bars: phraseBars,
+      beats_per_bar: engine.project.timeSig,
+      offset_mode: offsetAuto ? "auto" : "manual",
+      offset_ms: offsetAuto ? null : offsetMs,
+      warp_mode: "manual",
+      window_bars: 4,
+      hop_bars: 2,
+      render_settings: renderSettings,
+      preview_id: preview.preview_id,
+      base_revision: preview.revision,
+      anchors: preview.anchors.map((anchor) => ({
+        id: anchor.id,
+        input_time_sec: anchor.input_time_sec,
+        timeline_time_sec: manualAnchorValues[`${preview.preview_id}:${preview.revision}:${anchor.id}`] ?? anchor.timeline_time_sec,
+      })),
+    }));
+  };
 
   const outputName =
     job?.status === "done" && job.result?.output
@@ -290,10 +422,6 @@ export function RemixPanel() {
     job?.status === "done" && typeof (job.result?.bpm as Record<string, unknown> | undefined)?.stretch === "number"
       ? ((job.result?.bpm as Record<string, unknown>).stretch as number)
       : null;
-
-  const previewOffsetSec = offsetAuto ? 0 : (phraseBars * 2) + (offsetMs / 1000);
-  const vocalPreviewStart = Math.max(0, previewOffsetSec);
-  const beatPreviewStart = Math.max(0, -previewOffsetSec);
 
   // ── เนื้อหาแต่ละโหนด (เน้น visual: knob/meter/waveform) ─────
   const buildData = (id: string): NodeData => {
@@ -483,20 +611,20 @@ export function RemixPanel() {
         "vocal",
         source ? { kind: "upload", name: source } : null,
         "#9b6cf0",
-        { start: vocalPreviewStart },
+        { start: 0 },
       );
     }
-  }, [source, vocalPreviewStart]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [source]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!loadingRef.current) {
       engine.setTrackSource(
         "beat",
         beat ? { kind: "upload", name: beat } : null,
         "#3d9be0",
-        { start: beatPreviewStart },
+        { start: 0 },
       );
     }
-  }, [beat, beatPreviewStart]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [beat]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!loadingRef.current) engine.setTrackSource("master", outputName ? { kind: "output", name: outputName } : null, "#c7f046"); }, [outputName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เลือก clip → สลับไปแท็บ Track อัตโนมัติ
@@ -674,6 +802,13 @@ export function RemixPanel() {
               {resultKey ? `Key ${resultKey}` : "Key -"} · {resultOffset != null ? `Offset ${Math.round(resultOffset)}ms` : "Offset -"} · {resultStretch != null ? `Stretch ${resultStretch.toFixed(3)}x` : "Stretch -"} · {resultLufs != null ? `LUFS ${resultLufs.toFixed(1)}` : "LUFS -"}
             </span>
           )}
+          <button className="seg-add" onClick={analyzeAndPreview} disabled={busy || previewBusy || !source || !beat}
+            title="สร้าง global-only และ drift preview ชั่วคราว โดยยังไม่แก้ clip หรือ render map ที่บันทึกไว้">
+            {previewBusy ? "Previewing…" : "Drift preview"}
+          </button>
+          {previewJob?.status === "error" && (
+            <span className="hint mono" style={{ color: "#e05a5a" }} title={previewJob.error}>⚠ preview failed</span>
+          )}
           <button className="primary tool-run" onClick={run} disabled={busy || !source || !beat}>
             <Icon name="play" size={15} />
             <span>{busy ? "Rendering…" : "Run"}</span>
@@ -753,8 +888,105 @@ export function RemixPanel() {
             </div>
           ) : (
             <div className="remix-standard">
-              <div className="remix-timeline-shell">
-                <StudioDock embedded />
+              <div className="remix-timeline-shell" style={{ display: "flex", flexDirection: "column" }}>
+                {preview && (
+                  <section aria-label="Beat warp timeline preview" style={{
+                    flex: "0 0 auto", maxHeight: 190, overflow: "auto", padding: "10px 14px",
+                    borderBottom: "1px solid var(--glass-border)", background: "rgba(199,240,70,.035)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span className="remix-kicker mono">TRANSIENT TIMELINE PREVIEW · r{preview.revision}</span>
+                      <span className="tool-metric">{preview.drift.status.replace(/_/g, " ")}</span>
+                      <span className="hint mono">{preview.drift.confidence.toFixed(2)} confidence · {preview.drift.anchor_count} anchors · {preview.drift.span_bars.toFixed(1)} bars</span>
+                      <span className="hint mono">p95 {preview.drift.residual_p95_ms.toFixed(1)} ms · end {preview.drift.end_drift_ms.toFixed(1)} ms · local ±{preview.drift.max_local_stretch_pct.toFixed(2)}%</span>
+                    </div>
+                    {preview.anchors.length >= 2 && (() => {
+                      const maxInput = Math.max(1, ...preview.anchors.map((anchor) => anchor.input_time_sec));
+                      const maxDrift = Math.max(20, ...preview.anchors.map((anchor) => Math.abs(anchor.drift_ms)));
+                      const points = preview.anchors.map((anchor) =>
+                        `${(anchor.input_time_sec / maxInput) * 100},${17 - (anchor.drift_ms / maxDrift) * 13}`
+                      ).join(" ");
+                      return (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7 }}>
+                          <span className="hint mono" style={{ width: 92 }}>RESIDUAL TRACE</span>
+                          <svg role="img" aria-label="Residual drift trace by source time" viewBox="0 0 100 34" preserveAspectRatio="none"
+                            style={{ height: 34, flex: 1, overflow: "visible" }}>
+                            <line x1="0" y1="17" x2="100" y2="17" stroke="#607080" strokeDasharray="2 2" strokeWidth="0.8" />
+                            <polyline points={points} fill="none" stroke={preview.warp_candidate.available ? "#c7f046" : "#e4a84d"} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                          </svg>
+                        </div>
+                      );
+                    })()}
+                    {!preview.warp_candidate.available && (
+                      <div className="hint" style={{ marginTop: 5 }} title={preview.warp_candidate.reason ?? "No candidate was generated"}>
+                        Candidate unavailable: {(preview.warp_candidate.reason ?? "no candidate").replace(/_/g, " ")}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 0" }}>
+                      <span className="hint mono" style={{ width: 92 }}>GLOBAL ONLY</span>
+                      <div style={{ height: 8, flex: 1, position: "relative", background: "#27303b", borderRadius: 8 }}>
+                        {preview.anchors.map((anchor) => {
+                          const maxTime = Math.max(1, ...preview.anchors.map((item) => item.timeline_time_sec));
+                          const baselineTime = anchor.input_time_sec + preview.baseline.phase_offset_ms / 1000 + preview.baseline.phrase_offset_sec;
+                          return <span key={`g-${anchor.id}`} title={`${anchor.id}: baseline ${baselineTime.toFixed(3)}s`}
+                            style={{ position: "absolute", left: `${Math.max(0, Math.min(100, baselineTime / maxTime * 100))}%`, top: -2, width: 2, height: 12, background: "#64b5f6" }} />;
+                        })}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span className="hint mono" style={{ width: 92 }}>WARP MAP</span>
+                      <div style={{ height: 8, flex: 1, position: "relative", background: "#27303b", borderRadius: 8 }}>
+                        {preview.anchors.map((anchor) => {
+                          const maxTime = Math.max(1, ...preview.anchors.map((item) => item.timeline_time_sec));
+                          return <span key={`w-${anchor.id}`} title={`${anchor.id}: ${anchor.drift_ms.toFixed(1)}ms · conf ${anchor.confidence.toFixed(2)} · ${anchor.origin}`}
+                            style={{ position: "absolute", left: `${Math.max(0, Math.min(100, anchor.timeline_time_sec / maxTime * 100))}%`, top: -2, width: 2, height: 12, background: preview.warp_candidate.available ? "#c7f046" : "#e4a84d" }} />;
+                        })}
+                      </div>
+                    </div>
+                    {preview.anchors.length >= 2 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        <span className="hint mono">EDIT DESTINATION MARKERS</span>
+                        {preview.anchors.map((anchor) => {
+                          const valueKey = `${preview.preview_id}:${preview.revision}:${anchor.id}`;
+                          return <label key={`edit-${anchor.id}`} className="hint mono" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            {anchor.id} {anchor.input_time_sec.toFixed(2)}s →
+                            <input aria-label={`${anchor.id} destination time`} type="number" min={0} step={0.001}
+                              value={manualAnchorValues[valueKey] ?? anchor.timeline_time_sec}
+                              onChange={(event) => setManualAnchorValues((current) => ({ ...current, [valueKey]: Number(event.target.value) }))}
+                              style={{ width: 82, padding: "3px 5px", background: "#151922", color: "var(--text)", border: "1px solid var(--glass-border)", borderRadius: 5 }} />
+                          </label>;
+                        })}
+                        <button type="button" className="seg-add" disabled={busy || previewBusy} onClick={revisePreviewWithManualAnchors}>
+                          Apply manual anchors · new revision
+                        </button>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 9 }}>
+                      <button type="button" className={previewMode === "global_only" ? "primary" : "seg-add"} onClick={() => setPreviewMode("global_only")}>
+                        Global only
+                      </button>
+                      <button type="button" className={previewMode === "warp_candidate" ? "primary" : "seg-add"}
+                        disabled={!preview.warp_candidate.available}
+                        onClick={() => setPreviewMode("warp_candidate")}>
+                        Warp candidate
+                      </button>
+                      <audio key={`${preview.preview_id}-${preview.revision}-${previewMode}`} controls preload="none" style={{ flex: "1 1 280px", height: 34 }}
+                        src={`${API_BASE}${(previewMode === "warp_candidate" && preview.warp_candidate.available ? preview.audio_preview.warp_candidate_url : preview.audio_preview.global_only_url) ?? ""}`} />
+                      <button type="button" className="seg-add" disabled={busy} onClick={() => renderPreview(false)}>
+                        Render global-only
+                      </button>
+                      {preview.warp_candidate.available && (
+                        <button type="button" className="primary" disabled={busy} onClick={() => renderPreview(true)}>
+                          Accept warp and render
+                        </button>
+                      )}
+                      <span className="hint" style={{ flexBasis: "100%" }}>
+                        Beat lane เป็น reference; markers และเสียงนี้เป็น preview ชั่วคราว ไม่แก้ saved clip · phase {preview.baseline.phase_offset_ms.toFixed(1)} ms · phrase {preview.baseline.phrase_offset_sec.toFixed(3)} s
+                      </span>
+                    </div>
+                  </section>
+                )}
+                <div style={{ flex: 1, minHeight: 0 }}><StudioDock embedded /></div>
               </div>
               <section className={`remix-bottom-dock ${deviceDockTab ?? "closed"}`} aria-label="Device dock">
                 <div className="remix-device-tabs" role="tablist" aria-label="Remix processors">

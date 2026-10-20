@@ -185,6 +185,12 @@ export const music = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
+  preview: (body: Record<string, unknown>) =>
+    req<{ job_id: string; preview_id: string; revision: number }>("/music/remix/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
   exportFx: (body: Record<string, unknown>) =>
     req<{ job_id: string }>("/music/export", {
       method: "POST",

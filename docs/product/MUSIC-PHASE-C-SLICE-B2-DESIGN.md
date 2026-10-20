@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Document version | 0.1.0 |
-| Status | Proposed design; implementation not started |
+| Status | Implemented in Slice B2 branch; PR review/hosted CI and audio/runtime acceptance remain pending |
 | Scope | Piecewise beat-warp, drift detection, and timeline preview contract |
-| Depends on | Slice B1 evaluation; PR #31 is open while this design is prepared |
+| Depends on | Slice B1 evaluation merged in PR #31; this design merged in PR #32 |
 
 ## 1. Decision and scope
 
@@ -172,11 +172,12 @@ The timeline shows a transient **preview overlay**, separate from the saved
   audio is ready, the UI labels the visualization “alignment only” and does not
   audition unwarped audio as if it were the candidate.
 
-### 5.1 Proposed versioned payloads
+### 5.1 Implemented versioned payloads
 
-The proposed submit route is `POST /music/remix/preview`. It is an asynchronous
-analysis/render job using the existing job and WebSocket progress pattern. These
-shapes are design contracts, not implemented API schemas.
+The implemented submit route is `POST /music/remix/preview`. It is an asynchronous
+analysis/render job using the existing job and WebSocket progress pattern. The
+request and result schemas live in `apps/api/app/schemas.py` and
+`apps/api/app/routers/music.py`.
 
 Request:
 
@@ -222,8 +223,8 @@ and diagnostics explain why.
 `manual` requires `preview_id`, `base_revision`, and the edited `anchors` from
 that preview; the server validates their fingerprints and bounds.
 
-The submit response follows the existing job shape `{ "job_id": "..." }`. The
-finished job returns:
+The submit response returns `{ "job_id": "...", "preview_id": "...", "revision": 1 }`.
+The finished job returns:
 
 ```json
 {
@@ -344,31 +345,33 @@ files remain ordinary output assets under the current project lifecycle.
 
 ## 6. Implementation acceptance gates
 
-These gates are for the later implementation slice; none are claimed as passed by
-this design:
+Gate status for the Slice B2 implementation is recorded in
+[`2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md`](../validation/2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md).
 
-1. Deterministic synthetic beat grids with zero drift, gradual ±0.5% drift,
+1. **Synthetic algorithm coverage:** deterministic synthetic beat grids with zero drift, gradual ±0.5% drift,
    gradual ±2% drift, local tempo steps, dropped/ambiguous beats, and weak onset
    confidence exercise every status and guardrail.
-2. Zero-drift fixtures do not produce an automatic warp. Drift above the
+2. **Status and threshold behavior:** zero-drift fixtures do not produce an automatic warp. Drift above the
    provisional threshold over at least eight bars is detected when confidence
    meets the threshold; low-confidence fixtures never auto-warp.
-3. Accepted maps are monotone, stay within the local stretch guardrail, and
+3. **Map quality on synthetic fixtures:** accepted maps are monotone, stay within the local stretch guardrail, and
    reduce p95 anchor residual to ≤25 ms on the synthetic fixtures.
-4. Preview audio, the timeline marker map, and the final render use the same
+4. **Preview/render identity:** preview audio, the timeline marker map, and the final render use the same
    immutable map digest. Stale plans and expired preview audio are rejected.
-5. Audio A/B uses licensed vocals and includes listen review at representative
+5. **Real-vocal A/B (pending):** audio A/B uses licensed vocals and includes listen review at representative
    phrase boundaries. Synthetic tests alone do not establish musical quality.
-6. Existing global-only and manual-offset remixes retain their previous behavior
+6. **Legacy route (code-level only):** existing global-only and manual-offset remixes retain their previous behavior
    when `warp_mode` is off or no plan is supplied.
+
+7. **Native desktop UAT (pending):** verify the transient timeline overlay, A/B audition, stale-preview invalidation, and accepted-render result in the packaged desktop app.
 
 ## 7. Next-step boundary
 
-This design closes the Slice B2 design task only. Before implementation, review
-the proposed thresholds and preview lifecycle against the actual drift problem.
-Implementation should begin only after Slice B1 is merged and this contract is
-accepted. The implementation must then provide algorithm tests, synthetic drift
-fixtures, licensed-audio A/B evidence, and a UI preview/render parity check.
+Slice B2 implementation is in progress for code review. Synthetic checks and
+preview byte-parity tests are implemented; licensed-vocal A/B and native desktop
+UAT remain open. These are product-quality gates and must not be inferred from
+CI or synthetic fixtures. Once those gates are reviewed, select the next slice
+from the execution backlog rather than expanding this implementation's scope.
 
 ## References in this repository
 
