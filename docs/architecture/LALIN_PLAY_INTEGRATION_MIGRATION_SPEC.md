@@ -1,7 +1,7 @@
 ---
-version: "0.2.5b"
+version: "0.2.16b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-09-27T14:03:11+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -106,8 +106,24 @@ Security and lifecycle implementation status:
   logon SID, never from a UI-supplied name. Play creates a protected DACL for
   that SID and enables `PIPE_REJECT_REMOTE_CLIENTS`; Studio verifies the server
   process image and session, and Play impersonates/checks the client SID.
-  Local tests verify DACL creation and the remote-rejection flag; live
-  cross-session and endpoint-spoof attempts remain unverified.
+  Local tests verify DACL creation and the remote-rejection flag. The isolated
+  paired pipe test sends URL- and UNC-shaped invalid paths; Play rejects both
+  before path/network lookup and leaves STATE unchanged. It also drops the
+  sender connection before reading a command ACK, then reconciles by request
+  ID against the still-running owner. A local Windows ACL test now attempts to
+  open the pipe with a restricted token whose current logon SID is disabled and
+  verifies `CreateFileW` receives `ERROR_ACCESS_DENIED`, then verifies the normal
+  same-session HELLO still succeeds. An opt-in Windows runtime test verifies a
+  loopback SMB/UNC positive-control pipe accepts a connection, then a pipe using
+  the production remote-rejection mode and the same permissive test DACL denies
+  the same remote path with `ERROR_ACCESS_DENIED`; a local open still succeeds.
+  This isolates the remote-rejection flag from DACL denial. An ignored
+  different-host probe and PowerShell client are prepared with the same-DACL
+  positive control and target denial. One server-listener attempt timed out
+  after 180 seconds before a complete client result arrived, so remote rejection
+  remains NOT_VERIFIED. A separate interactive logon session remains unverified.
+  The isolated paired owner-restart test verifies that a command applied before
+  its ACK is read is not blindly replayed after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
   is not claimed to be isolated by this design.
 - Sender resolves authorized workspace/upload/output references while backend
@@ -117,6 +133,8 @@ Security and lifecycle implementation status:
   On Windows, `GetDriveTypeW` must classify the canonical drive root as fixed,
   removable, CD-ROM or RAM disk; remote, unknown and invalid drive types fail
   closed. Receiver checks both conditions before granting to the asset scope.
+  Ignored mapped-drive and reparse-to-mapped-drive runtime tests are present but
+  NOT_RUN because their fixtures are not provisioned.
   Never execute a shell or infer a path from a title/pack ID.
 - File grants apply only to the explicit handoff item; source survives Studio/API
   shutdown. Missing receiver reports install/configuration guidance; no fallback
@@ -126,7 +144,15 @@ Security and lifecycle implementation status:
   whose installer setup remains unverified.
 - Studio's explicit standalone handoff actions keep an in-memory FIFO capped at
   128 commands and reject overflow visibly. A native sender mutex and one pipe
-  request at a time preserve that order. Play records at most 1,024 request
+  request at a time preserve that order within one Studio process. Independent
+  Studio clients may race; Play's single-instance server serializes accepted
+  owner mutations, and the ACK revision defines the applied FIFO order across
+  those clients. When a sender observes `ERROR_PIPE_BUSY`, it waits for and
+  retries that existing owner; it must not treat an occupied or just-recreated
+  pipe as a cold start or launch another Play process. A missing endpoint on the
+  initial connection attempt may use the cold-start path. Play retains and
+  reconnects its single server pipe instance after each client disconnect so a
+  warm owner has no endpoint-recreation gap. Play records at most 1,024 request
   outcomes per owner session; after eviction, QUERY returns `unknown` and sender
   must not automatically replay.
 - Duplicate ID with same payload returns original outcome without a second
@@ -143,12 +169,22 @@ Security and lifecycle implementation status:
 Focused local tests now cover cold/warm launch decisions, one-launch timeout,
 Studio FIFO ordering, payload, canonical-root and drive-type validation,
 duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots,
-protected same-logon DACL creation and the remote-client-rejection flag. Drive
-classification is tested with fixed, remote, unknown and invalid values; no
-mapped-drive runtime case was exercised. The ACL test does not attempt an
-unauthorized connection. Live cross-process delivery, ACK-loss under process
-interruption, cross-session/spoof attempts, Studio/API exit during active playback,
-audible parity and Cast regression remain **NOT VERIFIED**.
+protected same-logon DACL creation, a local restricted-token denial when the
+allowed logon SID is absent, the remote-client-rejection flag, and an opt-in
+loopback SMB/UNC runtime denial with identical-DACL remote and local positive
+controls. Drive
+classification is tested with fixed, remote, unknown and invalid values; the
+ignored mapped-drive and reparse tests compile but are NOT_RUN. The local
+negative ACL case does not exercise a separate interactive logon session; the
+loopback SMB probe does not use a different remote machine. The second-host listener timed out after 180 seconds without a complete client result; remote rejection remains NOT_VERIFIED.
+Live
+cross-process cold/warm delivery, FIFO, ACK/STATE
+reconciliation including a dropped ACK while the owner remains live, a command applied before a lost ACK
+followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
+rejection are verified in the isolated Windows paired test. Same-host SMB/UNC
+pipe rejection is verified by the dedicated runtime probe. A separate
+interactive logon session or remote machine, Studio/API exit during active
+playback, audible parity and Cast regression remain **NOT VERIFIED**.
 
 ## 3. Approved S2 opt-in migration envelope v1
 
@@ -213,12 +249,16 @@ selection; duplicate queue entries and export IDs; write failure at each phase;
 restart recovery before store initialization; apply→undo queue/EQ/catalog parity;
 undo-disabled-after-catalog-change; retained Studio state; and no autoplay.
 S2 queue/EQ migration and bounded undo are implemented locally; schema parity,
-focused rollback/undo tests, synthetic native restart-phase coverage and selected write-failure tests
-are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
-Process-crash restart recovery, power-loss durability, remaining native write
-failures (including journal creation and import-history persistence), and an
-actual Studio-to-Play transfer remain unverified. Named-pipe Studio handoff and
-media relink remain separate gates.
+focused rollback/undo tests, synthetic native restart-phase coverage, and selected
+write-failure tests are recorded in [S2 migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md).
+A test-binary child process was terminated at five journal/catalog checkpoints;
+directory-level recovery restored the expected catalog state before UI
+initialization. The tests also verify initial journal-write failure leaves no
+journal, undo-snapshot write failure is retryable, and import-history failure
+remains retryable without a duplicate export ID. This does not test restarting
+the Play desktop/WebView or power-loss durability. Other native write-failure
+points and an actual Studio-to-Play transfer remain unverified. Named-pipe Studio
+handoff and media relink remain separate gates.
 
 Implementation boundary: Studio export reads the live Play store in the running
 Studio app. Standalone import reads/writes its own active `localStorage` through
@@ -229,6 +269,17 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
+| 0.2.15b | 2026-09-27 | beta | Specify second-host pipe probe and distinguish compiled mapped/reparse runtime tests from execution | based on 3bb4414 | Codex |
+| 0.2.14b | 2026-09-27 | beta | Verify loopback SMB/UNC rejection with a remote positive control and local access; retain separate-session and parity gates | based on a75c540 | Codex |
+| 0.2.13b | 2026-09-27 | beta | Add retryable S2 undo-snapshot failure evidence alongside journal/history and process-recovery tests | based on e843e1c | Codex |
+| 0.2.12b | 2026-09-27 | beta | Add S2 journal-creation and retryable history-write failure evidence; retain power-loss and transfer gates | based on 75c2001 | Codex |
+| 0.2.11b | 2026-09-27 | beta | Record test-binary termination at five S2 checkpoints and directory-level restart recovery; retain power-loss and transfer gates | based on e2bd20a | Codex |
+| 0.2.10b | 2026-09-27 | beta | Record local Windows pipe ACL denial for a restricted token; retain cross-session and playback parity gates | based on 988a3e4 | Codex |
+| 0.2.9b | 2026-09-27 | beta | Record paired applied-command/lost-ACK owner-restart no-replay evidence; retain security and playback-parity gates | based on 17a5c96 | Codex |
+| 0.2.8b | 2026-09-27 | beta | Verify live ACK-loss query/state recovery while the owner remains active; preserve process-interruption and parity gates | based on cee5e93 | Codex |
+| 0.2.7b | 2026-09-27 | beta | Record live rejection of UNC-shaped handoff input before lookup; retain remote-client and parity gates | based on cee5e93 | Codex |
+| 0.2.6b | 2026-09-27 | beta | Define independent-client ACK revision ordering, retain the server pipe instance, and prohibit cold launch while its owner is busy | based on 1084d5e | Codex |
 | 0.2.5b | 2026-09-26 | beta | Integrate approved S3 named-pipe handoff with S2 migration; record local drive validation and open parity/recovery gates | S2 7c30ea1; S3 235875b; docs 362bbd0 | Codex |
 | 0.2.4b | 2026-09-26 | beta | Reject mapped network drives in S2 native file validation and record deterministic drive-type coverage | 7c30ea1 | Codex |
 | 0.2.3b | 2026-09-26 | beta | Add explicit journaled last-import undo and report its safety gate | based on 58f6b67 | Codex |

@@ -126,7 +126,7 @@ pub fn track(path: &Path) -> Track {
 }
 
 pub fn data_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let directory = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let directory = crate::play_app_data_dir(app)?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     Ok(directory.join("library-v1.json"))
 }

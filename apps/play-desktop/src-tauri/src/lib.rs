@@ -3,12 +3,67 @@ mod library;
 mod migration;
 
 use library::LibraryState;
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
     AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize, WindowEvent,
 };
+
+pub(crate) fn play_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    #[cfg(feature = "g3-test-app-data-dir")]
+    {
+        let _ = app;
+        let path = std::env::var_os("LALIN_PLAY_G3_APP_DATA_DIR")
+            .map(PathBuf::from)
+            .ok_or_else(|| "G3 test build requires LALIN_PLAY_G3_APP_DATA_DIR".to_string())?;
+        let temp_root = std::env::temp_dir()
+            .canonicalize()
+            .map_err(|_| "cannot resolve the G3 temporary directory".to_string())?;
+        let parent = path
+            .parent()
+            .and_then(|parent| parent.canonicalize().ok())
+            .ok_or_else(|| "G3 app-data path must be a direct child of system temp".to_string())?;
+        let has_test_prefix = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with("lalin-play-g3-appdata-"));
+        if !path.is_absolute() || parent != temp_root || !has_test_prefix {
+            return Err("G3 app-data path must be a named direct child of system temp".into());
+        }
+        Ok(path)
+    }
+
+    #[cfg(not(feature = "g3-test-app-data-dir"))]
+    {
+        if std::env::var_os("LALIN_PLAY_G3_APP_DATA_DIR").is_some() {
+            return Err("G3 app-data override requires the dedicated test build".into());
+        }
+        app.path().app_data_dir().map_err(|error| error.to_string())
+    }
+}
+
+#[cfg(feature = "g3-test-app-data-dir")]
+pub(crate) fn g3_test_trace(app: &AppHandle, stage: &str) {
+    use std::{fs::OpenOptions, io::Write};
+
+    let Ok(directory) = play_app_data_dir(app) else {
+        return;
+    };
+    if std::fs::create_dir_all(&directory).is_err() {
+        return;
+    }
+    if let Ok(mut trace) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(directory.join("g3-startup.log"))
+    {
+        let _ = writeln!(trace, "{stage}");
+    }
+}
+
+#[cfg(not(feature = "g3-test-app-data-dir"))]
+pub(crate) fn g3_test_trace(_app: &AppHandle, _stage: &str) {}
 
 struct Presentation {
     compact: bool,
@@ -221,8 +276,27 @@ pub fn run() {
             fullscreen_restore: None,
         }))
         .manage(handoff::HandoffService::default())
+        .on_page_load(|webview, payload| {
+            let stage = match payload.event() {
+                tauri::webview::PageLoadEvent::Started => "webview_page_load_started",
+                tauri::webview::PageLoadEvent::Finished => "webview_page_load_finished",
+            };
+            g3_test_trace(webview.app_handle(), stage);
+            #[cfg(feature = "g3-test-app-data-dir")]
+            if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                let probe = "localStorage.setItem('lalin-play:g3-native-probe', JSON.stringify({url:location.href,ready:document.readyState,internals:typeof window.__TAURI_INTERNALS__,root:!!document.getElementById('root'),text:(document.getElementById('root')?.innerText||'').slice(0,512)}))";
+                let stage = if webview.eval(probe).is_ok() {
+                    "webview_probe_eval_sent"
+                } else {
+                    "webview_probe_eval_failed"
+                };
+                g3_test_trace(webview.app_handle(), stage);
+            }
+        })
         .setup(|app| {
+            g3_test_trace(app.handle(), "native_setup_started");
             let library = library::initialize(app.handle()).map_err(std::io::Error::other)?;
+            g3_test_trace(app.handle(), "library_initialized");
             app.manage(LibraryState(Mutex::new(library)));
             let open = MenuItem::with_id(app, "open", "เปิด Lalin Play", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "ออกจาก Lalin Play", true, None::<&str>)?;
