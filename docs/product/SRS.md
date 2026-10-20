@@ -647,6 +647,6 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 1.5.2b | 2026-10-20 | under review | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | pending (PR #29, draft) | Codex |
+| 1.5.2b | 2026-10-20 | under review | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | 65df361 (PR #29, draft) | Codex |
 | 1.5.1b | 2026-10-20 | under review | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, draft) | Codex |
 | 1.5.0b | 2026-09-20 | under review | Map standalone approved deltas and evidence separately from Studio baseline; add metadata | based on f5a6681 | LALIN |

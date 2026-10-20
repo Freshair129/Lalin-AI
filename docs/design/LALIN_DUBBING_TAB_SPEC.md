@@ -86,7 +86,7 @@ S1           D2 stepper | D3 segment editor | D4 selected-segment inspector
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.1.3b | 2026-10-20 | beta | Add approved manual speaker assignment, voice mapping, and transcript-backed render behavior | pending (PR #29, draft) | Codex |
+| 0.1.3b | 2026-10-20 | beta | Add approved manual speaker assignment, voice mapping, and transcript-backed render behavior | 65df361 (PR #29, draft) | Codex |
 | 0.1.2b | 2026-10-20 | beta | Record Slice A implementation and distinguish it from the future multi-stage target | 1ef64f0 (PR #29, draft) | Codex |
 | 0.1.1b | 2026-07-21 | beta | Dubbing v1 visual baseline approved; implementation pending. | uncommitted | ATHER |
 | 0.1.0b | 2026-07-21 | superseded | First Dubbing design spec under approved W0 shell, pending visual approval. | uncommitted | ATHER |
