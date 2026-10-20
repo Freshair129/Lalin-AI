@@ -1,7 +1,7 @@
 ---
-version: "1.4.2b"
+version: "1.4.4b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -115,10 +115,11 @@ API, MCP และ contracts เป็นส่วนประกอบของ
 | รายการ | รายละเอียด |
 |--------|------------|
 | **อินพุต** | ไฟล์เสียง/วิดีโอ |
-| **กระบวนการ** | ASR (ถอดเสียง) → แปลภาษาด้วย AI → โคลนเสียงทีละ segment → ปรับจังหวะให้ตรง → มิกซ์ timeline |
+| **Analyze path** | อัปโหลด → ASR → ดู transcript พร้อม timestamps และส่งออก SRT/VTT ก่อนเริ่มพากย์ (Slice A) |
+| **Render path** | ทางลัดเดิมยังทำ ASR → แปล → TTS ด้วย voice เดียว; transcript flow เลือกกำหนด speaker/voice ต่อ segment แล้ว render จากผล analyze เดิมได้ (Slice B) |
 | **ถอดเสียง** | faster-whisper — ค่าเริ่มต้น `large-v3`; เลือก `base`, `small`, `medium`, `large-v3` หรือ `turbo` ได้ใน full local runtime |
 | **แปลภาษา** | ผ่าน Brain (Ollama/Cloud), temperature 0.3 |
-| **โคลนเสียง** | เลือกเสียงจากคลัง |
+| **โคลนเสียง** | เลือกเสียงจากคลัง; manual speaker mapping ใช้ voice profile แยกตาม speaker โดยผู้ใช้กำหนดเอง |
 | **ปรับจังหวะ** | ยืด/หดเสียงให้ตรงกับ segment ต้นฉบับ (รักษาระดับเสียง) |
 | **เอาต์พุต** | WAV (เสียงพากย์ใหม่บน timeline เดิม) |
 
@@ -284,6 +285,9 @@ PLAY-10 เป็น release gate แยกและต้องรายงา�
 → ฟัง/ดาวน์โหลดเสียงพากย์
 ```
 
+ทาง transcript-first เพิ่มขั้นเลือกได้: `อัปโหลด → Transcript → วิเคราะห์ → กำหนด speaker/voice → render`.
+การวิเคราะห์เป็น ASR job แยก; Slice B ใช้ผล analyze เดิมและไม่รัน ASR ซ้ำ ส่วนปุ่มพากย์เดิมยังคง single-speaker flow ของตัวเอง.
+
 ### Flow 3: มาสเตอร์เพลง
 ```
 เปิดแอป → Mastering → อัปโหลดเพลง → (อัปโหลดเพลงอ้างอิง ถ้ามี)
@@ -343,11 +347,16 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 ### v0.3.0 (อนาคต)
 - [ ] รองรับ macOS / Linux
 - [ ] Voice fine-tuning (เทรนเสียงเพิ่ม)
-- [ ] Multi-speaker dubbing (หลายตัวละคร)
+- [ ] Manual multi-speaker dubbing (Slice B approved; implementation in branch)
+- [ ] Automatic speaker diarization (ยังไม่อยู่ใน Slice B)
 - [ ] Plugin system สำหรับ pipeline ใหม่
 - [ ] Voice profiles: การยินยอม, อัปโหลด/บันทึกจากไมโครโฟน, แก้ไขและ metadata ตลอด lifecycle
 - [ ] ตัวเลือกขนาด Whisper พร้อมสถานะ runtime และผลตอบกลับเมื่อสลับโมเดล
 - [ ] Agent Voice สำหรับ Mix Copilot ใน full local runtime
+
+**Dubbing Pro Slice A (2026-10-20):** อนุมัติและ implement ใน branch `codex/dubbing-pro-slice-a-20261020`; backend/frontend automated checks ผ่าน. ยังรอ review/merge และยังไม่ได้ตรวจคุณภาพ ASR ด้วยเสียงจริงหรือ GPU runtime.
+
+**Dubbing Pro Slice B (2026-10-20):** ผู้ใช้ออนุมัติ manual-only: speaker labels ต่อ segment, mapping ไปยัง voice profiles ที่มี, และ render หลาย voice จาก analyze job เดิม; automatic diarization, clip export, short voice-over และ transcript text editing ยังไม่รวม. Implementation อยู่ใน Draft PR #29; TypeScript, Vite build, desktop tests (25 files/197 tests) และ Dubbing API tests (5 tests) ผ่าน. Live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
 
 ---
 
@@ -366,6 +375,8 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.4.4b | 2026-10-20 | beta | Record approved manual-only Dubbing Pro Slice B scope | 65df361 (PR #29, draft) | Codex |
+| 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | 1ef64f0 (PR #29, draft) | Codex |
 | 1.4.2b | 2026-09-20 | beta | Link current publication status and complete Play evidence/document map | based on f5a6681 | LALIN |
 | 1.4.1b | 2026-09-20 | beta | Record approved fullscreen/relative seek implementation and bounded local evidence | based on 8429010 | LALIN |
 | 1.4.0b | 2026-09-20 | candidate | Propose Compact fullscreen and relative seek requirements; retain approved preview baseline | based on 8429010 | LALIN |

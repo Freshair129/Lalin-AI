@@ -1,7 +1,7 @@
 ---
-version: "0.10.11b"
+version: "0.10.13b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-26T21:20:52+07:00,Codex"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -71,6 +71,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/design/LALIN_WORKSPACE_TAB_SPEC.md`
 - `docs/design/LALIN_VOICE_STUDIO_TAB_SPEC.md`
 - `docs/design/LALIN_DUBBING_TAB_SPEC.md`
+- `docs/archive/PROPOSED_V03_DUBBING_PRO_SLICE_B.md`: approved manual-only speaker assignment, voice mapping, and transcript-backed multi-speaker render scope.
 - `docs/design/LALIN_MASTERING_TAB_SPEC.md`
 - `docs/design/LALIN_LIBRARY_TAB_SPEC.md`
 - `docs/design/LALIN_JOBS_TAB_SPEC.md`
@@ -121,6 +122,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 ## Validation and Evidence Docs
 
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`: approved transcript analyze/UI Slice A implementation, backend/frontend automated checks and explicit live-ASR/native verification limits.
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`: manual speaker assignment and multi-voice render implementation evidence, compile/build status, and remaining live/native gates.
 - `docs/validation/SPRINT*_VALIDATION.md`
 - `docs/validation/2026-09-18-LALIN-PLAY-TV-MODE.md`: TV Mode unit, browser and native evidence with hardware limits.
 - `docs/validation/2026-09-17-LALIN-PLAY-COMMAND-DELIVERY.md`: regression, build and isolated browser/native debug fixture evidence; broad MVP/release gates remain separate.
@@ -163,6 +166,8 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.13b | 2026-10-20 | beta | Index approved manual-only Dubbing Pro Slice B scope and validation record | 65df361 (PR #29, draft) | Codex |
+| 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | 1ef64f0 (PR #29, draft) | Codex |
 | 0.10.11b | 2026-09-26 | beta | Index the approved Play execution DAG, S2/S3 contract and implementation evidence, and both local-path RCAs | S2 7c30ea1; S3 235875b/362bbd0; base 43121cc | Codex |
 | 0.10.10b | 2026-09-24 | beta | Index the handoff back to PRP | based on 4861082 | LALIN |
 | 0.10.9b | 2026-09-24 | beta | Index the PRP integration gap analysis | based on de6fd16 | LALIN |

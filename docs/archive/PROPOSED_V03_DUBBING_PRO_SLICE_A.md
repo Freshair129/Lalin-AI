@@ -1,8 +1,8 @@
 ---
 version: "0.1.0b"
 created_at: "2026-07-06T03:48:00+07:00,ATHER"
-last_update: "2026-07-06T03:48:00+07:00,ATHER"
-status: "candidate"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
+status: "approved"
 attributes:
   doc_type: "feature-spec"
   domain: "dubbing"
@@ -373,4 +373,6 @@ state ที่ต้องมี:
 - `+` เพิ่ม state model, UX states, และ verification plan
 - `+` จำกัด approval boundary ให้แคบลงเพื่อเริ่มลงโค้ดได้เร็ว
 
-Please review and approve this documentation. I will generate the code once approved.
+## Approval Record
+
+Approved by the user on 2026-10-20: transcript analyze + transcript UI + stale-source handling + regression coverage + canonical document sync after implementation. Multi-speaker mapping, diarization dependency, clip cutter, and short voice-over remain out of scope.

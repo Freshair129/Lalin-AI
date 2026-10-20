@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.1b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-07-06T04:08:00+07:00,ATHER"
-status: "candidate"
+last_update: "2026-10-20T00:00:00+07:00,Codex"
+status: "beta"
 attributes:
   doc_type: "execution-backlog"
   domain: "roadmap"
@@ -64,7 +64,7 @@ attributes:
 
 ### Track A — Dubbing Pro
 
-สถานะ: `next`
+สถานะ: `active — Slice A implemented; Slice B manual-only approved and in branch`
 
 เหตุผล:
 
@@ -78,21 +78,27 @@ attributes:
 - transcript UI
 - canonical doc sync
 
-สถานะ: `proposal ready`
+สถานะ: `approved; implemented and automated checks pass; Draft PR #29 open; live-ASR verification remains pending`
 
 เอกสาร:
 
 - `PROPOSED_V03_DUBBING_PRO.md`
 - `PROPOSED_V03_DUBBING_PRO_SLICE_A.md`
 - `PROPOSED_V03_SLICE_A_CANONICAL_DIFF.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`
 
 #### Slice B
 
-- speaker labels
-- voice-per-speaker mapping
-- multi-speaker render payload
+- manual speaker labels on transcript segments
+- voice-per-speaker mapping from existing voice profiles
+- multi-speaker render job reusing the completed analyze transcript
 
-สถานะ: `not approved`
+สถานะ: `approved (manual-only); implementation in branch; automatic diarization remains out of scope`
+
+เอกสาร:
+
+- `PROPOSED_V03_DUBBING_PRO_SLICE_B.md`
+- `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`
 
 #### Slice C
 
@@ -233,16 +239,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-ถ้าจะเดินต่อโดยไม่เปลี่ยนลำดับ:
+Slice A implement แล้วและ Slice B แบบ manual-only ได้รับอนุมัติ; ทั้งคู่ทำบน branch ของ Draft PR #29. ขั้นถัดไป:
 
-`Approve Slice A`
+`Review/merge Slice A + B; then request separate approval for Slice C`
 
-แล้วลงมือ:
-
-1. `POST /dubbing/analyze`
-2. transcript tab UI
-3. stale transcript handling
-4. doc truth sync หลังโค้ดผ่าน
+Slice C ยังไม่อนุมัติ; live ASR/audio quality และ native desktop verification ยังเป็น gate แยก.
 
 ---
 
@@ -251,4 +252,5 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
+- `+` บันทึก approval และสถานะ implementation ของ Slice A/B; Slice C ยังไม่อนุมัติ
 

@@ -123,6 +123,24 @@ export const dubbing = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
+  analyze: (body: { source_audio: string; source_lang?: string | null }) =>
+    req<{ job_id: string }>("/dubbing/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  render: (body: {
+    analysis_job_id: string;
+    segment_speakers: Array<{ segment_id: string; speaker_id: string }>;
+    speaker_voices: Array<{ speaker_id: string; voice_id: string }>;
+    target_lang: string;
+    translate: boolean;
+  }) =>
+    req<{ job_id: string }>("/dubbing/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
   // เกลาบทพากย์ให้ความยาวคำพูดพอดีกับช่องเวลา (ตัวช่วยแยก ไม่ผูกกับ job หลัก)
   refine: (body: { text: string; target_sec: number; tone?: "formal" | "casual" }) =>
     req<{ refined: string }>("/dubbing/refine", {
@@ -236,9 +254,30 @@ export interface Job {
   updated_at: string;
   result?: {
     output?: string;
+    analysis_job_id?: string;
     // dubbing: ไฟล์ซับไตเติล + วิดีโอที่รวมเสียงพากย์กลับเข้าไปแล้ว (ถ้าต้นฉบับเป็นวิดีโอ)
     subtitle_srt?: string | null;
     subtitle_vtt?: string | null;
+    source_audio?: string;
+    detected_language?: string | null;
+    segment_count?: number;
+    duration_sec?: number;
+    transcript?: {
+      segments?: Array<{
+        id: string;
+        start: number;
+        end: number;
+        text: string;
+      }>;
+    };
+    speaker_count?: number;
+    speaker_voice_map?: Record<string, string>;
+    rendered_segments?: Array<{
+      id: string;
+      start: number;
+      end: number;
+      speaker_id: string;
+    }>;
     video_output?: string;
     video_mux_error?: string;
   } & Record<string, unknown>;
