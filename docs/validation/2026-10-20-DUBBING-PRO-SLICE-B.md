@@ -44,7 +44,7 @@ clip export, and short voice-over remain out of scope.
 | Desktop production build | PASS | Vite 6.4.3; 275 modules transformed |
 | Desktop tests | PASS | Vitest: 25 files, 197 tests passed, including speaker assignment/render UI coverage |
 | Python syntax | PASS | `py_compile` for changed API modules and new API test source, using Python 3.14.7 |
-| API pytest | NOT RUN | This checkout has no Python 3.11 environment or `pytest`; Python 3.11 is the repository runtime target |
+| API pytest | PASS | Python 3.11.9 venv: `python -m pytest -q tests/test_dubbing_analyze.py tests/test_dubbing_render.py` — 5 passed |
 | Live ASR/TTS and GPU render | NOT RUN | Requires local speech runtime, usable audio, and voice profiles |
 | Native Tauri UI/UAT | NOT RUN | Build evidence does not establish visible desktop behavior or audio playback |
 
@@ -54,6 +54,6 @@ the TypeScript and Vite entrypoints were run directly and both passed.
 ## Review Notes
 
 - `apps/api/tests/test_dubbing_render.py` covers mapping validation, analyze
-  reuse, output traceability, and per-segment voice selection. Its runtime
-  assertions remain pending the Python 3.11 test environment.
+  reuse, output traceability, and per-segment voice selection; the Slice A
+  analyze regression tests and Slice B render tests pass together (5 tests).
 - No real audio quality, diarization, GPU, or native desktop claim is made.

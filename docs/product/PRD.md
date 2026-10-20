@@ -356,7 +356,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 **Dubbing Pro Slice A (2026-10-20):** อนุมัติและ implement ใน branch `codex/dubbing-pro-slice-a-20261020`; backend/frontend automated checks ผ่าน. ยังรอ review/merge และยังไม่ได้ตรวจคุณภาพ ASR ด้วยเสียงจริงหรือ GPU runtime.
 
-**Dubbing Pro Slice B (2026-10-20):** ผู้ใช้ออนุมัติ manual-only: speaker labels ต่อ segment, mapping ไปยัง voice profiles ที่มี, และ render หลาย voice จาก analyze job เดิม; automatic diarization, clip export, short voice-over และ transcript text editing ยังไม่รวม. Implementation อยู่ใน Draft PR #29; TypeScript, Vite build และ desktop tests ผ่าน (25 files/197 tests). API pytest, live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
+**Dubbing Pro Slice B (2026-10-20):** ผู้ใช้ออนุมัติ manual-only: speaker labels ต่อ segment, mapping ไปยัง voice profiles ที่มี, และ render หลาย voice จาก analyze job เดิม; automatic diarization, clip export, short voice-over และ transcript text editing ยังไม่รวม. Implementation อยู่ใน Draft PR #29; TypeScript, Vite build, desktop tests (25 files/197 tests) และ Dubbing API tests (5 tests) ผ่าน. Live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
 
 ---
 
