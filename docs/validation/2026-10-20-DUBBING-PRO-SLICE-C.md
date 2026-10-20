@@ -2,7 +2,7 @@
 version: "0.1.0b"
 created_at: "2026-10-20T00:00:00+07:00,Codex"
 last_update: "2026-10-20T00:00:00+07:00,Codex"
-status: "candidate; automated verification passed; live TTS and native UAT pending"
+status: "Draft PR #30; automated verification passed; live TTS and native UAT pending"
 superseded_by: null
 attributes:
   domain: "validation"

@@ -107,7 +107,7 @@ attributes:
 - preview, download, and add exported audio to the Dubbing timeline
 - no transcript text editing, automatic diarization, or social publishing
 
-สถานะ: `approved on 2026-10-20; implementation on codex/dubbing-pro-slice-c-20261020`
+สถานะ: `approved on 2026-10-20; implementation in Draft PR #30`
 
 ---
 
@@ -242,9 +242,9 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-Slice A และ B ถูกรวมใน PR #29 แล้ว และผู้ใช้อนุมัติ Slice C เมื่อ 2026-10-20. ขั้นถัดไป:
+Slice A และ B ถูกรวมใน PR #29 แล้ว; Slice C ได้รับอนุมัติ, implement และเปิดเป็น Draft PR #30 แล้ว. ขั้นถัดไป:
 
-`Finish Slice C API/UI, run automated checks, update validation evidence, and open its PR`
+`Review Draft PR #30 and merge when approved`
 
 การทดสอบ ASR/TTS ด้วยเสียงจริง, GPU render และ native desktop UAT ยังเป็น gate แยก.
 

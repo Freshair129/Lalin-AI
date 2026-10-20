@@ -358,7 +358,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 **Dubbing Pro Slice A/B (2026-10-20):** PR #29 รวมแล้วใน merge commit `60c66c4`. Slice A เพิ่ม analyze/transcript; Slice B เพิ่ม manual speaker/voice mapping และ multi-speaker render. Automated checks ผ่านตาม validation report; live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
 
-**Dubbing Pro Slice C (2026-10-20):** ผู้ใช้อนุมัติ clip export จาก segment ที่เลือกพร้อม SRT/VTT snippet และ short voice-over จากข้อความ transcript ด้วย speaker/voice mapping เดิม รวม preview/download/เพิ่มลง Timeline. ไม่รวมแก้ข้อความ transcript, automatic diarization หรือ social publishing. Implementation อยู่บน branch `codex/dubbing-pro-slice-c-20261020`.
+**Dubbing Pro Slice C (2026-10-20):** ผู้ใช้อนุมัติ clip export จาก segment ที่เลือกพร้อม SRT/VTT snippet และ short voice-over จากข้อความ transcript ด้วย speaker/voice mapping เดิม รวม preview/download/เพิ่มลง Timeline. ไม่รวมแก้ข้อความ transcript, automatic diarization หรือ social publishing. Implementation อยู่ใน Draft PR #30.
 
 ---
 
@@ -377,7 +377,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 1.4.5b | 2026-10-20 | under review | Record approved Dubbing Pro Slice C clip export and mapped short voice-over scope | Slice C branch | Codex |
+| 1.4.5b | 2026-10-20 | under review | Record approved Dubbing Pro Slice C clip export and mapped short voice-over scope | Draft PR #30 | Codex |
 | 1.4.4b | 2026-10-20 | beta | Record approved manual-only Dubbing Pro Slice B scope | 65df361 (PR #29, merged as 60c66c4) | Codex |
 | 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |
 | 1.4.2b | 2026-09-20 | beta | Link current publication status and complete Play evidence/document map | based on f5a6681 | LALIN |
