@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.0.3 |
+| **Doc Version** | 1.0.4 |
 | **Status** | Active |
 | **Author** | Boss |
 | **Created** | 2026-06-28 |
-| **Last Updated** | 2026-10-20 |
+| **Last Updated** | 2026-10-21 |
 | **Approved By** | — |
 
 | Version | Date | Author | Changes |
@@ -19,6 +19,7 @@
 | 1.0.1 | 2026-08-09 | Boss | เพิ่ม Document Control + เข้าระบบ doc-graph — ตาราง license §4 ถูกอ้างโดย ai-system/ethics-governance.md |
 | 1.0.2 | 2026-10-20 | Codex | บันทึกผลประเมิน pyworld เทียบ psola แบบ synthetic และแก้ metadata license ของ psola ตาม upstream |
 | 1.0.3 | 2026-10-20 | Codex | เพิ่มลิงก์ Slice B2 design และระบุว่า piecewise warp ยังไม่ implement |
+| 1.0.4 | 2026-10-21 | Codex | บันทึก Slice B2 implementation และคง licensed-audio/native desktop acceptance เป็น pending |
 
 ---
 
@@ -58,8 +59,8 @@ Suno เจนเพลง / เดโม่ตัวเอง  →  [G-Music]  
 
 | ปัญหา | สถานะ | ทางแก้ |
 |-------|-------|--------|
-| **Beat-sync ระดับโปร** | ⚠️ global phase ได้ แต่ drift/phrase ยังไม่จัด | Manual nudge ใช้ได้; Slice B2 กำหนด drift gate และ timeline preview แล้ว แต่ยังไม่ implement |
-| Piecewise warp | ❌ ยังไม่มี local tempo map หรือ warp markers | ทำตาม design ที่ [Slice B2](MUSIC-PHASE-C-SLICE-B2-DESIGN.md) หลัง review thresholds, B1 merge, และ licensed-vocal A/B |
+| **Beat-sync ระดับโปร** | ⚠️ global phase และ gated drift preview implement แล้ว; ยังไม่มี licensed-vocal/native desktop acceptance | Slice B2 เพิ่ม drift gate, phase correction แยกจาก residual และ timeline overlay; ดู [implementation evidence](../validation/2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md) |
+| Piecewise warp | ⚠️ local tempo map, manual markers และ preview/render contract implement แล้ว; product acceptance pending | ตรวจ PR/hosted CI, ทำ A/B กับเสียงร้องที่มีสิทธิ์ และ native desktop UAT ก่อนอ้างคุณภาพ |
 | Key match minor↔major | ⚠️ detect ถูก แต่ force mode อาจเพี้ยน melody | ให้ผู้ใช้ override คีย์ได้ |
 | LUFS หลัง FX ตก / drift จาก target | ✅ ดีขึ้นแล้ว แต่ยังต้องยืนยัน acceptance window | ใช้ smoke gate ตรวจ output จริง พร้อม target/tolerance และ peak ceiling |
 | Formant ตอน pitch-shift มาก | ⚠️ ผล benchmark synthetic ที่ +8 semitone: pyworld drift p95 8.49%, psola 26.95%; ยังไม่ได้ฟังกับเสียงร้องจริง | ทำ blinded A/B กับเสียงร้องที่มีสิทธิ์ก่อนเพิ่ม pyworld ในแอป — ดู [Slice B1 evidence](../validation/2026-10-20-MUSIC-PHASE-C-SLICE-B1.md) |

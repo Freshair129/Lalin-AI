@@ -1,7 +1,9 @@
 """Pydantic request/response models for the API."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, model_validator
 
 
 # ── Brain ───────────────────────────────────────────────────
@@ -115,6 +117,7 @@ class RemixRequest(BaseModel):
     key_override: str | None = None
     do_fx: bool = True
     phrase_bars: int = 0
+    beats_per_bar: int = Field(default=4, ge=1, le=16)
     offset_ms: float | None = Field(
         default=None, description="เลื่อนเสียงร้อง (ms); None = หา phase อัตโนมัติ"
     )
@@ -123,6 +126,56 @@ class RemixRequest(BaseModel):
     stem_gains: dict[str, float] | None = Field(
         default=None, description="gain ต่อ stem (vocals/drums/bass/other); None = ข้าม 4-stem"
     )
+    preview_id: str | None = None
+    preview_revision: int | None = Field(default=None, ge=1)
+    map_digest: str | None = None
+    accept_warp: bool = False
+    window_bars: int = Field(default=4, ge=1, le=64)
+    hop_bars: int = Field(default=2, ge=1, le=63)
+
+
+class RemixPreviewRenderSettings(BaseModel):
+    target_lufs: float = -14.0
+    do_autotune: bool = True
+    autotune_strength: float = 1.0
+    key_override: str | None = None
+    do_fx: bool = True
+    reverb: float = 0.16
+    delay: float = 0.12
+    stem_gains: dict[str, float] | None = None
+
+
+class RemixPreviewRequest(BaseModel):
+    contract_version: Literal[1] = 1
+    source_audio: str
+    beat_audio: str
+    phrase_bars: int = Field(default=0, ge=0, le=64)
+    beats_per_bar: int = Field(default=4, ge=1, le=16)
+    offset_mode: Literal["auto", "manual"] = "auto"
+    offset_ms: float | None = None
+    warp_mode: Literal["off", "suggest", "manual"] = "suggest"
+    window_bars: int = Field(default=4, ge=1, le=64)
+    hop_bars: int = Field(default=2, ge=1, le=63)
+    render_settings: RemixPreviewRenderSettings = Field(default_factory=RemixPreviewRenderSettings)
+    preview_id: str | None = None
+    base_revision: int | None = Field(default=None, ge=1)
+    anchors: list[dict] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_preview_contract(self):
+        if self.hop_bars >= self.window_bars:
+            raise ValueError("hop_bars must be less than window_bars")
+        if self.offset_mode == "manual" and self.offset_ms is None:
+            raise ValueError("manual offset requires offset_ms")
+        if self.offset_mode == "auto" and self.offset_ms is not None:
+            raise ValueError("auto offset must omit offset_ms")
+        if self.preview_id is None and self.warp_mode == "manual":
+            raise ValueError("manual warp requires preview_id and base_revision")
+        if self.preview_id is not None and self.base_revision is None:
+            raise ValueError("preview revision requires base_revision")
+        if self.warp_mode == "manual" and not self.anchors:
+            raise ValueError("manual warp requires anchors")
+        return self
 
 
 # ── Jobs ────────────────────────────────────────────────────

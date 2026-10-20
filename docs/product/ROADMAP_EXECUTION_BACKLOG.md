@@ -1,7 +1,7 @@
 ---
 version: "0.2.2b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-10-20T20:35:00+07:00,Codex"
+last_update: "2026-10-21T00:00:28+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -143,17 +143,19 @@ attributes:
 - drift detection definition
 - timeline preview contract for warped segments
 
-สถานะ: `design complete in PR #32 (stacked on B1 PR #31); implementation not started`
+สถานะ: `implementation in progress; PR review/hosted CI, licensed-vocal A/B, and native desktop UAT pending`
 
 เอกสาร: `MUSIC-PHASE-C-SLICE-B2-DESIGN.md`
 
-ข้อกำหนดสำคัญก่อนเริ่ม implementation:
+สิ่งที่ implementation ทำ:
 
 - คง global-only/manual-offset path เดิมเป็น default
 - วิเคราะห์ drift หลังแยก constant phase offset ออกจาก residual timing error
-- เสนอ warp เมื่อ confidence และจำนวน anchor ถึงเกณฑ์; ต้องให้ผู้ใช้ยอมรับก่อน render
-- preview audio, timeline marker map, และ final render ต้องผูกกับ immutable map revision
-- ตรวจ B1 merge และ review threshold/preview lifecycle ก่อนเริ่ม implementation
+- สร้าง gated warp candidate และต้องให้ผู้ใช้ยอมรับก่อน render
+- ผูก preview audio, timeline marker map, และ final render กับ immutable map revision/fingerprints
+- preview เก็บชั่วคราว 30 นาที; การแก้ anchor สร้าง revision ใหม่
+
+Gate ที่ยังเปิด: licensed-vocal A/B listening และ native desktop UAT; ดูหลักฐานใน `docs/validation/2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md`.
 
 #### Slice B3
 
@@ -260,12 +262,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-PR #31 ของ Slice B1 ยังเปิดอยู่; B2 design ถูกเตรียมแบบ stacked เพื่อไม่รวมสอง slice.
-หลัง PR #31 merge และ B2 design ผ่านการ review ให้ดำเนินงานตามลำดับด้วย:
+PR #31 (B1) และ PR #32 (B2 design) merge แล้ว. Slice B2 implementation กำลังเตรียม PR; หลัง merge ให้ทำ product-quality acceptance ที่ยัง pending ก่อนเลือก B3:
 
-`Slice B2 implementation — validate drift thresholds and implement the accepted preview contract`
+`Slice B2 acceptance — licensed-vocal A/B and native desktop preview/render UAT`
 
-Slice B2 design กำหนด global-only fallback และ gated warp candidate; อย่าเริ่ม implementation ก่อนยืนยันว่า drift detection และ preview contract แก้ปัญหาจริงได้. Track A runtime UAT gates ยังคงแยกอยู่.
+Slice B2 คง global-only fallback และ gated warp candidate. Synthetic และ hosted CI เป็นหลักฐานคนละประเภทกับ A/B listening และ native desktop UAT; Track A runtime UAT gates ยังคงแยกอยู่.
 
 ---
 
