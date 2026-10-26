@@ -153,3 +153,20 @@ def test_piecewise_renderer_keeps_continuous_audio_and_expected_duration():
         start = int((boundary - 0.05) * sample_rate)
         end = int((boundary + 0.05) * sample_rate)
         assert float(np.sqrt(np.mean(warped[:, start:end] ** 2))) > 0.2
+
+
+def test_manual_map_accepts_two_bar_boundary_after_float_rounding():
+    anchors = [
+        {"input_time_sec": 11.491519274376417, "timeline_time_sec": 11.491519274376417},
+        {"input_time_sec": 19.479183673469386, "timeline_time_sec": 19.479183673469386},
+    ]
+
+    validated = validate_manual_anchors(
+        anchors,
+        duration_sec=72.0,
+        beats_per_bar=4,
+        target_bpm=60.09265988372093,
+    )
+
+    assert len(validated) == 2
+    assert [item["origin"] for item in validated] == ["manual", "manual"]
