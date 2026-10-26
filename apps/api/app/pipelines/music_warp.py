@@ -11,6 +11,7 @@ MIN_CONFIDENCE = 0.70
 MIN_ANCHORS = 3
 MIN_SPAN_BARS = 8.0
 MIN_SEGMENT_BARS = 2.0
+MIN_SEGMENT_TIME_TOLERANCE_SEC = 1e-6
 MIN_RATIO = 0.97
 MAX_RATIO = 1.03
 
@@ -179,7 +180,7 @@ def analyze_drift(
     if status == "drift_detected":
         minimum_span = MIN_SEGMENT_BARS * bar_sec
         if any(ratio < MIN_RATIO or ratio > MAX_RATIO for ratio in ratios) or any(
-            right.input_time_sec - left.input_time_sec < minimum_span - 1e-6
+            right.input_time_sec - left.input_time_sec < minimum_span - MIN_SEGMENT_TIME_TOLERANCE_SEC
             for left, right in zip(anchors, anchors[1:])
         ) or any(right.timeline_time_sec <= left.timeline_time_sec for left, right in zip(anchors, anchors[1:])):
             status, reason = "warp_limited", "local_stretch_or_segment_guardrail"
@@ -244,12 +245,12 @@ def validate_manual_anchors(anchors: list[dict], *, duration_sec: float, beats_p
             delta_input = input_time - previous["input_time_sec"]
             delta_output = timeline_time - previous["timeline_time_sec"]
             ratio = delta_output / delta_input if delta_input > 0 else float("inf")
-            if delta_input < minimum_segment or delta_output <= 0 or ratio < MIN_RATIO or ratio > MAX_RATIO:
+            if delta_input < minimum_segment - MIN_SEGMENT_TIME_TOLERANCE_SEC or delta_output <= 0 or ratio < MIN_RATIO or ratio > MAX_RATIO:
                 raise ValueError("invalid_warp_map")
         result.append(point)
         previous = point
-    if (result[0]["input_time_sec"] < minimum_segment
-            or duration_sec - result[-1]["input_time_sec"] < minimum_segment):
+    if (result[0]["input_time_sec"] < minimum_segment - MIN_SEGMENT_TIME_TOLERANCE_SEC
+            or duration_sec - result[-1]["input_time_sec"] < minimum_segment - MIN_SEGMENT_TIME_TOLERANCE_SEC):
         raise ValueError("invalid_warp_map")
     return result
 
