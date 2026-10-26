@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Lalin Play Remote TLS Feasibility</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">L</div>
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">Isolated browser capability check</p>
+        <h1>Lalin Play Remote</h1>
+      </div>
+      <div class="topbar-actions">
+        <span class="scope-pill" data-i18n="scope">TLS feasibility</span>
+        <div class="language-switch" role="group" aria-label="Language">
+          <button id="language-en" type="button" aria-pressed="true">ENG</button>
+          <button id="language-th" type="button" aria-pressed="false">TH</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="intro card">
+      <p class="eyebrow" data-i18n="network">Local network only</p>
+      <h2 data-i18n="intro-title">Check this browser and secure connection</h2>
+      <p data-i18n="intro-copy">This page checks secure-context and camera permission support, then sends one temporary nonce over same-origin WSS. It does not pair a device or control playback.</p>
+      <dl class="facts">
+        <div><dt data-i18n="origin">Page origin</dt><dd id="origin-value">Checking…</dd></div>
+        <div><dt data-i18n="secure-context">Secure context</dt><dd id="secure-value" role="status">Checking…</dd></div>
+        <div><dt data-i18n="camera-api">Camera API</dt><dd id="camera-api-value">Checking…</dd></div>
+        <div><dt data-i18n="camera-permission">Camera permission</dt><dd id="camera-permission-value" role="status">Checking…</dd></div>
+      </dl>
+    </section>
+
+    <section class="checks" aria-label="Capability checks" data-i18n-aria="checks-label">
+      <article class="card check-card">
+        <div class="check-heading">
+          <div class="icon" aria-hidden="true">◎</div>
+          <div><p class="eyebrow" data-i18n="browser-permission">Browser permission</p><h2 data-i18n="camera-title">Camera capability</h2></div>
+        </div>
+        <p class="body-copy" data-i18n="camera-copy">Request access only when you press the button. If granted, the temporary camera track is stopped immediately.</p>
+        <button id="camera-button" type="button" disabled data-i18n="camera-button">Check camera access</button>
+        <p id="camera-result" class="result" role="status" data-message-key="camera-idle">No permission request has been made.</p>
+      </article>
+
+      <article class="card check-card">
+        <div class="check-heading">
+          <div class="icon signal" aria-hidden="true">⌁</div>
+          <div><p class="eyebrow" data-i18n="same-origin">Same-origin transport</p><h2 data-i18n="probe-title">WSS nonce probe</h2></div>
+        </div>
+        <p class="body-copy" data-i18n="probe-copy">Opens one secure WebSocket, sends one random nonce and checks the matching acknowledgement. No payload is logged or saved.</p>
+        <button id="probe-button" type="button" disabled data-i18n="probe-button">Run secure transport probe</button>
+        <p id="probe-result" class="result" role="status" data-message-key="waiting-https">Waiting for a secure page context.</p>
+      </article>
+    </section>
+
+    <footer data-i18n="footer">Feasibility harness only · no pairing, remote commands, queue, audio, or file access</footer>
+  </main>
+</body>
+</html>

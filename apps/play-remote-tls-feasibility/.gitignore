@@ -1,0 +1,3 @@
+# Generated static output from the scoped feasibility build.
+dist/
+node_modules/
