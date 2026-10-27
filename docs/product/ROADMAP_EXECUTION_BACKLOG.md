@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-10-21T00:00:28+07:00,Codex"
+last_update: "2026-10-27T00:00:00+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -143,7 +143,7 @@ attributes:
 - drift detection definition
 - timeline preview contract for warped segments
 
-สถานะ: `implementation in progress; PR review/hosted CI, licensed-vocal A/B, and native desktop UAT pending`
+สถานะ: `implemented and merged in PR #35 (merge commit eed358ef); hosted CI passed; synthetic native Tauri UAT passed; licensed-vocal A/B pending`
 
 เอกสาร: `MUSIC-PHASE-C-SLICE-B2-DESIGN.md`
 
@@ -155,7 +155,7 @@ attributes:
 - ผูก preview audio, timeline marker map, และ final render กับ immutable map revision/fingerprints
 - preview เก็บชั่วคราว 30 นาที; การแก้ anchor สร้าง revision ใหม่
 
-Gate ที่ยังเปิด: licensed-vocal A/B listening และ native desktop UAT; ดูหลักฐานใน `docs/validation/2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md`.
+Gate ที่ยังเปิด: licensed-vocal A/B listening กับ vocal/instrumental ที่จับคู่กันและยืนยันสิทธิ์แล้ว. Native Tauri interaction ผ่านด้วย synthetic fixture โดย mock stem separation; ดูหลักฐานใน `docs/validation/2026-10-21-MUSIC-PHASE-C-SLICE-B2-IMPLEMENTATION.md`.
 
 #### Slice B3
 
@@ -262,11 +262,11 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
-PR #31 (B1) และ PR #32 (B2 design) merge แล้ว. Slice B2 implementation กำลังเตรียม PR; หลัง merge ให้ทำ product-quality acceptance ที่ยัง pending ก่อนเลือก B3:
+PR #31 (B1), PR #32 (B2 design), และ PR #35 (B2 implementation) merge แล้ว. Synthetic native desktop acceptance ผ่าน; งานถัดไปก่อนเลือก B3 คือ licensed-vocal A/B listening:
 
-`Slice B2 acceptance — licensed-vocal A/B and native desktop preview/render UAT`
+`Slice B2 acceptance — licensed-vocal A/B`
 
-Slice B2 คง global-only fallback และ gated warp candidate. Synthetic และ hosted CI เป็นหลักฐานคนละประเภทกับ A/B listening และ native desktop UAT; Track A runtime UAT gates ยังคงแยกอยู่.
+ไฟล์ใน Downloads ที่ตรวจพบเป็นเพลง Suno คนละ arrangement และยังยืนยันสิทธิ์ไม่ได้ จึงไม่ใช่คู่ A/B ที่เหมาะสม. รอ vocal กับ instrumental beat ที่จับคู่กันและ rights-cleared; synthetic, hosted CI, และ native Tauri interaction ไม่ใช้แทน listening acceptance. Track A runtime UAT gates ยังคงแยกอยู่.
 
 ---
 
@@ -277,4 +277,5 @@ Slice B2 คง global-only fallback และ gated warp candidate. Synthetic �
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
 - `+` บันทึกว่า Slice A/B merge แล้ว และ Slice C ได้รับอนุมัติให้ implement แบบ manual mapping
 - `+` ปิด Track A ถึง Slice C และเพิ่มผล benchmark/decision evidence สำหรับ Track B Slice B1
+- `+` อัปเดต Slice B2 หลัง PR #35 merge และบันทึก synthetic native Tauri acceptance; licensed-vocal A/B ยังคง pending
 
