@@ -1,7 +1,7 @@
 # Music Phase C — Slice B2 Implementation Evidence
 
-**Date:** 2026-10-21
-**Status:** Implementation candidate; PR review and exact-head hosted CI pending
+**Implementation merged:** 2026-10-27, PR #35 (`eed358ef2addac99e7faa8b39f27a9f12935024a`)
+**Status:** Synthetic native desktop UAT passed; licensed-vocal A/B remains pending
 
 ## Scope delivered
 
@@ -42,6 +42,26 @@ arrangements. They are not suitable evidence for vocal-versus-beat listening.
 **Licensed-vocal A/B remains pending.** No perceptual-quality or commercial
 rights claim is made from these files or from the synthetic tests.
 
+## Post-merge native desktop UAT (2026-10-27)
+
+The native Tauri window was exercised against the local API harness using
+72-second synthetic source and beat fixtures. Stem separation was replaced by
+a deterministic fixture adapter, so this verifies the timeline/preview/render
+interaction and warp path without claiming live Demucs or real-vocal quality.
+
+- Drift preview reported `insufficient_evidence` at confidence 0.6874 with 7
+  anchors and 12 bars; p95 beat residual was 23.22 ms, end drift was about
+  0 ms, and maximum local stretch was 0.2907%.
+- Moving anchor `a4` by 30 ms created manual revision 2 and an available warp
+  candidate.
+- Global-only and candidate previews were auditioned in the desktop window.
+  Accept/render job `4e1e538f10f` completed with `warp_applied=true`.
+- The stereo 44.1 kHz, 72-second output matched the selected preview exactly
+  (SHA-256 `8E5B0A17B4B62AC3CBEF04484EE61987D40C87106F4F6FC50F36E590596EFB3C`).
+
+This closes the synthetic native interaction gate only. Licensed-vocal A/B
+listening and rights verification remain open.
+
 ## Acceptance gates
 
 | Gate | Status | Evidence / remaining work |
@@ -52,11 +72,13 @@ rights claim is made from these files or from the synthetic tests.
 | Preview audio / map revision / final output identity, stale rejection, expiry | **Passed at API contract level** | Fake-render API tests assert final output bytes equal the selected preview bytes |
 | Existing global-only/manual-offset behavior | **Partial: code and route contract only** | Legacy request path test passes; no real matched-audio render/listen run |
 | Licensed-vocal A/B listening | **Pending** | Need an identified, rights-cleared vocal and matching instrumental beat |
-| Native desktop timeline, audition, and accepted-render UAT | **Pending** | Production build passed; packaged UI interaction has not been exercised |
-| Exact-head hosted CI and independent PR review | **Pending** | Run and inspect after PR creation |
+| Native desktop timeline, audition, and accepted-render UAT | **Passed with synthetic fixtures** | Native Tauri window; local API harness with mocked stem separation; see post-merge UAT above |
+| Exact-head hosted CI | **Passed** | PR #35 check run `40421277513`; merged at `eed358ef2addac99e7faa8b39f27a9f12935024a` |
+| Independent PR review | **No review submission recorded** | PR #35 merged; no submitted review or inline review thread was recorded |
 
 ## Limits
 
-Local tests and a frontend build do not prove packaged desktop behavior, musical
-quality, or a successful exact-head hosted validation. Keep these gates open
-until their corresponding evidence is available.
+Local tests, hosted CI, and synthetic desktop interaction do not prove
+licensed-vocal musical quality or commercial rights. Keep licensed-vocal A/B
+open until a rights-cleared, matched vocal and instrumental beat are available
+for listening.
