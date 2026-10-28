@@ -1,7 +1,7 @@
 ---
-version: "0.10.14b"
+version: "0.10.15b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-10-20T00:00:00+07:00,Codex"
+last_update: "2026-10-28T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -123,6 +123,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 ## Validation and Evidence Docs
 
+- `docs/validation/2026-10-28-LALIN-CROSS-PLATFORM-FEASIBILITY.md`: source-only macOS/Linux feasibility and packaging delta; Windows remains the only configured Studio build/release target, with target selection and native build/UAT still open.
 - `docs/validation/2026-10-20-DUBBING-PRO-SLICE-A.md`: approved transcript analyze/UI Slice A implementation, backend/frontend automated checks and explicit live-ASR/native verification limits.
 - `docs/validation/2026-10-20-DUBBING-PRO-SLICE-B.md`: manual speaker assignment and multi-voice render implementation evidence, compile/build status, and remaining live/native gates.
 - `docs/validation/2026-10-20-DUBBING-PRO-SLICE-C.md`: selected transcript clip export, compact mapped voice-over, generated subtitle snippets, and automated verification evidence.
@@ -169,6 +170,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.15b | 2026-10-28 | beta | Index the cross-platform feasibility audit and keep macOS/Linux support claims gated on target builds and UAT | 8536429 | Codex |
 | 0.10.14b | 2026-10-20 | beta | Index Slice B2 beat-warp design and keep implementation gates explicit | PR #32 (stacked on PR #31) | Codex |
 | 0.10.13b | 2026-10-20 | beta | Index approved manual-only Dubbing Pro Slice B scope and validation record | 65df361 (PR #29, draft) | Codex |
 | 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | 1ef64f0 (PR #29, draft) | Codex |
