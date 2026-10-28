@@ -170,7 +170,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
-| 0.10.15b | 2026-10-28 | beta | Index the cross-platform feasibility audit and keep macOS/Linux support claims gated on target builds and UAT | 8536429 | Codex |
+| 0.10.15b | 2026-10-28 | beta | Index the cross-platform feasibility audit and keep macOS/Linux support claims gated on target builds and UAT | PR #37 | Codex |
 | 0.10.14b | 2026-10-20 | beta | Index Slice B2 beat-warp design and keep implementation gates explicit | PR #32 (stacked on PR #31) | Codex |
 | 0.10.13b | 2026-10-20 | beta | Index approved manual-only Dubbing Pro Slice B scope and validation record | 65df361 (PR #29, draft) | Codex |
 | 0.10.12b | 2026-10-20 | beta | Index the approved Dubbing Pro Slice A implementation and bounded verification evidence | 1ef64f0 (PR #29, draft) | Codex |
