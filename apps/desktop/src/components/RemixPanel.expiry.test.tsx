@@ -137,4 +137,19 @@ describe("expired preview recovery", () => {
     await completePreview("recovered", "2026-10-29T00:01:00Z");
     expect(screen.getByRole("button", { name: "Accept warp and render" })).toBeTruthy();
   });
+
+  it.each(["preview_expired", "preview_not_found"])("ignores late %s from an older render after replacement", async (error) => {
+    await openPreview();
+    vi.mocked(music.remix).mockResolvedValue({ job_id: "old-render" });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Render global-only" })));
+    const oldRenderUpdate = updateJob;
+    const oldJob: Job = { id: "old-render", kind: "remix", status: "done", progress: 1, message: "done", result: {}, resource: "cpu", created_at: "x", updated_at: "x" };
+    await act(async () => oldRenderUpdate(oldJob));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Drift preview" })));
+    await completePreview("replacement", "2026-10-29T00:01:00Z");
+    await act(async () => oldRenderUpdate({ ...oldJob, status: "error", error }));
+    expect(screen.getByRole("button", { name: "Accept warp and render" })).toBeTruthy();
+    expect(document.querySelector("audio")?.src).toContain("replacement");
+    expect(screen.queryByRole("button", { name: "สร้าง preview ใหม่" })).toBe(null);
+  });
 });

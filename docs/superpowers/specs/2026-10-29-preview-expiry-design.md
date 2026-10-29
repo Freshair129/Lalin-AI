@@ -8,6 +8,8 @@ Use the deadline to retire the preview, including on window focus after sleep. E
 
 Handle server `preview_expired` from render/manual revision requests and background jobs with the same recovery state. Media load failure must also remove unusable controls, with a distinct unavailable message rather than claiming a network failure proves expiry. Do not let a late error for an older preview retire a replacement. Recovery must not reuse the expired ID or base revision, and failed recovery must remain retryable.
 
+Server cleanup can remove an expired manifest before the request checks it. Treat exact HTTP 404/background `preview_not_found` as unavailable with the same fresh-preview recovery, while retaining unrelated 404/network errors.
+
 Approaches considered: server-error-only handling misses idle expiration; a new polling endpoint adds unnecessary API work. Chosen implementation is a small frontend lifetime hook with a deadline timer, focus/visibility recheck, action-time guard, and server/media failure handling. This is an implementation choice within the requested scope.
 
 Validation: focused deadline/error/race tests, actual RemixPanel control/recovery tests, full desktop suite and build, isolated Tauri native UAT for deadline and server rejection plus regeneration. Native evidence must identify simulated shortened deadlines; it does not imply installed-package or human-listening acceptance.

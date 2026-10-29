@@ -40,3 +40,6 @@ Files: new `apps/desktop/src/hooks/useWarpPreviewLifetime.ts` and its test; modi
 ## Execution record
 
 - Baseline: reused the isolated worktree on a new branch from merged PR #39, `e70ba2b`; three generated Tauri files were already dirty and have no textual diff.
+- Initial regressions: five panel tests failed on visible expired controls/missing recovery; implementation passed 224 tests and build.
+- Independent review found server cleanup returns `404 preview_not_found` for manual revision/render. Added two failing panel regressions, then handled exact missing-preview errors as unavailable; full suite passed 226 tests and build. Added late background-error fencing coverage for both error codes.
+- Final review ruling: native UAT remains an execution gate below; installed-package/listening acceptance and backend TTL/DSP changes are outside this frontend task. No such release or audio-quality claim is made.
