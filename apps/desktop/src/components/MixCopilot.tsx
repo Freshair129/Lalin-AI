@@ -116,8 +116,9 @@ const styles: Record<string, CSSProperties> = {
   disabledNote: { color: "#8a8d97", fontStyle: "italic" as const },
 };
 
-export function MixCopilot({ engine }: { engine: ClipEngine }) {
+export function MixCopilot({ engine, sidebar = false }: { engine: ClipEngine; sidebar?: boolean }) {
   const [entries, setEntries] = useState<ChatEntry[]>([]);
+  const [history, setHistory] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +145,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
     setEntries((es) => [...es, userEntry]);
     setBusy(true);
     try {
-      const res = await agent.act(message, engine.project as unknown as Record<string, unknown>);
+      const res = await agent.act(message, engine.project as unknown as Record<string, unknown>, history);
       const agentEntry: ChatEntry = {
         id: Date.now() + 1,
         role: "agent",
@@ -154,6 +155,12 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
         failed: new Set(),
       };
       setEntries((es) => [...es, agentEntry]);
+      if (res.reply.trim()) {
+        setHistory((previous) => [...previous,
+          { role: "user" as const, content: message.slice(0, 4000) },
+          { role: "assistant" as const, content: res.reply.slice(0, 4000) },
+        ].slice(-20));
+      }
       const selectedVoice = voiceProfiles.find((voice) => voice.id === voiceId);
       if (speakReplies && speechConfig?.tts_available && selectedVoice && res.reply.trim()) {
         startVoice(() => tts.synth({ text: res.reply, voice_id: selectedVoice.id, language: selectedVoice.language }));
@@ -184,9 +191,9 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
   };
 
   return (
-    <div style={styles.panel}>
+    <div style={{ ...styles.panel, ...(sidebar ? { width: "100%", height: "100%", border: 0, borderRadius: 0 } : {}) }}>
       <div style={styles.header}>
-        <span>🤖 Mix Copilot</span>
+        <span>Agent · Mix Copilot</span>
       </div>
       <div style={{ display: "grid", gap: 6 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -201,7 +208,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
         {speechConfig?.tts_available === false && <span style={styles.disabledNote}>Agent Voice ใช้ได้เฉพาะ full local runtime ที่มี TTS</span>}
         {speakReplies && !voiceId && <span style={styles.disabledNote}>สร้าง voice profile ก่อนจึงจะเปิดอ่านคำตอบได้</span>}
       </div>
-      <div style={styles.log}>
+      <div style={{ ...styles.log, ...(sidebar ? { maxHeight: "none" } : {}) }} aria-label="Agent conversation" aria-live="polite">
         {entries.length === 0 && (
           <div style={styles.disabledNote}>
             พิมพ์คำสั่งผสมเสียง เช่น "ดันเสียงร้องขึ้น ลด beat ช่วง hook"
@@ -248,6 +255,7 @@ export function MixCopilot({ engine }: { engine: ClipEngine }) {
       {speakReplies && <JobProgress job={voiceJob} />}
       <div style={styles.inputRow}>
         <input
+          aria-label="Message agent"
           style={styles.input}
           value={text}
           placeholder="สั่งงาน mix..."

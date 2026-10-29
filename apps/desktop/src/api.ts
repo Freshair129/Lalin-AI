@@ -70,11 +70,11 @@ export const speech = {
 
 // ── Agent (mix copilot — LLM เสนอ mutations ให้ apply เอง) ──
 export const agent = {
-  act: (message: string, project: Record<string, unknown>) =>
+  act: (message: string, project: Record<string, unknown>, history: { role: "user" | "assistant"; content: string }[] = []) =>
     req<AgentActResult>("/agent/act", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, project }),
+      body: JSON.stringify({ message, project, history }),
     }),
 };
 
