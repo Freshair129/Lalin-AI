@@ -4,14 +4,19 @@ type UnavailableReason = "expired" | "unavailable";
 type PreviewLifetime = { key: string; deadline: number; reason: UnavailableReason | null };
 
 export const PREVIEW_EXPIRED_MESSAGE = "Preview หมดอายุแล้ว กด ‘สร้าง preview ใหม่’ หรือ ‘Drift preview’ เพื่อวิเคราะห์จาก Source และ Beat ปัจจุบัน";
+export const PREVIEW_UNAVAILABLE_MESSAGE = "ไม่สามารถโหลดเสียง preview ได้ ตรวจสอบการเชื่อมต่อ แล้วกด ‘สร้าง preview ใหม่’ หรือ ‘Drift preview’";
 
 /** รับทั้ง HTTP error จาก API client และ error ของงานเบื้องหลัง */
-export function isPreviewExpiredError(error: unknown): boolean {
+export function previewFailureReason(error: unknown): UnavailableReason | null {
   const message = error instanceof Error ? error.message : error;
-  if (message === "preview_expired") return true;
-  if (typeof message !== "string" || !message.startsWith("410: ")) return false;
-  try { return JSON.parse(message.slice(5)).detail === "preview_expired"; }
-  catch { return false; }
+  if (message === "preview_expired") return "expired";
+  if (message === "preview_not_found") return "unavailable";
+  if (typeof message !== "string") return null;
+  try {
+    if (message.startsWith("410: ") && JSON.parse(message.slice(5)).detail === "preview_expired") return "expired";
+    if (message.startsWith("404: ") && JSON.parse(message.slice(5)).detail === "preview_not_found") return "unavailable";
+  } catch { /* ข้อผิดพลาดอื่นให้ caller แสดงตามเดิม */ }
+  return null;
 }
 
 export function useWarpPreviewLifetime() {

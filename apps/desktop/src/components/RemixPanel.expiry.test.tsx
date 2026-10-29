@@ -97,6 +97,17 @@ describe("expired preview recovery", () => {
     expect(screen.getByRole("status").textContent).not.toMatch(/หมดอายุ/);
   });
 
+  it.each(["Render global-only", "Apply manual anchors · new revision"])("recovers when server cleanup removed the preview before %s", async (action) => {
+    await openPreview();
+    const error = new Error('404: {"detail":"preview_not_found"}');
+    vi.mocked(music.remix).mockRejectedValue(error);
+    vi.mocked(music.preview).mockRejectedValueOnce(error);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: action })));
+    expectRetired();
+    expect(screen.getByRole("status").textContent).toMatch(/ไม่สามารถโหลด/);
+    expect(document.body.textContent).not.toMatch(/404|preview_not_found/);
+  });
+
   it("keeps non-expiry failures visible without retiring a valid preview", async () => {
     await openPreview();
     vi.mocked(music.remix).mockRejectedValue(new Error("network failure"));

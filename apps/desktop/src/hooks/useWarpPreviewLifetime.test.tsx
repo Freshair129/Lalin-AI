@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isPreviewExpiredError, useWarpPreviewLifetime } from "./useWarpPreviewLifetime";
+import { previewFailureReason, useWarpPreviewLifetime } from "./useWarpPreviewLifetime";
 
 describe("warp preview lifetime", () => {
   beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-29T00:00:00Z")); });
@@ -66,10 +66,12 @@ describe("warp preview lifetime", () => {
   });
 
   it("recognizes expiry from HTTP and job errors without swallowing unrelated failures", () => {
-    expect(isPreviewExpiredError(new Error('410: {"detail":"preview_expired"}'))).toBe(true);
-    expect(isPreviewExpiredError("preview_expired")).toBe(true);
-    for (const error of ['404: {"detail":"preview_not_found"}', '410: {"detail":"other"}', "network failure", "410: invalid JSON", null]) {
-      expect(isPreviewExpiredError(error)).toBe(false);
+    expect(previewFailureReason(new Error('410: {"detail":"preview_expired"}'))).toBe("expired");
+    expect(previewFailureReason("preview_expired")).toBe("expired");
+    expect(previewFailureReason(new Error('404: {"detail":"preview_not_found"}'))).toBe("unavailable");
+    expect(previewFailureReason("preview_not_found")).toBe("unavailable");
+    for (const error of ['404: {"detail":"other"}', '410: {"detail":"other"}', "network failure", "410: invalid JSON", null]) {
+      expect(previewFailureReason(error)).toBe(null);
     }
   });
 });

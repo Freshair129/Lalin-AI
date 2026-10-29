@@ -19,7 +19,7 @@ import "@xyflow/react/dist/style.css";
 import { API_BASE, files, music, projects, render } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
 import { useWarpPreviewValidity } from "../hooks/useWarpPreviewValidity";
-import { isPreviewExpiredError, PREVIEW_EXPIRED_MESSAGE, useWarpPreviewLifetime } from "../hooks/useWarpPreviewLifetime";
+import { previewFailureReason, PREVIEW_EXPIRED_MESSAGE, PREVIEW_UNAVAILABLE_MESSAGE, useWarpPreviewLifetime } from "../hooks/useWarpPreviewLifetime";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
 import { Waveform } from "./Waveform";
@@ -319,13 +319,15 @@ export function RemixPanel() {
     if (previewKey && previewDeadline !== undefined) register(previewKey, previewDeadline);
   }, [previewKey, previewDeadline, register]);
   useEffect(() => {
-    if (renderPreviewKey.current && job?.status === "error" && isPreviewExpiredError(job.error)) {
-      invalidate(renderPreviewKey.current, "expired");
+    const reason = previewFailureReason(job?.error);
+    if (renderPreviewKey.current && job?.status === "error" && reason) {
+      invalidate(renderPreviewKey.current, reason);
     }
   }, [job, invalidate]);
   useEffect(() => {
-    if (revisionPreviewKey.current && previewJob?.status === "error" && isPreviewExpiredError(previewJob.error)) {
-      invalidate(revisionPreviewKey.current, "expired");
+    const reason = previewFailureReason(previewJob?.error);
+    if (revisionPreviewKey.current && previewJob?.status === "error" && reason) {
+      invalidate(revisionPreviewKey.current, reason);
     }
   }, [previewJob, invalidate]);
   const canAudition = validity.canAudition && !lifetime.reason;
@@ -339,14 +341,18 @@ export function RemixPanel() {
     };
   }, [previewKey, previewMode, canAudition]);
 
-  const withPreviewExpiry = async (key: string, request: () => Promise<{ job_id: string }>) => {
+  const withPreviewRecovery = async (key: string, request: () => Promise<{ job_id: string }>) => {
     try { return await request(); }
     catch (error) {
-      if (!isPreviewExpiredError(error)) throw error;
-      invalidate(key, "expired");
-      throw new Error(PREVIEW_EXPIRED_MESSAGE);
+      const reason = previewFailureReason(error);
+      if (!reason) throw error;
+      invalidate(key, reason);
+      throw new Error(reason === "expired" ? PREVIEW_EXPIRED_MESSAGE : PREVIEW_UNAVAILABLE_MESSAGE);
     }
   };
+  const hasPreviewRecoveryMessage = (error?: string) => !!previewFailureReason(error)
+    || error === PREVIEW_EXPIRED_MESSAGE || error === PREVIEW_UNAVAILABLE_MESSAGE;
+  const renderMessage = job && !hasPreviewRecoveryMessage(job.error) ? job.message || job.error : "";
 
   const renderSettings = {
     do_autotune: autotune,
@@ -401,7 +407,7 @@ export function RemixPanel() {
       : preview.render_map_digests.global_only;
     if (!mapDigest) return;
     renderPreviewKey.current = previewKey;
-    start(() => withPreviewExpiry(previewKey, () => music.remix({
+    start(() => withPreviewRecovery(previewKey, () => music.remix({
       source_audio: source,
       beat_audio: beat,
       ...renderSettings,
@@ -421,7 +427,7 @@ export function RemixPanel() {
     if (!preview || !previewKey || !source || !beat || preview.anchors.length < 2 || !lifetime.isFresh(previewKey)) return;
     revisionPreviewKey.current = previewKey;
     validity.startPreview();
-    startPreview(() => withPreviewExpiry(previewKey, () => music.preview({
+    startPreview(() => withPreviewRecovery(previewKey, () => music.preview({
       contract_version: 1,
       source_audio: source,
       beat_audio: beat,
@@ -756,7 +762,7 @@ export function RemixPanel() {
             <span className="remix-workspace-view">Timeline</span>
           </div>
           <span className="hint mono" style={{ margin: 0 }}>
-            {job ? isPreviewExpiredError(job.error) || job.error === PREVIEW_EXPIRED_MESSAGE ? "" : job.message || job.error : "Arrange · align · mix · export"}
+            {job ? renderMessage : "Arrange · align · mix · export"}
           </span>
           <div className="remix-head-badges">
             <span className="tool-metric">DAW layout</span>
@@ -853,7 +859,7 @@ export function RemixPanel() {
             title="สร้าง global-only และ drift preview ชั่วคราว โดยยังไม่แก้ clip หรือ render map ที่บันทึกไว้">
             {previewBusy ? "Previewing…" : "Drift preview"}
           </button>
-          {previewJob?.status === "error" && !isPreviewExpiredError(previewJob.error) && previewJob.error !== PREVIEW_EXPIRED_MESSAGE && (
+          {previewJob?.status === "error" && !hasPreviewRecoveryMessage(previewJob.error) && (
             <span className="hint mono" style={{ color: "#e05a5a" }} title={previewJob.error}>⚠ preview failed</span>
           )}
           <button className="primary tool-run" onClick={run} disabled={busy || !source || !beat}>
@@ -865,7 +871,7 @@ export function RemixPanel() {
 
       {validity.canShow && lifetime.reason && (
         <div className="recover-banner">
-          <span role="status">{lifetime.reason === "expired" ? PREVIEW_EXPIRED_MESSAGE : "ไม่สามารถโหลดเสียง preview ได้ ตรวจสอบการเชื่อมต่อ แล้วกด ‘สร้าง preview ใหม่’ หรือ ‘Drift preview’"}</span>
+          <span role="status">{lifetime.reason === "expired" ? PREVIEW_EXPIRED_MESSAGE : PREVIEW_UNAVAILABLE_MESSAGE}</span>
           <button type="button" className="seg-add" disabled={busy || previewBusy || !source || !beat} onClick={analyzeAndPreview}>สร้าง preview ใหม่</button>
         </div>
       )}
