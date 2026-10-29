@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RemixPanel } from "./RemixPanel";
 import { EngineProvider } from "../store/engineContext";
@@ -32,7 +33,7 @@ async function completePreview(id = "preview-a", expires?: string) {
   await act(async () => updateJob({ id: "job-preview", kind: "remix-preview", status: "done", progress: 1, message: "done", resource: "gpu", created_at: "x", updated_at: "x", result: payload(id, expires) }));
 }
 async function openPreview() {
-  render(<EngineProvider><RemixPanel /></EngineProvider>);
+  render(<StrictMode><EngineProvider><RemixPanel /></EngineProvider></StrictMode>);
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Drift preview" })));
   await completePreview();
   expect(screen.getByRole("button", { name: "Accept warp and render" })).toBeTruthy();
@@ -63,6 +64,7 @@ describe("expired preview recovery", () => {
 
   it("hides expired controls while preserving inputs and regenerates without the old ID", async () => {
     await openPreview();
+    expect(document.querySelector("audio")?.getAttribute("src")).toContain("preview-a");
     act(() => vi.advanceTimersByTime(10_000));
     expectRetired();
     expect(screen.getByRole("status").textContent).toMatch(/หมดอายุ/);
