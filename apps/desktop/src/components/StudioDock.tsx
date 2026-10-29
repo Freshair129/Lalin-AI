@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ClipTimeline, type ClipCtx } from "./ClipTimeline";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Splitter } from "./Splitter";
-import { MixCopilot } from "./MixCopilot";
 import { useEngine } from "../store/engineContext";
 import { useRemixStore } from "../store/useRemixStore";
 
@@ -25,7 +24,6 @@ export function StudioDock({ embedded = false }: { embedded?: boolean }) {
   const setTlH = useRemixStore((s) => s.setTlH);
 
   const [ctxMenu, setCtxMenu] = useState<ClipCtx | null>(null);
-  const [copilotOpen, setCopilotOpen] = useState(false);
   const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
   const dockMin = 190;
   const dockMax = Math.min(420, Math.max(dockMin + 20, Math.round(window.innerHeight * 0.34)));
@@ -52,25 +50,6 @@ export function StudioDock({ embedded = false }: { embedded?: boolean }) {
       {!embedded && (
         <Splitter axis="y" onDelta={(d) => setTlH((h) => clamp(h - d, dockMin, dockMax))} onReset={() => setTlH(260)} />
       )}
-      <button
-        title="Mix Copilot"
-        onClick={() => setCopilotOpen((v) => !v)}
-        style={{
-          position: "absolute",
-          top: embedded ? 10 : 6,
-          right: copilotOpen ? 332 : 8,
-          zIndex: 5,
-          background: copilotOpen ? "#c7f046" : "#1b1c22",
-          color: copilotOpen ? "#14151a" : "#e6e6e6",
-          border: "1px solid #33353d",
-          borderRadius: 6,
-          padding: "4px 8px",
-          cursor: "pointer",
-          fontSize: 13,
-        }}
-      >
-        🤖
-      </button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <ClipTimeline
           engine={engine} onContext={setCtxMenu}
@@ -78,11 +57,6 @@ export function StudioDock({ embedded = false }: { embedded?: boolean }) {
           onReverb={setMReverb} onEcho={setMEcho} onComp={setMComp}
         />
       </div>
-      {copilotOpen && !embedded && (
-        <div style={{ flexShrink: 0, height: "100%", padding: "4px 4px 4px 0" }}>
-          <MixCopilot engine={engine} />
-        </div>
-      )}
       {ctxMenu && (
         <ContextMenu x={ctxMenu.x} y={ctxMenu.y} items={ctxItems(ctxMenu)} onClose={() => setCtxMenu(null)} />
       )}

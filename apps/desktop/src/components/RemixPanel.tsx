@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { API_BASE, files, music, projects, render } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
+import { useWarpPreviewValidity } from "../hooks/useWarpPreviewValidity";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
 import { Waveform } from "./Waveform";
@@ -286,7 +287,6 @@ export function RemixPanel() {
     set(r.filename);
   };
 
-  const previewKeyRef = useRef<string | null>(null);
   const previewInputKey = JSON.stringify({
     source,
     beat,
@@ -303,7 +303,8 @@ export function RemixPanel() {
     beatsPerBar: engine.project.timeSig,
     stemGains: stemGainsActive ? stemGains : null,
   });
-  const preview = previewJob?.status === "done" && previewKeyRef.current === previewInputKey
+  const validity = useWarpPreviewValidity(previewInputKey);
+  const preview = previewJob?.status === "done" && validity.canShow
     ? previewJob.result as unknown as WarpPreviewPayload
     : null;
 
@@ -332,7 +333,7 @@ export function RemixPanel() {
 
   const analyzeAndPreview = () => {
     if (!source || !beat) return;
-    previewKeyRef.current = previewInputKey;
+    validity.startPreview();
     setPreviewMode("global_only");
     startPreview(() => music.preview({
       contract_version: 1,
@@ -350,7 +351,7 @@ export function RemixPanel() {
   };
 
   const renderPreview = (acceptWarp: boolean) => {
-    if (!preview || !source || !beat) return;
+    if (!preview || !validity.canAudition || !source || !beat) return;
     const mapDigest = acceptWarp
       ? preview.render_map_digests.warp_candidate
       : preview.render_map_digests.global_only;
@@ -373,7 +374,7 @@ export function RemixPanel() {
 
   const revisePreviewWithManualAnchors = () => {
     if (!preview || !source || !beat || preview.anchors.length < 2) return;
-    previewKeyRef.current = previewInputKey;
+    validity.startPreview();
     startPreview(() => music.preview({
       contract_version: 1,
       source_audio: source,
@@ -952,7 +953,10 @@ export function RemixPanel() {
                             {anchor.id} {anchor.input_time_sec.toFixed(2)}s →
                             <input aria-label={`${anchor.id} destination time`} type="number" min={0} step={0.001}
                               value={manualAnchorValues[valueKey] ?? anchor.timeline_time_sec}
-                              onChange={(event) => setManualAnchorValues((current) => ({ ...current, [valueKey]: Number(event.target.value) }))}
+                              onChange={(event) => {
+                                validity.markAnchorChanged();
+                                setManualAnchorValues((current) => ({ ...current, [valueKey]: Number(event.target.value) }));
+                              }}
                               style={{ width: 82, padding: "3px 5px", background: "#151922", color: "var(--text)", border: "1px solid var(--glass-border)", borderRadius: 5 }} />
                           </label>;
                         })}
@@ -961,7 +965,8 @@ export function RemixPanel() {
                         </button>
                       </div>
                     )}
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 9 }}>
+                    {!validity.canAudition && <p className="hint" role="status">Markers changed. Apply manual anchors to create a new preview.</p>}
+                    {validity.canAudition && <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 9 }}>
                       <button type="button" className={previewMode === "global_only" ? "primary" : "seg-add"} onClick={() => setPreviewMode("global_only")}>
                         Global only
                       </button>
@@ -983,7 +988,7 @@ export function RemixPanel() {
                       <span className="hint" style={{ flexBasis: "100%" }}>
                         Beat lane เป็น reference; markers และเสียงนี้เป็น preview ชั่วคราว ไม่แก้ saved clip · phase {preview.baseline.phase_offset_ms.toFixed(1)} ms · phrase {preview.baseline.phrase_offset_sec.toFixed(3)} s
                       </span>
-                    </div>
+                    </div>}
                   </section>
                 )}
                 <div style={{ flex: 1, minHeight: 0 }}><StudioDock embedded /></div>

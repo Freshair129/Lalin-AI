@@ -9,7 +9,7 @@
 # @spec AI-AGT-001 — propose-only: agent เสนอ mutation, frontend commit เองแบบ undo-able (FR-14.3)
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -20,9 +20,15 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 
 
 # ── Request / Response models ───────────────────────────────
+class AgentHistoryMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
 class AgentActRequest(BaseModel):
     message: str = Field(description="คำสั่งภาษาธรรมชาติจากผู้ใช้")
     project: dict = Field(description="state ปัจจุบันของโปรเจกต์ (tracks/clips ฯลฯ)")
+    history: list[AgentHistoryMessage] = Field(default_factory=list, max_length=20)
 
 
 class Mutation(BaseModel):
@@ -211,6 +217,7 @@ SYSTEM_PROMPT = (
     "(ย้าย clip, ปรับ gain/pan, ใส่ FX, ตั้งค่า mastering, mute, slice, จัดลำดับ track) "
     "ให้เรียกใช้เครื่องมือ (tools) ที่เหมาะสมเพื่อ 'เสนอ' การแก้ไข — คุณจะไม่แก้ไขไฟล์เอง "
     "ระบบจะนำสิ่งที่คุณเรียกไปให้ผู้ใช้ยืนยันก่อนเสมอ "
+    "คำตอบหรือข้อเสนอในประวัติไม่ได้ยืนยันว่ามีการนำไปใช้ ให้ยึด state ปัจจุบันเป็นหลัก "
     "ถ้าคำสั่งกำกวมหรือขาดข้อมูล (เช่น ไม่รู้ clip_id) ให้ถามกลับในข้อความตอบแทนการเดา"
 )
 
@@ -228,6 +235,7 @@ async def act(req: AgentActRequest) -> AgentActResponse:
 
     messages = [
         Message("system", context),
+        *(Message(item.role, item.content) for item in req.history),
         Message("user", req.message),
     ]
 

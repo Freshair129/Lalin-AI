@@ -18,6 +18,9 @@ import { usePlaybackClient, requestPlayback, reconcilePlayback } from "./playbac
 import { Icon } from "./components/icons";
 import { EngineProvider } from "./store/engineContext";
 import { StudioDock } from "./components/StudioDock";
+import { StudioNavigation } from "./components/StudioNavigation";
+import { MixCopilot } from "./components/MixCopilot";
+import { useEngine } from "./store/engineContext";
 import { BatchQueue } from "./components/BatchQueue";
 import { useBackendReadiness, type BackendReadiness } from "./hooks/useBackendReadiness";
 import { useRuntimeActivity } from "./hooks/useRuntimeActivity";
@@ -47,6 +50,7 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
 export default function App() {
   const [tab, setTab] = useState<Tab>("arrange");
   const [activityOpen, setActivityOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
   const [menu, setMenu] = useState<"file" | "edit" | "view" | "help" | null>(null);
   const [mediaStatus, setMediaStatus] = useState<MediaLifecycleState | null>(null);
   const [mediaBusy, setMediaBusy] = useState(false);
@@ -99,6 +103,7 @@ export default function App() {
             <span className="play-pill-indicator">{nowPlaying.state === "playing" ? "▶" : "🎵"}</span>
             <span className="play-pill-label">{nowPlaying.item ? nowPlaying.item.title : "Lalin Play"}</span>
           </button>
+          <button type="button" className="agent-toggle" onClick={() => setAgentOpen((open) => !open)} aria-expanded={agentOpen} aria-controls="studio-agent-panel">Agent</button>
           <div className="topbar-meta mono">
             <span className={`topbar-pill ${backend.online ? "live" : backend.online === false ? "down" : ""}`}><span className={`dot ${backend.online ? "up" : backend.online === false ? "down" : ""}`} />{backend.online == null ? "CONNECTING" : backend.online ? "READY" : "OFFLINE"}</span>
             <span className="topbar-pill">{runtime?.runtime.model || backend.brainName || "model N/A"}</span>
@@ -110,9 +115,7 @@ export default function App() {
         {mediaError && <div className="fm-err" role="alert">{mediaError} <button type="button" onClick={openMediaApp}>ลองเปิด Lalin Cast ใหม่</button></div>}
 
         <div className="daw-body">
-          <nav className="rail" aria-label="Lalin Studio navigation">
-            {NAV.map((item) => <button key={item.id} className={`rail-btn ${tab === item.id ? "active" : ""}`} onClick={() => setTab(item.id)} title={item.label}><Icon name={item.icon} /><span>{item.label}</span></button>)}
-          </nav>
+          <StudioNavigation items={NAV} current={tab} onNavigate={setTab} />
           <main className={`stage ${backendReady && STUDIO_TABS.has(tab) ? "stage-studio" : ""}`}>
             {!backendReady ? <BackendGate readiness={backend} /> : tab === "arrange" ? <RemixPanel /> : tab === "library" ? <LibraryHub /> : <div className="stage-pad">
               {tab === "workspace" && <WorkspacePanel activity={runtime} onNavigate={setTab} />}
@@ -123,6 +126,7 @@ export default function App() {
               {tab === "settings" && <BrainPanel onChange={backend.retry} />}
             </div>}
           </main>
+          <AgentSidebar open={agentOpen} onClose={() => setAgentOpen(false)} />
         </div>
 
         {backendReady && STUDIO_TABS.has(tab) && tab !== "arrange" && <StudioDock />}
@@ -131,6 +135,14 @@ export default function App() {
       </div>
     </EngineProvider>
   );
+}
+
+function AgentSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const engine = useEngine();
+  return <aside id="studio-agent-panel" className="studio-agent-panel" aria-label="Agent chat" hidden={!open}>
+    <div className="studio-agent-title"><strong>Agent</strong><button type="button" onClick={onClose} aria-label="Close agent panel">×</button></div>
+    <MixCopilot engine={engine} sidebar />
+  </aside>;
 }
 
 function WorkspacePanel({ activity, onNavigate }: { activity: RuntimeActivityStatus | null; onNavigate: (tab: Tab) => void }) {
