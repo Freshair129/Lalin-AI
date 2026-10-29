@@ -26,9 +26,10 @@ from pathlib import Path
 
 import numpy as np
 
-from .music_warp import analyze_drift, estimate_beat_grid, warp_audio_piecewise
+from .music_warp import analyze_drift, estimate_beat_grid, grid_aligned_onset_confidence, warp_audio_piecewise
 
 from ..config import get_settings
+from ..runtime_devices import resolve_tts_runtime
 from ..utils.ids import short_id
 
 SR = 44100
@@ -120,7 +121,7 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
     )
     import torch
 
-    dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    dev = resolve_tts_runtime(device or get_settings().tts_device).effective
     sep_root = Path(out_dir) / "_sep"
     name = Path(audio).stem
 
@@ -607,9 +608,21 @@ def run_remix(
     if analysis_out is not None:
         source_grid, source_grid_conf = estimate_beat_grid(src_wav, sample_rate=SR)
         beat_grid, beat_grid_conf = estimate_beat_grid(beat_wav, sample_rate=SR)
+        alignment_confidence = phase_alignment_confidence
+        if (alignment_confidence < 0.70 and min(source_grid_conf, beat_grid_conf) >= 0.70
+                and abs(ratio - 1.0) <= 0.01):
+            hop = 256
+            source_signal, _ = librosa.load(src_wav, sr=SR, mono=True)
+            beat_signal, _ = librosa.load(beat_wav, sr=SR, mono=True)
+            source_onset = librosa.onset.onset_strength(y=source_signal, sr=SR, hop_length=hop)
+            beat_onset = librosa.onset.onset_strength(y=beat_signal, sr=SR, hop_length=hop)
+            aligned_confidence = grid_aligned_onset_confidence(
+                source_onset, beat_onset, source_grid, beat_grid,
+                hop_seconds=hop / SR, target_bpm=bpm_b, beats_per_bar=beats_per_bar,
+            )
+            alignment_confidence = max(alignment_confidence, aligned_confidence)
         source_grid = source_grid / ratio - trim_start_sec
         source_grid = source_grid[source_grid >= 0]
-        alignment_confidence = phase_alignment_confidence
         coarse_drift = analyze_drift(
             source_grid,
             beat_grid,
