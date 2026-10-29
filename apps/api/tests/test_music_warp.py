@@ -170,3 +170,35 @@ def test_manual_map_accepts_two_bar_boundary_after_float_rounding():
 
     assert len(validated) == 2
     assert [item["origin"] for item in validated] == ["manual", "manual"]
+
+
+def test_grid_aligned_onset_confidence_accepts_smooth_drift_but_rejects_unrelated_or_missing_beats():
+    from app.pipelines.music_warp import grid_aligned_onset_confidence
+
+    rng = np.random.default_rng(23)
+    hop_seconds = 0.01
+    t = np.arange(6000) * hop_seconds
+    source_beats = np.arange(1.0, 59.0, 0.5)
+    destination_beats = source_beats + 0.12 * np.sin(2 * np.pi * source_beats / 30)
+    source_onset = np.zeros_like(t)
+    amplitudes = rng.uniform(0.2, 1.0, len(source_beats))
+    for beat, amplitude in zip(source_beats, amplitudes):
+        source_onset += amplitude * np.exp(-0.5 * ((t - beat) / 0.025) ** 2)
+    destination_onset = np.interp(t, destination_beats, source_beats, left=-1, right=60)
+    destination_onset = np.interp(destination_onset, t, source_onset, left=0, right=0)
+    args = dict(hop_seconds=hop_seconds, target_bpm=120.0, beats_per_bar=4)
+
+    confidence = grid_aligned_onset_confidence(source_onset, destination_onset, source_beats, destination_beats, **args)
+    unrelated = grid_aligned_onset_confidence(source_onset, rng.random(len(t)), source_beats, destination_beats, **args)
+    unrelated_same_tempo = np.zeros_like(t)
+    for beat, amplitude in zip(destination_beats, rng.uniform(0.2, 1.0, len(destination_beats))):
+        unrelated_same_tempo += amplitude * np.exp(-0.5 * ((t - beat) / 0.025) ** 2)
+    same_tempo_confidence = grid_aligned_onset_confidence(source_onset, unrelated_same_tempo, source_beats, destination_beats, **args)
+    missing = grid_aligned_onset_confidence(source_onset, destination_onset, source_beats, np.delete(destination_beats, 30), **args)
+    silence = grid_aligned_onset_confidence(np.zeros_like(t), destination_onset, source_beats, destination_beats, **args)
+
+    assert confidence >= 0.7
+    assert unrelated < 0.7
+    assert same_tempo_confidence < 0.7
+    assert missing < 0.7
+    assert silence < 0.7

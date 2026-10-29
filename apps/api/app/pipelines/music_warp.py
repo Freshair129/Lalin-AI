@@ -200,6 +200,61 @@ def analyze_drift(
     )
 
 
+def grid_aligned_onset_confidence(
+    source_onset: np.ndarray, destination_onset: np.ndarray,
+    source_beats: np.ndarray, destination_beats: np.ndarray, *,
+    hop_seconds: float, target_bpm: float, beats_per_bar: int,
+) -> float:
+    """Compare onset envelopes after a bounded, index-preserving beat alignment."""
+    src, dst = _finite_sorted(source_beats), _finite_sorted(destination_beats)
+    if hop_seconds <= 0 or target_bpm <= 0 or beats_per_bar <= 0 or len(src) == 0 or len(dst) == 0:
+        return 0.0
+    start = int(np.argmin(np.abs(dst - src[0])))
+    count = min(len(src), len(dst) - start)
+    if count < beats_per_bar * 8:
+        return 0.0
+    src, dst = src[:count], dst[start:start + count]
+    beat_sec = 60.0 / target_bpm
+    src_intervals, dst_intervals = np.diff(src), np.diff(dst)
+    if (np.any(src_intervals <= 0) or np.any(dst_intervals <= 0)
+            or np.any(np.abs(src_intervals - dst_intervals) > beat_sec * 0.4)):
+        return 0.0
+    source = np.asarray(source_onset, dtype=float)
+    destination = np.asarray(destination_onset, dtype=float)
+    if not np.all(np.isfinite(source)) or not np.all(np.isfinite(destination)):
+        return 0.0
+    first = max(0, int(np.ceil(src[0] / hop_seconds)))
+    last = min(len(source), int(np.floor(src[-1] / hop_seconds)))
+    times = np.arange(first, last, dtype=float) * hop_seconds
+    if not len(times):
+        return 0.0
+    mapped = np.interp(times, src, dst) / hop_seconds
+    phase = np.interp(times, src, np.arange(len(src), dtype=float)) % 1.0
+    phase_bins = np.minimum((phase * 16).astype(int), 15)
+    destination_frames = np.arange(len(destination), dtype=float)
+    valid = (mapped >= 0) & (mapped < len(destination) - 1)
+    window = max(2, int(round(4 * beats_per_bar * beat_sec / hop_seconds)))
+    scores = []
+    for begin in range(0, len(times) - window + 1, max(1, window // 2)):
+        if not np.all(valid[begin:begin + window]):
+            continue
+        x = source[first + begin:first + begin + window].copy()
+        y = np.interp(mapped[begin:begin + window], destination_frames, destination)
+        bins = phase_bins[begin:begin + window]
+        # Ignore the average within-beat pattern: a shared kick pulse alone is
+        # not evidence that two tracks contain the same musical material.
+        for bin_index in range(16):
+            mask = bins == bin_index
+            if np.any(mask):
+                x[mask] -= np.mean(x[mask])
+                y[mask] -= np.mean(y[mask])
+        denom = float(np.linalg.norm(x) * np.linalg.norm(y))
+        scores.append(float(np.dot(x, y) / denom) if denom > 1e-9 else 0.0)
+    if len(scores) < 3:
+        return 0.0
+    return float(np.clip(np.percentile(scores, 25), 0.0, 1.0))
+
+
 def estimate_beat_grid(path: str, *, sample_rate: int = 44100) -> tuple[np.ndarray, float]:
     """Estimate beat times and a conservative onset-strength confidence score."""
     import librosa

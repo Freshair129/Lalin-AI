@@ -336,7 +336,12 @@ async def get_remix_preview_audio(preview_id: str, revision: int, mode: str):
         _, path = music_previews.audio_file(preview_id, revision, mode)
     except MusicPreviewError as exc:
         raise HTTPException(exc.status_code, exc.code) from exc
-    return FileResponse(path, media_type="audio/wav", filename=path.name)
+    return FileResponse(
+        path,
+        media_type="audio/wav",
+        filename=path.name,
+        content_disposition_type="inline",
+    )
 
 
 def _preview_settings(req: RemixPreviewRequest) -> dict:

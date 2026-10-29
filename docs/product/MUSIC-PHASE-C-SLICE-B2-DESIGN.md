@@ -383,3 +383,31 @@ from the execution backlog rather than expanding this implementation's scope.
   is currently defined.
 - `docs/validation/2026-10-20-MUSIC-PHASE-C-SLICE-B1.md` — prior pitch-shift
   benchmark; it is separate from beat-warp quality evidence.
+
+### Drift-aware alignment confidence remediation (2026-10-29)
+
+A single whole-track onset correlation assumes a constant lag and can reject a
+matching pair precisely when its lag varies over time. Keep that existing score
+and add a conservative fallback: compare source and destination onset envelopes
+following the paired beat grids, using a lower-quartile score over multiple
+windows after removing the average beat-phase pattern, so a shared regular
+pulse alone does not establish correspondence. This fallback applies only when
+the global BPM ratio differs by at most 1%; other ratios retain the existing
+confidence path. Require sufficient beat span, reject missing or ambiguous beat
+pairs, and preserve the existing beat-strength, stretch, and duration guardrails.
+The fallback assesses correspondence; it does not accept or render a map by
+itself. Validate matching drifted and in-sync signals, unrelated or silent
+signals, missing beats, and the rights-cleared audio pair. Human listening remains
+separate from automated detection and candidate generation.
+
+Local validation on 2026-10-29 used the CC BY 3.0 “One Cute Leash”
+source mix and matching instrumental by Geoff Peters. The instrumental was
+modified with a sinusoidal timing offset of up to 120 ms over a 60-second
+period; it is a controlled drift fixture, not naturally recorded drift. The
+real Demucs/API job returned `drift_detected`, confidence 0.71818, residual
+p95 127.71 ms, and an automatic candidate with 33 anchors and maximum local
+stretch 1.25%. Both preview mixes were saved locally for listening. This does
+not establish perceptual quality, performance on other songs, or native desktop
+acceptance. Synthetic tests also reject unrelated same-tempo onset patterns,
+silence, and a missing beat. Source and attribution:
+https://ccmixter.org/files/geoffpeters/58766 (CC BY 3.0).
