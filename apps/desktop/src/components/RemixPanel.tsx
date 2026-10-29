@@ -19,6 +19,7 @@ import "@xyflow/react/dist/style.css";
 import { API_BASE, files, music, projects, render } from "../api";
 import { useProjectFile } from "../hooks/useProjectFile";
 import { useWarpPreviewValidity } from "../hooks/useWarpPreviewValidity";
+import { previewFailureReason, PREVIEW_EXPIRED_MESSAGE, PREVIEW_UNAVAILABLE_MESSAGE, useWarpPreviewLifetime } from "../hooks/useWarpPreviewLifetime";
 import { useDialogHost } from "./Dialog";
 import { useJob } from "../useJob";
 import { Waveform } from "./Waveform";
@@ -304,9 +305,54 @@ export function RemixPanel() {
     stemGains: stemGainsActive ? stemGains : null,
   });
   const validity = useWarpPreviewValidity(previewInputKey);
+  const lifetime = useWarpPreviewLifetime();
+  const renderPreviewKey = useRef<string | null>(null);
+  const revisionPreviewKey = useRef<string | null>(null);
+  const previewAudio = useRef<HTMLAudioElement | null>(null);
   const preview = previewJob?.status === "done" && validity.canShow
     ? previewJob.result as unknown as WarpPreviewPayload
     : null;
+  const previewKey = preview ? `${preview.preview_id}:${preview.revision}` : null;
+  const previewDeadline = preview?.audio_preview.expires_at;
+  const { register, invalidate } = lifetime;
+  useEffect(() => {
+    if (previewKey && previewDeadline !== undefined) register(previewKey, previewDeadline);
+  }, [previewKey, previewDeadline, register]);
+  useEffect(() => {
+    const reason = previewFailureReason(job?.error);
+    if (renderPreviewKey.current && job?.status === "error" && reason) {
+      invalidate(renderPreviewKey.current, reason);
+    }
+  }, [job, invalidate]);
+  useEffect(() => {
+    const reason = previewFailureReason(previewJob?.error);
+    if (revisionPreviewKey.current && previewJob?.status === "error" && reason) {
+      invalidate(revisionPreviewKey.current, reason);
+    }
+  }, [previewJob, invalidate]);
+  const canAudition = validity.canAudition && !lifetime.reason;
+  useEffect(() => {
+    const audio = previewAudio.current;
+    return () => {
+      if (!audio) return;
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    };
+  }, [previewKey, previewMode, canAudition]);
+
+  const withPreviewRecovery = async (key: string, request: () => Promise<{ job_id: string }>) => {
+    try { return await request(); }
+    catch (error) {
+      const reason = previewFailureReason(error);
+      if (!reason) throw error;
+      invalidate(key, reason);
+      throw new Error(reason === "expired" ? PREVIEW_EXPIRED_MESSAGE : PREVIEW_UNAVAILABLE_MESSAGE);
+    }
+  };
+  const hasPreviewRecoveryMessage = (error?: string) => !!previewFailureReason(error)
+    || error === PREVIEW_EXPIRED_MESSAGE || error === PREVIEW_UNAVAILABLE_MESSAGE;
+  const renderMessage = job && !hasPreviewRecoveryMessage(job.error) ? job.message || job.error : "";
 
   const renderSettings = {
     do_autotune: autotune,
@@ -319,7 +365,8 @@ export function RemixPanel() {
     stem_gains: stemGainsActive ? stemGains : null,
   };
 
-  const run = () =>
+  const run = () => {
+    renderPreviewKey.current = null;
     start(() =>
       music.remix({
         source_audio: source,
@@ -330,9 +377,12 @@ export function RemixPanel() {
         offset_ms: offsetAuto ? null : offsetMs,
       })
     );
+  };
 
   const analyzeAndPreview = () => {
     if (!source || !beat) return;
+    lifetime.clear();
+    revisionPreviewKey.current = null;
     validity.startPreview();
     setPreviewMode("global_only");
     startPreview(() => music.preview({
@@ -351,12 +401,13 @@ export function RemixPanel() {
   };
 
   const renderPreview = (acceptWarp: boolean) => {
-    if (!preview || !validity.canAudition || !source || !beat) return;
+    if (!preview || !previewKey || !validity.canAudition || !source || !beat || !lifetime.isFresh(previewKey)) return;
     const mapDigest = acceptWarp
       ? preview.render_map_digests.warp_candidate
       : preview.render_map_digests.global_only;
     if (!mapDigest) return;
-    start(() => music.remix({
+    renderPreviewKey.current = previewKey;
+    start(() => withPreviewRecovery(previewKey, () => music.remix({
       source_audio: source,
       beat_audio: beat,
       ...renderSettings,
@@ -369,13 +420,14 @@ export function RemixPanel() {
       preview_revision: preview.revision,
       map_digest: mapDigest,
       accept_warp: acceptWarp,
-    }));
+    })));
   };
 
   const revisePreviewWithManualAnchors = () => {
-    if (!preview || !source || !beat || preview.anchors.length < 2) return;
+    if (!preview || !previewKey || !source || !beat || preview.anchors.length < 2 || !lifetime.isFresh(previewKey)) return;
+    revisionPreviewKey.current = previewKey;
     validity.startPreview();
-    startPreview(() => music.preview({
+    startPreview(() => withPreviewRecovery(previewKey, () => music.preview({
       contract_version: 1,
       source_audio: source,
       beat_audio: beat,
@@ -394,7 +446,7 @@ export function RemixPanel() {
         input_time_sec: anchor.input_time_sec,
         timeline_time_sec: manualAnchorValues[`${preview.preview_id}:${preview.revision}:${anchor.id}`] ?? anchor.timeline_time_sec,
       })),
-    }));
+    })));
   };
 
   const outputName =
@@ -710,7 +762,7 @@ export function RemixPanel() {
             <span className="remix-workspace-view">Timeline</span>
           </div>
           <span className="hint mono" style={{ margin: 0 }}>
-            {job ? job.message || job.error : "Arrange · align · mix · export"}
+            {job ? renderMessage : "Arrange · align · mix · export"}
           </span>
           <div className="remix-head-badges">
             <span className="tool-metric">DAW layout</span>
@@ -807,7 +859,7 @@ export function RemixPanel() {
             title="สร้าง global-only และ drift preview ชั่วคราว โดยยังไม่แก้ clip หรือ render map ที่บันทึกไว้">
             {previewBusy ? "Previewing…" : "Drift preview"}
           </button>
-          {previewJob?.status === "error" && (
+          {previewJob?.status === "error" && !hasPreviewRecoveryMessage(previewJob.error) && (
             <span className="hint mono" style={{ color: "#e05a5a" }} title={previewJob.error}>⚠ preview failed</span>
           )}
           <button className="primary tool-run" onClick={run} disabled={busy || !source || !beat}>
@@ -816,6 +868,13 @@ export function RemixPanel() {
           </button>
         </div>
       </div>
+
+      {validity.canShow && lifetime.reason && (
+        <div className="recover-banner">
+          <span role="status">{lifetime.reason === "expired" ? PREVIEW_EXPIRED_MESSAGE : PREVIEW_UNAVAILABLE_MESSAGE}</span>
+          <button type="button" className="seg-add" disabled={busy || previewBusy || !source || !beat} onClick={analyzeAndPreview}>สร้าง preview ใหม่</button>
+        </div>
+      )}
 
       {file.recoverable && (
         <div className="recover-banner">
@@ -890,7 +949,7 @@ export function RemixPanel() {
           ) : (
             <div className="remix-standard">
               <div className="remix-timeline-shell" style={{ display: "flex", flexDirection: "column" }}>
-                {preview && (
+                {preview && !lifetime.reason && (
                   <section aria-label="Beat warp timeline preview" style={{
                     flex: "0 0 auto", maxHeight: 190, overflow: "auto", padding: "10px 14px",
                     borderBottom: "1px solid var(--glass-border)", background: "rgba(199,240,70,.035)",
@@ -966,16 +1025,18 @@ export function RemixPanel() {
                       </div>
                     )}
                     {!validity.canAudition && <p className="hint" role="status">Markers changed. Apply manual anchors to create a new preview.</p>}
-                    {validity.canAudition && <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 9 }}>
-                      <button type="button" className={previewMode === "global_only" ? "primary" : "seg-add"} onClick={() => setPreviewMode("global_only")}>
+                    {canAudition && <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 9 }}>
+                      <button type="button" className={previewMode === "global_only" ? "primary" : "seg-add"} onClick={() => { if (previewKey && lifetime.isFresh(previewKey)) setPreviewMode("global_only"); }}>
                         Global only
                       </button>
                       <button type="button" className={previewMode === "warp_candidate" ? "primary" : "seg-add"}
                         disabled={!preview.warp_candidate.available}
-                        onClick={() => setPreviewMode("warp_candidate")}>
+                        onClick={() => { if (previewKey && lifetime.isFresh(previewKey)) setPreviewMode("warp_candidate"); }}>
                         Warp candidate
                       </button>
-                      <audio key={`${preview.preview_id}-${preview.revision}-${previewMode}`} controls preload="none" style={{ flex: "1 1 280px", height: 34 }}
+                      <audio ref={previewAudio} key={`${preview.preview_id}-${preview.revision}-${previewMode}`} controls preload="none" style={{ flex: "1 1 280px", height: 34 }}
+                        onPlay={(event) => { if (!previewKey || !lifetime.isFresh(previewKey)) event.currentTarget.pause(); }}
+                        onError={() => { if (previewKey && lifetime.isFresh(previewKey)) invalidate(previewKey, "unavailable"); }}
                         src={`${API_BASE}${(previewMode === "warp_candidate" && preview.warp_candidate.available ? preview.audio_preview.warp_candidate_url : preview.audio_preview.global_only_url) ?? ""}`} />
                       <button type="button" className="seg-add" disabled={busy} onClick={() => renderPreview(false)}>
                         Render global-only
