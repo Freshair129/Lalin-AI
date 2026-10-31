@@ -31,6 +31,7 @@ from .music_warp import analyze_drift, estimate_beat_grid, grid_aligned_onset_co
 from ..config import get_settings
 from ..runtime_devices import resolve_tts_runtime
 from ..utils.ids import short_id
+from ..utils.external_python import demucs_python, RESET_DLL_SEARCH
 
 SR = 44100
 
@@ -108,27 +109,31 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
     full=True: แยกเต็ม 4 stem (vocals/drums/bass/other) สำหรับ per-stem mixer
         → คืน {"vocals","drums","bass","other","instrumental"} (instrumental = drums+bass+other รวมกัน)
     """
-    try:
-        import torch  # noqa: F401
-    except ImportError as e:  # noqa: BLE001
-        raise RuntimeError(
-            "ยังไม่ได้ติดตั้ง torch — รัน scripts/setup_windows.ps1 ก่อน"
-        ) from e
-    _require_optional_module(
-        "demucs",
-        packages="demucs",
-        feature="การแยก stem ของ Remix",
-    )
-    import torch
-
-    dev = resolve_tts_runtime(device or get_settings().tts_device).effective
+    frozen = bool(getattr(sys, "frozen", False))
+    if frozen:
+        python = demucs_python()
+        if not python:
+            raise RuntimeError("ตั้งค่า GMUSIC_DEMUCS_PYTHON เป็น path ของ Python ที่ติดตั้ง torch และ demucs ก่อนสร้าง preview")
+        command = [python, "-c", RESET_DLL_SEARCH + "import runpy; runpy.run_module('demucs', run_name='__main__', alter_sys=True)"]
+        requested = device or get_settings().tts_device
+        dev = "cpu" if requested == "auto" else requested
+        torch = None
+    else:
+        try:
+            import torch
+        except ImportError as e:
+            raise RuntimeError("ยังไม่ได้ติดตั้ง torch — รัน scripts/setup_windows.ps1 ก่อน") from e
+        _require_optional_module("demucs", packages="demucs", feature="การแยก stem ของ Remix")
+        python = sys.executable
+        command = [python, "-m", "demucs"]
+        dev = resolve_tts_runtime(device or get_settings().tts_device).effective
     sep_root = Path(out_dir) / "_sep"
     name = Path(audio).stem
 
     if full:
         try:
             subprocess.run(
-                [sys.executable, "-m", "demucs", "-d", dev,
+                [*command, "-d", dev,
                  "-o", str(sep_root), audio],
                 check=True,
             )
@@ -136,7 +141,8 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
             raise RuntimeError(
                 "Demucs รันไม่สำเร็จระหว่างแยก stem เต็ม 4 ทาง"
             ) from e
-        torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
+        if torch is not None:
+            torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
         base = sep_root / "htdemucs" / name
         result = {stem: str(base / f"{stem}.wav") for stem in STEM_NAMES}
         result["instrumental"] = _sum_stems(
@@ -147,7 +153,7 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
 
     try:
         subprocess.run(
-            [sys.executable, "-m", "demucs", "--two-stems=vocals", "-d", dev,
+            [*command, "--two-stems=vocals", "-d", dev,
              "-o", str(sep_root), audio],
             check=True,
         )
@@ -155,7 +161,8 @@ def separate_stems(audio: str, out_dir: str, *, device: str | None = None,
         raise RuntimeError(
             "Demucs รันไม่สำเร็จระหว่างแยก vocals/instrumental"
         ) from e
-    torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
+    if torch is not None:
+        torch.cuda.empty_cache()  # ปล่อย VRAM ก่อนขั้นถัดไป
     base = sep_root / "htdemucs" / name
     return {
         "vocals": str(base / "vocals.wav"),

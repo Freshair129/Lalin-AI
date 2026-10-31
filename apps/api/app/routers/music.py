@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import sys
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
@@ -15,6 +16,7 @@ from pydantic import BaseModel
 
 from ..jobs import jobs
 from ..jobs.resources import automatic_torch_resource
+from ..config import get_settings
 from ..pipelines.music import run_remix
 from ..pipelines.music_warp import analyze_drift, validate_manual_anchors
 from ..schemas import RemixPreviewRequest, RemixRequest
@@ -23,6 +25,12 @@ from ..services.music_previews import MusicPreviewError
 from .files import resolve_upload
 
 router = APIRouter(prefix="/music", tags=["music"])
+
+
+def remix_resource() -> str:
+    if getattr(sys, "frozen", False):
+        return "gpu" if get_settings().tts_device == "cuda" else "cpu"
+    return automatic_torch_resource()
 
 
 @router.post("/remix")
@@ -104,7 +112,7 @@ async def remix(req: RemixRequest):
             ),
         )
 
-    job = jobs.spawn("remix", task, resource=automatic_torch_resource())
+    job = jobs.spawn("remix", task, resource=remix_resource())
     return {"job_id": job.id}
 
 
@@ -326,7 +334,7 @@ async def remix_preview(req: RemixPreviewRequest):
             if not saved:
                 shutil.rmtree(folder, ignore_errors=True)
 
-    job = jobs.spawn("music-remix-preview", task, resource=automatic_torch_resource())
+    job = jobs.spawn("music-remix-preview", task, resource=remix_resource())
     return {"job_id": job.id, "preview_id": preview_id, "revision": revision}
 
 

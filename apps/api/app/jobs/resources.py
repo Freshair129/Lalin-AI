@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+import subprocess
+import sys
 from typing import Protocol
 
 from ..runtime_devices import Device, DeviceResolution
@@ -9,6 +11,10 @@ from ..runtime_devices import Device, DeviceResolution
 
 class ResourceJob(Protocol):
     kind: str
+
+
+class GpuAdmissionError(RuntimeError):
+    """A GPU probe cannot run, rather than merely finding insufficient VRAM."""
 
 
 def resource_for_device(resolution: DeviceResolution) -> str:
@@ -54,8 +60,15 @@ def configured_gpu_probe(job: ResourceJob) -> bool:
     from ..config import get_settings
 
     thresholds = get_settings().gpu_min_free_mb
-    if max(0, thresholds.get(job.kind, 0)) == 0:
+    kind = "remix" if job.kind == "music-remix-preview" else job.kind
+    minimum = max(0, thresholds.get(kind, 0))
+    if minimum == 0:
         return True
+    if getattr(sys, "frozen", False) and kind == "remix":
+        free = external_remix_free_vram()
+        if free is None:
+            raise GpuAdmissionError("ตรวจ GPU ไม่ได้ — ตรวจ GMUSIC_DEMUCS_PYTHON และติดตั้ง torch ที่รองรับ CUDA")
+        return free >= minimum * 1024 * 1024
     try:
         import torch
 
@@ -63,8 +76,23 @@ def configured_gpu_probe(job: ResourceJob) -> bool:
             return False
         return has_required_vram(
             job,
-            minimum_mb=thresholds,
+            minimum_mb={job.kind: minimum},
             mem_get_info=lambda: torch.cuda.mem_get_info(torch.cuda.current_device()),
         )
     except (ImportError, AttributeError, RuntimeError):
         return False
+
+
+def external_remix_free_vram() -> int | None:
+    from ..utils.external_python import demucs_python, RESET_DLL_SEARCH
+
+    python = demucs_python()
+    if not python:
+        return None
+    code = RESET_DLL_SEARCH + "import torch; print(torch.cuda.mem_get_info()[0] if torch.cuda.is_available() else -1)"
+    try:
+        result = subprocess.run([python, "-c", code], capture_output=True, text=True, timeout=30, check=True)
+        value = int(result.stdout.strip())
+        return value if value >= 0 else None
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None

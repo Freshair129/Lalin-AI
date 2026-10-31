@@ -76,6 +76,11 @@ if (-not (Test-Path $entryScript)) {
 Write-Host "[*] Found entrypoint: $entryScript" -ForegroundColor Green
 Write-Host "[*] Backend profile: $profile" -ForegroundColor Green
 
+if ($profile -eq "full") {
+    & $venvPy -m pip install -r (Join-Path $backendDir "requirements-full.txt")
+    if ($LASTEXITCODE -ne 0) { throw "Failed to install full profile requirements." }
+}
+
 if (-not (Test-Path $specFile)) {
     Write-Host "[!] Missing tracked spec file: $specFile" -ForegroundColor Red
     Write-Host "    This file is checked into git on purpose (see comment above) -- it must" -ForegroundColor Yellow
