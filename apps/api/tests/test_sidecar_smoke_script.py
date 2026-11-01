@@ -13,6 +13,8 @@ SCRIPT = Path(__file__).resolve().parents[3] / "tools" / "build" / "smoke_sideca
 
 
 def run_gate(tmp_path, response, delay=0, timeout=8):
+    tmp_path = tmp_path / "path with spaces"
+    tmp_path.mkdir()
     server = tmp_path / "server.py"
     server.write_text("""import http.server, sys, time
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -27,7 +29,7 @@ http.server.HTTPServer((\"127.0.0.1\", int(sys.argv[1])), Handler).serve_forever
     port = sock.getsockname()[1]
     sock.close()
     return subprocess.run(["pwsh", "-NoProfile", "-File", str(SCRIPT), "-Executable", sys.executable,
-      "-Arguments", f"{server} {port} {response} {delay}", "-Port", str(port), "-TimeoutSeconds", str(timeout),
+      "-Arguments", subprocess.list2cmdline([str(server), str(port), response, str(delay)]), "-Port", str(port), "-TimeoutSeconds", str(timeout),
       "-LogDirectory", str(tmp_path)], capture_output=True, text=True, timeout=25)
 
 
@@ -88,7 +90,7 @@ def test_response_from_unrelated_listener_fails(tmp_path):
     thread.start()
     try:
         result = subprocess.run(["pwsh", "-NoProfile", "-File", str(SCRIPT), "-Executable", sys.executable,
-            "-Arguments", str(sleeper), "-Port", str(port), "-TimeoutSeconds", "5",
+            "-Arguments", subprocess.list2cmdline([str(sleeper)]), "-Port", str(port), "-TimeoutSeconds", "5",
             "-LogDirectory", str(tmp_path)], capture_output=True, text=True, timeout=20)
         assert result.returncode != 0, result.stdout + result.stderr
     finally:
@@ -96,3 +98,32 @@ def test_response_from_unrelated_listener_fails(tmp_path):
             server.shutdown()
             server.server_close()
         thread.join(timeout=3)
+
+
+def test_child_listener_is_stopped_with_launcher(tmp_path):
+    import time
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    launcher = tmp_path / "launcher.py"
+    child = tmp_path / "child.py"
+    child.write_text("""import http.server, sys
+class Handler(http.server.BaseHTTPRequestHandler):
+ def do_GET(self):
+  self.send_response(200); self.end_headers(); self.wfile.write(b'{"status":"ok","service":"g-music"}')
+http.server.HTTPServer(('127.0.0.1', int(sys.argv[1])), Handler).serve_forever()
+""")
+    launcher.write_text("import subprocess, sys, time; subprocess.Popen([sys.executable, sys.argv[1], sys.argv[2]]); time.sleep(30)")
+    result = subprocess.run(["pwsh", "-NoProfile", "-File", str(SCRIPT), "-Executable", sys._base_executable,
+        "-Arguments", subprocess.list2cmdline([str(launcher), str(child), str(port)]), "-Port", str(port),
+        "-TimeoutSeconds", "12", "-LogDirectory", str(tmp_path)], capture_output=True, text=True, timeout=25)
+    assert result.returncode == 0, result.stdout + result.stderr
+    for _ in range(20):
+        with socket.socket() as probe:
+            if probe.connect_ex(("127.0.0.1", port)) != 0:
+                break
+        time.sleep(.1)
+    else:
+        pytest.fail("child listener remains after smoke gate exited")

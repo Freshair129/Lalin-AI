@@ -61,7 +61,11 @@ try {
     Write-Host "Sidecar answered /health with expected status and service."
 } finally {
     $proc.Refresh()
-    if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue; $proc.WaitForExit() }
+    if (-not $proc.HasExited) {
+        # This process was launched by the gate; terminate its children too.
+        & taskkill.exe /PID $proc.Id /T /F *> $null
+        $proc.WaitForExit()
+    }
     if (-not $healthy) {
         Write-Host "Sidecar stdout: $log"
         if (Test-Path $log) { Get-Content $log -Tail 100 }
