@@ -10,7 +10,9 @@
 import os
 import sys
 
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
+
+full = os.environ.get("GMUSIC_BACKEND_PROFILE", "lite") == "full"
 
 # collect_submodules("app") runs here, before Analysis(pathex=['.']) is even
 # constructed below -- pathex only affects PyInstaller's own module graph once
@@ -36,6 +38,9 @@ hiddenimports = (
 )
 
 datas = collect_data_files("imageio_ffmpeg")  # ffmpeg.exe ที่ฝังมากับ wheel
+if full:
+    hiddenimports += collect_submodules("librosa")
+    datas += collect_data_files("librosa") + copy_metadata("librosa")
 
 a = Analysis(
     ['sidecar_entry.py'],
@@ -57,17 +62,17 @@ a = Analysis(
     excludes=[
         # ML stack — ผู้ใช้ติดตั้งเองผ่านแท็บปลั๊กอิน (BYOM)
         'torch', 'torchaudio', 'demucs', 'f5_tts', 'TTS',
-        'matchering', 'pedalboard', 'psola', 'librosa',
+        'matchering', 'pedalboard', 'psola',
         'faster_whisper', 'ctranslate2',
         # ตัวโหลดโมเดล + deps ของมัน (มาทาง cached_path ใน tts.py)
         'cached_path', 'huggingface_hub', 'boto3', 'botocore',
         's3transfer', 'transformers', 'datasets',
         # ตัวใหญ่ที่ตามเข้ามาทาง numba/pandas แต่ lite runtime ไม่แตะเลย
         # (วัดจาก build จริง 2026-08-19: llvmlite 102MB, pyarrow 79MB, pandas 13MB, PIL 13MB)
-        'numba', 'llvmlite', 'pyarrow', 'pandas', 'PIL', 'Pillow',
+        'pyarrow', 'pandas', 'PIL', 'Pillow',
         # อื่น ๆ ที่ไม่เกี่ยว
         'matplotlib', 'IPython', 'notebook', 'pytest',
-    ],
+    ] + ([] if full else ['librosa', 'numba', 'llvmlite']),
     noarchive=False,
     optimize=0,
 )

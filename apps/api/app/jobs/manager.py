@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Awaitable, Callable
 
 from ..utils.ids import short_id
+from .resources import GpuAdmissionError
 
 logger = logging.getLogger(__name__)
 
@@ -182,14 +183,18 @@ class JobManager:
             self._persist()
             await self._broadcast(job)
             async with self._gpu_lock:
-                while self._gpu_probe is not None and not self._gpu_probe(job):
-                    job.message = "รอ GPU: VRAM ว่างยังไม่พอ"
-                    job.updated_at = _now()
-                    self._persist()
-                    await self._broadcast(job)
-                    await asyncio.sleep(self._gpu_poll_seconds)
                 try:
+                    while self._gpu_probe is not None and not await asyncio.to_thread(self._gpu_probe, job):
+                        job.message = "รอ GPU: VRAM ว่างยังไม่พอ"
+                        job.updated_at = _now()
+                        self._persist()
+                        await self._broadcast(job)
+                        await asyncio.sleep(self._gpu_poll_seconds)
                     await self._execute(job, task)
+                except GpuAdmissionError as exc:
+                    async def failed_probe(_job, _report):
+                        raise RuntimeError(str(exc))
+                    await self._execute(job, failed_probe)
                 finally:
                     try:
                         self._gpu_cleanup()

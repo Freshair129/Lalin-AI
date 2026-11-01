@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 
 
 def test_gpu_jobs_run_fifo_with_single_concurrency():
@@ -57,6 +58,35 @@ def test_gpu_job_waits_for_free_vram_before_task_starts():
 
     assert started is True
     assert job.status == "done"
+
+
+def test_slow_gpu_probe_does_not_block_event_loop():
+    from app.jobs.manager import JobManager
+
+    async def scenario():
+        entered = threading.Event()
+        release = threading.Event()
+
+        def probe(_job):
+            entered.set()
+            release.wait(timeout=3)
+            return True
+
+        manager = JobManager(gpu_probe=probe)
+        job = manager.create("remix", resource="gpu")
+
+        async def task(_job, _report):
+            return {}
+
+        running = asyncio.create_task(manager.run(job, task))
+        try:
+            assert await asyncio.wait_for(asyncio.to_thread(entered.wait, 2), 2.5)
+            await asyncio.wait_for(asyncio.sleep(0.01), 0.3)
+        finally:
+            release.set()
+            await running
+
+    asyncio.run(scenario())
 
 
 def test_gpu_cleanup_runs_after_success_and_error():
