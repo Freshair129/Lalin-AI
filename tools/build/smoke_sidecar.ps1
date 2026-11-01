@@ -64,7 +64,10 @@ try {
     if (-not $proc.HasExited) {
         # This process was launched by the gate; terminate its children too.
         & taskkill.exe /PID $proc.Id /T /F *> $null
-        $proc.WaitForExit()
+        if ($LASTEXITCODE -ne 0 -and -not $proc.HasExited) {
+            throw "Failed to stop sidecar process tree (taskkill exit $LASTEXITCODE)."
+        }
+        if (-not $proc.WaitForExit(10000)) { throw "Sidecar process tree did not stop within 10 seconds." }
     }
     if (-not $healthy) {
         Write-Host "Sidecar stdout: $log"
