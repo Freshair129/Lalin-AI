@@ -2,6 +2,7 @@ mod handoff;
 mod library;
 mod library_store;
 mod local_media_store;
+mod media_validation;
 mod migration;
 pub mod smart_medley;
 mod smart_medley_store;
@@ -351,6 +352,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             library::get_library,
             library::select_media,
+            library::select_relink_file,
+            library::relink_track,
             library::remove_library_track,
             library::set_track_favorite,
             library::record_listen,

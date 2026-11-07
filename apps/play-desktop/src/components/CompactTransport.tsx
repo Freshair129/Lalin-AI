@@ -12,6 +12,7 @@ export function CompactTransport({
   onFull,
   switching,
   onOpen,
+  relinkHint = false,
   report,
   fullscreen,
   onFullscreen,
@@ -19,6 +20,7 @@ export function CompactTransport({
   onFull: () => void;
   switching: boolean;
   onOpen: () => void;
+  relinkHint?: boolean;
   report: (error: unknown) => void;
   fullscreen: boolean;
   onFullscreen: () => void;
@@ -300,6 +302,7 @@ export function CompactTransport({
       {now.error ? (
         <p className="error" role="alert">
           {localizeError(now.error, locale)}
+          {relinkHint ? <small>{t("relink.compactHint")}</small> : null}
         </p>
       ) : null}
     </footer>

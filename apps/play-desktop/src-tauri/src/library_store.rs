@@ -966,6 +966,141 @@ pub fn read_catalog(directory: &Path) -> Result<Library, String> {
     read_catalog_from(&database, directory)
 }
 
+pub fn track_for_relink(directory: &Path, id: &str) -> Result<Track, String> {
+    let database = open_database(directory).map_err(|_| "relink:write-failed")?;
+    let database = database.lock().map_err(|_| "relink:write-failed")?;
+    let rows = query_rows(
+        &database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "id",
+            Value::String(id.into()),
+        )],
+        1,
+    )
+    .map_err(|_| "relink:write-failed")?;
+    if track_is_retired(&database, id).map_err(|_| "relink:write-failed")? {
+        return Err("relink:retired-track".into());
+    }
+    let row = rows.first().ok_or("relink:unknown-track")?;
+    if row.get("storage_kind").and_then(Value::as_str) == Some("managed") {
+        return Err("relink:managed-unsupported".into());
+    }
+    track_from_row(directory, row).map_err(|_| "relink:write-failed".into())
+}
+
+pub fn relink_track<HashFile, AllowFile>(
+    directory: &Path,
+    id: &str,
+    path: &str,
+    accept_different_content: bool,
+    hash_file: HashFile,
+    allow_file: AllowFile,
+) -> Result<Track, String>
+where
+    HashFile: FnOnce(&Path) -> Result<String, String>,
+    AllowFile: FnOnce(&Path) -> Result<(), String>,
+{
+    let database = open_database(directory).map_err(|_| "relink:write-failed")?;
+    let database = database.lock().map_err(|_| "relink:write-failed")?;
+    let rows = query_rows(
+        &database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "id",
+            Value::String(id.into()),
+        )],
+        1,
+    )
+    .map_err(|_| "relink:write-failed")?;
+    if track_is_retired(&database, id).map_err(|_| "relink:write-failed")? {
+        return Err("relink:retired-track".into());
+    }
+    let row = rows.first().ok_or("relink:unknown-track")?;
+
+    let canonical =
+        crate::media_validation::validate_media_file(path).map_err(|error| error.relink_code())?;
+    let content_hash = hash_file(&canonical).map_err(|_| "relink:not-a-file")?;
+    let canonical_text = canonical.to_string_lossy().into_owned();
+
+    for candidate in raw_track_rows(&database).map_err(|_| "relink:write-failed")? {
+        let candidate_id = row_string(&candidate, "id").map_err(|_| "relink:write-failed")?;
+        if candidate_id == id
+            || (candidate.get("media_path").and_then(Value::as_str)
+                != Some(canonical_text.as_str())
+                && candidate.get("source_path").and_then(Value::as_str)
+                    != Some(canonical_text.as_str()))
+        {
+            continue;
+        }
+        if track_is_retired(&database, &candidate_id).map_err(|_| "relink:write-failed")? {
+            continue;
+        }
+        let title = candidate
+            .get("title")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        return Err(format!("relink:duplicate:{title}"));
+    }
+
+    if row
+        .get("content_hash")
+        .and_then(Value::as_str)
+        .is_some_and(|existing_hash| existing_hash != content_hash.as_str())
+        && !accept_different_content
+    {
+        return Err("relink:different-content".into());
+    }
+    if row.get("storage_kind").and_then(Value::as_str) == Some("managed") {
+        return Err("relink:managed-unsupported".into());
+    }
+
+    let mut track = track_from_row(directory, row).map_err(|_| "relink:write-failed")?;
+    let discovered = crate::library::track(&canonical);
+    if track.title.trim().is_empty() {
+        track.title = discovered.title;
+    }
+    if track
+        .artist
+        .as_deref()
+        .is_none_or(|value| value.trim().is_empty())
+    {
+        track.artist = discovered.artist;
+    }
+    if track
+        .album
+        .as_deref()
+        .is_none_or(|value| value.trim().is_empty())
+    {
+        track.album = discovered.album;
+    }
+    if track.duration.is_none() {
+        track.duration = discovered.duration;
+    }
+    track.path = canonical_text.clone();
+    track.kind = crate::library::media_kind(&canonical);
+    track.source_path = Some(canonical_text);
+    track.content_hash = Some(content_hash);
+    track.missing = false;
+
+    allow_file(&canonical).map_err(|_| "relink:write-failed")?;
+    let values = track_values_preserving_publication(&database, directory, &track)
+        .map_err(|_| "relink:write-failed")?;
+    apply(
+        &database,
+        vec![mutation(
+            "tracks",
+            RelationalMutationKind::Upsert,
+            values,
+            None,
+        )],
+    )
+    .map_err(|_| "relink:write-failed")?;
+    Ok(track)
+}
+
 pub fn publish_prepared(
     directory: &Path,
     prepared: &crate::local_media_store::PreparedPublicationV1,

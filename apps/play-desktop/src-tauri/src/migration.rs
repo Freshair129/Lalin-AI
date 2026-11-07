@@ -1,4 +1,10 @@
 use crate::library::{self, Library, LibraryState, MediaKind, Track};
+use crate::media_validation::{is_local_absolute, is_local_import_path};
+#[cfg(test)]
+use crate::media_validation::{
+    is_local_windows_drive_type, local_windows_drive_root, DRIVE_CDROM, DRIVE_FIXED,
+    DRIVE_NO_ROOT_DIR, DRIVE_RAMDISK, DRIVE_REMOTE, DRIVE_REMOVABLE, DRIVE_UNKNOWN,
+};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
@@ -579,21 +585,21 @@ fn build_preview(
         let mut track = new_library
             .tracks
             .iter()
-            .find(|item| item.id == canonical_text || item.path == canonical_text)
+            .find(|item| {
+                item.path == canonical_text
+                    || item.source_path.as_deref() == Some(canonical_text.as_str())
+            })
             .cloned()
             .unwrap_or_else(|| library::track(&canonical));
-        track.id = canonical_text.clone();
         track.path = canonical_text;
         track.kind = library::media_kind(&canonical);
         track.missing = false;
         if let Some(title) = &entry.title {
             track.title = title.clone();
         }
-        if !new_library
-            .tracks
-            .iter()
-            .any(|item| item.id == track.id || item.path == track.path)
-        {
+        if !new_library.tracks.iter().any(|item| {
+            item.path == track.path || item.source_path.as_deref() == Some(track.path.as_str())
+        }) {
             new_library.tracks.push(track.clone());
         }
         items.push(PlannedQueueItem {
@@ -1021,66 +1027,6 @@ fn restore_library_before_ui_from_directory(directory: &Path) -> Result<(), Stri
 pub fn restore_library_before_ui(app: &AppHandle) -> Result<(), String> {
     let directory = data_dir(app)?;
     restore_library_before_ui_from_directory(&directory)
-}
-
-fn is_local_absolute(path: &Path) -> bool {
-    #[cfg(windows)]
-    {
-        if !path.is_absolute() {
-            return false;
-        }
-        let Some(root) = local_windows_drive_root(&path.to_string_lossy()) else {
-            return false;
-        };
-        let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
-        let drive_type =
-            unsafe { windows_sys::Win32::Storage::FileSystem::GetDriveTypeW(wide.as_ptr()) };
-        is_local_windows_drive_type(drive_type)
-    }
-    #[cfg(not(windows))]
-    {
-        path.is_absolute() && !path.as_os_str().to_string_lossy().starts_with("//")
-    }
-}
-
-#[cfg(any(windows, test))]
-fn local_windows_drive_root(value: &str) -> Option<String> {
-    let normalized = value.replace('/', "\\");
-    let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
-    let bytes = path.as_bytes();
-    (bytes.len() >= 3 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && bytes[2] == b'\\')
-        .then(|| path[..3].to_string())
-}
-
-// Win32 GetDriveTypeW return values; only local media drive kinds are accepted.
-#[cfg(test)]
-const DRIVE_UNKNOWN: u32 = 0;
-#[cfg(test)]
-const DRIVE_NO_ROOT_DIR: u32 = 1;
-#[cfg(any(windows, test))]
-const DRIVE_REMOVABLE: u32 = 2;
-#[cfg(any(windows, test))]
-const DRIVE_FIXED: u32 = 3;
-#[cfg(test)]
-const DRIVE_REMOTE: u32 = 4;
-#[cfg(any(windows, test))]
-const DRIVE_CDROM: u32 = 5;
-#[cfg(any(windows, test))]
-const DRIVE_RAMDISK: u32 = 6;
-
-#[cfg(any(windows, test))]
-fn is_local_windows_drive_type(drive_type: u32) -> bool {
-    matches!(
-        drive_type,
-        DRIVE_REMOVABLE | DRIVE_FIXED | DRIVE_CDROM | DRIVE_RAMDISK
-    )
-}
-
-fn is_local_import_path(value: &str) -> bool {
-    if value.starts_with("\\\\") || value.starts_with("//") {
-        return false;
-    }
-    is_local_absolute(Path::new(value))
 }
 
 fn valid_text(value: &str, max_chars: usize) -> bool {

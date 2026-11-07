@@ -319,6 +319,75 @@ pub async fn select_media(app: AppHandle, folder: bool) -> Result<Vec<Track>, St
     .map_err(|e| e.to_string())?
 }
 
+#[tauri::command(rename_all = "camelCase")]
+pub async fn select_relink_file(app: AppHandle, id: String) -> Result<Option<String>, String> {
+    let directory = app.state::<LibraryState>().1.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let track = crate::library_store::track_for_relink(&directory, &id)?;
+        let parent_directory = track
+            .source_path
+            .as_deref()
+            .and_then(|path| Path::new(path).parent())
+            .filter(|path| path.is_dir())
+            .map(Path::to_path_buf)
+            .or_else(|| {
+                Path::new(&track.path)
+                    .parent()
+                    .filter(|path| path.is_dir())
+                    .map(Path::to_path_buf)
+            });
+        let mut dialog = app
+            .dialog()
+            .file()
+            .set_title("เลือกไฟล์ใหม่เพื่อเชื่อมเพลง")
+            .add_filter("Audio / Video", MEDIA_EXTENSIONS);
+        if let Some(directory) = parent_directory {
+            dialog = dialog.set_directory(directory);
+        }
+        let Some(selected) = dialog.blocking_pick_file() else {
+            return Ok(None);
+        };
+        let path = selected.into_path().map_err(|_| "relink:invalid-path")?;
+        Ok(Some(path.to_string_lossy().into_owned()))
+    })
+    .await
+    .map_err(|_| "relink:write-failed".to_string())?
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn relink_track(
+    app: AppHandle,
+    id: String,
+    path: String,
+    accept_different_content: bool,
+) -> Result<Track, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<LibraryState>();
+        let mut library = state.0.lock().map_err(|_| "relink:write-failed")?;
+        crate::migration::ensure_no_active_journal(&app).map_err(|_| "relink:write-failed")?;
+        let track = crate::library_store::relink_track(
+            &state.1,
+            &id,
+            &path,
+            accept_different_content,
+            crate::media_validation::sha256_file,
+            |path| {
+                app.asset_protocol_scope()
+                    .allow_file(path)
+                    .map_err(|error| error.to_string())
+            },
+        )?;
+        if let Some(existing) = library.tracks.iter_mut().find(|item| item.id == id) {
+            *existing = track.clone();
+        } else {
+            library.tracks.push(track.clone());
+        }
+        Ok(track)
+    })
+    .await
+    .map_err(|_| "relink:write-failed".to_string())?
+}
+
 #[tauri::command]
 pub fn remove_library_track(app: AppHandle, id: String) -> Result<(), String> {
     let state = app.state::<LibraryState>();

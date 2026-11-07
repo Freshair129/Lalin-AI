@@ -15,6 +15,8 @@ export interface LocalTrack {
   missing: boolean;
   sourceKind?: string;
   storageKind?: string;
+  sourcePath?: string | null;
+  contentHash?: string | null;
   favorite?: boolean;
   playCount?: number;
   lastPlayedAt?: number | null;
@@ -32,6 +34,18 @@ export async function getLibrary(): Promise<LocalTrack[]> {
     "get_library",
   );
   return library.tracks;
+}
+
+export async function selectRelinkFile(id: string): Promise<string | null> {
+  return invoke<string | null>("select_relink_file", { id });
+}
+
+export async function relinkTrack(
+  id: string,
+  path: string,
+  acceptDifferentContent: boolean,
+): Promise<LocalTrack> {
+  return invoke<LocalTrack>("relink_track", { id, path, acceptDifferentContent });
 }
 
 export async function listYoutubeLinks(): Promise<YoutubeLink[]> {

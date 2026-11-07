@@ -1,4 +1,10 @@
 use crate::library;
+use crate::media_validation;
+#[cfg(test)]
+use crate::media_validation::{
+    is_local_windows_drive_type, local_windows_drive_root, DRIVE_FIXED, DRIVE_NO_ROOT_DIR,
+    DRIVE_REMOTE, DRIVE_REMOVABLE, DRIVE_UNKNOWN,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -754,86 +760,12 @@ pub fn grant_handoff_media(
 }
 
 fn validate_media_file(path: &str) -> Result<std::path::PathBuf, String> {
-    use std::{fs, path::Path};
-    let candidate = Path::new(path);
-    if path.is_empty()
-        || path.len() > 4096
-        || path.contains('\0')
-        || (path.starts_with("\\\\") && local_windows_drive_root(path).is_none())
-        || path.starts_with("//")
-    {
-        return Err("invalid_file_path".into());
-    }
-    if !candidate.is_absolute() {
-        return Err("invalid_file_path".into());
-    }
-    let canonical = fs::canonicalize(candidate).map_err(|_| "ไม่พบไฟล์ที่ Studio ส่งมา")?;
-    if !is_local_canonical_path(&canonical) {
-        return Err("ไฟล์ที่ Studio ส่งมาต้องอยู่บน local drive".into());
-    }
-    if !canonical.is_file() {
-        return Err("ไฟล์ที่ส่งมาไม่ใช่ไฟล์ปกติ".into());
-    }
-    let ext = canonical
-        .extension()
-        .and_then(|value| value.to_str())
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    if !library::MEDIA_EXTENSIONS.contains(&ext.as_str()) {
-        return Err("ชนิดไฟล์นี้ Lalin Play ยังไม่รองรับ".into());
-    }
-    Ok(canonical)
+    media_validation::validate_media_file(path).map_err(|error| error.handoff_message().to_string())
 }
 
 #[cfg(test)]
 fn is_local_windows_canonical(value: &str) -> bool {
     local_windows_drive_root(value).is_some()
-}
-
-fn local_windows_drive_root(value: &str) -> Option<String> {
-    let normalized = value.replace('/', "\\");
-    let path = normalized.strip_prefix("\\\\?\\").unwrap_or(&normalized);
-    let bytes = path.as_bytes();
-    (bytes.len() >= 3 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && bytes[2] == b'\\')
-        .then(|| path[..3].to_string())
-}
-
-// Win32 GetDriveTypeW return values; only local media drive kinds are accepted.
-#[cfg(test)]
-const DRIVE_UNKNOWN: u32 = 0;
-#[cfg(test)]
-const DRIVE_NO_ROOT_DIR: u32 = 1;
-#[cfg(any(windows, test))]
-const DRIVE_REMOVABLE: u32 = 2;
-#[cfg(any(windows, test))]
-const DRIVE_FIXED: u32 = 3;
-#[cfg(any(windows, test))]
-const DRIVE_REMOTE: u32 = 4;
-#[cfg(any(windows, test))]
-const DRIVE_CDROM: u32 = 5;
-#[cfg(any(windows, test))]
-const DRIVE_RAMDISK: u32 = 6;
-
-#[cfg(any(windows, test))]
-fn is_local_windows_drive_type(drive_type: u32) -> bool {
-    drive_type != DRIVE_REMOTE
-        && matches!(
-            drive_type,
-            DRIVE_REMOVABLE | DRIVE_FIXED | DRIVE_CDROM | DRIVE_RAMDISK
-        )
-}
-
-#[cfg(windows)]
-fn is_local_canonical_path(path: &std::path::Path) -> bool {
-    let Some(root) = local_windows_drive_root(&path.to_string_lossy()) else {
-        return false;
-    };
-    windows_pipe::is_local_drive(&root)
-}
-
-#[cfg(not(windows))]
-fn is_local_canonical_path(path: &std::path::Path) -> bool {
-    path.is_absolute()
 }
 
 #[cfg(windows)]
@@ -860,7 +792,7 @@ mod windows_pipe {
             TOKEN_QUERY,
         },
         Storage::FileSystem::{
-            FlushFileBuffers, GetDriveTypeW, FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX,
+            FlushFileBuffers, FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_ACCESS_DUPLEX,
         },
         System::{
             Pipes::{
@@ -881,11 +813,6 @@ mod windows_pipe {
     const PIPE_CAP: usize = MAX_FRAME_BYTES;
     const PIPE_NAME_PREFIX: &str = r"\\.\pipe\ai.lalin.play.handoff.v1";
     const TOKEN_ACCESS: u32 = TOKEN_QUERY;
-
-    pub fn is_local_drive(root: &str) -> bool {
-        let wide = root.encode_utf16().chain([0]).collect::<Vec<_>>();
-        is_local_windows_drive_type(unsafe { GetDriveTypeW(wide.as_ptr()) })
-    }
 
     pub fn pipe_name() -> Result<Vec<u16>, String> {
         let sid = current_logon_sid()?;

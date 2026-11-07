@@ -7,7 +7,15 @@ export function formatTime(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 }
 
-export function Transport({ report }: { report: (error: unknown) => void }) {
+export function Transport({
+  report,
+  onRelink,
+  relinkTitle,
+}: {
+  report: (error: unknown) => void;
+  onRelink?: () => void;
+  relinkTitle?: string;
+}) {
   const store = usePlaybackStore();
   const { t, locale } = useI18n();
   const { nowPlaying: now, queue } = store;
@@ -102,6 +110,11 @@ export function Transport({ report }: { report: (error: unknown) => void }) {
       {now.error ? (
         <p role="alert" className="error">
           {localizeError(now.error, locale)}
+          {onRelink ? (
+            <button type="button" title={relinkTitle} onClick={onRelink}>
+              {t("relink.button")}
+            </button>
+          ) : null}
         </p>
       ) : null}
     </footer>

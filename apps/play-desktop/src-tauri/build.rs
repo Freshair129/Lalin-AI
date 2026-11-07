@@ -3,6 +3,8 @@ fn main() {
         tauri_build::AppManifest::new().commands(&[
             "get_library",
             "select_media",
+            "select_relink_file",
+            "relink_track",
             "remove_library_track",
             "set_track_favorite",
             "record_listen",
@@ -13,6 +15,7 @@ fn main() {
             "get_cache_settings",
             "set_cache_settings",
             "resolve_media",
+            "analyze_smart_medley_pair",
             "preview_play_migration",
             "prepare_play_migration",
             "apply_play_migration",
