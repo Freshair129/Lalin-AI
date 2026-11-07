@@ -1,7 +1,7 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -34,6 +34,7 @@ authorization to create keys, change repo settings, publish assets or install ap
 
 - [ ] Candidate contract/runbook reviewed; product owner and release operator named.
 - [ ] S2–S6 gates completed or an explicitly approved reduced-scope release documented.
+  Candidate reduced-scope decision for v1.0: [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md) (pending owner approval in issue #47).
 - [ ] Destination source SHA and clean checkout verified; no parent workspace links.
 - [ ] License/notices gate closed; no user data, models or debug-only fixtures in bundle.
 - [ ] Choose supported Windows versions/architecture, WebView2 provisioning and test machines.
@@ -121,4 +122,5 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-11-07 | candidate | Link the candidate reduced-scope Play v1.0 release decision from R0 | working tree | Claude |
 | 0.1.0b | 2026-09-20 | candidate | Define release decisions, draft/installer/update tests and non-destructive recovery gates | based on f5a6681 | LALIN |
