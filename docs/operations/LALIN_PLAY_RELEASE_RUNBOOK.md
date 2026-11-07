@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.3b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "approved reduced scope; release qualification NOT_RUN"
 superseded_by: null
 attributes:
@@ -146,6 +146,10 @@ Fixes found by the smoke: `build.rs` guard honours `TAURI_CONFIG` overrides; `de
 
 ## R2 — installer and update qualification
 
+P1.5 attempt 2026-11-08: native cases remain NOT_RUN because concurrent
+build growth was unqualified. [Partial handoff and resume conditions](../validation/evidence/play-v1-p15/README.md).
+The owner retains clean-VM and real-identifier install qualification.
+
 | Case | Required observation | Status |
 |---|---|---|
 | Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | NOT_RUN |
@@ -198,6 +202,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.3b | 2026-11-08 | qualification NOT_RUN | Record blocked P1.5 attempt and resume conditions | working tree | Codex |
 | 0.2.2b | 2026-11-07 | approved scope; qualification NOT_RUN | Record R1 local release smoke evidence and the three fixes it found | working tree | Claude |
 | 0.2.1b | 2026-11-07 | approved scope; qualification NOT_RUN | Merge with the R0 scope link; record MIT source license | working tree | Claude |
 | 0.2.0b | 2026-11-07 | approved scope; qualification NOT_RUN | Fill R0 values from the owner-approved scope and record P1.4 installer, signed updater, key ceremony and workflow steps | working tree | Codex |
