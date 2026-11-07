@@ -1,7 +1,7 @@
 ---
-version: "0.3.21b"
+version: "0.3.22b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -16,20 +16,20 @@ attributes:
 
 Lalin Play เป็น local audio/video player แยกจาก Studio/Cast มีสอง surface
 Full และ Compact ใช้ playback owner เดียวกัน ปัจจุบัน source อยู่ที่
-`apps/play-desktop` ใน `Freshair129/Lalin-AI`; approved source เริ่มจาก branch
-`codex/lalin-play-split` (`f5a6681`) และ latest follow-up อยู่ที่
-`codex/lalin-play-g3-followup` (`d241a74`). Follow-up ยังไม่ merge เข้า `main`
-และไม่ได้ทำให้การแยก repository เสร็จแล้ว
+`apps/play-desktop` ใน `Freshair129/Lalin-AI`; approved source baseline เริ่มจาก
+branch `codex/lalin-play-split` (`f5a6681`). PR #25 นำ S2/G3 follow-up
+(`d241a74`) เข้า `main` ด้วย merge commit `78ed550` เมื่อ 2026-10-20.
+การ merge นี้ไม่ได้ทำให้การแยก repository เสร็จแล้ว
 
 | รายการ | สถานะ / หลักฐานล่าสุด |
 |---|---|
 | Source commit | `f5a66819ad58b481635733dd29e1658d67e29e3d` (`f5a6681`) |
-| Publication | Baseline `f5a6681` was pushed on the original split branch; latest follow-up `d241a74` remains an unmerged Lalin-AI branch, and no separate Play repository export has occurred |
+| Publication | Baseline `f5a6681` was pushed on the original split branch; PR #25 (`d241a74`) merged into Lalin-AI `main` as `78ed550`; no separate Play repository export has occurred |
 | App identity | `lalin-play.exe`, `ai.lalin.play`, app version `0.1.0` |
 | Runtime | Rust/Tauri v2 shell + React + HTML media/Web Audio; ไม่ใช่ Rust decoder |
 | Candidate checks | Snapshot 2026-09-26: Studio frontend 6/6, Play frontend 23/23, Play Rust 31/31, Studio native handoff 6/6, API file tests 10/10; builds/format checks passed. Paired Windows handoff 1/1 on 2026-09-27; see foundation report for limits |
 | Current milestone | Local-first candidate: ใช้งานไฟล์ในเครื่องแบบ offline โดยไม่พึ่ง Studio/FastAPI/Ollama |
-| Split phases | S1 LOCAL PASS; S2/S3 remain partial; G3 PARTIAL. Follow-up branch passes cross-host pipe denial and different-logon ACL probes; mapped/reparse, Studio/API exit during playback and audible parity remain open. S4–S7 NOT_RUN |
+| Split phases | S1 LOCAL PASS; S2/S3 remain partial; G3 PARTIAL. PR #25 evidence is integrated in `main`: five child-process recovery checkpoints, journal/undo-snapshot/history write-failure tests, cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1 PASS. Mapped/reparse runtime, Studio/API exit during playback and audible parity remain open. S4–S7 NOT_RUN |
 | Original Studio player | ยังอยู่ ห้ามใช้เอกสารนี้เป็นคำสั่งลบ |
 | New repo / installer / updater / release | ยังไม่มี execution evidence; ห้ามตีความ branch push เป็น independent release |
 
@@ -50,16 +50,14 @@ have passed.
 
 | Lane | Latest evidence | Current milestone |
 |---|---|---|
-| S2 migration | Follow-up branch records recovery at five child-process termination checkpoints; power-loss durability, remaining write failures and actual Studio transfer remain open | Further work deferred |
-| S3 / G3 handoff | Follow-up branch passes cross-host pipe denial and different-logon-session ACL probes; mapped/reparse runtime, Studio/API exit during playback and audible parity remain open, so G3 is PARTIAL | Further work deferred |
+| S2 migration | PR #25 evidence is integrated in `main`: recovery at five child-process termination checkpoints and journal, undo-snapshot and history write-failure tests; power-loss durability, remaining storage failures and actual Studio transfer remain open | Further work deferred |
+| S3 / G3 handoff | PR #25 evidence is integrated in `main`: cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1 PASS; mapped/reparse runtime, Studio/API exit during playback and audible parity remain open, so G3 is PARTIAL | Further work deferred |
 | S4–S7 | Export, source removal, installer, updater and release acceptance have not run | NOT_RUN / deferred |
 
 Deferral is a scheduling decision, not a status upgrade. Keep the original
 Studio player and source consumers in place until a later integration milestone
-passes its acceptance gates. The additional evidence is on
-[`codex/lalin-play-g3-followup` at `d241a74`](https://github.com/Freshair129/Lalin-AI/commit/d241a74),
-which is 23 commits ahead and 4 behind `main` as of 2026-10-19; it has not been
-integrated into `main`. The earlier 2026-09-29 SMB ingress blocker remains a
+passes its acceptance gates. The additional evidence merged into `main` in PR
+#25 as `78ed550` (head `d241a74`) on 2026-10-20. The earlier 2026-09-29 SMB ingress blocker remains a
 historical result, not the latest probe status. See the [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md)
 and [traceability matrix](../validation/LALIN_PLAY_TRACEABILITY.md) for the
 remaining gates.
@@ -116,12 +114,13 @@ prove only audio rendered by Lalin Play.
 | CR-008 execution waves / readiness | [Wave DAG](../architecture/LALIN_PLAY_CR008_EXECUTION_DAG.md) | Candidate implementation plan updated with browser-first docs and Astra findings; W0-B/C remain BLOCKED and no remote wave starts |
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
-| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [cross-session ACL RCA](../../.brain/rca/2026-09-30-lalin-play-cross-session-acl-evidence-gap.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, and cross-host pipe denial with positive control (Win32 5) plus same-host access pass; the separate-logon attempt failed at `runas` with Win32 1326 before pipe contact; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
+| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Historical integrated Play Rust snapshot: 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open; this is not the current branch Rust suite result |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [cross-session ACL RCA](../../.brain/rca/2026-09-30-lalin-play-cross-session-acl-evidence-gap.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, cross-host pipe denial 1/1 and different-logon-session ACL denial 1/1 in PR #25 (`78ed550`); the first `runas` attempt failed with Win32 1326 before pipe contact, and a later ACL probe passed; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
 | Developer setup / provenance | [Play README](../../apps/play-desktop/README.md) | Current candidate behavior |
+| Website preview | [`apps/lalin-play-site/`](../../apps/lalin-play-site/README.md) | Draft landing, Terms and Privacy pages; legal review pending and pages are marked not for publication |
 | Historical runtime evidence | [Foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [Video](../validation/LALIN_PLAY_LOCAL_VIDEO.md), [Compact](../validation/LALIN_PLAY_MINIMAL_COMPACT.md), [Fullscreen/skip](../validation/LALIN_PLAY_FULLSCREEN_SKIP.md) | Local evidence with explicit limitations |
 
 ## วิธีอ่านสถานะและลำดับงานต่อ
@@ -244,8 +243,8 @@ Tauri event/API bridge, command authorization and native pipe creation remains
 unconfirmed. See the
 [registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
 
-G3 remains **PARTIAL**. The implementation follow-up is in draft PR #25 and
-unmerged.
+G3 remains **PARTIAL**. This 2026-09-27 record predates PR #25's merge; PR #25
+later merged on 2026-10-20 as `78ed550`.
 Ordinary Studio playback remains enabled; no Play parity, source removal, or
 release acceptance is claimed.
 
@@ -283,8 +282,9 @@ At that earlier paired run, G3 remained **PARTIAL**, not playback parity.
 Cross-session/unauthorized and remote-client rejection, invalid-path and
 mapped-drive/reparse runtime cases, ACK loss across process interruption,
 Studio/API exit during active playback and audible parity were still open.
-PR #25 is open and draft. Keep ordinary Studio playback enabled; do not merge or
-remove its playback owner until full parity is proven.
+At this 2026-09-27 record PR #25 was draft; it later merged on 2026-10-20 as
+`78ed550`. Keep ordinary Studio playback enabled; do not remove its playback
+owner until full parity is proven.
 
 ## G3 receiver invalid-path follow-up — 2026-09-27
 
@@ -341,8 +341,8 @@ S2 child-process termination at five journal/catalog checkpoints now recovers to
 the expected catalog before store initialization. Tests also verify initial
 journal-write failure leaves no journal; undo-snapshot failure remains retryable;
 import-history failure can be retried without a duplicate export ID. Power-loss
-durability and other storage-write cases remain open. PR #25 remains draft pending
-those gates. Keep ordinary Studio
+durability and other storage-write cases remain open. PR #25 later merged on
+2026-10-20 as `78ed550`; the remaining gates are still open. Keep ordinary Studio
 playback enabled; no playback parity, source removal or release is claimed.
 
 ## G3 lost ACK across Play owner restart — 2026-09-27
@@ -582,7 +582,9 @@ Windows host. The client first proves the UNC/SMB route can reach a pipe with
 the test DACL, then expects `ERROR_ACCESS_DENIED` on the pipe using production
 remote-rejection mode; the server also verifies local access. The server test
 and script are prepared. The listener timed out after 180 seconds without a
-complete client result, so remote rejection remains NOT_VERIFIED. Mapped-drive
+complete client result, so remote rejection was NOT_VERIFIED at that checkpoint.
+PR #25 later recorded cross-host pipe denial 1/1 PASS and different-logon-
+session ACL denial 1/1 PASS (`78ed550`). Mapped-drive
 and reparse runtime tests compile but remain NOT_RUN because their fixtures were
 not provisioned.
 
@@ -670,9 +672,11 @@ The opt-in Windows cross-host test passed on `DESKTOP-VETATMQ` with a second
 Windows host. The server accepted the positive-control connection and exact
 result `control=0;target=5`, then confirmed same-host access to the protected
 target pipe still worked. This proves the remote-pipe-denial subgate for the
-tested pair; it does not close G3. A separate interactive logon session,
-mapped/reparse runtime cases, Studio/API exit during playback and audible parity
-remain open. Keep ordinary Studio playback enabled.
+tested pair; it does not close G3. At this cross-host-only checkpoint, the
+different-logon-session ACL probe was still open; a later probe passed 1/1 and
+was integrated by PR #25 (`78ed550`). Mapped/reparse runtime cases, Studio/API
+exit during playback and audible parity remain open. Keep ordinary Studio
+playback enabled.
 
 ## Current documentation version diff — 2026-09-30 G3 cross-host denial
 
@@ -713,6 +717,7 @@ tests and remains **NOT_RUN** until the local account launches the client.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.22b | 2026-11-07 | beta | Reconcile PR #25's merged S2/G3 evidence and current code map; register the unpublished Play site draft while retaining runtime and release gates | working tree | Codex |
 | 0.3.21b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
 | 0.3.20b | 2026-10-20 | beta | Add browser-first ADR, SIS and functional flow; refine the CR-008 plan while retaining W0-B/C and remote-start gates | working tree | Codex |
 | 0.3.19b | 2026-10-20 | beta | Record final DAG review: all CR-008 implementation lanes remain BLOCKED until the content-pinned snapshot and W0 contracts pass review | working tree | Codex |

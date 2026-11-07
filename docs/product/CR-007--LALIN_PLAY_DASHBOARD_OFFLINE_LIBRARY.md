@@ -1,7 +1,7 @@
 ---
-version: "0.2.0b"
+version: "0.2.1b"
 created_at: "2026-10-20T02:43:00+07:00,Codex"
-last_update: "2026-10-20T04:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "approved"
 superseded_by: null
 attributes:
@@ -53,18 +53,20 @@ YouTube.
   YouTube Premium offline downloads อยู่ใน YouTube/YouTube Music app ตาม
   [YouTube Help](https://support.google.com/youtube/answer/6308116?hl=en).
 
-## Implementation snapshot — 2026-10-20
+## Implementation snapshot — 2026-11-07
 
-- `library_store.rs` now opens one GenesisBlockDB handle for the Play catalog,
-  registers relational tables and uses Genesis relational query/batch APIs;
-  `cargo check` passes on the current working tree. Legacy JSON migration and
-  failure recovery still need automated/native verification.
-- User imports currently copy to a content-hash file under app data. The current
-  code does not yet provide the approved object-store interface, RustFS endpoint,
-  resumable object publication or authenticated byte-range streaming.
-- Dashboard, successful-listen history wiring, visible favorites/badges, real
-  cache population/eviction and Genesis graph/vector recommendations/search are
-  still open. The existing cache setting commands alone do not implement a cache.
+- `library_store.rs` opens one GenesisBlockDB handle for the Play catalog,
+  registers relational tables and uses Genesis relational query/batch APIs.
+  The `cargo check` result recorded on 2026-10-20 is historical; legacy JSON
+  migration and failure recovery still need automated/native verification.
+- User imports are handled by the local content-addressed object store in
+  `local_media_store.rs`. A RustFS S3 adapter, resumable object publication and
+  authenticated byte-range streaming are still absent.
+- Dashboard, successful-listen history, favorites and USER/OFFLINE/YOUTUBE
+  badges are wired in the current UI/code. Runtime behavior, persistence and
+  native acceptance remain NOT_RUN. Real cache population/eviction and Genesis
+  graph/vector recommendations/search remain open; cache settings alone do not
+  implement a cache.
 
 ## Proposed V1
 
@@ -198,5 +200,13 @@ PRD/SRS and mapped in the Play traceability matrix.
   local-only graph/vector-assisted recommendations, 2 GB default authorized-source
   cache, cache after 3 successful listens, favorites and source badges; YouTube
   remains an external official link with no Play download/cache/offline path.
-- **Implementation state:** In progress; requirements are now canonical. Build,
-  automated tests and native offline acceptance are recorded separately.
+- **Implementation state (2026-11-07):** Dashboard, favorites, source badges
+  and the local content-addressed object store are wired in code. Runtime/native
+  acceptance remains NOT_RUN; RustFS, authenticated Range streaming, real cache
+  behavior and graph/vector search remain open.
+
+## CHANGELOG
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 0.2.1b | 2026-11-07 | approved | Reconcile Dashboard/favorites/badges and local object-store implementation status; retain runtime, RustFS, cache and search gates | working tree | Codex |

@@ -1,7 +1,7 @@
 ---
-version: "0.3.3b"
+version: "0.3.4b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -56,22 +56,21 @@ update does not claim that the local-first acceptance checks have passed.
 
 ### Deferred by scope
 
-- Further S2 old-state queue/EQ migration and live transfer work. The follow-up
-  branch records five child-process termination checkpoints; power-loss
-  durability, remaining write failures and live Studio-to-Play transfer remain
-  open.
+- Further S2 old-state queue/EQ migration and live transfer work. PR #25 merged
+  evidence for five child-process termination checkpoints and journal,
+  undo-snapshot and history write-failure tests; power-loss durability,
+  remaining storage failures and live Studio-to-Play transfer remain open.
 - Further S3 Studio sender/receiver integration and G3 paired-process parity,
   including mapped-drive/reparse runtime cases, Studio/API exit during active
   playback and audible parity.
 - S4–S7 repository export, source removal, installer, updater and release.
 
 Deferral changes the work priority; it does not rewrite evidence status. S2/S3
-remain partial with the limits recorded below. G3 remains **PARTIAL**: the
-follow-up branch records passing cross-host pipe-denial and different-logon
-session ACL probes, while mapped-drive/reparse runtime cases, Studio/API exit
-during active playback and audible parity remain open. The evidence is on
-`origin/codex/lalin-play-g3-followup` at `d241a74`, which is 23 commits ahead and
-4 behind `origin/main` as of 2026-10-19; it is not integrated into `main`.
+remain partial with the limits recorded below. G3 remains **PARTIAL**: PR #25
+merged into `main` on 2026-10-20 as `78ed550` (head `d241a74`) and records
+cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1
+PASS. Mapped-drive/reparse runtime cases, Studio/API exit during active playback
+and audible parity remain open.
 S4–S7 remain **NOT_RUN**. Nothing here authorizes deleting the existing Studio
 playback path.
 
@@ -325,7 +324,8 @@ gates. Record export, PR, merge and release states independently.
 - **G4 — evidence updated locally:** this DAG, the Play status register,
   traceability, foundation report and registration readiness RCA now record the
   successful paired boundary, earlier test-build/fixture causes and remaining
-  gates. PR #25 is still open and draft; no merge or release is claimed.
+  gates. At this 2026-09-27 record PR #25 was draft; it later merged on
+  2026-10-20 as `78ed550`. This test does not establish parity or release acceptance.
 
 ## Execution status — 2026-09-27 G3 receiver path-rejection follow-up
 
@@ -355,8 +355,9 @@ gates. Record export, PR, merge and release states independently.
   active playback and audible parity remain unverified. Preserve Studio
   playback; this control-plane result does not prove audio parity.
 - **G4 — evidence updated locally:** this DAG, the status register, foundation,
-  traceability and new acceptance-gap RCA record the result. PR #25 remains
-  open and draft; no merge or release is claimed.
+  traceability and new acceptance-gap RCA record the result. At this
+  2026-09-27 record PR #25 was draft; it later merged on 2026-10-20 as
+  `78ed550`. The remaining acceptance gates stay open.
 
 ## Execution status — 2026-09-27 G3 concurrent-client ordering follow-up
 
@@ -398,7 +399,8 @@ gates. Record export, PR, merge and release states independently.
   the Studio playback owner before full parity is proven.
 - **G4 — evidence updated locally:** the integration spec, this DAG, status
   register, foundation, traceability and RCA record the fix and exact test
-  boundary. PR #25 remains draft until the remaining acceptance gates pass.
+  boundary. This note predates PR #25's merge on 2026-10-20 (`78ed550`); the
+  remaining acceptance gates stay open.
 
 ## Execution status — 2026-09-27 G3 live UNC-shaped path rejection
 
@@ -710,6 +712,7 @@ parity remain open. Keep Studio playback enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.4b | 2026-11-07 | beta | Reconcile S2/G3 execution summary with PR #25 merge evidence and retain all open runtime, durability and parity gates | working tree | Codex |
 | 0.3.3b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
 | 0.3.2b | 2026-10-19 | beta | Reconcile current G3/S2 status with the unmerged follow-up branch evidence while retaining open parity and release gates | working tree | Codex |
 | 0.3.1b | 2026-10-19 | beta | Reconcile local-first priority with the latest remote SMB probe evidence; keep G3 partial and integration/release gates open | working tree | Codex |

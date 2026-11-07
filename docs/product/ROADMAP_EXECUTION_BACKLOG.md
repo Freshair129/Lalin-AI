@@ -1,7 +1,7 @@
 ---
-version: "0.2.4b"
+version: "0.2.5b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -40,13 +40,13 @@ play user-selected local media offline, without Studio, FastAPI or Ollama. This
 is the execution priority already within the approved PRD goal; it does not
 change product acceptance.
 
-S2/S3 implementation and focused evidence exist. The follow-up branch at
-`d241a74` records S2 recovery at five child-process termination checkpoints,
-cross-host pipe denial and different-logon-session ACL denial. G3 remains
-**PARTIAL**: mapped-drive/reparse runtime cases, Studio/API exit during active
-playback and audible parity remain open. The follow-up branch is 23 commits
-ahead and 4 behind `main`, so these results are not integrated into `main`.
-These lanes are deferred while local-first readiness is pursued, not passed or
+PR #25 merged the S2/S3 implementation and focused evidence into `main` on
+2026-10-20 (`78ed550`, head `d241a74`): S2 recovery at five child-process
+termination checkpoints, journal/undo-snapshot/history write-failure coverage,
+cross-host pipe denial (1/1 PASS), and different-logon-session ACL denial
+(1/1 PASS). G3 remains **PARTIAL**: mapped-drive/reparse runtime cases,
+Studio/API exit during active playback and audible parity remain open. These
+lanes are deferred while local-first readiness is pursued, not passed or
 cancelled. S4–S7 remain **NOT_RUN**. See the [Play execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md)
 and [traceability matrix](../validation/LALIN_PLAY_TRACEABILITY.md) for the
 evidence boundaries and remaining gates.
@@ -300,9 +300,10 @@ PR #31 (B1), PR #32 (B2 design), และ PR #35 (B2 implementation) merge แ�
 
 ## Version Diff
 
+- `0.2.5b` (2026-11-07): reconcile PR #25's merged S2/G3 evidence with the remaining open gates.
 - `0.2.4b` (2026-11-07): rebased the Lalin Play local-first/CR-006..008 work onto main; kept merged Music B2 next action and Play local-first milestone together.
 - `0.1.4b` (2026-10-19): closed the Lalin Play Windows EQ / CMF Buds Pro 2 documentation gap-analysis item while keeping product acceptance gaps explicit.
-- `0.1.3b` (2026-10-19): reconciled the Play local-first note with unmerged S2/G3 follow-up evidence and retained remaining gates.
+- `0.1.3b` (2026-10-19): reconciled the Play local-first note with then-available S2/G3 evidence and retained remaining gates.
 - `0.1.2b` (2026-10-19): reconciled the priority note with the latest G3 blocker evidence and kept partial/not-run statuses distinct from deferred scheduling.
 - `0.1.1b` (2026-10-02): prioritized the local-first Play milestone without changing the approved product scope.
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices

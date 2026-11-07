@@ -1,7 +1,7 @@
 ---
-version: "1.5.1b"
+version: "1.5.2b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -19,11 +19,11 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.5.0b |
+| **Doc Version** | 1.5.2b |
 | **Status** | CR-004 Addendum A and CR-006..CR-008 approved; local implementations remain partial and native/device/release gates stay open |
 | **Author** | Boss |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-10-20 |
+| **Last Updated** | 2026-11-07 |
 | **Approved By** | ผู้ใช้อนุมัติ CR-004 Addendum A (2026-09-20) และ CR-006..CR-008 (2026-10-20); approval นี้ไม่ใช่การอนุมัติ release/merge |
 
 | Version | Date | Author | Changes |
@@ -42,6 +42,7 @@ attributes:
 | 1.5.0b | 2026-10-20 | Codex | Register approved CR-008 mobile pairing, phone-file transfer, YouTube playlist references, queue identity and dual-deck transition requirements; implementation remains partial |
 | 1.4.3b | 2026-10-20 | Codex | เพิ่ม approved CR-006 สำหรับ Play mixer, stereo-to-binaural virtual surround และ ENG/TH locale; implementation locally, native audio acceptance remains open |
 | 1.5.1b | 2026-11-07 | Claude | Rebase CR-006/007/008 Play work onto main (a6325d0); requirements unchanged |
+| 1.5.2b | 2026-11-07 | Codex | Reconcile merged Play G3 source status and implementation-versus-acceptance states |
 
 ---
 
@@ -193,8 +194,11 @@ API, MCP และ contracts เป็นส่วนประกอบของ
 เสียงไฟล์ในเครื่องแล้ว; ยังไม่ผ่าน requirements ทั้งชุด ดู
 [หลักฐานและงานค้าง](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md)
 
-Candidate source commit `f5a6681` push แล้วใน Lalin-AI branch แต่ยังไม่ export
-เป็น repo ใหม่ ดู [สถานะเอกสารปัจจุบัน](LALIN_PLAY_DOCUMENTATION.md) และ
+Current candidate source อยู่ใน `apps/play-desktop` บน Lalin-AI `main`.
+Baseline `f5a6681` push แล้วบน `codex/lalin-play-split`;
+PR #25 รวม G3 follow-up head `d241a74` เข้า `main` ด้วย merge commit
+`78ed550` เมื่อ 2026-10-20. Source ยังไม่ export เป็น repo ใหม่ ดู
+[สถานะเอกสารปัจจุบัน](LALIN_PLAY_DOCUMENTATION.md) และ
 [traceability ทุก PLAY criterion](../validation/LALIN_PLAY_TRACEABILITY.md).
 รายละเอียด IPC/migration/release ที่เพิ่มในชุดเอกสารเป็น candidate รอ review
 ไม่ใช่หลักฐานว่า implementation หรือ release เสร็จ
@@ -404,12 +408,12 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 - [ ] รองรับ macOS / Linux
 - [ ] Voice fine-tuning (เทรนเสียงเพิ่ม)
 - [x] Manual multi-speaker dubbing (Slice B merged in PR #29)
-- [ ] Transcript clip export and short voice-over (Slice C approved; implementation in progress)
+- [x] Transcript clip export and short voice-over (Slice C implementation merged in PR #30; live TTS and native desktop UAT remain unverified)
 - [ ] Automatic speaker diarization (ยังไม่อยู่ใน Slice C)
 - [ ] Plugin system สำหรับ pipeline ใหม่
-- [ ] Voice profiles: การยินยอม, อัปโหลด/บันทึกจากไมโครโฟน, แก้ไขและ metadata ตลอด lifecycle
-- [ ] ตัวเลือกขนาด Whisper พร้อมสถานะ runtime และผลตอบกลับเมื่อสลับโมเดล
-- [ ] Agent Voice สำหรับ Mix Copilot ใน full local runtime
+- [ ] Voice profiles: มี consent-first upload enforcement ใน `apps/api/app/routers/voices.py`; profile lifecycle, microphone recording และ runtime acceptance ยังไม่ verified
+- [ ] Whisper size selection ผ่าน `/speech/config` และ `VoicesPanel.tsx` มี implementation แล้ว; live model-switch verification ยังไม่ verified
+- [ ] Agent Voice TTS ใน `MixCopilot.tsx` มี implementation แล้ว; full local-runtime verification ยังไม่ verified
 
 **Dubbing Pro Slice A/B (2026-10-20):** PR #29 รวมแล้วใน merge commit `60c66c4`. Slice A เพิ่ม analyze/transcript; Slice B เพิ่ม manual speaker/voice mapping และ multi-speaker render. Automated checks ผ่านตาม validation report; live ASR/TTS/GPU และ native desktop UAT ยังไม่ได้รัน.
 
@@ -432,6 +436,7 @@ Studio Library/File Manager → เปิดด้วย Lalin Play / Play Next 
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.5.2b | 2026-11-07 | beta | Reconcile Play G3 merge status and mark Slice C implementation and Studio voice features with separate verification states | working tree | Codex |
 | 1.4.5b | 2026-10-20 | beta | Record approved Dubbing Pro Slice C clip export and mapped short voice-over scope | PR #30, merged as `8df8c073eeab07f87a6fa70875bb321e8ecbe672` | Codex |
 | 1.4.4b | 2026-10-20 | beta | Record approved manual-only Dubbing Pro Slice B scope | 65df361 (PR #29, merged as 60c66c4) | Codex |
 | 1.4.3b | 2026-10-20 | beta | Record approved Dubbing Pro Slice A analyze/transcript path and branch verification limits | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |

@@ -1,7 +1,7 @@
 ---
-version: "1.9.1b"
+version: "1.9.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "under review"
 superseded_by: null
 attributes:
@@ -19,11 +19,11 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.9.0b |
+| **Doc Version** | 1.9.2b |
 | **Status** | CR-006..CR-008 Play requirements adopted; full Studio SRS remains in review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-10-20 |
+| **Last Updated** | 2026-11-07 |
 | **Approved By** | Boss — Phase 1 scope approved 2026-08-23; user approved CR-006..CR-008 Play scope 2026-10-20; MVP acceptance remains under review |
 
 | Version | Date | Author | Changes |
@@ -41,6 +41,7 @@ attributes:
 | 1.9.0b | 2026-10-20 | Codex | Adopt approved CR-008 LAN remote, phone media handoff, YouTube reference metadata and audio-only dual-deck transitions; implementation acceptance remains open |
 | 1.8.0b | 2026-10-20 | Codex | Amend approved CR-007 to use GenesisBlockDB as the single catalog/index database and RustFS-ready object storage; implementation acceptance remains open |
 | 1.9.1b | 2026-11-07 | Claude | Rebase CR-006/007/008 Play work onto main (a6325d0); requirements unchanged |
+| 1.9.2b | 2026-11-07 | Codex | Reconcile Play source integration status with PR #25 and retain independent export and acceptance gates |
 
 ---
 
@@ -363,8 +364,12 @@ maps all 50 criteria to source/tests/evidence with local/partial/not-run status.
 | PLAY-21–27 | Approved CR-008 LAN pairing/remote commands, phone-file copy/stream, YouTube metadata references, queue occurrence identity and audio-only transitions; security/mobile/native acceptance remains separately tracked |
 | FR-18 / NFR-TV | Retained TV presentation target; Compact fullscreen is separate and does not prove native TV/gamepad parity |
 
-Source `f5a6681` is pushed on `codex/lalin-play-split` in Lalin-AI, not exported
-to an independent repository. S1 local pass/S2 partial/S3–S7 not run remain per
+Current candidate source is `apps/play-desktop` on Lalin-AI `main`. Baseline
+`f5a6681` was pushed on `codex/lalin-play-split`; PR #25 merged G3 follow-up
+head `d241a74` into `main` as `78ed550` on
+2026-10-20. Source is not exported to an independent repository. S1 local pass;
+S2/S3 remain partial, including the passed focused PR #25 G3 denial probes;
+S4–S7 remain NOT_RUN per
 [ADR-004](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md). New detailed
 IPC/migration/release specifications linked by the [document register](LALIN_PLAY_DOCUMENTATION.md)
 retain their individual status; CR-006, CR-007 and CR-008 are approved and their
@@ -686,6 +691,7 @@ Older version history is retained above.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.9.2b | 2026-11-07 | under review | Reconcile Play source integration status with PR #25 while retaining open acceptance and export gates | working tree | Codex |
 | 1.5.3b | 2026-10-20 | beta | Add approved Dubbing Pro Slice C clip export and mapped short voice-over requirements | PR #30, merged as `8df8c073eeab07f87a6fa70875bb321e8ecbe672` | Codex |
 | 1.5.2b | 2026-10-20 | beta | Add approved manual speaker assignment, voice mapping, and transcript-backed multi-speaker render requirements | 65df361 (PR #29, merged as 60c66c4) | Codex |
 | 1.5.1b | 2026-10-20 | beta | Add approved transcript-first Slice A requirements, analyze job contract, and stale-source behavior | 1ef64f0 (PR #29, merged as 60c66c4) | Codex |

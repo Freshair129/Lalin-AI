@@ -1,7 +1,7 @@
 ---
-version: "0.10.27b"
+version: "0.10.28b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -84,7 +84,8 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 
 - `docs/product/LALIN_PLAY_DOCUMENTATION.md`: Play documentation entrypoint, source publication status and document ownership; approval/evidence/export remain distinct.
 - `docs/product/CR-006--LALIN_PLAY_SONAR_MIXER_SPATIAL_AUDIO.md`: approved Play-only MEDIA/MASTER mixer, stereo-to-binaural virtual surround and ENG/TH UI (ENG default); locally implemented, Windows headphone acceptance NOT_RUN.
-- `docs/product/CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md`: approved dashboard, GenesisBlockDB single catalog/index store, RustFS-ready media objects, authorized platform sources, bounded cache, favorites and source badges; Genesis adapter passes `cargo check`, while Dashboard, RustFS adapter, real cache, hybrid search and native acceptance remain open.
+- `docs/product/CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md`: approved dashboard, GenesisBlockDB single catalog/index store, RustFS-ready media objects, authorized platform sources, bounded cache, favorites and source badges; Dashboard/favorites/badges are wired in code, with runtime acceptance NOT_RUN; RustFS adapter, real cache, hybrid search and native acceptance remain open.
+- `apps/lalin-play-site/README.md`: draft Lalin Play landing, Terms and Privacy pages; marked not for publication and awaiting owner/legal review.
 - `docs/product/CR-008--LALIN_PLAY_MOBILE_REMOTE_HOST_CROSSFADE.md`: approved paired mobile remote, phone-hosted local files, official YouTube playlist references and shared-graph A/B crossfade; implementation remains partial.
 - [CR-008 execution DAG](architecture/LALIN_PLAY_CR008_EXECUTION_DAG.md): implementation waves, verification and review gates; browser-first package is candidate, W0-B/C remain BLOCKED and no remote implementation starts.
 - docs/architecture/ADR-006-LALIN-PLAY-BROWSER-FIRST-MOBILE-REMOTE.md: candidate decision to avoid native iOS/App Store distribution for the controller; LAN trust profile remains under W0-B/C review.
@@ -144,7 +145,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-21-VOICE-WORKER-D14-D15-PROPOSAL.md`: proposal for the PRP owner — D14 manifest-level VAD and D15 per-request glossary (draft contract diff), evidence-backed, no code change until approved.
 - `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-B-TTS.md`: Slice B TTS — F5-TTS-THAI engine in the worker (`tts-th-preset-01`), smoke PASS on GPU, dev-only sample voice, D19 (TTS device) measured: GPU RTF 0.19–0.44 vs CPU 7–14.
 - `docs/validation/2026-09-22-HEADLESS-VOICE-WORKER-SLICE-C-LINUX.md`: Slice C step 1 — the worker in a Linux CPU-only container (D10/D11); 135 tests and the smoke pass inside it; bugs fixed (incl. the engine memory leak); D17/D18 raised; dev-box CPU sizing; D13 minimum 3 GiB; worker-only image 786 MB.
-- `docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md`: monitoring evidence — the three layers (/metrics, status gateway, Prometheus + Grafana), 7 alert rules, a 13-panel dashboard, and a drop-in kit for an existing dashboard; a real job verified end to end (RTF 0.317); Alertmanager still missing.
+- `docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md`: monitoring evidence — the three layers (/metrics, status gateway, Prometheus + Grafana), 7 alert rules, a 13-panel dashboard, and a drop-in kit for an existing dashboard; a real job verified end to end (RTF 0.317); Alertmanager → LINE delivery passed end to end on the real LINE API.
 - `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
@@ -177,6 +178,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.28b | 2026-11-07 | beta | Reconcile Play documentation/status entries, register the unpublished site draft and correct Alertmanager monitoring evidence | working tree | Codex |
 | 0.10.27b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
 | 0.10.26b | 2026-10-20 | beta | Index browser-first ADR/SIS/functional flows and the updated CR-008 plan; preserve W0-B/C blockers | working tree | Codex |
 | 0.10.25b | 2026-10-20 | beta | Record the final CR-008 DAG review verdict and current blocked wave readiness | working tree | Codex |
