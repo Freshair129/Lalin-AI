@@ -276,8 +276,8 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
   it("exposes only real media/master mixer channels and persists media controls", async () => {
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "มิกเซอร์" }));
-    expect(screen.getByText("MEDIA · สื่อ")).not.toBeNull();
-    expect(screen.getByText("MASTER · รวม")).not.toBeNull();
+    expect(screen.getByText("สื่อ")).not.toBeNull();
+    expect(screen.getByText("รวม")).not.toBeNull();
     expect(screen.queryByText("GAME")).toBeNull();
     fireEvent.change(screen.getByRole("slider", { name: "ระดับเสียงสื่อ" }), { target: { value: "1.25" } });
     expect(usePlaybackStore.getState().mixer.mediaGain).toBe(1.25);

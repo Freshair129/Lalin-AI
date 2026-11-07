@@ -54,6 +54,31 @@ try {
   await c('Page.reload');
   const ready=async()=>{for(let i=0;i<200;i++){try {if(await ev("!!document.querySelector('.language-switch button')")) return;} catch {} await new Promise(r=>setTimeout(r,200));} throw Error('render timeout');};
   await new Promise(r=>setTimeout(r,500)); await ready();
+  // Collect controls intersecting the viewport, including those partially clipped by
+  // a non-scrollable ancestor. Horizontal scroll containers intentionally exempt x.
+  const inspect = `(()=>{
+    const rect = r => ({left:r.left,top:r.top,right:r.right,bottom:r.bottom});
+    const visible = (e,r) => { const s=getComputedStyle(e); return r.width>0 && r.height>0 && s.visibility!=='hidden' && s.display!=='none' && +s.opacity!==0 && r.right>0 && r.bottom>0 && r.left<innerWidth && r.top<innerHeight; };
+    const controls=[...document.querySelectorAll('button,input,select,[role="slider"]')].flatMap(e=>{
+      const r=e.getBoundingClientRect(); if(!visible(e,r)) return [];
+      let scrollX=false, scrollY=false, clippedBy=[];
+      for(let a=e.parentElement;a;a=a.parentElement){
+        const s=getComputedStyle(a), b=a.getBoundingClientRect();
+        if(/^(auto|scroll)$/.test(s.overflowX)) scrollX=true;
+        if(/^(auto|scroll)$/.test(s.overflowY)) scrollY=true;
+        if(/^(hidden|clip)$/.test(s.overflowX) && !scrollX && (r.left<b.left-0.5||r.right>b.right+0.5)) clippedBy.push((a.className||a.tagName)+':x');
+        if(/^(hidden|clip)$/.test(s.overflowY) && !scrollY && (r.top<b.top-0.5||r.bottom>b.bottom+0.5)) clippedBy.push((a.className||a.tagName)+':y');
+      }
+      if(!scrollX && (r.left < -0.5 || r.right > innerWidth+0.5)) clippedBy.push('viewport:x');
+      if(!scrollY && (r.top < -0.5 || r.bottom > innerHeight+0.5)) clippedBy.push('viewport:y');
+      return clippedBy.length ? [{element:e.outerHTML.slice(0,240),rect:rect(r),clippedBy}] : [];
+    });
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); let n, visibleText=[];
+    while(n=walker.nextNode()) { const text=n.textContent.trim(); if(!text || !n.parentElement) continue; const range=document.createRange(); range.selectNodeContents(n); const r=range.getBoundingClientRect(); if(!visible(n.parentElement,r)) continue;
+      let shown=true; for(let a=n.parentElement;a;a=a.parentElement){const s=getComputedStyle(a),b=a.getBoundingClientRect(); if((/^(hidden|clip|auto|scroll)$/.test(s.overflowX) && (r.right<=b.left||r.left>=b.right))||(/^(hidden|clip|auto|scroll)$/.test(s.overflowY) && (r.bottom<=b.top||r.top>=b.bottom))){shown=false;break;}} if(shown) visibleText.push(text);
+    }
+    return {clippedControls:controls,visibleText};
+  })()`;
   const results=[];
   const names=['home','tracks','favorites','artists','albums','queue','mixer','equalizer','repair','youtube','playlist','settings'];
   for(const width of [1280,360]) for(const locale of ['en','th']) {
@@ -67,17 +92,18 @@ try {
       if(!clicked){results.push({name,locale,width,error:'navigation button not found'});continue;}
       await new Promise(r=>setTimeout(r,100));
       const data=await ev(`(()=>({lang:document.documentElement.lang,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth,footerRect:(()=>{const r=document.querySelector('footer')?.getBoundingClientRect();return r?{top:r.top,bottom:r.bottom,height:r.height}:null})(),nestedOverflow:[...document.querySelectorAll('main,aside,section')].filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>({tag:e.tagName,className:e.className,scrollWidth:e.scrollWidth,clientWidth:e.clientWidth})),text:document.body.innerText,clipped:[...document.querySelectorAll('button, label, h1, h2, p')].filter(e=>e.offsetWidth>0 && e.scrollWidth>e.clientWidth+1).map(e=>e.innerText).filter(Boolean)}))()`);
+      Object.assign(data, await ev(inspect));
       const shot=await c('Page.captureScreenshot',{format:'png'});
       await writeFile(path.join(root,`${name}-${locale}-${width}.png`),Buffer.from(shot.data,'base64'));
       results.push({name,locale,width,...data});
       if(name==='youtube') { const check=await ev(`(()=>{const before=localStorage.getItem('lalin-play:v1:queue');const b=[...document.querySelectorAll('.youtube-row button')][0];b.click();return {before,after:localStorage.getItem('lalin-play:v1:queue'),calls:window.__calls.filter(x=>x.cmd==='open_youtube_link')}})()`); results.push({check:'youtube external command',locale,width,...check}); }
     }
     const switched=await ev(`(()=>{const b=[...document.querySelectorAll('.top-actions button')].find(x=>/Compact/.test(x.innerText)||/กะทัดรัด/.test(x.innerText));if(!b)return false;b.click();return true})()`);
-    if(switched){await new Promise(r=>setTimeout(r,150));const data=await ev(`({lang:document.documentElement.lang,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,text:document.body.innerText})`);const shot=await c('Page.captureScreenshot',{format:'png'});await writeFile(path.join(root,`compact-${locale}-${width}.png`),Buffer.from(shot.data,'base64'));results.push({name:'compact',locale,width,...data}); await ev(`document.querySelector('.top-actions button:nth-child(2)').click()`);await new Promise(r=>setTimeout(r,100));}
+    if(switched){await new Promise(r=>setTimeout(r,150));const data=await ev(`({lang:document.documentElement.lang,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,text:document.body.innerText})`);Object.assign(data, await ev(inspect));const shot=await c('Page.captureScreenshot',{format:'png'});await writeFile(path.join(root,`compact-${locale}-${width}.png`),Buffer.from(shot.data,'base64'));results.push({name:'compact',locale,width,...data}); await ev(`document.querySelector('.top-actions button:nth-child(2)').click()`);await new Promise(r=>setTimeout(r,100));}
     results.push({check:'reload language',locale,width,lang});
   }
   await writeFile(path.join(root,'cdp-results.json'),JSON.stringify({mocked:true,defaultLang,results},null,2));
-  console.log(JSON.stringify({defaultLang,count:results.length,errors:results.filter(x=>x.error),overflow:results.filter(x=>x.overflow).map(x=>`${x.name}-${x.locale}-${x.width}`)},null,2));
+  console.log(JSON.stringify({defaultLang,count:results.length,errors:results.filter(x=>x.error),overflow:results.filter(x=>x.overflow).map(x=>`${x.name}-${x.locale}-${x.width}`), clipped:results.filter(x=>x.clippedControls?.length).map(x=>({name:x.name,locale:x.locale,width:x.width,controls:x.clippedControls}))},null,2));
 } finally {
   ws?.close();
   try {

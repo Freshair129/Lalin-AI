@@ -2981,6 +2981,39 @@ mod tests {
     }
 
     #[test]
+    fn generated_wav_uses_managed_import_publication_path() {
+        // tempdir uses the process TEMP, set to the owned lane for this run.
+        let directory = tempdir().unwrap();
+        let source = directory.path().join("generated.wav");
+        let samples = vec![0u8; 16_000]; // 0.5 seconds, mono 16-bit PCM at 16 kHz
+        let mut wav = Vec::new();
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36u32 + samples.len() as u32).to_le_bytes());
+        wav.extend_from_slice(b"WAVEfmt ");
+        wav.extend_from_slice(&16u32.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&16_000u32.to_le_bytes());
+        wav.extend_from_slice(&32_000u32.to_le_bytes());
+        wav.extend_from_slice(&2u16.to_le_bytes());
+        wav.extend_from_slice(&16u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&(samples.len() as u32).to_le_bytes());
+        wav.extend_from_slice(&samples);
+        fs::write(&source, &wav).unwrap();
+        let source_path = source.to_string_lossy().to_string();
+        let id =
+            crate::local_media_store::publication_id_for_import(&source_path, &source).unwrap();
+        let prepared = prepared_import_fixture(directory.path(), &source, &id);
+        let imported = publish_prepared(directory.path(), &prepared).unwrap();
+        assert_eq!(fs::read(&imported.path).unwrap(), wav);
+        assert_eq!(
+            read_catalog(directory.path()).unwrap().tracks[0].id,
+            imported.id
+        );
+    }
+
+    #[test]
     fn same_file_reimport_uses_a_new_generation_and_becomes_visible() {
         let directory = tempdir().unwrap();
         let source = directory.path().join("repeat.mp3");
