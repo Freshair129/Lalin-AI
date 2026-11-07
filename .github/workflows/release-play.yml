@@ -117,6 +117,7 @@ jobs:
           Copy-Item -LiteralPath $builtInstaller.FullName -Destination $installerPath
           Copy-Item -LiteralPath $builtSignature -Destination $signaturePath
           Copy-Item -LiteralPath "apps/play-desktop/THIRD_PARTY_NOTICES.txt" -Destination (Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt")
+          Copy-Item -LiteralPath "apps/play-desktop/LICENSE" -Destination (Join-Path $assetDirectory "LICENSE")
 
           $signature = [IO.File]::ReadAllText($signaturePath).Trim()
           if ([string]::IsNullOrWhiteSpace($signature)) { throw "The updater signature is empty." }
@@ -136,7 +137,7 @@ jobs:
           [IO.File]::WriteAllText($manifestPath, $manifestJson + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 
           $noticePath = Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt"
-          $checksumFiles = @($installerPath, $signaturePath, $manifestPath, $noticePath)
+          $checksumFiles = @($installerPath, $signaturePath, $manifestPath, $noticePath, (Join-Path $assetDirectory "LICENSE"))
           $checksumLines = foreach ($file in $checksumFiles) {
             $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $(Split-Path -Leaf $file)"
@@ -168,7 +169,8 @@ jobs:
             (Join-Path $assetDirectory "Lalin-Play_${version}_x64-setup.exe.sig"),
             (Join-Path $assetDirectory "latest-play.json"),
             (Join-Path $assetDirectory "SHA256SUMS.txt"),
-            (Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt")
+            (Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt"),
+            (Join-Path $assetDirectory "LICENSE")
           )
           gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Lalin Play $version" --notes-file $notesPath @assets
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

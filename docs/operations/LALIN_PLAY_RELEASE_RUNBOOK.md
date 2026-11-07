@@ -85,7 +85,51 @@ secrets/tag/version, runs the checks above, builds with
 `npm run tauri -- build --ci`, and creates a **draft** GitHub release from the
 NSIS installer, its updater signature, generated update metadata, checksums and
 third-party notice inventory. It does not modify the `play-updates` release.
+The draft assets also include the Play MIT `LICENSE`, covered by the checksums.
 Never expose private signing material in logs or repository files.
+
+### Local P1.4 test round — 2026-11-07 (partial)
+
+Source `898949cbe73dce49db971d63cf88ddb8d28ac6ae`, Windows, Node
+24.20.0, npm 11.19.0, rustc/cargo 1.96.0. `npm test`: 16 files,
+105 tests passed. `cargo fmt --check`: passed. The notices generator produced
+an inventory of 434 Cargo and 11 production npm packages; this is metadata,
+not license compliance review. Signing preflight rejected both an empty key
+and invalid base64 with exit code 1. An attempted ephemeral-key setup and
+cleanup command was rejected before execution by automatic policy review
+(`rejected: blocked by policy`); valid-key preflight remains NOT_RUN.
+
+`cargo test --offline --locked --manifest-path src-tauri/Cargo.toml`: unit
+tests 80 passed, 6 ignored; integration tests 3 passed; main and benchmark
+each ran 0 tests. Overall exit 1: the operator stopped the owned rustdoc
+process after it made no visible progress for several minutes; doc-tests are
+incomplete, not an assertion of a product test failure. The added `--offline`
+follows the lane's recorded dependency boundary; the exact online command
+remains NOT_RUN. Resume by diagnosing and completing doc-tests under the lane.
+
+Lane lock acquired 15:03:39 and released 15:18:10 ICT, 2026-11-07.
+Immediately before Cargo the free bytes were C: 124,415,971,328;
+E: 132,360,876,032; F: 2,040,792,535,040. Before release they were
+C: 124,386,955,264; E: 132,360,843,264; F: 2,036,505,907,200.
+These are volume snapshots including other activity, not isolated build sizes.
+The lane's recorded floors are C/E: 53,687,091,200 and F: 107,374,182,400
+bytes. No release-profile delta exists because no release build ran.
+
+Static workflow review: version/tag and placeholder checks are present, the
+release is created as a draft, and promotion requires a published stable
+`play-vX.Y.Z` release. `LICENSE` is included in the draft asset and checksum
+lists in this change, alongside the five scope assets. `actionlint` NOT_RUN
+(not installed). No GitHub release or secret was changed.
+
+Release-profile guard/build, ephemeral-key NSIS artifact and signature/tamper
+checks, generated NSIS script and bundle contents are NOT_RUN. The lane's
+existing measured write basis covers debug/test, not the new release profile;
+qualify its physical paths, peak writes and concurrent growth before a build.
+The guard currently reads `tauri.conf.json` directly: compatibility with a
+`--config` public-key override is unverified and needs a release-build test.
+Frontend production build also remains NOT_RUN pending a qualified build
+write/path budget. CI, real-key ceremony and secrets, clean-VM installation,
+and A→B updates between published releases remain NOT_RUN.
 Record runner/toolchain/Windows/WebView2 versions, source SHA, CI run, artifact
 names/size/hash, signature verification result and release notes. Verify app,
 Cargo, npm and Tauri versions agree. The draft is not published by this workflow.
