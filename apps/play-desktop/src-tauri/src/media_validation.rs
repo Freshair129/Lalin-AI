@@ -145,3 +145,20 @@ pub(crate) fn is_local_windows_drive_type(drive_type: u32) -> bool {
         DRIVE_REMOVABLE | DRIVE_FIXED | DRIVE_CDROM | DRIVE_RAMDISK
     )
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn sha256_matches_import_whole_sha256() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("fixture.wav");
+        std::fs::write(&source, b"hash parity fixture\0with binary bytes").unwrap();
+        let staged =
+            crate::local_media_store::stage_local_file(directory.path(), "hash-parity", &source)
+                .unwrap();
+        assert_eq!(
+            super::sha256_file(&source).unwrap(),
+            staged.manifest.whole_sha256
+        );
+    }
+}

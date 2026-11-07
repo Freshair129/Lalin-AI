@@ -87,6 +87,50 @@ afterEach(() => {
 });
 
 describe("standalone surfaces (mocked IPC; native evidence is separate)", () => {
+  it("relinks a missing row after confirmation and preserves queue identities and playlists", async () => {
+    const replacement = { ...track, path: "C:\\new\\one.wav", missing: false };
+    const missing = { ...track, missing: true };
+    const queue = {
+      items: [
+        { id: track.id, title: track.title, url: "old", sourcePath: track.path, queueEntryId: "first" },
+        { id: "other", title: "Other", url: "other", queueEntryId: "middle" },
+        { id: track.id, title: track.title, url: "old", sourcePath: track.path, queueEntryId: "last" },
+      ], currentIndex: 1, repeatMode: "off" as const, shuffle: false, revision: 1,
+    };
+    usePlaybackStore.setState({ queue });
+    const playlistRaw = JSON.stringify({ version: 1, playlists: [] });
+    localStorage.setItem("lalin-play:v1:playlists", playlistRaw);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    let attempts = 0;
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "get_library") return { version: 1, tracks: [missing] };
+      if (command === "select_relink_file") return replacement.path;
+      if (command === "relink_track") {
+        if (attempts++ === 0) throw new Error("relink:different-content");
+        return replacement;
+      }
+      return undefined;
+    });
+    render(<App />);
+    await openAllTracks();
+    fireEvent.click(await screen.findByRole("button", { name: "เชื่อมไฟล์ใหม่…" }));
+    await waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.queryByRole("button", { name: "เชื่อมไฟล์ใหม่…" })).toBeNull());
+    const calls = vi.mocked(invoke).mock.calls.filter(([command]) => command === "relink_track");
+    expect(calls.map(([, args]) => args)).toEqual([
+      { id: track.id, path: replacement.path, acceptDifferentContent: false },
+      { id: track.id, path: replacement.path, acceptDifferentContent: true },
+    ]);
+    const result = usePlaybackStore.getState().queue;
+    expect(result.currentIndex).toBe(1);
+    expect(result.items.map((item) => item.queueEntryId)).toEqual(["first", "middle", "last"]);
+    for (const item of [result.items[0], result.items[2]]) {
+      expect(item.sourcePath).toBe(replacement.path);
+      expect(item.url).toBe(`http://asset.localhost/${encodeURIComponent(replacement.path)}`);
+    }
+    expect(JSON.parse(localStorage.getItem(STORAGE_QUEUE_KEY)!).items).toEqual(result.items);
+    expect(localStorage.getItem("lalin-play:v1:playlists")).toBe(playlistRaw);
+  });
   it("defaults to English and switches the shared locale without changing playback", async () => {
     localStorage.removeItem(STORAGE_LOCALE_KEY);
     render(<App />);

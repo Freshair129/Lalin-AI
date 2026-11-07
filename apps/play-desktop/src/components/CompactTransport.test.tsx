@@ -94,6 +94,15 @@ async function mount() {
   return result;
 }
 
+it("shows the localized Full hint without a relink picker in Compact", async () => {
+  usePlaybackStore.setState((state) => ({
+    nowPlaying: { ...state.nowPlaying, state: "error", error: "ไม่พบไฟล์นี้ กรุณาเพิ่มไฟล์จากตำแหน่งใหม่" },
+  }));
+  render(<CompactTransport {...props} relinkHint />);
+  expect(screen.getByText("Switch to Full to relink this file.")).not.toBeNull();
+  expect(screen.queryByRole("button", { name: /relink/i })).toBeNull();
+});
+
 it("hover does not seek; dragging commits once and Escape/cancel do not commit", async () => {
   await mount();
   const slider = screen.getByRole("slider", { name: "Playback position" });

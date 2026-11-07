@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-analyze-smart-medley-pair"
+description = "Enables the analyze_smart_medley_pair command without any pre-configured scope."
+commands.allow = ["analyze_smart_medley_pair"]
+
+[[permission]]
+identifier = "deny-analyze-smart-medley-pair"
+description = "Denies the analyze_smart_medley_pair command without any pre-configured scope."
+commands.deny = ["analyze_smart_medley_pair"]

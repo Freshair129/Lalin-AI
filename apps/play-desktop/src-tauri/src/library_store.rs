@@ -424,16 +424,32 @@ fn apply(database: &Storage, operations: Vec<RelationalRowMutation>) -> Result<(
         if chunk.is_empty() {
             continue;
         }
+        #[allow(unused_mut)]
+        let mut batch_operations = chunk.to_vec();
+        #[cfg(test)]
+        if FAIL_NEXT_RELATIONAL_BATCH.with(|flag| flag.replace(false)) {
+            batch_operations.push(mutation(
+                "missing_test_table",
+                RelationalMutationKind::Insert,
+                json!({"id":"failure"}),
+                None,
+            ));
+        }
         database
             .apply_relational_batch(RelationalMutationBatch {
                 mutation_id: Uuid::new_v4().to_string(),
                 namespace: NAMESPACE.into(),
                 schema_version: SCHEMA_VERSION,
-                operations: chunk.to_vec(),
+                operations: batch_operations,
             })
             .map_err(|error| error.to_string())?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+thread_local! {
+    static FAIL_NEXT_RELATIONAL_BATCH: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 fn stored_media_path(directory: &Path, track: &Track) -> Result<String, String> {
@@ -1019,6 +1035,12 @@ where
         return Err("relink:retired-track".into());
     }
     let row = rows.first().ok_or("relink:unknown-track")?;
+    if row.get("storage_kind").and_then(Value::as_str) == Some("managed") {
+        return Err("relink:managed-unsupported".into());
+    }
+    if path.starts_with("\\\\") || path.starts_with("//") {
+        return Err("relink:not-local".into());
+    }
 
     let canonical =
         crate::media_validation::validate_media_file(path).map_err(|error| error.relink_code())?;
@@ -1053,10 +1075,6 @@ where
     {
         return Err("relink:different-content".into());
     }
-    if row.get("storage_kind").and_then(Value::as_str) == Some("managed") {
-        return Err("relink:managed-unsupported".into());
-    }
-
     let mut track = track_from_row(directory, row).map_err(|_| "relink:write-failed")?;
     let discovered = crate::library::track(&canonical);
     if track.title.trim().is_empty() {
@@ -1709,6 +1727,224 @@ fn now_millis() -> i64 {
 mod tests {
     use super::*;
     use tempfile::tempdir;
+
+    fn relink_fixture(directory: &Path) -> (Track, std::path::PathBuf) {
+        let old = directory.join("missing.wav");
+        let replacement = directory.join("replacement.wav");
+        fs::write(&replacement, b"replacement content").unwrap();
+        let mut track = crate::library::track(&old);
+        track.id = "stable-linked-id".into();
+        track.favorite = true;
+        add_track(directory, &track).unwrap();
+        (track, replacement)
+    }
+
+    fn relink_rows(directory: &Path) -> (Vec<Value>, Vec<Value>) {
+        let database = open_database(directory).unwrap();
+        let database = database.lock().unwrap();
+        (
+            raw_track_rows(&database).unwrap(),
+            query_rows(
+                &database,
+                "play_history",
+                &["id", "track_id", "played_at"],
+                vec![],
+                100,
+            )
+            .unwrap(),
+        )
+    }
+
+    fn relink_for_test(
+        directory: &Path,
+        id: &str,
+        path: &str,
+        accept: bool,
+    ) -> Result<Track, String> {
+        relink_track(
+            directory,
+            id,
+            path,
+            accept,
+            crate::media_validation::sha256_file,
+            |_| Ok(()),
+        )
+    }
+
+    #[test]
+    fn relink_preserves_identity_favorite_listens_and_history() {
+        let directory = tempdir().unwrap();
+        let (original, replacement) = relink_fixture(directory.path());
+        let played = record_listen(directory.path(), &original.id).unwrap();
+        let before = relink_rows(directory.path());
+        let result = relink_for_test(
+            directory.path(),
+            &original.id,
+            replacement.to_str().unwrap(),
+            false,
+        )
+        .unwrap();
+        let after = relink_rows(directory.path());
+        assert_eq!(result.id, original.id);
+        assert!(result.favorite);
+        assert_eq!(result.play_count, 1);
+        assert_eq!(result.last_played_at, Some(played));
+        assert!(!result.missing);
+        assert_eq!(
+            result.path,
+            fs::canonicalize(&replacement).unwrap().to_string_lossy()
+        );
+        assert_eq!(after.1, before.1);
+        let loaded = read_catalog(directory.path()).unwrap();
+        assert_eq!(loaded.tracks[0].id, original.id);
+        assert_eq!(
+            fs::canonicalize(&loaded.tracks[0].path).unwrap(),
+            fs::canonicalize(replacement).unwrap()
+        );
+    }
+
+    #[test]
+    fn relink_different_content_requires_consent_without_writing() {
+        let directory = tempdir().unwrap();
+        let (mut original, replacement) = relink_fixture(directory.path());
+        original.content_hash = Some("old-hash".into());
+        add_track(directory.path(), &original).unwrap();
+        let before = relink_rows(directory.path());
+        assert_eq!(
+            relink_for_test(
+                directory.path(),
+                &original.id,
+                replacement.to_str().unwrap(),
+                false
+            )
+            .unwrap_err(),
+            "relink:different-content"
+        );
+        assert_eq!(relink_rows(directory.path()), before);
+        let result = relink_for_test(
+            directory.path(),
+            &original.id,
+            replacement.to_str().unwrap(),
+            true,
+        )
+        .unwrap();
+        assert_eq!(
+            result.content_hash,
+            Some(crate::media_validation::sha256_file(&replacement).unwrap())
+        );
+    }
+
+    #[test]
+    fn relink_relational_batch_failure_keeps_row_unchanged() {
+        let directory = tempdir().unwrap();
+        let (original, replacement) = relink_fixture(directory.path());
+        let before = relink_rows(directory.path());
+        FAIL_NEXT_RELATIONAL_BATCH.with(|flag| flag.set(true));
+        assert_eq!(
+            relink_for_test(
+                directory.path(),
+                &original.id,
+                replacement.to_str().unwrap(),
+                false
+            )
+            .unwrap_err(),
+            "relink:write-failed"
+        );
+        assert_eq!(relink_rows(directory.path()), before);
+    }
+
+    #[test]
+    fn relink_rejects_invalid_paths_unknown_and_duplicate_without_writes() {
+        let directory = tempdir().unwrap();
+        let (original, replacement) = relink_fixture(directory.path());
+        let invalid_extension = directory.path().join("file.txt");
+        fs::write(&invalid_extension, b"not media").unwrap();
+        let mut duplicate = crate::library::track(&fs::canonicalize(&replacement).unwrap());
+        duplicate.id = "another-id".into();
+        duplicate.title = "Existing".into();
+        add_track(directory.path(), &duplicate).unwrap();
+        let before = relink_rows(directory.path());
+        let cases = [
+            (original.id.as_str(), "relative.wav", "relink:invalid-path"),
+            (
+                original.id.as_str(),
+                "\\\\server\\share\\file.wav",
+                "relink:not-local",
+            ),
+            (
+                original.id.as_str(),
+                "//server/share/file.wav",
+                "relink:not-local",
+            ),
+            (
+                original.id.as_str(),
+                "\\\\?\\C:\\file.wav",
+                "relink:not-local",
+            ),
+            (
+                original.id.as_str(),
+                directory.path().to_str().unwrap(),
+                "relink:not-a-file",
+            ),
+            (
+                original.id.as_str(),
+                invalid_extension.to_str().unwrap(),
+                "relink:unsupported-type",
+            ),
+            (
+                "unknown-id",
+                replacement.to_str().unwrap(),
+                "relink:unknown-track",
+            ),
+            (
+                original.id.as_str(),
+                replacement.to_str().unwrap(),
+                "relink:duplicate:Existing",
+            ),
+        ];
+        for (id, path, expected) in cases {
+            assert_eq!(
+                relink_for_test(directory.path(), id, path, false).unwrap_err(),
+                expected,
+                "{path}"
+            );
+            assert_eq!(relink_rows(directory.path()), before, "{path}");
+        }
+    }
+
+    #[test]
+    fn relink_managed_track_is_unsupported_even_for_different_content() {
+        let directory = tempdir().unwrap();
+        let prepared = prepared_fixture(directory.path());
+        let managed = publish_prepared(directory.path(), &prepared).unwrap();
+        let replacement = directory.path().join("different.mp3");
+        fs::write(&replacement, b"different content").unwrap();
+        let before = relink_rows(directory.path());
+        assert_eq!(
+            relink_for_test(
+                directory.path(),
+                &managed.id,
+                replacement.to_str().unwrap(),
+                false
+            )
+            .unwrap_err(),
+            "relink:managed-unsupported"
+        );
+        assert_eq!(relink_rows(directory.path()), before);
+        remove_track(directory.path(), &managed.id).unwrap();
+        let retired = relink_rows(directory.path());
+        assert_eq!(
+            relink_for_test(
+                directory.path(),
+                &managed.id,
+                replacement.to_str().unwrap(),
+                false
+            )
+            .unwrap_err(),
+            "relink:retired-track"
+        );
+        assert_eq!(relink_rows(directory.path()), retired);
+    }
 
     fn prepared_fixture(directory: &Path) -> crate::local_media_store::PreparedPublicationV1 {
         let source = directory.join("fixture.mp3");

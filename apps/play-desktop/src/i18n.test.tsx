@@ -17,6 +17,24 @@ function LocaleProbe() {
 beforeEach(() => localStorage.clear());
 
 describe("Lalin Play localization", () => {
+  it("localizes every relink code and native resolve error in both locales", () => {
+    const codes = ["unknown-track", "retired-track", "invalid-path", "not-local", "not-a-file", "unsupported-type", "different-content", "managed-unsupported", "write-failed", "duplicate:Song"];
+    const nativeErrors = [
+      "ไฟล์นี้ไม่อยู่ในคลังที่อนุญาต กรุณาเลือกไฟล์เพิ่มอีกครั้ง",
+      "ไม่พบไฟล์นี้ กรุณาเพิ่มไฟล์จากตำแหน่งใหม่",
+      "ไฟล์เปลี่ยนตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเลือกไฟล์อีกครั้ง",
+      "ไม่พบคลัง offline",
+      "ไฟล์ offline อยู่นอกคลังที่จัดการโดย Lalin Play",
+    ];
+    for (const message of [...codes.map((code) => `relink:${code}`), ...nativeErrors]) {
+      const en = localizeError(message, "en");
+      const th = localizeError(message, "th");
+      expect(en).not.toBe(message);
+      expect(th).not.toBe(message);
+      expect(en).not.toBe(th);
+    }
+    expect(localizeError("relink:duplicate:Song", "en")).toContain("Song");
+  });
   it("defaults to English, persists changes, and updates the document language", async () => {
     render(<I18nProvider><LocaleProbe /></I18nProvider>);
     expect(screen.getByText("en")).not.toBeNull();

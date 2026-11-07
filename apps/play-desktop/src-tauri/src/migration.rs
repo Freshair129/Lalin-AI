@@ -591,11 +591,13 @@ fn build_preview(
             })
             .cloned()
             .unwrap_or_else(|| library::track(&canonical));
-        track.path = canonical_text;
-        track.kind = library::media_kind(&canonical);
-        track.missing = false;
-        if let Some(title) = &entry.title {
-            track.title = title.clone();
+        if track.storage_kind != "managed" {
+            track.path = canonical_text;
+            track.kind = library::media_kind(&canonical);
+            track.missing = false;
+            if let Some(title) = &entry.title {
+                track.title = title.clone();
+            }
         }
         if !new_library.tracks.iter().any(|item| {
             item.path == track.path || item.source_path.as_deref() == Some(track.path.as_str())
@@ -1169,6 +1171,48 @@ mod tests {
         let mut unsupported = valid;
         unsupported.queue.items[0].local_path = "https://example.test/one.wav".into();
         assert!(validate_envelope(&unsupported).is_err());
+    }
+
+    #[test]
+    fn preview_reuses_relinked_path_and_preserves_managed_source_match() {
+        let directory = tempfile::tempdir().unwrap();
+        let media = directory.path().join("one.wav");
+        fs::write(&media, b"fixture").unwrap();
+        let canonical = fs::canonicalize(&media).unwrap();
+        let mut existing = library::track(&canonical);
+        existing.id = "stable-id".into();
+        let envelope = fixture_envelope(&media);
+        let linked = Library {
+            version: 1,
+            tracks: vec![existing.clone()],
+        };
+        let (preview, result) = build_preview(&envelope, &linked, false).unwrap();
+        assert_eq!(result.tracks.len(), 1);
+        assert!(preview
+            .plan
+            .items
+            .iter()
+            .all(|item| item.track.id == "stable-id"));
+
+        existing.storage_kind = "managed".into();
+        existing.source_path = Some(canonical.to_string_lossy().into_owned());
+        existing.path = directory
+            .path()
+            .join("managed-copy.mp3")
+            .to_string_lossy()
+            .into_owned();
+        existing.kind = MediaKind::Video;
+        let managed = Library {
+            version: 1,
+            tracks: vec![existing.clone()],
+        };
+        let (preview, result) = build_preview(&envelope, &managed, false).unwrap();
+        assert_eq!(result.tracks.len(), 1);
+        let expected = serde_json::to_value(&existing).unwrap();
+        assert_eq!(serde_json::to_value(&result.tracks[0]).unwrap(), expected);
+        for item in preview.plan.items {
+            assert_eq!(serde_json::to_value(item.track).unwrap(), expected);
+        }
     }
 
     #[test]

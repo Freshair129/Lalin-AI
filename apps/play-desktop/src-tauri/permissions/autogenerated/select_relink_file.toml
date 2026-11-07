@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-select-relink-file"
+description = "Enables the select_relink_file command without any pre-configured scope."
+commands.allow = ["select_relink_file"]
+
+[[permission]]
+identifier = "deny-select-relink-file"
+description = "Denies the select_relink_file command without any pre-configured scope."
+commands.deny = ["select_relink_file"]
