@@ -1666,4 +1666,36 @@ main {
   .track-badges {
     margin-left: 40px;
   }
+  .app:not(.compact):not(.tv) .transport {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .app:not(.compact):not(.tv) .transport-buttons {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .app:not(.compact):not(.tv) .transport-buttons .volume {
+    flex: 0 0 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+}
+
+/* Keep the library usable at narrow widths without squeezing the content pane. */
+@media (max-width: 480px) {
+  .workspace { flex-direction: column; }
+  aside {
+    width: 100%;
+    padding: 8px;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  aside button, aside form { flex: 0 0 auto; }
+  aside form { flex-direction: row; margin: 0; }
+  aside .section-label, aside .local-note { display: none; }
+  aside .settings-link { margin-top: 0; }
 }

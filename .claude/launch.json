@@ -38,6 +38,16 @@
         "8830"
       ],
       "port": 8830
+    },
+    {
+      "name": "play-desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "cwd": "apps/play-desktop",
+      "port": 5175
     }
   ]
 }

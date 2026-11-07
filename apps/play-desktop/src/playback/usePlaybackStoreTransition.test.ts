@@ -261,6 +261,87 @@ describe("smooth transition queue commit", () => {
     expect(writes.mock.calls.filter(([key]) => key === STORAGE_QUEUE_KEY)).toHaveLength(1);
   });
 
+  it.each([
+    ["seek", () => usePlaybackStore.getState().seek(40)],
+    ["stop", () => usePlaybackStore.getState().stop()],
+    ["queue edit", () => usePlaybackStore.getState().addToQueue({ id: "added", title: "Added", url: "asset:added" })],
+  ] as const)("cancels prepared manual deck on %s", async (_name, action) => {
+    usePlaybackStore.setState({ transitionSettings: { mode: "manual", durationSeconds: 5 } });
+    vi.spyOn(engine, "prepareManualDeck").mockResolvedValue(true);
+    const cancel = vi.spyOn(engine, "cancelTransition");
+    await usePlaybackStore.getState().prepareNextDeck();
+    expect(usePlaybackStore.getState().transitionTargetQueueEntryId).toBe("entry-incoming");
+    action();
+    expect(cancel).toHaveBeenCalled();
+    emit("transitionend", { outgoing: 0, incoming: 1 });
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().transitionTargetQueueEntryId).toBeNull();
+  });
+
+  it("clears the manual target when deck B fails to prepare", async () => {
+    usePlaybackStore.setState({ transitionSettings: { mode: "manual", durationSeconds: 5 } });
+    vi.spyOn(engine, "prepareManualDeck").mockResolvedValue(false);
+    await usePlaybackStore.getState().prepareNextDeck();
+    expect(usePlaybackStore.getState().transitionTargetQueueEntryId).toBeNull();
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+  });
+
+  it.each([
+    ["repeat", () => usePlaybackStore.getState().setRepeatMode("all")],
+    ["shuffle", () => usePlaybackStore.getState().toggleShuffle()],
+  ] as const)("cancels a medley transition on %s change", async (_name, action) => {
+    const queue = transitionQueue();
+    queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };
+    usePlaybackStore.setState({ queue, transitionSettings: { mode: "medley", durationSeconds: 5 } });
+    let finish!: (completed: boolean) => void;
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    emit("timeupdate", 80);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(crossfade).toHaveBeenCalledOnce();
+    action();
+    finish(false);
+    await Promise.resolve();
+    emit("transitionend", { outgoing: 0, incoming: 1 });
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+  });
+
+  it("starts medley at zero when the next cue-in is missing", async () => {
+    const queue = transitionQueue();
+    queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };
+    usePlaybackStore.setState({ queue, transitionSettings: { mode: "medley", durationSeconds: 5 } });
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+    emit("timeupdate", 80);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+  });
+
+  it.each([[NaN, 0], [-3, 0], [120, 119.9], [200, 119.9]])(
+    "bounds invalid medley cue-in %s to %s", async (cueIn, expected) => {
+      const queue = transitionQueue();
+      queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };
+      queue.items[1] = { ...queue.items[1]!, cueInSeconds: cueIn };
+      usePlaybackStore.setState({ queue, transitionSettings: { mode: "medley", durationSeconds: 5 } });
+      const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+      emit("timeupdate", 80);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, expected, expect.anything());
+    },
+  );
+
+  it.each([[NaN, 0], [-3, 0], [120, 119.9], [200, 119.9]])(
+    "bounds invalid manual cue-in %s to %s", async (cueIn, expected) => {
+      const queue = transitionQueue();
+      queue.items[1] = { ...queue.items[1]!, cueInSeconds: cueIn };
+      usePlaybackStore.setState({ queue, transitionSettings: { mode: "manual", durationSeconds: 5 } });
+      const prepare = vi.spyOn(engine, "prepareManualDeck").mockResolvedValue(false);
+      await usePlaybackStore.getState().prepareNextDeck();
+      expect(prepare).toHaveBeenCalledWith("asset:resolved", expected, expect.anything());
+    },
+  );
+
   it("uses medley cue-out as the transition point and the next track cue-in as its start", async () => {
     const queue = transitionQueue();
     queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };

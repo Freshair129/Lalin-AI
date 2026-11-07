@@ -242,6 +242,30 @@ describe("dual-deck transition readiness and attribution", () => {
     expect(internal.activeDeck).toBe(0);
   });
 
+  it("keeps deck A active when manual deck B fails to load", async () => {
+    const incoming = internal.secondaryAudio!;
+    const prepare = engine.prepareManualDeck("asset:broken");
+    incoming.dispatchEvent(new Event("error"));
+    await expect(prepare).resolves.toBe(false);
+    expect(internal.activeDeck).toBe(0);
+    expect(engine.isTransitioning()).toBe(false);
+  });
+
+  it("commits the incoming deck once when the outgoing track ends during a fade", async () => {
+    setReadyState(internal.secondaryAudio!, HTMLMediaElement.HAVE_FUTURE_DATA);
+    const onEnd = vi.fn();
+    engine.on("transitionend", onEnd);
+    const transition = engine.crossfadeTo("asset:incoming", 4);
+    await Promise.resolve();
+    await Promise.resolve();
+    internal.audio!.dispatchEvent(new Event("ended"));
+    await expect(transition).resolves.toBe(true);
+    vi.advanceTimersByTime(5000);
+    expect(onEnd).toHaveBeenCalledOnce();
+    expect(internal.activeDeck).toBe(1);
+    engine.off("transitionend", onEnd);
+  });
+
   it("pauses and resumes a smooth overlap at its current progress", async () => {
     const incoming = internal.secondaryAudio!;
     setReadyState(incoming, HTMLMediaElement.HAVE_FUTURE_DATA);

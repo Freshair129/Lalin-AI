@@ -121,10 +121,12 @@ const en = {
   "relink.error.differentContent": "The selected file has different content from the original.",
   "relink.error.managedUnsupported": "Offline managed tracks cannot be relinked.",
   "relink.error.writeFailed": "Could not save the new media location.",
-  "recovery.notice": "{count} offline files need repair",
+  "recovery.notice.one": "{count} offline file needs repair",
+  "recovery.notice.other": "{count} offline files need repair",
   "recovery.panelTitle": "Repair offline files",
   "recovery.openPanel": "Open Repair panel",
-  "recovery.compactHint": "{count} offline files need repair. Switch to Full to repair.",
+  "recovery.compactHint.one": "{count} offline file needs repair. Switch to Full to repair.",
+  "recovery.compactHint.other": "{count} offline files need repair. Switch to Full to repair.",
   "recovery.reasonMissing": "Managed object is missing",
   "recovery.reasonCorrupt": "Managed object is corrupt",
   "recovery.noSourcePath": "Original source path not recorded",
@@ -367,8 +369,8 @@ const th: Record<keyof typeof en, string> = {
   "app.totalPlays": "จำนวนครั้งที่ฟัง",
   "app.favoriteTrack": "เพิ่ม {title} ในเพลงโปรด",
   "app.unfavoriteTrack": "นำ {title} ออกจากเพลงโปรด",
-  "app.badgeUser": "USER",
-  "app.badgeOffline": "OFFLINE",
+  "app.badgeUser": "ของฉัน",
+  "app.badgeOffline": "ออฟไลน์",
   "app.badgeYoutube": "YOUTUBE",
   "app.youtubeLinksTitle": "ลิงก์ YouTube",
   "app.youtubeLinksHelp": "เปิดลิงก์ใน YouTube โดยตรง Lalin Play ไม่ดาวน์โหลดหรือเล่นเสียง YouTube",
@@ -441,17 +443,19 @@ const th: Record<keyof typeof en, string> = {
   "relink.error.differentContent": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับไฟล์เดิม",
   "relink.error.managedUnsupported": "ไม่รองรับการเชื่อมไฟล์ใหม่ให้เพลงออฟไลน์ที่จัดการโดย Lalin Play",
   "relink.error.writeFailed": "บันทึกตำแหน่งไฟล์ใหม่ไม่สำเร็จ",
-  "recovery.notice": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
+  "recovery.notice.one": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
+  "recovery.notice.other": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
   "recovery.panelTitle": "ซ่อมแซมไฟล์ออฟไลน์",
   "recovery.openPanel": "เปิดหน้าซ่อมแซม",
-  "recovery.compactHint": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
-  "recovery.reasonMissing": "ไม่พบ object ที่จัดการไว้",
-  "recovery.reasonCorrupt": "object ที่จัดการไว้เสียหาย",
+  "recovery.compactHint.one": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
+  "recovery.compactHint.other": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
+  "recovery.reasonMissing": "ไม่พบไฟล์ที่จัดเก็บไว้ในคลัง",
+  "recovery.reasonCorrupt": "ไฟล์ที่จัดเก็บไว้ในคลังเสียหาย",
   "recovery.noSourcePath": "ไม่มีการบันทึกตำแหน่งไฟล์ต้นฉบับ",
   "recovery.restore": "กู้คืนจากไฟล์…",
   "recovery.success": "กู้คืนเพลงออฟไลน์แล้ว โดยคงรายการในคิวและเพลย์ลิสต์ไว้",
   "recovery.empty": "ไม่มีไฟล์ออฟไลน์ที่ต้องซ่อมแซม",
-  "recovery.importMismatchConfirm": "ไฟล์นี้มีเนื้อหาไม่ตรงกับ object ออฟไลน์ ต้องการนำเข้าเป็นเพลงใหม่หรือไม่?",
+  "recovery.importMismatchConfirm": "ไฟล์ที่เลือกมีเนื้อหาไม่ตรงกับไฟล์ที่จัดเก็บไว้ในคลัง ต้องการนำเข้าเป็นเพลงใหม่หรือไม่?",
   "recovery.importedNew": "นำเข้าเป็นเพลงใหม่แล้ว",
   "recovery.error.notRecoverable": "เพลงออฟไลน์นี้ไม่เข้าเงื่อนไขการกู้คืน",
   "recovery.error.invalidPath": "ตำแหน่งไฟล์ที่เลือกไม่ถูกต้อง",
@@ -459,7 +463,7 @@ const th: Record<keyof typeof en, string> = {
   "recovery.error.unsupportedType": "ไม่รองรับชนิดสื่อนี้",
   "recovery.error.contentMismatch": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับต้นฉบับออฟไลน์",
   "recovery.error.writeFailed": "กู้คืนไฟล์ออฟไลน์ไม่สำเร็จ",
-  "recovery.error.verifyFailed": "ไฟล์ออฟไลน์ที่กู้คืนไม่ผ่านการตรวจสอบ และคืน object เดิมแล้ว",
+  "recovery.error.verifyFailed": "ไฟล์ออฟไลน์ที่กู้คืนไม่ผ่านการตรวจสอบ ระบบคืนไฟล์เดิมให้แล้ว",
   "error.resolveNotInLibrary": "ไฟล์นี้ไม่ได้อยู่ในคลังที่อนุญาต กรุณาเพิ่มไฟล์เข้าในคลังอีกครั้ง",
   "error.resolveMissing": "ไม่พบไฟล์ กรุณาเลือกไฟล์จากตำแหน่งใหม่",
   "error.resolveMoved": "ไฟล์ย้ายตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเชื่อมใหม่จาก Full",
@@ -514,8 +518,8 @@ const th: Record<keyof typeof en, string> = {
   "video.shrink": "ย่อภาพ (Esc)",
   "video.expand": "ขยายภาพ",
   "video.loading": "กำลังโหลดวิดีโอ…",
-  "mixer.media": "MEDIA · สื่อ",
-  "mixer.master": "MASTER · รวม",
+  "mixer.media": "สื่อ",
+  "mixer.master": "รวม",
   "mixer.mediaDescription": "เสียงสื่อที่ Lalin Play กำลังเล่น",
   "mixer.noMedia": "ไม่มีสื่อกำลังเล่น",
   "mixer.channelLevel": "ระดับเสียงสื่อ",
@@ -530,9 +534,9 @@ const th: Record<keyof typeof en, string> = {
   "mixer.output": "อุปกรณ์เสียงออก",
   "mixer.refreshOutput": "ตรวจอุปกรณ์เสียงออก",
   "mixer.spatialHeading": "เสียงรอบทิศทางสำหรับหูฟัง",
-  "mixer.spatialHelp": "Virtual 7.1 จำลองจากเสียงสเตอริโอและส่งออกเป็นเสียงสเตอริโอสำหรับหูฟัง ไม่ใช่การถอดรหัส 7.1 จริง",
+  "mixer.spatialHelp": "เสียงรอบทิศทางจำลอง 7.1 สร้างจากเสียงสเตอริโอและส่งออกเป็นเสียงสเตอริโอสำหรับหูฟัง ไม่ใช่การถอดรหัส 7.1 จริง",
   "mixer.stereo": "สเตอริโอ",
-  "mixer.virtual71": "Virtual 7.1",
+  "mixer.virtual71": "เสียงรอบทิศทางจำลอง 7.1",
   "mixer.headphones": "หูฟัง",
   "mixer.frontLeft": "หน้า ซ้าย",
   "mixer.frontCenter": "กลาง",
@@ -543,7 +547,7 @@ const th: Record<keyof typeof en, string> = {
   "mixer.rearRight": "หลัง ขวา",
   "mixer.lfe": "LFE",
   "mixer.fallback": "ไม่พร้อมใช้เสียงรอบทิศทาง กำลังใช้โหมดสเตอริโอ",
-  "eq.preset": "พรีเซ็ต EQ",
+  "eq.preset": "พรีเซ็ตอีควอไลเซอร์",
   "eq.preset.flat": "เสียงเรียบ",
   "eq.preset.bassBoost": "เพิ่มเสียงเบส",
   "eq.preset.trebleBoost": "เพิ่มเสียงแหลม",
@@ -563,12 +567,12 @@ const th: Record<keyof typeof en, string> = {
   "eq.reset": "รีเซ็ต",
   "eq.disable": "ปิด EQ ชั่วคราว",
   "eq.enable": "เปิด EQ",
-  "eq.enabled": "EQ เปิดอยู่",
+  "eq.enabled": "อีควอไลเซอร์เปิดอยู่",
   "eq.disabled": "ปิด EQ อยู่",
   "eq.newPresetName": "ชื่อพรีเซ็ตใหม่",
-  "eq.overview": "ภาพรวมการตอบสนองของ EQ",
-  "eq.responseHelp": "gain (dB) ตามความถี่ (Hz) · ไม่รวม Preamp",
-  "eq.activeValues": "กำลังใช้ EQ",
+  "eq.overview": "ภาพรวมการตอบสนองของอีควอไลเซอร์",
+  "eq.responseHelp": "ระดับขยาย (dB) ตามความถี่ (Hz) · ไม่รวมระดับขยายรวม",
+  "eq.activeValues": "กำลังใช้อีควอไลเซอร์",
   "eq.savedValues": "แสดงค่าที่บันทึกไว้ · ปิด EQ อยู่",
   "eq.responseAria": "ภาพรวมค่า gain ของ EQ 10 ย่าน ช่วงลบ 12 ถึงบวก 12 dB{state}",
   "eq.responseActive": " และกำลังเปิดใช้งาน",
@@ -586,10 +590,10 @@ const th: Record<keyof typeof en, string> = {
   "eq.mid": "เสียงกลาง",
   "eq.treble": "เสียงแหลม",
   "eq.adjustBand": "ปรับ EQ ที่ {frequency}",
-  "migration.title": "ย้ายคิวและ EQ จาก Studio",
-  "migration.intro": "เลือกไฟล์ migration ที่ส่งออกจาก Studio แล้ว Lalin Play จะแสดงตัวอย่างและตรวจไฟล์ในเครื่องก่อนเขียนข้อมูล",
+  "migration.title": "ย้ายคิวและอีควอไลเซอร์จากลลิน สตูดิโอ",
+  "migration.intro": "เลือกไฟล์ย้ายข้อมูลที่ส่งออกจากลลิน สตูดิโอ แล้ว Lalin Play จะแสดงตัวอย่างและตรวจไฟล์ในเครื่องก่อนเขียนข้อมูล",
   "migration.chooseAria": "เลือกไฟล์ migration จาก Studio",
-  "migration.choose": "เลือกไฟล์ migration",
+  "migration.choose": "เลือกไฟล์ย้ายข้อมูล",
   "migration.undo": "ย้อนกลับการย้ายครั้งล่าสุด",
   "migration.undoConfirm": "ย้อนกลับคิว, EQ และคลัง Play ไปยังสถานะก่อน migration ครั้งล่าสุดหรือไม่? การแก้ไขคลังหลัง migration จะไม่ถูกรวมไว้ และไฟล์สื่อจะไม่ถูกลบ",
   "migration.unresolvedReport": "รายงานรายการที่แก้ไขไม่ได้ ({count})",
@@ -645,6 +649,7 @@ const th: Record<keyof typeof en, string> = {
 };
 
 export type TranslationKey = keyof typeof en;
+export type PluralTranslationKey = "recovery.notice" | "recovery.compactHint";
 type Variables = Record<string, string | number>;
 
 function readLocale(): Locale {
@@ -663,6 +668,11 @@ function translate(locale: Locale, key: TranslationKey, variables?: Variables): 
     }
   }
   return value;
+}
+
+function translatePlural(locale: Locale, key: PluralTranslationKey, count: number): string {
+  const form = new Intl.PluralRules(locale).select(count) === "one" ? "one" : "other";
+  return translate(locale, `${key}.${form}` as TranslationKey, { count });
 }
 
 export function localizeError(value: unknown, locale: Locale): string {
@@ -766,12 +776,14 @@ interface I18nValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, variables?: Variables) => string;
+  tPlural: (key: PluralTranslationKey, count: number) => string;
 }
 
 const fallback: I18nValue = {
   locale: "en",
   setLocale: () => undefined,
   t: (key, variables) => translate("en", key, variables),
+  tPlural: (key, count) => translatePlural("en", key, count),
 };
 const I18nContext = createContext<I18nValue>(fallback);
 
@@ -789,6 +801,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     locale,
     setLocale,
     t: (key, variables) => translate(locale, key, variables),
+    tPlural: (key, count) => translatePlural(locale, key, count),
   }), [locale]);
 
   useEffect(() => {

@@ -46,7 +46,7 @@ export function App() {
 }
 
 function AppContent() {
-  const { locale, setLocale, t } = useI18n();
+  const { locale, setLocale, t, tPlural } = useI18n();
   useEffect(() => {
     PlaybackAudioEngine.getInstance().setMediaElementLabel(t("video.label"));
   }, [locale, t]);
@@ -569,7 +569,7 @@ function AppContent() {
       {notice ? <div className="notice" role="status">{notice}</div> : null}
       {!compact && damagedTracks.length ? (
         <div className="recovery-notice" role="status">
-          <span>{t("recovery.notice", { count: damagedTracks.length })}</span>
+          <span>{tPlural("recovery.notice", damagedTracks.length)}</span>
           <button type="button" onClick={() => setView("repair")}>
             {t("recovery.openPanel")}
           </button>
@@ -577,7 +577,7 @@ function AppContent() {
       ) : null}
       {compact && damagedTracks.length ? (
         <div className="compact-recovery-hint" role="status">
-          {t("recovery.compactHint", { count: damagedTracks.length })}
+          {tPlural("recovery.compactHint", damagedTracks.length)}
         </div>
       ) : null}
       <VideoStage
