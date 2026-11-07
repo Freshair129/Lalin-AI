@@ -1734,20 +1734,42 @@ mod tests {
         let root = dir.path().join("genesis-play");
         fs::create_dir_all(&root).unwrap();
         let storage = Storage::open(OpenOptions {
-            path: root.to_string_lossy().to_string(), page_cache_mb: Some(32),
-            read_only: Some(false), vector_dim: Some(256), retention: Some("frontier_only".into()),
-        }).unwrap();
-        storage.register_relational_schema(schema_package_v1()).unwrap();
+            path: root.to_string_lossy().to_string(),
+            page_cache_mb: Some(32),
+            read_only: Some(false),
+            vector_dim: Some(256),
+            retention: Some("frontier_only".into()),
+        })
+        .unwrap();
+        storage
+            .register_relational_schema(schema_package_v1())
+            .unwrap();
         let mut track = crate::library::track(&dir.path().join("v1.wav"));
-        track.id = "v1-track".into(); track.favorite = true; track.play_count = 2;
+        track.id = "v1-track".into();
+        track.favorite = true;
+        track.play_count = 2;
         let mut values = track_values(dir.path(), &track).unwrap();
-        for field in ["publication_id", "publication_plan_digest", "publication_state", "publication_row_digest"] {
+        for field in [
+            "publication_id",
+            "publication_plan_digest",
+            "publication_state",
+            "publication_row_digest",
+        ] {
             values.as_object_mut().unwrap().remove(field);
         }
-        storage.apply_relational_batch(RelationalMutationBatch {
-            mutation_id: Uuid::new_v4().to_string(), namespace: NAMESPACE.into(), schema_version: 1,
-            operations: vec![mutation("tracks", RelationalMutationKind::Insert, values, None)],
-        }).unwrap();
+        storage
+            .apply_relational_batch(RelationalMutationBatch {
+                mutation_id: Uuid::new_v4().to_string(),
+                namespace: NAMESPACE.into(),
+                schema_version: 1,
+                operations: vec![mutation(
+                    "tracks",
+                    RelationalMutationKind::Insert,
+                    values,
+                    None,
+                )],
+            })
+            .unwrap();
         drop(storage);
         let loaded = read_catalog(dir.path()).unwrap();
         assert_eq!(loaded.tracks.len(), 1);
@@ -1763,9 +1785,11 @@ mod tests {
     fn genesis_catalog_settings_history_and_links_survive_reopen() {
         let dir = tempdir().unwrap();
         let mut b = crate::library::track(&dir.path().join("b.wav"));
-        b.id = "b".into(); b.title = "Beta".into();
+        b.id = "b".into();
+        b.title = "Beta".into();
         let mut a = crate::library::track(&dir.path().join("a.wav"));
-        a.id = "a".into(); a.title = "Alpha".into();
+        a.id = "a".into();
+        a.title = "Alpha".into();
         add_track(dir.path(), &b).unwrap();
         add_track(dir.path(), &a).unwrap();
         set_favorite(dir.path(), "b", true).unwrap();
@@ -1779,12 +1803,20 @@ mod tests {
         forget_database(dir.path());
         let after = read_catalog(dir.path()).unwrap();
         assert_eq!(serde_json::to_value(&after).unwrap(), before);
-        assert_eq!(after.tracks.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["a", "b"]);
+        assert_eq!(
+            after
+                .tracks
+                .iter()
+                .map(|t| t.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["a", "b"]
+        );
         assert_eq!(after.tracks[1].play_count, 2);
         assert!(after.tracks[1].favorite);
         assert_eq!(relink_rows(dir.path()).1.len(), 2);
         let settings = cache_settings(dir.path()).unwrap();
-        assert!(settings.enabled); assert_eq!(settings.quota_bytes, 128 * 1024 * 1024);
+        assert!(settings.enabled);
+        assert_eq!(settings.quota_bytes, 128 * 1024 * 1024);
         assert_eq!(youtube_link_url(dir.path(), &link.id).unwrap(), link.url);
         assert_eq!(youtube_links(dir.path()).unwrap().len(), 1);
         set_favorite(dir.path(), "b", false).unwrap();
@@ -1822,10 +1854,29 @@ mod tests {
 
     #[test]
     fn youtube_policy_accepts_only_official_https_authorities() {
-        for host in ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be", "www.youtu.be"] {
-            assert!(is_official_youtube_url(&format!("https://{host}/watch?v=1")), "{host}");
+        for host in [
+            "youtube.com",
+            "www.youtube.com",
+            "m.youtube.com",
+            "music.youtube.com",
+            "youtu.be",
+            "www.youtu.be",
+        ] {
+            assert!(
+                is_official_youtube_url(&format!("https://{host}/watch?v=1")),
+                "{host}"
+            );
         }
-        for url in ["http://youtube.com/watch", "https://youtube.com.evil.test/", "https://evil.test/youtube.com", "https://youtube.com@evil.test/", "https://user@youtube.com/", "https://youtube.com:443/", "not a url", "https://youtube.com/redirect?x=1"] {
+        for url in [
+            "http://youtube.com/watch",
+            "https://youtube.com.evil.test/",
+            "https://evil.test/youtube.com",
+            "https://youtube.com@evil.test/",
+            "https://user@youtube.com/",
+            "https://youtube.com:443/",
+            "not a url",
+            "https://youtube.com/redirect?x=1",
+        ] {
             assert!(!is_official_youtube_url(url), "{url}");
         }
         let dir = tempdir().unwrap();

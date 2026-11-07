@@ -1,5 +1,5 @@
 ---
-version: "0.3.8b"
+version: "0.3.9b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
@@ -80,11 +80,11 @@ suite's provenance or establish full Studio/Play playback parity.
 
 | ID | Code/tests | Evidence and status | Remaining exit work |
 |---|---|---|---|
-| PLAY-14 | `App.tsx`, `usePlaybackStore.ts`, Genesis history rows | PARTIAL; 2026-11-07 Vitest PASS: `orders reopened listening data and produces deterministic recommendations`, existing `records a listen only after attributed deck time is audible` and `counts both overlap decks only while each deck is audible, ignoring silent preload`; 16 files / 107 tests | Rust restart/count test added but NOT_RUN; mocked IPC does not prove actual restart; native threshold/seek/repeat and recommendation acceptance NOT_RUN |
-| PLAY-15 | Genesis relational catalog | PARTIAL; Genesis relational schema/query/batch APIs are wired; earlier `cargo check` passed before this test round. Tests added: `genesis_catalog_settings_history_and_links_survive_reopen`, `v1_fixture_data_survives_upgrade_and_reopen`, `listen_favorite_and_remove_batches_roll_back_on_invalid_mutation` | New Rust tests NOT_RUN: Cargo resource admission lacks reviewed child-write and concurrent-growth bounds; native migration/restart acceptance NOT_RUN |
-| PLAY-16 | `library_store.rs`, native commands, `App.tsx` | PARTIAL; official-host HTTPS validation, external open, add/list/remove UI are wired; prior build passed. Tests added: `youtube_policy_accepts_only_official_https_authorities`, `genesis_catalog_settings_history_and_links_survive_reopen` | New Rust tests NOT_RUN; native open and persistence acceptance NOT_RUN; official YouTube playlist metadata import tracked by CR-008 PLAY-24 |
+| PLAY-14 | `App.tsx`, `usePlaybackStore.ts`, Genesis history rows | PARTIAL; 2026-11-07: Rust `genesis_catalog_settings_history_and_links_survive_reopen` PASS (two listens and history rows after reopen); Vitest 16 files / 107 tests PASS: `orders reopened listening data and produces deterministic recommendations`, `records a listen only after attributed deck time is audible`, `counts both overlap decks only while each deck is audible, ignoring silent preload` | Ordering/recommendation UI uses mocked IPC; native threshold/seek/repeat and recommendation acceptance NOT_RUN |
+| PLAY-15 | Genesis relational catalog | PARTIAL; 2026-11-07: `genesis_catalog_settings_history_and_links_survive_reopen` and `listen_favorite_and_remove_batches_roll_back_on_invalid_mutation` PASS; `v1_fixture_data_survives_upgrade_and_reopen` FAIL on second open with `REL_SCHEMA_VERSION_CONFLICT` during Genesis projection replay; full Rust suite 83 passed / 1 failed / 6 ignored | Investigate/fix pinned Genesis dependency replay across schema versions and rerun; native migration/restart acceptance NOT_RUN |
+| PLAY-16 | `library_store.rs`, native commands, `App.tsx` | PARTIAL; 2026-11-07: Rust `youtube_policy_accepts_only_official_https_authorities` and `genesis_catalog_settings_history_and_links_survive_reopen` PASS, including unknown-id lookup and add/remove reopen; full Rust suite 83 passed / 1 failed / 6 ignored | Command-level unknown-id/open and native open/persistence acceptance NOT_RUN; official YouTube playlist metadata import tracked by CR-008 PLAY-24 |
 | PLAY-17 | Authorized-source cache | PARTIAL | Settings exist in candidate code; provider capability model, cache storage and bounded LRU eviction remain open |
-| PLAY-18 | `library_store.rs`, `native.ts`, `App.tsx`, `styles.css` | PARTIAL; 2026-11-07 Vitest PASS: `filters reopened favorites and renders persisted USER and OFFLINE badges` (mocked IPC; 16 files / 107 tests); Rust favorite reopen test added | Rust test NOT_RUN; mocked data does not prove actual restart; native import/filter acceptance NOT_RUN; links are not playable tracks |
+| PLAY-18 | `library_store.rs`, `native.ts`, `App.tsx`, `styles.css` | PARTIAL; 2026-11-07: Rust `genesis_catalog_settings_history_and_links_survive_reopen` PASS for favorite on/off; Vitest `filters reopened favorites and renders persisted USER and OFFLINE badges` PASS with mocked IPC (16 files / 107 tests) | Native import/filter acceptance NOT_RUN; mocked IPC does not prove runtime restart; links are not playable tracks |
 | PLAY-19 | `local_media_store.rs` | PARTIAL; local content-addressed object-store implementation exists; RustFS S3 adapter and authenticated Range streaming are absent | Add RustFS S3 integration, resumable upload/publication and authenticated Range streaming; complete offline/native acceptance |
 | PLAY-20 | Genesis hybrid search/recommendations | NOT_IMPLEMENTED | Deterministic metadata vectors, graph relations, hybrid retrieval, pending-index recovery and UX disclosure |
 
@@ -196,6 +196,7 @@ PARTIAL, and Studio playback stays enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.9b | 2026-11-07 | beta | Record Genesis restart and rollback results, v1 replay failure, formatting and mocked UI evidence; retain native acceptance gaps | working tree | Codex |
 | 0.3.8b | 2026-11-07 | beta | Record mocked dashboard/favorites tests and unrun Genesis restart, migration, rollback and URL tests; retain runtime and Cargo admission gaps | working tree | Codex |
 | 0.3.7b | 2026-11-07 | beta | Merge main: keep PLAY-08-M spec link and PLAY-10 release smoke evidence | working tree | Claude |
 | 0.3.6b | 2026-11-07 | beta | Record PLAY-10 local release smoke (guard, NSIS build, signature/tamper, bundle contents) | working tree | Claude |
