@@ -1,7 +1,7 @@
 ---
-version: "1.4.4b"
+version: "1.5.1b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-10-20T00:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
 superseded_by: null
 attributes:
@@ -19,12 +19,12 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.4.2b |
-| **Status** | CR-004 Addendum A approved and implemented locally; bounded native evidence, device/release gates remain open |
+| **Doc Version** | 1.5.0b |
+| **Status** | CR-004 Addendum A and CR-006..CR-008 approved; local implementations remain partial and native/device/release gates stay open |
 | **Author** | Boss |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-09-20 |
-| **Approved By** | ผู้ใช้ตอบ approve เมื่อ 2026-09-20; ไม่ใช่การอนุมัติ release/merge |
+| **Last Updated** | 2026-10-20 |
+| **Approved By** | ผู้ใช้อนุมัติ CR-004 Addendum A (2026-09-20) และ CR-006..CR-008 (2026-10-20); approval นี้ไม่ใช่การอนุมัติ release/merge |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
@@ -39,6 +39,9 @@ attributes:
 | 1.4.0b | 2026-09-20 | LALIN | เสนอ Compact native fullscreen และ ±10 วินาทีตาม CR-004 Addendum A; รออนุมัติ |
 | 1.4.1b | 2026-09-20 | LALIN | Addendum A approved; fullscreen/±10 implemented พร้อม tests และ native evidence ที่ระบุข้อจำกัด |
 | 1.4.2b | 2026-09-20 | LALIN | เชื่อม current status, traceability และเอกสารส่งมอบ; ไม่เปลี่ยน acceptance หรือปิด split gates |
+| 1.5.0b | 2026-10-20 | Codex | Register approved CR-008 mobile pairing, phone-file transfer, YouTube playlist references, queue identity and dual-deck transition requirements; implementation remains partial |
+| 1.4.3b | 2026-10-20 | Codex | เพิ่ม approved CR-006 สำหรับ Play mixer, stereo-to-binaural virtual surround และ ENG/TH locale; implementation locally, native audio acceptance remains open |
+| 1.5.1b | 2026-11-07 | Claude | Rebase CR-006/007/008 Play work onto main (a6325d0); requirements unchanged |
 
 ---
 
@@ -194,7 +197,7 @@ Candidate source commit `f5a6681` push แล้วใน Lalin-AI branch แต
 เป็น repo ใหม่ ดู [สถานะเอกสารปัจจุบัน](LALIN_PLAY_DOCUMENTATION.md) และ
 [traceability ทุก PLAY criterion](../validation/LALIN_PLAY_TRACEABILITY.md).
 รายละเอียด IPC/migration/release ที่เพิ่มในชุดเอกสารเป็น candidate รอ review
-ไม่ใช่การเปลี่ยน acceptance ที่อนุมัติไว้หรือหลักฐานว่า implementation เสร็จ
+ไม่ใช่หลักฐานว่า implementation หรือ release เสร็จ
 
 **เป้าหมาย:** ติดตั้งและเปิด Lalin Play เพื่อฟังไฟล์ในเครื่องได้โดยไม่ต้องเปิด
 Studio, FastAPI, Ollama หรือโหลดโมเดล AI ใช้งาน offline ได้สำหรับไฟล์ที่อยู่บนดิสก์
@@ -228,6 +231,38 @@ PLAY-C09–13 มี implementation และ [local evidence](../validation/LAL
 พร้อมข้อจำกัด DPI/touch/multi-monitor; ขอบเขต single playback owner และ Full
 library เดิมไม่เปลี่ยน Fullscreen ใน addendum ไม่ใช่ TV mode
 
+**Approved extension — CR-006:** ผู้ใช้อนุมัติเมื่อ 2026-10-20 ให้เพิ่มหน้า
+Mixer ใน Full โดยแสดงเฉพาะช่อง MEDIA และ MASTER ที่ Lalin Play เป็นเจ้าของจริง;
+เพิ่ม Stereo (ค่าเริ่มต้น) และ Virtual 7.1 ที่จำลองจาก stereo แล้ว render ด้วย
+HRTF ลง stereo headphones; เพิ่มตัวสลับ ENG | TH โดย ENG เป็นค่าเริ่มต้นและจดจำ
+ภาษาที่เลือก ใช้ media element, AudioContext, EQ, limiter, volume และ output
+owner เดิมต่อเนื่องกัน Compact ใช้ภาษาที่เลือกแต่ยังไม่มีหน้า Mixer/EQ หรือปุ่ม
+เปลี่ยนภาษา ขอบเขต/ข้อห้ามเพิ่มเติมอยู่ใน
+[CR-006](CR-006--LALIN_PLAY_SONAR_MIXER_SPATIAL_AUDIO.md); implementation
+ท้องถิ่นมี automated build/tests แต่ยังไม่มีการรับฟังเปรียบเทียบผ่าน Windows
+headphone endpoint จึงยังไม่ถือว่า virtual surround ผ่าน native acceptance
+
+**Approved extension — CR-007:** ผู้ใช้อนุมัติเมื่อ 2026-10-20 ให้เปิด Full ที่
+Dashboard, จัดอันดับเพลงจาก play history จริง, แนะนำเพลงด้วย ranking ภายในเครื่อง,
+นำเข้าไฟล์เข้า object store, ใช้ GenesisBlockDB เป็นฐานข้อมูล catalog เพียงตัวเดียว
+พร้อม relational SQL projection, graph และ vector index, เก็บไฟล์ต้นฉบับและ
+library JSON เดิมไว้, เพิ่ม favorites/source badges และ cache
+สำหรับ provider ที่อนุญาตอย่างชัดเจน (default 2 GB, หลังฟังสำเร็จ 3 ครั้ง).
+YouTube เป็น external link เท่านั้น; ไม่มี download/cache/offline player หากยังไม่มี
+prior written approval. รายละเอียดอยู่ใน [CR-007](CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md);
+PLAY-14..20 เป็น requirements ของ CR-007 และ acceptance/runtime evidence ยังคง
+แยกตาม [traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
+
+**Approved extension — CR-008:** ผู้ใช้อนุมัติเมื่อ 2026-10-20 ให้เพิ่ม remote
+ผ่าน LAN ที่จับคู่และเพิกถอนได้, transfer ไฟล์จากมือถือแบบ resumable พร้อม
+ตรวจ hash ก่อนลง catalog, YouTube playlist แบบ metadata/reference ผ่าน API ทางการ,
+queue occurrence IDs และ audio-only dual-deck transition บน shared playback graph.
+โหมด Smooth ปิดเป็นค่าเริ่มต้น; Manual DJ/Medley ต้องรักษาการควบคุม commit ที่ PC.
+ไม่เปิด WAN/UPnP และไม่มี YouTube media download/playback/cache. PLAY-21..27
+เป็นเกณฑ์รับงาน; implementation และ native acceptance ติดตามใน
+[CR-008](CR-008--LALIN_PLAY_MOBILE_REMOTE_HOST_CROSSFADE.md) และ
+[traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
+
 | ID | ข้อกำหนด / เกณฑ์รับงาน |
 |---|---|
 | PLAY-01 | เปิด executable โดย Studio/API ปิดอยู่ เลือกไฟล์บนดิสก์แล้วได้ยินเสียงจริง |
@@ -240,6 +275,23 @@ library เดิมไม่เปลี่ยน Fullscreen ใน addendum �
 | PLAY-08 | ไฟล์หาย/ย้าย/codec ไม่รองรับแสดงเหตุผลและให้ผู้ใช้เลือกไฟล์ใหม่; ไม่ล้าง queue ทั้งชุด |
 | PLAY-09 | ย้าย queue/EQ เดิมผ่าน export/import ที่ผู้ใช้เลือก; ตรวจ version/ข้อมูล, แสดงรายการ resolve ไม่ได้ และเก็บข้อมูลเดิมไว้ |
 | PLAY-10 | ติดตั้ง/ถอน Play ได้แยกจาก Studio/Cast; updater identity/key/release เป็นของ Play และต้องผ่าน gate ก่อนเปิดใช้ |
+| PLAY-11 | Full Mixer ควบคุมเฉพาะ MEDIA gain/mute และ MASTER volume/mute/output ของ playback owner เดิม; ค่า MEDIA persist และ EQ ยังอยู่ใน chain เดิม |
+| PLAY-12 | Stereo เป็นค่าเริ่มต้น; Virtual 7.1 จำลองจาก stereo ด้วย HRTF ลง stereo output, เปลี่ยนโหมดโดยไม่ restart media และ fallback เป็น Stereo พร้อมแจ้งเมื่อ HRTF ใช้ไม่ได้ |
+| PLAY-13 | UI ของ Play รองรับ ENG/TH, ENG เป็นค่าเริ่มต้น, ภาษา persist และเปลี่ยนข้อความ Play-owned รวม accessibility labels; metadata/OS-owned text คงเดิม |
+| PLAY-14 | Full เปิด Dashboard ที่มี Recently Played, Most Played เรียงตาม successful listen count และ local-only recommendations; ห้ามสร้าง fake history หรือเรียก AI/network เพื่อจัดอันดับ |
+| PLAY-15 | GenesisBlockDB เป็นฐานข้อมูลเดียวของ catalog/history/favorite/cache/settings ผ่าน relational schema/batch API; ห้าม dual-write SQLite แยกหรือเขียน projection.sqlite โดยตรง; migration ของ JSON เก็บ IDs/metadata/path refs เดิมโดยไม่ย้ายหรือลบไฟล์ |
+| PLAY-16 | YouTube link เปิดได้เฉพาะผ่าน YouTube ทางการและอยู่นอก playback queue; generic platform download/cache มีได้เฉพาะ provider/API ที่ให้สิทธิ์ชัดเจนและผ่าน allowlist; YouTube ต้องมี prior written approval แยกก่อน download/cache/offline playback |
+| PLAY-17 | Cache ปิด/เปิดได้และมี quota ค่าเริ่มต้น 2 GB; authorized provider cache ได้หลัง 3 successful listens และ LRU ลบได้เฉพาะ transient cache ไม่ลบ user imports หรือ pinned downloads; เมื่อไม่มี provider ที่อนุญาต cache ต้องไม่สร้างข้อมูล/requests ปลอม |
+| PLAY-18 | รายการเพลงแสดง `USER` / `OFFLINE` / `YOUTUBE` ตาม storage/source จริง; favorites และ filter persist ใน local catalog โดยไม่เปลี่ยน queue หรือหยุด playback |
+| PLAY-19 | Media objects ใช้ object-store interface รองรับ local offline objects และ RustFS S3-compatible self-host; upload แบบ temporary + immutable content-hash key ก่อน commit Genesis metadata, remote streaming ต้องผ่าน authenticated HTTP Range path โดยไม่ส่ง S3 credentials เข้า WebView |
+| PLAY-20 | Exact/filter/sort search ใช้ Genesis relational projection; discovery/recommendations ใช้ Genesis graph/vector candidates และ deterministic local metadata embedding; graph/vector เป็น derived index ที่ rebuild ได้จาก Genesis rows และไม่แทนข้อมูลล่าสุดเมื่อ indexing ค้าง |
+| PLAY-21 | PC เป็น session/queue authority; remote pair ผ่าน LAN ด้วย invite แบบ single-use/หมดอายุ, TLS fingerprint pin และการอนุมัติบน PC; มี role scope/revoke และปิด public WAN/UPnP/cloud exposure เป็นค่าเริ่มต้น |
+| PLAY-22 | Remote commands/events มี requestId, sessionId, expectedRevision และ idempotent retry; stale edit คืน snapshot ล่าสุด; queue แต่ละ occurrence มี stable queueEntryId เพื่อให้เพิ่มเพลงซ้ำและแก้รายการถูกตัว; playback/advance clock อยู่ที่ PC |
+| PLAY-23 | Phone แชร์เฉพาะไฟล์ที่ผู้ใช้เลือก; Copy to PC รองรับ resume เป็น chunks และตรวจ whole-file hash ก่อน publish object + Genesis metadata; ไฟล์ที่บันทึกแล้วเล่น offline ได้หลังตัดมือถือ; optional authenticated Range streaming ไม่ส่ง S3 credential ไป WebView และการขาด stream กระทบเฉพาะ item ถัดไป |
+| PLAY-24 | YouTube playlist เก็บเฉพาะ reference/metadata จาก API ทางการ รองรับ pagination, quota, authorization และอายุข้อมูลตาม policy; item เปิดใน YouTube หรือ map โดยผู้ใช้ไปยัง local-owned track เท่านั้น; ห้าม extract/download/cache/play media ของ YouTube |
+| PLAY-25 | Audio-only crossfade ใช้สอง decoder decks ที่มี gain แยก แล้วเข้า AudioContext/EQ/spatial/limiter/master/output chain ชุดเดียว; default Off; Smooth ใช้ equal-power automation ตาม AudioContext clock และรอ deck ถัดไปพร้อมก่อน commit; video ไม่ overlap และการจบเพลงไม่ double-advance |
+| PLAY-26 | Manual DJ แสดง A/B และ crossfader; Medley ใช้ cue-in/cue-out/duration ที่ผู้ใช้กำหนด; pause/seek/stop/queue edit/failure ต้อง cancel หรือ rebase อย่าง deterministic โดย current item เปลี่ยนเมื่อ transition commit เท่านั้น |
+| PLAY-27 | Smart Medley ใช้ BPM/key/cue analysis ที่มี confidence; confidence ต่ำกลับไปใช้ regular crossfade; profile CPU/memory/latency/artifacts และห้ามอ้าง beat-perfect/sample-accurate หากไม่ได้ใช้ engine ที่พิสูจน์คุณสมบัตินั้น |
 
 การส่งไฟล์จาก Studio ต้องได้ local file ที่ Play เปิดต่อได้แม้ backend หยุดแล้ว
 metadata/title จาก Studio ใช้แสดงผลได้ แต่ไม่ใช้แทนสิทธิ์เข้าถึงไฟล์
@@ -248,10 +300,13 @@ metadata/title จาก Studio ใช้แสดงผลได้ แต่�
 ข้อกำหนดเดิมเรื่อง TV presentation (FR-18) ให้คงความสามารถที่ตรวจผ่านไว้เป็น
 ตัวเลือกการแสดงผลภายใน Full; ไม่เพิ่ม primary surface ที่สามและไม่เพิ่ม YouTube/DIAL เข้า Play
 
-**Success / exit criteria:** PLAY-01 ถึง PLAY-09 ผ่านทั้ง automated checks ที่เกี่ยวข้อง
+**Success / exit criteria:** PLAY-01 ถึง PLAY-09, PLAY-11 และ PLAY-13 ถึง PLAY-27 ผ่าน automated checks ที่เกี่ยวข้อง
 และ Windows runtime evidence; Studio/Arrange ไม่ถดถอย; standalone build ไม่อ่าน
 source จาก repo แม่ ก่อนลบ implementation เดิมและ merge การแยก
 PLAY-10 เป็น release gate แยกและต้องรายงาน NOT_RUN จนมีหลักฐาน installer/update จริง
+PLAY-12 ต้องมีหลักฐาน playback จริงเทียบ Stereo กับ Virtual 7.1 ผ่าน endpoint
+หูฟังที่เลือก พร้อมรายงานข้อจำกัด latency/CPU; source/build checks เพียงอย่างเดียว
+ไม่ผ่านเกณฑ์เสียง native
 
 ---
 

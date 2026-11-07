@@ -96,7 +96,7 @@ async function mount() {
 
 it("hover does not seek; dragging commits once and Escape/cancel do not commit", async () => {
   await mount();
-  const slider = screen.getByRole("slider", { name: "ตำแหน่งเล่น" });
+  const slider = screen.getByRole("slider", { name: "Playback position" });
   fireEvent.pointerMove(slider, { clientX: 20 });
   expect(seek).not.toHaveBeenCalled();
   fireEvent.pointerDown(slider, { button: 0, clientX: 30 });
@@ -117,14 +117,14 @@ it("hover does not seek; dragging commits once and Escape/cancel do not commit",
 
 it("keyboard range change seeks; Full-only buttons are absent", async () => {
   await mount();
-  fireEvent.change(screen.getByRole("slider", { name: "ตำแหน่งเล่น" }), {
+  fireEvent.change(screen.getByRole("slider", { name: "Playback position" }), {
     target: { value: "35" },
   });
   expect(seek).toHaveBeenCalledWith(35);
   expect(
-    screen.queryByRole("button", { name: /EQ|คิว|สุ่ม|หยุด$/ }),
+    screen.queryByRole("button", { name: /EQ|Queue|Shuffle|Stop$/ }),
   ).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "กลับ Full" }));
+  fireEvent.click(screen.getByRole("button", { name: "Back to Full" }));
   expect(props.onFull).toHaveBeenCalled();
 });
 
@@ -135,7 +135,7 @@ it("auto-hides only playing idle video; pointer/focus/pause keep controls availa
   expect(footer.classList.contains("controls-hidden")).toBe(true);
   fireEvent.pointerMove(container.querySelector(".app")!);
   expect(footer.classList.contains("controls-hidden")).toBe(false);
-  act(() => screen.getByRole("button", { name: "กลับ Full" }).focus());
+  act(() => screen.getByRole("button", { name: "Back to Full" }).focus());
   act(() => vi.advanceTimersByTime(2500));
   expect(footer.classList.contains("controls-hidden")).toBe(false);
   act(() =>
@@ -159,10 +159,10 @@ it("audio/empty/unknown duration does not start a preview and disposes video on 
   await mount();
   expect(FramePreview).not.toHaveBeenCalled();
   expect(
-    (screen.getByRole("slider", { name: "ตำแหน่งเล่น" }) as HTMLInputElement)
+    (screen.getByRole("slider", { name: "Playback position" }) as HTMLInputElement)
       .disabled,
   ).toBe(true);
-  expect(screen.getByRole("button", { name: "เปิดไฟล์" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Import file" })).toBeTruthy();
 });
 
 it("does not create a decoder after native authorization resolves after unmount", async () => {
@@ -193,12 +193,12 @@ it.each(["playing", "paused"] as const)(
     });
     const before = usePlaybackStore.getState();
     await mount();
-    fireEvent.pointerMove(screen.getByRole("slider", { name: "ตำแหน่งเล่น" }), {
+    fireEvent.pointerMove(screen.getByRole("slider", { name: "Playback position" }), {
       clientX: 80,
     });
-    fireEvent.click(screen.getByRole("button", { name: "ข้าม 10 วินาที" }));
+    fireEvent.click(screen.getByRole("button", { name: "Forward 10 seconds" }));
     expect(seek).toHaveBeenLastCalledWith(35);
-    fireEvent.click(screen.getByRole("button", { name: "ย้อน 10 วินาที" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back 10 seconds" }));
     expect(seek).toHaveBeenLastCalledWith(15);
     expect(usePlaybackStore.getState().nowPlaying.state).toBe(state);
     expect(usePlaybackStore.getState().queue).toBe(before.queue);
@@ -211,9 +211,9 @@ it("disables skip during drag/loading/error and consumes only the drag-cancellin
   const escape = vi.fn();
   window.addEventListener("keydown", escape);
   try {
-    const slider = screen.getByRole("slider", { name: "ตำแหน่งเล่น" });
+    const slider = screen.getByRole("slider", { name: "Playback position" });
     const forward = screen.getByRole("button", {
-      name: "ข้าม 10 วินาที",
+      name: "Forward 10 seconds",
     }) as HTMLButtonElement;
     fireEvent.pointerDown(slider, { button: 0, clientX: 50 });
     expect(forward.disabled).toBe(true);

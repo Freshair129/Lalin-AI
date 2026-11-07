@@ -1,3 +1,4 @@
+// @req FR-22.2 — Localized migration workflow, confirmation and status
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,15 +9,17 @@ import {
   type MigrationPreview,
 } from "../playMigration";
 import { importPlayMigration, undoLastPlayMigration } from "../playMigrationImport";
+import { useI18n, localizeError, type TranslationKey } from "../i18n";
 
 export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
+  const { t, locale } = useI18n();
   const fileRef = useRef<HTMLInputElement>(null);
   const [rawJson, setRawJson] = useState<string | null>(null);
   const [preview, setPreview] = useState<MigrationPreview | null>(null);
   const [allowRepeat, setAllowRepeat] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<{ key: TranslationKey; variables?: Record<string, string | number> } | null>(null);
   const [completedUnresolved, setCompletedUnresolved] = useState<MigrationPreview["unresolved"]>([]);
   const [undoAvailable, setUndoAvailable] = useState(false);
   const [undoReason, setUndoReason] = useState("");
@@ -47,7 +50,7 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
     setRawJson(null);
     setAllowRepeat(false);
     setError("");
-    setStatus("");
+    setStatus(null);
     setCompletedUnresolved([]);
     if (!file) return;
     try {
@@ -75,7 +78,7 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
     if (!preview || rawJson === null || busy) return;
     setBusy(true);
     setError("");
-    setStatus("");
+    setStatus(null);
     try {
       const result = await importPlayMigration(rawJson, preview, allowRepeat);
       onChanged();
@@ -84,11 +87,10 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
       setCompletedUnresolved(preview.unresolved);
       setPreview(null);
       setRawJson(null);
-      setStatus(
-        result.cleanupPending
-          ? `คิวและ EQ ถูกนำเข้าแล้ว (${preview.unresolved.length} รายการยังแก้ไขไม่ได้); จะตรวจ journal ซ้ำเมื่อเปิด Lalin Play ครั้งถัดไป`
-          : `นำเข้าคิวและ EQ แล้ว (${preview.unresolved.length} รายการยังแก้ไขไม่ได้) · หยุดเล่นอยู่และไม่เล่นอัตโนมัติ`,
-      );
+      setStatus({
+        key: result.cleanupPending ? "migration.cleanupPending" : "migration.importComplete",
+        variables: { count: preview.unresolved.length },
+      });
     } catch (cause) {
       setError(String(cause));
     } finally {
@@ -99,22 +101,18 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
   const undoImport = async () => {
     if (busy || !undoAvailable) return;
     const confirmed = window.confirm(
-      "ย้อนกลับคิว, EQ และคลัง Play ไปยังสถานะก่อน migration ครั้งล่าสุดหรือไม่? การแก้ไขคลังหลัง migration จะไม่ถูกรวมไว้ใน undo และไฟล์สื่อจะไม่ถูกลบ",
+      t("migration.undoConfirm"),
     );
     if (!confirmed) return;
     setBusy(true);
     setError("");
-    setStatus("");
+    setStatus(null);
     try {
       const result = await undoLastPlayMigration();
       onChanged();
       setUndoAvailable(false);
       setUndoReason("");
-      setStatus(
-        result.cleanupPending
-          ? "ย้อนกลับข้อมูลแล้ว; จะตรวจ journal ซ้ำเมื่อเปิด Lalin Play ครั้งถัดไป"
-          : "ย้อนกลับคิว, EQ และคลังไปยังสถานะก่อน migration แล้ว · ไฟล์สื่อเดิมยังอยู่",
-      );
+      setStatus({ key: result.cleanupPending ? "migration.undoCleanupPending" : "migration.undoComplete" });
     } catch (cause) {
       setError(String(cause));
     } finally {
@@ -124,33 +122,31 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
 
   return (
     <section className="play-migration" aria-labelledby="play-migration-title">
-      <h2 id="play-migration-title">ย้ายคิวและ EQ จาก Studio</h2>
-      <p>
-        เลือกไฟล์ migration ที่ส่งออกจาก Studio ระบบจะแสดงตัวอย่างและตรวจไฟล์ในเครื่องก่อนเขียนข้อมูล
-      </p>
+      <h2 id="play-migration-title">{t("migration.title")}</h2>
+      <p>{t("migration.intro")}</p>
       <input
         ref={fileRef}
         className="play-migration-file"
         type="file"
         accept=".json,application/json"
-        aria-label="เลือกไฟล์ migration จาก Studio"
+        aria-label={t("migration.chooseAria")}
         data-testid="play-migration-file"
         onChange={(event) => void selectFile(event)}
       />
       <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}>
-        เลือกไฟล์ migration
+        {t("migration.choose")}
       </button>
-      {error ? <p className="play-migration-error" role="alert">{error}</p> : null}
-      {status ? <p role="status" aria-live="polite">{status}</p> : null}
-      {undoReason ? <p role="status">{undoReason}</p> : null}
+      {error ? <p className="play-migration-error" role="alert">{localizeError(error, locale)}</p> : null}
+      {status ? <p role="status" aria-live="polite">{t(status.key, status.variables)}</p> : null}
+      {undoReason ? <p role="status">{localizeError(undoReason, locale)}</p> : null}
       {undoAvailable ? (
         <button type="button" onClick={() => void undoImport()} disabled={busy}>
-          ย้อนกลับการย้ายครั้งล่าสุด
+          {t("migration.undo")}
         </button>
       ) : null}
       {completedUnresolved.length ? (
         <details className="play-migration-report">
-          <summary>รายงานรายการที่แก้ไขไม่ได้ ({completedUnresolved.length})</summary>
+          <summary>{t("migration.unresolvedReport", { count: completedUnresolved.length })}</summary>
           <ul>
             {completedUnresolved.map((item) => (
               <li key={item.entryId}>{item.displayLabel}: {item.reason}</li>
@@ -160,20 +156,20 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
       ) : null}
       {busy && typeof document !== "undefined" ? createPortal(
         <div className="play-migration-overlay" role="dialog" aria-modal="true" aria-labelledby="play-migration-busy">
-          <p id="play-migration-busy">กำลังนำเข้าคิว/EQ และบันทึก transaction อย่างปลอดภัย…</p>
+          <p id="play-migration-busy">{t("migration.busy")}</p>
         </div>,
         document.body,
       ) : null}
       {preview ? (
-        <div className="play-migration-preview" role="region" aria-label="ตัวอย่าง migration">
-          <h3>ตรวจสอบก่อนนำเข้า</h3>
-          <p>เพลงที่ตรวจพบและเพิ่มในคิว: {preview.plan.items.length}</p>
-          <p>รายการที่แก้ไขไม่ได้และจะคงไว้ในรายงาน: {preview.unresolved.length}</p>
-          <p>EQ: {preview.eq.bands.length} bands · preset กำหนดเอง {preview.eq.customPresets.length} รายการ</p>
-          <p>การนำเข้าจะแทนที่คิวและ EQ ปัจจุบัน เพิ่มไฟล์เข้า library และเปิดการคืนคิวเมื่อเปิดครั้งถัดไป โดยไม่ autoplay</p>
+        <div className="play-migration-preview" role="region" aria-label={t("migration.previewAria")}>
+          <h3>{t("migration.review")}</h3>
+          <p>{t("migration.addedTracks", { count: preview.plan.items.length })}</p>
+          <p>{t("migration.unresolvedCount", { count: preview.unresolved.length })}</p>
+          <p>{t("migration.eqSummary", { bands: preview.eq.bands.length, presets: preview.eq.customPresets.length })}</p>
+          <p>{t("migration.replaceSummary")}</p>
           {preview.unresolved.length ? (
             <details>
-              <summary>ดูรายการที่แก้ไขไม่ได้ ({preview.unresolved.length})</summary>
+              <summary>{t("migration.viewUnresolved", { count: preview.unresolved.length })}</summary>
               <ul>
                 {preview.unresolved.map((item) => (
                   <li key={item.entryId}>{item.displayLabel}: {item.reason}</li>
@@ -188,17 +184,17 @@ export function PlayMigrationImport({ onChanged }: { onChanged: () => void }) {
                 checked={allowRepeat}
                 onChange={(event) => setAllowRepeat(event.target.checked)}
               />{" "}
-              ยืนยันนำเข้า export ID นี้ซ้ำและแทนที่คิว/EQ อีกครั้ง
+              {t("migration.repeatConfirm")}
             </label>
           ) : null}
           <div className="play-migration-actions">
-            <button type="button" onClick={cancel} disabled={busy}>ยกเลิก</button>
+            <button type="button" onClick={cancel} disabled={busy}>{t("migration.cancel")}</button>
             <button
               type="button"
               onClick={() => void confirmImport()}
               disabled={busy || (preview.alreadyImported && !allowRepeat)}
             >
-              {busy ? "กำลังนำเข้า…" : "นำเข้าและแทนที่คิว/EQ"}
+              {busy ? t("migration.importing") : t("migration.importReplace")}
             </button>
           </div>
         </div>

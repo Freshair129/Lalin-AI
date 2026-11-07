@@ -1,4 +1,6 @@
+// @req FR-22.2 — Localized full playback controls, state and accessibility labels
 import { usePlaybackStore } from "../playback/usePlaybackStore";
+import { useI18n, localizeError } from "../i18n";
 
 export function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -7,26 +9,27 @@ export function formatTime(seconds: number) {
 
 export function Transport({ report }: { report: (error: unknown) => void }) {
   const store = usePlaybackStore();
+  const { t, locale } = useI18n();
   const { nowPlaying: now, queue } = store;
   const action = (promise: Promise<unknown>) => void promise.catch(report);
   return (
-    <footer className="transport" aria-label="ควบคุมการเล่น">
+    <footer className="transport" aria-label={t("transport.label")}>
       <div className="track-summary">
         <span className="cover" aria-hidden="true">
           ♪
         </span>
         <div>
-          <strong>{now.item?.title || "เลือกเพลงที่อยากฟัง"}</strong>
-          <small>{now.item?.artist || "ไฟล์ในเครื่องของคุณ"}</small>
+          <strong>{now.item?.title || t("transport.emptyTitle")}</strong>
+          <small>{now.item?.artist || t("transport.emptySubtitle")}</small>
         </div>
         <span className="play-state" data-testid="play-state">
-          {now.state}
+          {t(`transport.state.${now.state}` as "transport.state.idle" | "transport.state.playing" | "transport.state.paused" | "transport.state.loading" | "transport.state.error")}
         </span>
       </div>
       <div className="seek-row">
         <time data-testid="position">{formatTime(now.currentTime)}</time>
         <input
-          aria-label="ตำแหน่งเล่น"
+          aria-label={t("transport.position")}
           type="range"
           min="0"
           max={Number.isFinite(now.duration) ? now.duration : 0}
@@ -38,33 +41,33 @@ export function Transport({ report }: { report: (error: unknown) => void }) {
       </div>
       <div className="transport-buttons">
         <button
-          aria-label="สุ่มเพลง"
+          aria-label={t("transport.shuffle")}
           aria-pressed={queue.shuffle}
           onClick={store.toggleShuffle}
         >
           ⇄
         </button>
         <button
-          aria-label="เพลงก่อนหน้า"
+          aria-label={t("transport.previous")}
           onClick={() => action(store.previous())}
         >
           ⏮
         </button>
         <button
           className="play-button"
-          aria-label={now.state === "playing" ? "หยุดชั่วคราว" : "เล่น"}
+          aria-label={now.state === "playing" ? t("transport.pause") : t("transport.play")}
           onClick={() => action(store.togglePlay())}
         >
           {now.state === "playing" ? "Ⅱ" : "▶"}
         </button>
-        <button aria-label="เพลงถัดไป" onClick={() => action(store.next())}>
+        <button aria-label={t("transport.next")} onClick={() => action(store.next())}>
           ⏭
         </button>
-        <button aria-label="หยุด" onClick={store.stop}>
+        <button aria-label={t("transport.stop")} onClick={store.stop}>
           ■
         </button>
         <button
-          aria-label="เล่นซ้ำ"
+          aria-label={t("transport.repeat")}
           aria-pressed={queue.repeatMode !== "off"}
           onClick={() =>
             store.setRepeatMode(
@@ -80,13 +83,13 @@ export function Transport({ report }: { report: (error: unknown) => void }) {
         </button>
         <label className="volume">
           <button
-            aria-label={now.muted ? "เปิดเสียง" : "ปิดเสียง"}
+            aria-label={now.muted ? t("transport.unmute") : t("transport.mute")}
             onClick={store.toggleMute}
           >
-            {now.muted ? "เงียบ" : "เสียง"}
+            {now.muted ? t("transport.unmute") : t("transport.mute")}
           </button>
           <input
-            aria-label="ระดับเสียง"
+            aria-label={t("transport.volume")}
             type="range"
             min="0"
             max="1"
@@ -98,7 +101,7 @@ export function Transport({ report }: { report: (error: unknown) => void }) {
       </div>
       {now.error ? (
         <p role="alert" className="error">
-          {now.error}
+          {localizeError(now.error, locale)}
         </p>
       ) : null}
     </footer>

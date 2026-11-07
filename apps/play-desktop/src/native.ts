@@ -1,3 +1,6 @@
+// @req PLAY-15 — Native catalog reads are served by GenesisBlockDB.
+// @req PLAY-16 — YouTube references use the official external-link commands.
+// @req PLAY-18 — Persisted favorite and source metadata are exposed to the UI.
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type { MediaItem } from "./contracts";
 
@@ -10,6 +13,18 @@ export interface LocalTrack {
   album: string | null;
   duration: number | null;
   missing: boolean;
+  sourceKind?: string;
+  storageKind?: string;
+  favorite?: boolean;
+  playCount?: number;
+  lastPlayedAt?: number | null;
+}
+
+export interface YoutubeLink {
+  id: string;
+  url: string;
+  title: string;
+  addedAt: number;
 }
 
 export async function getLibrary(): Promise<LocalTrack[]> {
@@ -17,6 +32,22 @@ export async function getLibrary(): Promise<LocalTrack[]> {
     "get_library",
   );
   return library.tracks;
+}
+
+export async function listYoutubeLinks(): Promise<YoutubeLink[]> {
+  return invoke<YoutubeLink[]>("list_youtube_links");
+}
+
+export async function addYoutubeLink(url: string, title: string): Promise<YoutubeLink> {
+  return invoke<YoutubeLink>("add_youtube_link", { url, title });
+}
+
+export async function removeYoutubeLink(id: string): Promise<void> {
+  await invoke("remove_youtube_link", { id });
+}
+
+export async function openYoutubeLink(id: string): Promise<void> {
+  await invoke("open_youtube_link", { id });
 }
 
 export function mediaItem(track: LocalTrack): MediaItem {

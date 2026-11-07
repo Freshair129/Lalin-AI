@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-record-listen"
+description = "Enables the record_listen command without any pre-configured scope."
+commands.allow = ["record_listen"]
+
+[[permission]]
+identifier = "deny-record-listen"
+description = "Denies the record_listen command without any pre-configured scope."
+commands.deny = ["record_listen"]

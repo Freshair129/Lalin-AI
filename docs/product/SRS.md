@@ -1,7 +1,7 @@
 ---
-version: "1.5.2b"
+version: "1.9.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-10-20T00:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "under review"
 superseded_by: null
 attributes:
@@ -19,12 +19,12 @@ attributes:
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.5.0b |
-| **Status** | In Review |
+| **Doc Version** | 1.9.0b |
+| **Status** | CR-006..CR-008 Play requirements adopted; full Studio SRS remains in review |
 | **Author** | Boss / LALIN |
 | **Created** | 2026-06-27 |
-| **Last Updated** | 2026-09-20 |
-| **Approved By** | Boss — Phase 1 scope approved 2026-08-23; CR-001 implementation merged via PR #10, MVP acceptance remains under review |
+| **Last Updated** | 2026-10-20 |
+| **Approved By** | Boss — Phase 1 scope approved 2026-08-23; user approved CR-006..CR-008 Play scope 2026-10-20; MVP acceptance remains under review |
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
@@ -36,6 +36,11 @@ attributes:
 | 1.3.1b | 2026-09-17 | LALIN | Correct CR-001 integration status after PR #10; link command-delivery RCA and candidate remediation without claiming MVP acceptance |
 | 1.4.0b | 2026-09-18 | LALIN | เพิ่ม FR-18 และ NFR-TV สำหรับ Lalin Play TV / Leanback Mode ตาม CR-002 และแผน architecture ที่อนุมัติ |
 | 1.5.0b | 2026-09-20 | LALIN | Add standalone Play ownership/traceability, clarify historical video deferral and add version frontmatter without changing Studio acceptance |
+| 1.6.0b | 2026-10-20 | Codex | Adopt CR-006 Play Mixer, virtual HRTF surround and ENG/TH localization requirements; native audio acceptance remains open |
+| 1.7.0b | 2026-10-20 | Codex | Adopt approved CR-007 Play dashboard, offline library, authorized-source, cache, favorites and badge requirements; implementation acceptance remains open |
+| 1.9.0b | 2026-10-20 | Codex | Adopt approved CR-008 LAN remote, phone media handoff, YouTube reference metadata and audio-only dual-deck transitions; implementation acceptance remains open |
+| 1.8.0b | 2026-10-20 | Codex | Amend approved CR-007 to use GenesisBlockDB as the single catalog/index database and RustFS-ready object storage; implementation acceptance remains open |
+| 1.9.1b | 2026-11-07 | Claude | Rebase CR-006/007/008 Play work onto main (a6325d0); requirements unchanged |
 
 ---
 
@@ -346,20 +351,24 @@ Canonical definitions remain in [PRD §4.9](PRD.md#49-lalin-play--standalone-loc
 [CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md) and
 [CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md); do not duplicate/reassign
 their IDs as new FR numbers. [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md)
-maps all 33 criteria to source/tests/evidence with local/partial/not-run status.
+maps all 50 criteria to source/tests/evidence with local/partial/not-run status.
 
 | Requirement group | Scope and relationship to SRS |
 |---|---|
 | PLAY-01–10 | Independent local runtime, Full/Compact, data, Studio handoff and separate release; extends FR-16/16W/17 |
 | PLAY-V01–10 | Approved bounded local video; extends FR-16.10, preserves one playback owner and EQ |
 | PLAY-C01–13 | Approved minimal Compact, isolated preview, native fullscreen and ±10; queue/EQ controls remain in Full |
+| PLAY-11–13 | Approved CR-006 mixer, stereo-derived virtual surround and ENG/TH localization; native audio acceptance is tracked separately |
+| PLAY-14–20 | Approved CR-007 Dashboard, GenesisBlockDB relational catalog, RustFS-ready media objects, authorized source links, bounded cache, favorites/badges and graph/vector search; native offline acceptance is tracked separately |
+| PLAY-21–27 | Approved CR-008 LAN pairing/remote commands, phone-file copy/stream, YouTube metadata references, queue occurrence identity and audio-only transitions; security/mobile/native acceptance remains separately tracked |
 | FR-18 / NFR-TV | Retained TV presentation target; Compact fullscreen is separate and does not prove native TV/gamepad parity |
 
 Source `f5a6681` is pushed on `codex/lalin-play-split` in Lalin-AI, not exported
 to an independent repository. S1 local pass/S2 partial/S3–S7 not run remain per
 [ADR-004](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md). New detailed
 IPC/migration/release specifications linked by the [document register](LALIN_PLAY_DOCUMENTATION.md)
-are candidates, not implemented interfaces or a new approved release scope.
+retain their individual status; CR-006, CR-007 and CR-008 are approved and their
+implementation/evidence status is tracked in the Play traceability matrix.
 Studio Python/CUDA/ML constraints elsewhere in this SRS do not apply to standalone
 Play. Local file support does not promise a universal decoder, streaming or DIAL.
 
@@ -401,10 +410,37 @@ Play. Local file support does not promise a universal decoder, streaming or DIAL
 | FR-18.2 | TV Mode ต้องแสดง layout แบบ 10-foot ด้วยตัวอักษร/ปุ่ม/ระยะห่างที่อ่านและกดได้จากระยะไกล พร้อม visible focus | Must |
 | FR-18.3 | Keyboard navigation ต้องใช้ directional focus (Arrow/Tab), Enter/Space เพื่อ activate และ Escape เพื่อออกจาก TV Mode | Must |
 | FR-18.4 | ระบบต้อง map semantic gamepad input (D-pad, A/confirm, B/back, Start/menu) ผ่าน adapter ที่ถอดเปลี่ยนได้ และ cleanup listener/polling เมื่อออกจากโหมด | Should |
-| FR-18.5 | Native Tauri ใช้ fullscreen ของหน้าต่าง `play`; browser ใช้ Fullscreen API เมื่อมี และแสดงข้อผิดพลาดภาษาไทยเมื่อทำไม่ได้ | Must |
+| FR-18.5 | Native Tauri ใช้ fullscreen ของหน้าต่าง `play`; browser ใช้ Fullscreen API เมื่อมี และแสดงข้อผิดพลาดตาม locale ที่เลือกเมื่อทำไม่ได้ | Must |
 | FR-18.6 | การเข้า/ออก TV Mode ต้องไม่ reset queue, EQ, Now Playing, position, volume หรือ playback owner | Must |
 | FR-18.7 | TV Mode ต้องมีทางออกที่เข้าถึงได้เสมอและไม่ซ่อน error ของ fullscreen/input | Must |
 | FR-18.8 | TV Mode ต้องไม่เพิ่ม backend endpoint, network permission, media decoder หรือ playback engine ใหม่ | Must |
+
+### FR-20: Lalin Play in-app Mixer (CR-006 approved)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-20.1 | Full ต้องแสดงเฉพาะ channel ที่ playback owner ของ Play ส่งเสียงจริง ได้แก่ MEDIA และ MASTER; ห้ามแสดง Game/Chat/Aux/Mic เป็น channel ปลอม | Must |
+| FR-20.2 | MEDIA fader (0–150%) และ mute ต้องควบคุม gain แยกใน Play signal chain โดยไม่แก้ไฟล์ต้นฉบับ, reset EQ หรือเปลี่ยน master volume | Must |
+| FR-20.3 | MASTER controls ต้องใช้ master volume/mute และ output selection owner เดิม; transport volume และ mixer ต้องแสดงค่าเดียวกัน | Must |
+| FR-20.4 | MEDIA gain/mute และ spatial mode ต้อง persist ใน versioned local storage แยกจาก queue/EQ; invalid state ต้อง fallback เป็นค่าปลอดภัย | Must |
+| FR-20.5 | Full Mixer ต้องมีทางลัดไป EQ เดิม; Compact ยังคง minimal และไม่เพิ่ม Mixer/EQ controls | Must |
+
+### FR-21: Stereo-derived virtual headphone surround (CR-006 approved)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-21.1 | Stereo เป็นค่าเริ่มต้นและส่ง stereo ผ่าน playback chain โดยไม่ upmix/HRTF | Must |
+| FR-21.2 | Virtual 7.1 รับ stereo, สร้าง virtual speaker feeds และใช้ HRTF render ลง stereo output สำหรับหูฟัง; UI ต้องระบุว่าเป็นการจำลองจาก stereo ไม่ใช่ true 7.1 decode/8-channel output | Should |
+| FR-21.3 | การเปลี่ยนโหมดต้อง ramp gain, ไม่ restart/reload media และต้องรักษา queue, position, EQ, master volume และ selected output | Must |
+| FR-21.4 | หากสร้าง HRTF graph ไม่ได้ ต้อง fallback เป็น Stereo และแจ้งผู้ใช้; limiter เดิมยังต้องครอบ signal paths ทั้งสอง | Must |
+
+### FR-22: Lalin Play ENG/TH localization (CR-006 approved)
+
+| ID | ข้อกำหนด | Priority |
+|----|----------|----------|
+| FR-22.1 | เมื่อไม่มี locale preference ให้ใช้ ENG โดยไม่ตรวจ OS/browser locale; Full มีตัวสลับ ENG/TH และ Compact ใช้ locale ที่เลือกไว้ | Must |
+| FR-22.2 | Locale ต้องเปลี่ยนข้อความ Play-owned, errors, tooltips และ accessibility labels ทันทีและ persist ด้วย versioned local key; locale invalid fallback เป็น ENG | Must |
+| FR-22.3 | ห้ามแปลชื่อเพลง/ศิลปิน/อัลบั้ม/playlist, file metadata, Windows title bar/file picker หรือข้อความที่ OS เป็นเจ้าของ | Must |
 
 ---
 

@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.5b"
 created_at: "2026-09-20T18:34:22+07:00,LALIN,8429010"
-last_update: "2026-09-20T22:40:00+07:00,LALIN"
+last_update: "2026-10-19T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -24,7 +24,7 @@ attributes:
 | Product | หน้าที่ | Source ownership ปัจจุบัน |
 |---|---|---|
 | Lalin Studio | Create / Edit / Produce: AI audio workstation | `apps/desktop`, `apps/api`, `apps/mcp` ใน `Freshair129/Lalin-AI` |
-| Lalin Play | Local media player: Full แบบ Spotify + Winamp และ Compact แบบ VLC | มี standalone candidate ที่ `apps/play-desktop` บน `codex/lalin-play-split`; owner เดิมใน Studio ยังไม่ถอน |
+| Lalin Play | Local media player: Full แบบ Spotify + Winamp และ Compact แบบ VLC | candidate source `apps/play-desktop` อยู่ใน `main` จาก baseline `f5a6681`; follow-up `codex/lalin-play-g3-followup` ที่ `d241a74` ยังไม่ merge; owner เดิมใน Studio ยังไม่ถอน |
 | Lalin Cast | YouTube TV / Leanback, DIAL และ mobile pairing | แยกแล้วที่ `Freshair129/lalin-cast`; ดู [handoff](docs/architecture/LALIN_CAST_SEPARATION_HANDOFF.md) |
 
 Lalin Play เป็นหนึ่งโปรดัค มีสองรูปแบบหน้าจอที่ใช้ playback owner, queue,
@@ -150,6 +150,7 @@ powershell -ExecutionPolicy Bypass -File tools\build\build_installer.ps1
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-10-19 | beta | Clarify Play source baseline in main and distinguish the unmerged G3 follow-up branch; retain candidate and release boundaries | working tree | Codex |
 | 0.2.4b | 2026-10-15 | beta | Accept bounded CUDA allocator residual after releasing the TTS singleton; document coordinator verification and validate against a real local F5-TTS GPU job | based on f918b09 | LALIN |
 | 0.2.3b | 2026-10-15 | beta | Add opt-in TTS GPU release receipts and explicit idle runtime status for issue #26 | based on 64212b1 | LALIN |
 | 0.2.2b | 2026-09-20 | beta | Link complete Play document register and clarify candidate execution boundaries | based on f5a6681 | LALIN |

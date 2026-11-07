@@ -1,3 +1,4 @@
+// @tested FR-20.1, FR-20.2, FR-20.4, FR-20.5, FR-22.1, FR-22.2
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   act,
@@ -17,6 +18,7 @@ import {
   STORAGE_QUEUE_KEY,
 } from "./playback/usePlaybackStore";
 import { loadPlaylists, savePlaylists } from "./playlists";
+import { STORAGE_LOCALE_KEY } from "./i18n";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -38,6 +40,12 @@ const track = {
 const engine = PlaybackAudioEngine.getInstance();
 const audio = (engine as unknown as { audio: HTMLAudioElement }).audio;
 
+async function openAllTracks(): Promise<void> {
+  fireEvent.click(
+    await screen.findByRole("button", { name: /All tracks|เพลงทั้งหมด/ }),
+  );
+}
+
 beforeEach(() => {
   // jsdom ไม่มี MediaError constructor; ใช้ค่ามาตรฐานของ browser ใน fixture
   vi.stubGlobal("MediaError", {
@@ -46,7 +54,12 @@ beforeEach(() => {
     MEDIA_ERR_DECODE: 3,
     MEDIA_ERR_SRC_NOT_SUPPORTED: 4,
   });
+  vi.stubGlobal("ResizeObserver", class {
+    observe() {}
+    disconnect() {}
+  });
   localStorage.clear();
+  localStorage.setItem(STORAGE_LOCALE_KEY, "th");
   vi.mocked(listen).mockResolvedValue(() => {});
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
   vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
@@ -58,6 +71,9 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
   usePlaybackStore.getState().clearQueue();
   usePlaybackStore.getState().resetEQ();
+  usePlaybackStore.getState().setMediaGain(1);
+  if (usePlaybackStore.getState().mixer.mediaMuted) usePlaybackStore.getState().toggleMediaMute();
+  usePlaybackStore.getState().setSpatialMode("stereo");
   vi.mocked(invoke).mockImplementation(async (command) => {
     if (command === "get_library") return { version: 1, tracks: [track] };
     if (command === "resolve_media") return track.path;
@@ -71,8 +87,48 @@ afterEach(() => {
 });
 
 describe("standalone surfaces (mocked IPC; native evidence is separate)", () => {
+  it("defaults to English and switches the shared locale without changing playback", async () => {
+    localStorage.removeItem(STORAGE_LOCALE_KEY);
+    render(<App />);
+    const english = await screen.findByRole("button", { name: "ENG" });
+    expect(english.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "♫ All tracks" })).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Mixer" }));
+    expect(screen.getAllByText("MUTE")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "TH" }));
+    expect(screen.getByText("คลังเพลง")).not.toBeNull();
+    expect(Array.from(document.querySelectorAll(".mixer-mute"), (button) => button.textContent)).toEqual([
+      "ปิดเสียง",
+      "ปิดเสียง",
+    ]);
+    expect(localStorage.getItem(STORAGE_LOCALE_KEY)).toBe("th");
+    expect(document.documentElement.lang).toBe("th");
+    fireEvent.click(screen.getByRole("button", { name: /Compact/ }));
+    expect(await screen.findByRole("button", { name: "กลับ Full" })).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "กลับ Full" }));
+    expect(await screen.findByRole("button", { name: "มิกเซอร์" })).not.toBeNull();
+    expect(usePlaybackStore.getState().nowPlaying.item).toBeNull();
+  });
+
+  it("exposes only real media/master mixer channels and persists media controls", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "มิกเซอร์" }));
+    expect(screen.getByText("MEDIA · สื่อ")).not.toBeNull();
+    expect(screen.getByText("MASTER · รวม")).not.toBeNull();
+    expect(screen.queryByText("GAME")).toBeNull();
+    fireEvent.change(screen.getByRole("slider", { name: "ระดับเสียงสื่อ" }), { target: { value: "1.25" } });
+    expect(usePlaybackStore.getState().mixer.mediaGain).toBe(1.25);
+    expect(JSON.parse(localStorage.getItem("lalin-play:v1:mixer")!).mediaGain).toBe(1.25);
+    fireEvent.click(screen.getByRole("button", { name: "ปิดเสียงช่องสื่อ" }));
+    expect(usePlaybackStore.getState().mixer.mediaMuted).toBe(true);
+    expect(screen.getByText("ปิดเสียงแล้ว")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "เปิดอีควอไลเซอร์" }));
+    expect(screen.getByRole("region", { name: "ปรับระดับแต่ละย่าน EQ" })).not.toBeNull();
+  });
+
   it("preserves one audio element, position, queue and EQ across Full/Compact", async () => {
     render(<App />);
+    await openAllTracks();
     fireEvent.click(await screen.findByRole("button", { name: /♪ เพลง one/ }));
     await waitFor(() =>
       expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing"),
@@ -99,6 +155,7 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
 
   it("does not switch layout or recreate playback when native resizing fails", async () => {
     render(<App />);
+    await openAllTracks();
     await screen.findByRole("button", { name: /♪ เพลง one/ });
     vi.mocked(invoke).mockRejectedValueOnce(new Error("resize failed"));
     fireEvent.click(screen.getByRole("button", { name: /Compact/ }));
@@ -111,8 +168,9 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
 
   it("queues without autoplay and surfaces missing-file errors without losing the queue", async () => {
     render(<App />);
+    await openAllTracks();
     fireEvent.click(
-      await screen.findByRole("button", { name: /เพิ่ม เพลง one เข้าคิว/ }),
+      await screen.findByRole("button", { name: /เพิ่มเข้าคิว เพลง one/ }),
     );
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
     vi.mocked(invoke).mockRejectedValueOnce(new Error("ไม่พบไฟล์"));
@@ -123,11 +181,88 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
     expect(usePlaybackStore.getState().queue.items).toHaveLength(1);
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
   });
+
+  it("records a listen only after attributed deck time is audible", async () => {
+    render(<App />);
+    const shortItem = {
+      id: "listened-track",
+      title: "Short listen",
+      url: "asset:short-listen",
+      duration: 4,
+    };
+    await act(async () => usePlaybackStore.getState().play(shortItem));
+    const media = engine.getActiveMediaElement()!;
+    const updateTime = async (time: number) => {
+      await act(async () => {
+        media.currentTime = time;
+        media.dispatchEvent(new Event("timeupdate"));
+      });
+    };
+
+    await updateTime(0);
+    usePlaybackStore.getState().toggleMediaMute();
+    await updateTime(1);
+    await updateTime(2);
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(0);
+
+    usePlaybackStore.getState().toggleMediaMute();
+    await updateTime(2);
+    await updateTime(3);
+    await updateTime(4);
+    await waitFor(() => {
+      expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(1);
+    });
+    expect(invoke).toHaveBeenCalledWith("record_listen", { id: "listened-track" });
+  });
+
+  it("counts both overlap decks only while each deck is audible, ignoring silent preload", async () => {
+    render(<App />);
+    const emitAudibleTime = async (update: {
+      mediaId: string;
+      queueEntryId: string;
+      sessionId: number;
+      duration: number;
+      currentTime: number;
+      audible: boolean;
+    }) => {
+      await act(async () => {
+        (engine as unknown as { emit: (name: string, data: unknown) => void })
+          .emit("audibletimeupdate", update);
+      });
+    };
+    const event = (
+      mediaId: string,
+      queueEntryId: string,
+      sessionId: number,
+      currentTime: number,
+      audible: boolean,
+    ) => ({ mediaId, queueEntryId, sessionId, duration: 4, currentTime, audible });
+
+    await emitAudibleTime(event("outgoing-track", "entry-outgoing", 1, 0, true));
+    await emitAudibleTime(event("outgoing-track", "entry-outgoing", 1, 1, true));
+    await emitAudibleTime(event("incoming-track", "entry-incoming", 2, 0, false));
+    await emitAudibleTime(event("incoming-track", "entry-incoming", 2, 1, false));
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(0);
+
+    await emitAudibleTime(event("outgoing-track", "entry-outgoing", 1, 2, true));
+    await emitAudibleTime(event("incoming-track", "entry-incoming", 2, 2, true));
+    await emitAudibleTime(event("outgoing-track", "entry-outgoing", 1, 3, true));
+    await emitAudibleTime(event("incoming-track", "entry-incoming", 2, 3, true));
+    await emitAudibleTime(event("outgoing-track", "entry-outgoing", 1, 4, true));
+    await emitAudibleTime(event("incoming-track", "entry-incoming", 2, 4, true));
+
+    await waitFor(() => {
+      expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(2);
+    });
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen").map(([, args]) => args))
+      .toEqual([{ id: "outgoing-track" }, { id: "incoming-track" }]);
+  });
 });
 
 describe("Compact fullscreen (native IPC mocked)", () => {
   it("waits for native state, ignores repeat input, exits with Escape and preserves playback", async () => {
     render(<App />);
+    await openAllTracks();
     fireEvent.click(await screen.findByRole("button", { name: /♪ เพลง one/ }));
     await waitFor(() =>
       expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing"),
@@ -265,6 +400,7 @@ describe("local video presentation", () => {
 
   it("keeps a single mounted video and source across layouts, navigation and expanded Escape", async () => {
     const { container } = render(<App />);
+    await openAllTracks();
     await screen.findByRole("button", { name: /♪ เพลง one/ });
     await act(async () => {
       await usePlaybackStore.getState().play(videoItem);
@@ -283,7 +419,7 @@ describe("local video presentation", () => {
     expect(media.parentElement).toBe(parent);
     fireEvent.click(screen.getByRole("button", { name: /กลับ Full/ }));
     await screen.findByRole("button", { name: /Compact/ });
-    fireEvent.click(screen.getByRole("button", { name: "ปรับเสียง EQ" }));
+    fireEvent.click(screen.getByRole("button", { name: "อีควอไลเซอร์" }));
     fireEvent.click(screen.getByRole("button", { name: "ขยายภาพ" }));
     expect(container.querySelector(".video-expanded")).not.toBeNull();
     fireEvent.keyDown(window, { key: "Escape" });

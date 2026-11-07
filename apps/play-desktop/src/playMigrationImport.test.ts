@@ -69,6 +69,7 @@ afterEach(() => {
 
 describe("atomic Play migration import", () => {
   it("recovers a journal when the native prepare response is lost", async () => {
+    const before = usePlaybackStore.getState();
     localStorage.setItem(PLAY_QUEUE_KEY, "exact-old-queue");
     localStorage.setItem(PLAY_EQ_KEY, "exact-old-eq");
     localStorage.setItem(PLAY_RESUME_KEY, "false");
@@ -93,6 +94,10 @@ describe("atomic Play migration import", () => {
     expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe("exact-old-queue");
     expect(localStorage.getItem(PLAY_EQ_KEY)).toBe("exact-old-eq");
     expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
+    expect(usePlaybackStore.getState().queue).toBe(before.queue);
+    expect(usePlaybackStore.getState().eq).toBe(before.eq);
+    expect(usePlaybackStore.getState().nowPlaying).toBe(before.nowPlaying);
+    expect(usePlaybackStore.getState().queue.revision).toBe(before.queue.revision);
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
       "prepare_play_migration", "recover_play_migration", "ack_play_migration",
     ]);
@@ -101,6 +106,7 @@ describe("atomic Play migration import", () => {
   it("restores exact prior storage and store state when native catalog apply fails", async () => {
     usePlaybackStore.getState().addToQueue({ id: "old", title: "old", url: "asset:old" });
     usePlaybackStore.getState().setBandGain(0, 4);
+    const before = usePlaybackStore.getState();
     localStorage.setItem(PLAY_QUEUE_KEY, "exact-old-queue");
     localStorage.setItem(PLAY_EQ_KEY, "exact-old-eq");
     localStorage.setItem(PLAY_RESUME_KEY, "false");
@@ -126,8 +132,10 @@ describe("atomic Play migration import", () => {
     expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe("exact-old-queue");
     expect(localStorage.getItem(PLAY_EQ_KEY)).toBe("exact-old-eq");
     expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
-    expect(usePlaybackStore.getState().queue.items.map((item) => item.id)).toEqual(["old"]);
-    expect(usePlaybackStore.getState().eq.bands[0].gain).toBe(4);
+    expect(usePlaybackStore.getState().queue).toBe(before.queue);
+    expect(usePlaybackStore.getState().eq).toBe(before.eq);
+    expect(usePlaybackStore.getState().nowPlaying).toBe(before.nowPlaying);
+    expect(usePlaybackStore.getState().queue.revision).toBe(before.queue.revision);
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
       "prepare_play_migration", "apply_play_migration",
       "rollback_play_migration", "ack_play_migration",
@@ -137,6 +145,7 @@ describe("atomic Play migration import", () => {
   it("rolls back native catalog and exact prior values when EQ storage write fails", async () => {
     usePlaybackStore.getState().addToQueue({ id: "old", title: "old", url: "asset:old" });
     usePlaybackStore.getState().setBandGain(0, 4);
+    const before = usePlaybackStore.getState();
     localStorage.setItem(PLAY_QUEUE_KEY, "exact-old-queue");
     localStorage.setItem(PLAY_EQ_KEY, "exact-old-eq");
     localStorage.setItem(PLAY_RESUME_KEY, "false");
@@ -174,6 +183,10 @@ describe("atomic Play migration import", () => {
     expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe("exact-old-queue");
     expect(localStorage.getItem(PLAY_EQ_KEY)).toBe("exact-old-eq");
     expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
+    expect(usePlaybackStore.getState().queue).toBe(before.queue);
+    expect(usePlaybackStore.getState().eq).toBe(before.eq);
+    expect(usePlaybackStore.getState().nowPlaying).toBe(before.nowPlaying);
+    expect(usePlaybackStore.getState().queue.revision).toBe(before.queue.revision);
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
       "prepare_play_migration", "rollback_play_migration", "ack_play_migration",
     ]);
@@ -183,6 +196,7 @@ describe("atomic Play migration import", () => {
     localStorage.setItem(PLAY_QUEUE_KEY, "old-queue");
     localStorage.setItem(PLAY_EQ_KEY, "old-eq");
     localStorage.setItem(PLAY_RESUME_KEY, "false");
+    const before = usePlaybackStore.getState();
     const recovery = {
       transactionId: txId,
       committed: false,
@@ -206,8 +220,10 @@ describe("atomic Play migration import", () => {
     expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe("old-queue");
     expect(localStorage.getItem(PLAY_EQ_KEY)).toBe("old-eq");
     expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
-    expect(usePlaybackStore.getState().queue.items).toHaveLength(0);
-    expect(usePlaybackStore.getState().nowPlaying.state).toBe("idle");
+    expect(usePlaybackStore.getState().queue).toBe(before.queue);
+    expect(usePlaybackStore.getState().eq).toBe(before.eq);
+    expect(usePlaybackStore.getState().nowPlaying).toBe(before.nowPlaying);
+    expect(usePlaybackStore.getState().queue.revision).toBe(before.queue.revision);
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
       "prepare_play_migration", "apply_play_migration", "commit_play_migration",
       "recover_play_migration", "rollback_play_migration", "ack_play_migration",
@@ -215,6 +231,7 @@ describe("atomic Play migration import", () => {
   });
 
   it("commits queue, EQ and resume together without starting playback", async () => {
+    const startingRevision = usePlaybackStore.getState().queue.revision ?? 0;
     vi.mocked(invoke).mockImplementation(async (command) => {
       if (command === "prepare_play_migration") return prepared;
       return undefined;
@@ -227,6 +244,7 @@ describe("atomic Play migration import", () => {
     expect(JSON.parse(localStorage.getItem(PLAY_QUEUE_KEY)!).items[0].id).toBe(track.id);
     expect(JSON.parse(localStorage.getItem(PLAY_EQ_KEY)!).bands[0].gain).toBe(1);
     expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().queue.revision).toBe(startingRevision + 1);
     expect(usePlaybackStore.getState().eq.currentPreset).toBe("Imported");
     expect(usePlaybackStore.getState().nowPlaying.state).toBe("idle");
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([
@@ -261,6 +279,7 @@ describe("atomic Play migration import", () => {
       importedQueue,
       playbackEqFromMigration(preview.eq),
     );
+    const importedRevision = usePlaybackStore.getState().queue.revision ?? 0;
     localStorage.setItem(PLAY_QUEUE_KEY, JSON.stringify(importedQueue));
     localStorage.setItem(PLAY_EQ_KEY, JSON.stringify(preview.eq));
     localStorage.setItem(PLAY_RESUME_KEY, "true");
@@ -286,10 +305,17 @@ describe("atomic Play migration import", () => {
 
     await expect(undoLastPlayMigration()).resolves.toEqual({ cleanupPending: false });
 
-    expect(localStorage.getItem(PLAY_QUEUE_KEY)).toBe(oldQueueRaw);
+    const restoredQueue = JSON.parse(localStorage.getItem(PLAY_QUEUE_KEY)!);
+    const oldQueue = JSON.parse(oldQueueRaw);
+    expect(restoredQueue.items).toEqual(oldQueue.items);
+    expect(restoredQueue.currentIndex).toBe(oldQueue.currentIndex);
+    expect(restoredQueue.repeatMode).toBe(oldQueue.repeatMode);
+    expect(restoredQueue.shuffle).toBe(oldQueue.shuffle);
+    expect(restoredQueue.revision).toBe(importedRevision + 1);
     expect(localStorage.getItem(PLAY_EQ_KEY)).toBe(oldEqRaw);
     expect(localStorage.getItem(PLAY_RESUME_KEY)).toBe("false");
     expect(usePlaybackStore.getState().queue.items.map((item) => item.id)).toEqual(["old"]);
+    expect(usePlaybackStore.getState().queue.revision).toBe(importedRevision + 1);
     expect(usePlaybackStore.getState().eq.bands[0].gain).toBe(4);
     expect(usePlaybackStore.getState().nowPlaying.state).toBe("idle");
     expect(vi.mocked(invoke).mock.calls.map(([command]) => command)).toEqual([

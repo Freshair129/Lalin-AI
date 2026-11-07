@@ -1,7 +1,9 @@
+// @req FR-22.2 — Localized video-stage labels and status
 import { useEffect, useRef, useState } from "react";
 import { PlaybackAudioEngine } from "../playback/audioEngine";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { isVideoItem } from "../native";
+import { useI18n, localizeError } from "../i18n";
 
 export function VideoStage({
   expanded,
@@ -13,6 +15,7 @@ export function VideoStage({
   compact?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const { t, locale } = useI18n();
   const item = usePlaybackStore((state) => state.nowPlaying.item);
   const state = usePlaybackStore((store) => store.nowPlaying.state);
   const error = usePlaybackStore((store) => store.nowPlaying.error);
@@ -53,14 +56,14 @@ export function VideoStage({
   return (
     <section
       className={`video-stage ${video ? "" : "video-hidden"}`}
-      aria-label="วิดีโอ Now Playing"
+      aria-label={t("video.label")}
       aria-hidden={!video}
     >
       <div className="video-heading" hidden={compact}>
         <strong>{item?.title}</strong>
         <small>{dimensions}</small>
         <button onClick={onExpand} aria-pressed={expanded}>
-          {expanded ? "ย่อภาพ (Esc)" : "ขยายภาพ"}
+          {expanded ? t("video.shrink") : t("video.expand")}
         </button>
       </div>
       <div className="video-frame">
@@ -70,11 +73,11 @@ export function VideoStage({
         />
         {state === "error" ? (
           <p className="video-status" role="status">
-            {error}
+            {localizeError(error, locale)}
           </p>
         ) : state === "loading" ? (
           <p className="video-status" role="status">
-            กำลังโหลดวิดีโอ…
+            {t("video.loading")}
           </p>
         ) : null}
       </div>

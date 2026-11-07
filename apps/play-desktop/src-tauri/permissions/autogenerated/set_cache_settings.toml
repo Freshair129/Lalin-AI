@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-cache-settings"
+description = "Enables the set_cache_settings command without any pre-configured scope."
+commands.allow = ["set_cache_settings"]
+
+[[permission]]
+identifier = "deny-set-cache-settings"
+description = "Denies the set_cache_settings command without any pre-configured scope."
+commands.deny = ["set_cache_settings"]

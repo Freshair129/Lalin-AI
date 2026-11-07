@@ -1,18 +1,19 @@
 ---
-version: "0.2.18b"
+version: "0.3.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-30T06:33:36+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "validation"
   doc_type: "traceability-matrix"
-  scope: "All PLAY-01..10, PLAY-V01..10 and PLAY-C01..13 requirements with S2 migration and S3 handoff evidence"
+  scope: "All 50 PLAY-01..27, PLAY-V01..10 and PLAY-C01..13 criteria with bounded local evidence"
 ---
 
 # Lalin Play — requirements, implementation and evidence
 
-Manual audit of source `f5a6681`, not a new automated/native test run. Requirement
+Historical rows retain evidence tied to source `f5a6681`; CR-006 rows below record
+the current working-tree build and automated tests only, not a native/audio run. Requirement
 owners: [PRD](../product/PRD.md), [CR-003](../product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md),
 [CR-004](../product/CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md).
 The legacy [Studio matrix](../appendices/D-traceability.md) links here; Studio
@@ -29,9 +30,9 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 
 | Alias | Implementation | Automated tests / evidence scope |
 |---|---|---|
-| UI | `src/App.tsx`, `src/native.ts`, `src/components/Transport.tsx` | `src/App.test.tsx`: one element, surface failure, queue/errors, no-autoplay restore, playlists, video/layout/metadata/error and fullscreen IPC mocks |
-| Owner | `src/playback/audioEngine.ts`, `src/playback/usePlaybackStore.ts`, `src/contracts.ts` | `src/playback/audioEngineState.test.ts` readiness; App Stop-during-resolution test; EQ tests |
-| Native | `src-tauri/src/lib.rs`, `src-tauri/src/library.rs`, `src-tauri/src/migration.rs`, `src-tauri/src/handoff.rs`, `src-tauri/build.rs`, `src-tauri/capabilities/main.json` | Rust tests: library/catalog, S2 journal/import and drive validation, S3 pipe ACL/FIFO/ACK/STATE and lifecycle decisions |
+| UI | `src/App.tsx`, `src/native.ts`, `src/i18n.tsx`, `src/styles.css`, `src/components/Transport.tsx` | `src/App.test.tsx`: one element, surface failure, queue/errors, no-autoplay restore, playlists, video/layout/metadata/error, fullscreen IPC, locale and Mixer mocks; CR-007 Dashboard interactions NOT_RUN |
+| Owner | `src/playback/audioEngine.ts`, `src/playback/usePlaybackStore.ts`, `src/contracts.ts` | `src/playback/audioEngineState.test.ts` readiness; App Stop-during-resolution test; EQ tests; CR-007 listen threshold checks NOT_RUN |
+| Native | `src-tauri/src/lib.rs`, `src-tauri/src/library.rs`, `src-tauri/src/library_store.rs`, `src-tauri/src/migration.rs`, `src-tauri/src/handoff.rs`, `src-tauri/build.rs`, `src-tauri/capabilities/main.json` | Rust tests: library/catalog, S2 journal/import and drive validation, S3 pipe ACL/FIFO/ACK/STATE and lifecycle decisions; CR-007 Genesis migration tests NOT_RUN |
 | EQ | `src/components/PlaybackEQPanel.tsx`, `src/playback/audioContext.ts` and Owner | `src/playback/playbackEQ.test.ts`: 10 bands, gain/preamp limits, bypass/presets, graph/volume and output fallback mocks |
 | Preview | `src/components/CompactTransport.tsx`, `src/playback/framePreview.ts`, `src/styles.css` | `src/components/CompactTransport.test.tsx`, `src/playback/framePreview.test.ts`: drag/hover, disposal, latest work, cache limit, errors/timeouts, controls |
 | Skip | `src/playback/relativeSeek.ts`, CompactTransport and Native | `src/playback/relativeSeek.test.ts`; CompactTransport live-clock/disabled tests; App native ACK/error tests |
@@ -40,6 +41,9 @@ Paths below are under `apps/play-desktop/` unless otherwise stated.
 | Migration | Studio `src/playback/playMigrationExport.ts`; standalone `src/playMigration.ts`, `src/playMigrationImport.ts`, `src-tauri/src/migration.rs` | Studio envelope test; standalone schema, preview, cancel, import/rollback, four journal phases, five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write failures; see [S2 evidence](LALIN_PLAY_S2_MIGRATION.md) |
 | Handoff | Studio `apps/desktop/src-tauri/src/playback_handoff.rs`, `apps/desktop/src/playback/playbackClient.ts`; Play `src-tauri/src/handoff.rs`, `src/handoffReceiver.ts` | Isolated Windows paired process passed cold/warm commands, ACK/STATE recovery after a dropped command ACK, same-ID duplicate handling, sequential four-file queue, four independent concurrent senders ordered by ACK revision, busy-pipe wait without cold launch, owner restart after a lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED`; opt-in SMB loopback positive control succeeds and the same-DACL pipe with remote rejection denies the UNC path; cross-host listener timed out before a client result; mapped/reparse runtime tests compile but are NOT_RUN; separate interactive logon session, Studio/API exit during playback and audible parity NOT_VERIFIED |
 | TV | `src/playback/tvMode.ts`, `src/playback/mediaSessionAdapter.ts`, UI and Native | `src/playback/tvMode.test.ts` input cleanup/mapping; physical gamepad/SMTC not qualified |
+| Mixer | `src/components/PlaybackMixerPanel.tsx`, `src/playback/usePlaybackStore.ts`, `src/contracts.ts` | `src/App.test.tsx` checks real MEDIA/MASTER lanes, fader/mute persistence and EQ shortcut; `src/playback/playbackMixer.test.ts` validates defaults, malformed state and master-volume independence |
+| Spatial | `src/playback/audioEngine.ts`, shared EQ/limiter/output graph | `src/playback/audioEngineSpatial.test.ts` checks eight HRTF feeds, direct/spatial ramps, saved-mode activation and Stereo fallback with a fake AudioContext; real Windows headphone output remains NOT_RUN |
+| Locale | `src/i18n.tsx`, App and all Play-owned UI components | `src/i18n.test.tsx` and App locale test cover ENG default, TH persistence, language attribute and Full/Compact continuity; native OS text and user metadata stay outside translation |
 
 | Evidence alias | Report | Recorded checks, not current blanket certification |
 |---|---|---|
@@ -67,11 +71,33 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-08 | Native resolve + UI error | F/V + App: PARTIAL | Relink preserving references NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
 | PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
+| PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
+| PLAY-12 | Spatial, Owner | HRTF graph and ramp/fallback tests pass with fake AudioContext as part of the 14-file/81-test pass; audible/native behavior NOT_RUN | Compare Stereo and Virtual 7.1 on selected headphones; measure CPU/latency and listen for artifacts |
+| PLAY-13 | Locale, UI | 14-file/81-test pass covers ENG default, TH switch/persistence, Full/Compact continuity and visible mixer mute labels; visible app-owned text is routed through typed catalog | Review every view/tooltip/error at runtime in both locales and verify restart persistence |
 
-## Video requirements (CR-003)
+## Dashboard, GenesisBlockDB and object storage (CR-007)
 
 | ID | Code/tests | Evidence and status | Remaining exit work |
 |---|---|---|---|
+| PLAY-14 | `App.tsx`, `usePlaybackStore.ts`, Genesis history rows | PARTIAL; Home dashboard, play-count threshold, recent/most-played lists and deterministic local recommendations are wired; build passes | Runtime threshold/seek/repeat behavior, restart persistence, recommendation quality and acceptance evidence NOT_RUN |
+| PLAY-15 | Genesis relational catalog | PARTIAL; `library_store.rs` now opens GenesisBlockDB and uses its relational schema/query/batch APIs; `cargo check` PASS on the current working tree | Exercise migration/restart, atomic failure recovery, and query/write behavior; automated tests and native data migration NOT_RUN |
+| PLAY-16 | `library_store.rs`, native commands, `App.tsx` | PARTIAL; official-host HTTPS validation, external open, add/list/remove UI are wired; build passes | Native URL-policy and persistence checks NOT_RUN; official YouTube playlist metadata import is tracked by CR-008 PLAY-24 |
+| PLAY-17 | Authorized-source cache | PARTIAL | Settings exist in candidate code; provider capability model, cache storage and bounded LRU eviction remain open |
+| PLAY-18 | `library_store.rs`, `native.ts`, `App.tsx`, `styles.css` | PARTIAL; persistent favorite command, Favorites filter, USER/OFFLINE badges and star control are wired; build passes | Restart persistence and native import/filter acceptance NOT_RUN; no YouTube track badge because links are not playable tracks |
+| PLAY-19 | Local/RustFS object storage | PARTIAL; imports currently copy to a content-hash file under app data; no object-store interface or RustFS S3 adapter exists | Add a local object-store adapter and RustFS S3 integration, upload recovery, authenticated range streaming and offline/native acceptance |
+| PLAY-20 | Genesis hybrid search/recommendations | NOT_IMPLEMENTED | Deterministic metadata vectors, graph relations, hybrid retrieval, pending-index recovery and UX disclosure |
+
+## Mobile remote, phone-hosted files and transitions (CR-008)
+
+| ID | Code/tests | Evidence and status | Remaining exit work |
+|---|---|---|---|
+| PLAY-21 | Remote pairing/gateway | NOT_IMPLEMENTED | Native companion, expiring single-use pairing, TLS fingerprint pinning, PC approval, roles/revoke and LAN-only listener |
+| PLAY-22 | `contracts.ts`, `usePlaybackStore.ts` | PARTIAL; queue occurrences receive unique persisted IDs, duplicate tracks remain distinct, and local queue revisions advance on edits; `npm run build` PASS | Remote protocol, idempotent request/revision handling, stale-snapshot response, reconnect and security acceptance |
+| PLAY-23 | Phone media transfer | NOT_IMPLEMENTED | Resumable verified copy, authenticated range stream, offline-after-copy and phone-disconnect behavior |
+| PLAY-24 | YouTube playlist references | NOT_IMPLEMENTED; CR-007 has external YouTube links only | Official Data API pagination/auth/quota/expiry handling and explicit local-track mapping; no media playback/download/cache |
+| PLAY-25 | `audioEngine.ts`, `usePlaybackStore.ts`, `PlaybackSettings.tsx` | PARTIAL; Off is default; Smooth/Medley expose 2–12 seconds; two audio decks share one EQ/spatial/limiter/master/output graph; equal-power gains use AudioContext time and commit one queue advance; `npm run build` PASS | Automated transition coverage and native audible/output acceptance NOT_RUN; buffer readiness, decoder failure, end-of-track and long-play behavior need runtime evidence |
+| PLAY-26 | `audioEngine.ts`, `usePlaybackStore.ts`, `PlaybackSettings.tsx` | PARTIAL; pause freezes the fade; seek/stop/queue edits/repeat/shuffle/output loss cancel it; Manual DJ prepares a selected queue occurrence in deck B and uses an equal-power A/B fader; Medley persists cue-in/out per queue occurrence; video does not overlap | Automated/native cancellation checks and audible per-deck listen accounting NOT_RUN; Manual DJ/Medley failure and pause-resume behavior need runtime evidence |
+| PLAY-27 | Local audio analysis | DEFERRED | Confidence-bound BPM/key/cue analysis plus CPU, memory, latency and audible-artifact evidence before Smart Medley |
 | PLAY-V01 | Native, UI | V + Rust: PARTIAL | Complete picker/folder/drop/security native matrix beyond classification fixtures |
 | PLAY-V02 | Video, UI | V + App: LOCAL PASS | New codec/device layouts not certified |
 | PLAY-V03 | Video, Preview, Native | SUPERSEDED layout by C01/C07 | Stacked Compact/minimum no longer acceptance target; one owner still applies |
@@ -111,6 +137,24 @@ suite's provenance or establish full Studio/Play playback parity.
 | FR-18 | TV, ADR-004 retained presentation | TV input unit tests do not certify native gamepad; Compact fullscreen is not TV parity |
 | NFR-MP / NFR-TV | Bounded resource/ownership tests and X limitations | No fresh latency, long-play, CPU/GPU/memory benchmark; do not carry old Studio measurements across |
 
+## Follow-up branch evidence — 2026-09-30 (not integrated into main)
+
+The current GitHub refs checked on 2026-10-19 were `origin/main` at
+`61151ed` and `origin/codex/lalin-play-g3-followup` at `d241a74`; the follow-up
+branch is 23 commits ahead and 4 behind `main`. The results below are candidate
+branch evidence and do not establish that these changes or checks are present on
+the current `main` checkout.
+
+| Subgate | Recorded result | Still open |
+|---|---|---|
+| S2 process termination | Follow-up migration tests passed recovery at five child-process termination checkpoints, plus journal creation, undo-snapshot and retryable history-write failures | Power-loss durability, remaining storage failures and live Studio-to-Play transfer |
+| G3 cross-host pipe denial | Focused Windows probe passed 1/1: positive control connected, protected target returned Win32 5, and local access passed ([evidence commit](https://github.com/Freshair129/Lalin-AI/commit/20516d0)) | Mapped-drive/reparse runtime and playback parity |
+| G3 different-logon-session ACL | Focused Windows probe passed 1/1: alternate logon SID was denied with Win32 5 while owner-token positive control passed ([evidence commit](https://github.com/Freshair129/Lalin-AI/commit/d241a74)) | Mapped-drive/reparse runtime, Studio/API exit during active playback and audible parity |
+| G3 overall | **PARTIAL**; the two security subgates above pass | End-to-end audible parity and the remaining native/runtime cases |
+
+Keep Studio playback enabled. These results do not close PLAY-06 or authorize
+removing the original Studio implementation.
+
 ## Follow-up test backlog and acceptance ownership
 
 | Priority | Work | Requirement / next evidence owner |
@@ -123,7 +167,7 @@ suite's provenance or establish full Studio/Play playback parity.
 Each completion must name exact test command/case, source SHA/binary hash,
 environment and outcome; attach native evidence when required. Adding a row or
 test name alone does not close a gate. This matrix is manually maintained;
-the generated Studio doc graph is not proof of these 33 criteria.
+the generated Studio doc graph is not proof of these 50 criteria.
 
 ## Separate-logon-session ACL acceptance — 2026-09-30
 
@@ -152,6 +196,15 @@ PARTIAL, and Studio playback stays enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.1b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
+| 0.3.0b | 2026-10-20 | beta | Record Smooth, Manual DJ and cue-based Medley UI/build; preserve missing mobile, analysis and native acceptance gates | working tree | Codex |
+| 0.2.9b | 2026-10-20 | beta | Record local queue IDs and Smooth audio crossfade build; preserve missing mobile, manual-medley and native acceptance gates | working tree | Codex |
+| 0.2.8b | 2026-10-20 | beta | Register approved CR-008 PLAY-21..27 and retain mobile/security/audio/native acceptance gaps | working tree | Codex |
+| 0.2.7b | 2026-10-20 | beta | Record CR-007 Dashboard/history/favorites/link UI and Genesis build status; keep RustFS/cache/hybrid/native gates open | working tree | Codex |
+| 0.2.6b | 2026-10-20 | beta | Amend CR-007 traceability for GenesisBlockDB single-database and RustFS-ready object storage; preserve open evidence gates | working tree | Codex |
+| 0.2.5b | 2026-10-20 | beta | Record exact 14-file/81-test and build results for approved CR-006 while retaining native-audio gates | working tree | Codex |
+| 0.2.4b | 2026-10-20 | beta | Add approved CR-006 mixer, virtual-surround and locale mapping with local checks and native-audio gates | working tree | Codex |
+| 0.2.3b | 2026-10-19 | beta | Reconcile traceability with unmerged S2 termination and G3 ACL follow-up evidence while retaining open parity gates | working tree | Codex |
 | 0.2.18b | 2026-09-30 | beta | Pass same-session distinct-Logon-SID named-pipe ACL probe with denied target and owner positive control; preserve playback parity gates | based on c669602 | Codex |
 | 0.2.17b | 2026-09-30 | beta | Record the separate-logon runas credential failure without claiming pipe ACL evidence | based on 20516d0 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |

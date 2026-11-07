@@ -47,7 +47,7 @@ async function chooseMigrationFile() {
   fireEvent.change(screen.getByTestId("play-migration-file"), {
     target: { files: [file] },
   });
-  await screen.findByRole("region", { name: "ตัวอย่าง migration" });
+  await screen.findByRole("region", { name: "Migration preview" });
 }
 
 beforeEach(() => {
@@ -65,10 +65,10 @@ describe("Play migration confirmation", () => {
     render(<PlayMigrationImport onChanged={vi.fn()} />);
     await chooseMigrationFile();
 
-    fireEvent.click(screen.getByRole("button", { name: "ยกเลิก" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(importPlayMigration).not.toHaveBeenCalled();
-    expect(screen.queryByRole("region", { name: "ตัวอย่าง migration" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Migration preview" })).toBeNull();
   });
 
   it("keeps unresolved items visible in the completed import report", async () => {
@@ -76,13 +76,13 @@ describe("Play migration confirmation", () => {
     render(<PlayMigrationImport onChanged={onChanged} />);
     await chooseMigrationFile();
 
-    fireEvent.click(screen.getByRole("button", { name: "นำเข้าและแทนที่คิว/EQ" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import and replace queue/EQ" }));
 
     await waitFor(() => expect(importPlayMigration).toHaveBeenCalledWith("{}", preview, false));
     expect(onChanged).toHaveBeenCalledOnce();
-    expect((await screen.findByRole("status")).textContent).toContain("1 รายการยังแก้ไขไม่ได้");
-    expect(screen.getByText("รายงานรายการที่แก้ไขไม่ได้ (1)")).not.toBeNull();
-    expect(await screen.findByRole("button", { name: "ย้อนกลับการย้ายครั้งล่าสุด" })).not.toBeNull();
+    expect((await screen.findByRole("status")).textContent).toContain("1 unresolved items");
+    expect(screen.getByText("Unresolved item report (1)")).not.toBeNull();
+    expect(await screen.findByRole("button", { name: "Undo latest migration" })).not.toBeNull();
   });
 
   it("requires explicit confirmation before undoing the last migration", async () => {
@@ -91,12 +91,12 @@ describe("Play migration confirmation", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<PlayMigrationImport onChanged={onChanged} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "ย้อนกลับการย้ายครั้งล่าสุด" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Undo latest migration" }));
 
     expect(confirm).toHaveBeenCalledOnce();
     await waitFor(() => expect(undoLastPlayMigration).toHaveBeenCalledOnce());
     expect(onChanged).toHaveBeenCalledOnce();
-    expect((await screen.findByRole("status")).textContent).toContain("ย้อนกลับคิว, EQ และคลัง");
+    expect((await screen.findByRole("status")).textContent).toContain("Queue, EQ, and library restored");
     confirm.mockRestore();
   });
 });

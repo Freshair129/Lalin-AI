@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.3b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-25T19:20:01+07:00,Codex"
+last_update: "2026-10-20T06:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -12,8 +12,10 @@ attributes:
 
 # คู่มือ Lalin Play — รุ่นทดสอบในเครื่อง
 
-อ้างอิง source `f5a6681`, app `0.1.0` บน Windows ไม่ใช่คู่มือของ Studio player
-หรือ Lalin Cast และยังไม่มี installer/update ที่ผ่าน release gate
+อ้างอิง baseline source `f5a6681`, approved local CR-006 worktree และ CR-007
+implementation บางส่วนบน Windows ไม่ใช่คู่มือของ Studio player หรือ Lalin Cast
+และยังไม่มี installer/update ที่ผ่าน release gate; Dashboard, RustFS, cache และ
+Genesis graph/vector recommendations ยังอยู่ระหว่างทำ
 ดู [สถานะและเอกสารทั้งหมด](../product/LALIN_PLAY_DOCUMENTATION.md)
 
 หมายเหตุ S3: Studio มีคำสั่งส่งไฟล์ไป standalone Play แยกจากปุ่มเล่นเดิม
@@ -24,11 +26,19 @@ attributes:
 1. เปิด `lalin-play.exe` ที่ build จาก standalone candidate ไว้แล้ว นักพัฒนาใช้
    [README](../../apps/play-desktop/README.md) เพื่อ build; หน้า Vite ใน browser
    อย่างเดียวไม่สามารถแทน native file picker/การอ่านไฟล์ของแอปได้
-2. ใน Full กด `+ ไฟล์` หรือ `+ โฟลเดอร์` แล้วเลือกสื่อ หรือ drag/drop เข้าแอป
-   โปรแกรมเก็บรายการอ้างอิง ไม่ย้ายหรือคัดลอกไฟล์สื่อให้
+2. ใน Full กด `นำเข้าไว้ฟังออฟไลน์` หรือ `นำเข้าโฟลเดอร์` แล้วเลือกสื่อ หรือ
+   drag/drop เข้าแอป Play สร้าง managed copy ใน app-data เพื่อให้ไฟล์ที่นำเข้า
+   เปิดฟังได้เมื่อไม่มีอินเทอร์เน็ต; ไฟล์ต้นฉบับไม่ถูกย้ายหรือแก้ไข
 3. กดชื่อรายการเพื่อเล่น ข้อมูล title/artist/album ใช้ metadata ที่อ่านได้จริง
    ถ้าไม่มีจะแสดงชื่อไฟล์/ไม่ระบุศิลปิน ไม่ได้ดาวน์โหลดปกหรือข้อมูลจาก Spotify
-4. ใช้ช่องค้นหา และหมวดเพลง/ศิลปิน/อัลบั้ม จัด playlist ใน Full ได้
+4. หน้า Home แสดงฟังล่าสุด, ฟังบ่อย และคำแนะนำจากประวัติ/เพลงโปรดในเครื่อง;
+   ประวัติจะเพิ่มเมื่อได้ยินต่อเนื่องถึง 30 วินาที (หรือครึ่งหนึ่งของเพลงที่สั้นกว่า
+   30 วินาที). กดดาวที่เพลงเพื่อเก็บ Favorites และเลือกกรองจากแถบด้านข้างได้
+5. รายการเพลงแสดง `USER` สำหรับไฟล์ที่ผู้ใช้นำเข้า และ `OFFLINE` เมื่อมี managed
+   copy ที่อยู่ในเครื่อง; สองป้ายแสดงร่วมกันได้
+6. `YouTube links` เก็บลิงก์ไว้เปิดใน YouTube ทางการเท่านั้น; Lalin Play ไม่ดาวน์โหลด
+   ไม่แยกเสียง และไม่เล่นหรือ cache เสียง YouTube
+7. ใช้ช่องค้นหา และหมวดเพลง/ศิลปิน/อัลบั้ม จัด playlist ใน Full ได้
    สร้างชื่อ playlist ก่อน แล้วเลือก Playlist… ที่รายการเพื่อเพิ่มไฟล์
 
 จาก Studio บน Windows ใช้เมนูคลิกขวา `Play in standalone Lalin Play`,
@@ -51,6 +61,20 @@ symbolic links เลือกโฟลเดอร์ย่อยหากใ�
 | Fullscreen ใน Compact | ต้องการเต็มจอจริง | ปุ่ม ⛶ เข้า/ออก; Esc คืนหน้าต่างเดิม ไม่ใช่ TV Mode |
 | กลับ Full ↗ | กลับจัดคลัง | ถ้าอยู่ fullscreen จะออกก่อน แล้วคืน Full layout |
 | ขยายภาพใน Full | ให้ภาพใช้พื้นที่หน้าต่าง | เป็น expanded-in-window ไม่ใช่ native fullscreen |
+
+### ภาษา, Mixer และเสียงรอบทิศทาง
+
+- ใน top bar ของ Full ใช้ `ENG | TH` เพื่อเปลี่ยนภาษาทันที ภาษาเริ่มต้นเป็น ENG
+  และจำค่าที่เลือกไว้; Compact ใช้ภาษาเดียวกัน แต่เปลี่ยนภาษาจาก top bar ไม่ได้
+- หน้า `Mixer` แสดงเฉพาะช่อง `MEDIA` และ `MASTER` ของ Lalin Play ไม่มีช่อง Game,
+  Chat, Aux หรือ Mic เพราะ Play ยังไม่มี stream แยกเหล่านั้น
+- Fader/Mute ของ MEDIA คุมเสียงของสื่อที่ Play เล่นและทำงานก่อน EQ; fader/Mute
+  MASTER ใช้ volume/output controls ของ player เดิม จึงตรงกับ volume ด้านล่าง
+- `Stereo` เป็นค่าเริ่มต้น; `Virtual 7.1` ใช้ input stereo มาจำลอง virtual speakers
+  และ HRTF render เป็น stereo สำหรับหูฟัง เป็นเสียงจำลอง ไม่ใช่ true 7.1 decode,
+  output 8-channel หรือการปรับเสียงของแอปอื่นทั้ง Windows
+- หากระบบสร้าง HRTF graph ไม่ได้ Play กลับไป Stereo และแจ้งสถานะ การฟังเปรียบเทียบ
+  และคุณภาพเสียงบน Windows headphone endpoint ยังรอ native acceptance
 
 Compact มี Play/Pause, ย้อน/ข้าม 10 วินาที, seek/time, mute/volume,
 Fullscreen และกลับ Full. ปุ่ม ±10 อ้างตำแหน่งเล่นจริงและจำกัดช่วงไฟล์ ไม่เปลี่ยน
@@ -96,8 +120,11 @@ fullscreen. Preview ที่ decode ไม่ได้แสดงข้อค�
 
 ## ข้อมูลที่เก็บและการแจ้งปัญหา
 
-คลัง native อยู่ใน app-data ของ `ai.lalin.play` เป็น `library-v1.json`;
-playlist/queue/EQ อยู่ใน WebView storage ของ Play แยกจาก Studio/Cast.
+คลัง metadata ใหม่ใช้ GenesisBlockDB ใน app-data ของ `ai.lalin.play`; ไฟล์
+`library-v1.json` เดิมยังเก็บไว้เพื่อ migration/recovery. Managed media copies
+อยู่ใน app-data แยกจาก metadata; RustFS S3 adapter และ authenticated streaming
+ยังไม่พร้อมใช้. Playlist/queue/EQ ยังอยู่ใน WebView storage ของ Play แยกจาก
+Studio/Cast.
 ข้อมูลนี้อาจมีชื่อและ absolute path ของไฟล์ส่วนตัว ไม่ส่งทั้ง profile/library
 ขึ้น GitHub โดยไม่ตรวจและปิดบังข้อมูลก่อน ไม่แก้ไฟล์ persistence ขณะแอปทำงาน
 และไม่ copy profile ข้ามโปรดัคเพื่อย้ายข้อมูล (เครื่องมือ migration ยังไม่ทำ)
@@ -115,6 +142,8 @@ DPI 150%, multi-monitor, touch, physical A/V sync และ output-device recove
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.3b | 2026-10-20 | beta | Document partial CR-007 dashboard, history, favorite, badges, offline-copy and YouTube-link behavior; list storage/recommendation gaps | working tree | Codex |
+| 0.1.2b | 2026-10-20 | beta | Document approved CR-006 mixer, ENG/TH switch and stereo-derived virtual-surround limits; native audio evidence remains open | working tree | Codex |
 | 0.1.1b | 2026-09-25 | beta | Document explicit Studio-to-standalone actions and keep Studio playback as default pending parity | uncommitted | Codex |
 | 0.1.0b | 2026-09-20 | beta | Document current Windows standalone candidate usage and data boundaries | based on f5a6681 | LALIN |
 

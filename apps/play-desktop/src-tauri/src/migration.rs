@@ -233,6 +233,16 @@ fn save_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     let temporary = path.with_extension("json.tmp");
     fs::write(&temporary, bytes).map_err(|_| "บันทึกไฟล์ recovery ไม่สำเร็จ".to_string())?;
     fs::rename(&temporary, path).map_err(|_| "แทนที่ไฟล์ recovery ไม่สำเร็จ".to_string())
+        .and_then(|_| {
+            if path.file_name().and_then(|name| name.to_str()) == Some("library-v1.json") {
+                let library: Library = read_json(path, 16 * 1024 * 1024)?;
+                crate::library_store::replace_catalog(
+                    path.parent().ok_or_else(|| "ไม่พบโฟลเดอร์ข้อมูล Play".to_string())?,
+                    &library,
+                )?;
+            }
+            Ok(())
+        })
 }
 
 fn save_journal(directory: &Path, journal: &Journal) -> Result<(), String> {
@@ -1272,6 +1282,13 @@ mod tests {
                 album: None,
                 duration: None,
                 missing: false,
+                source_kind: "user".into(),
+                storage_kind: "linked".into(),
+                source_path: None,
+                content_hash: None,
+                favorite: false,
+                play_count: 0,
+                last_played_at: None,
             }],
         };
         let journal = Journal {
@@ -1342,6 +1359,13 @@ mod tests {
                 album: None,
                 duration: None,
                 missing: false,
+                source_kind: "user".into(),
+                storage_kind: "linked".into(),
+                source_path: None,
+                content_hash: None,
+                favorite: false,
+                play_count: 0,
+                last_played_at: None,
             }],
         };
         (old, new)
@@ -1402,6 +1426,13 @@ mod tests {
                 album: None,
                 duration: None,
                 missing: false,
+                source_kind: "user".into(),
+                storage_kind: "linked".into(),
+                source_path: None,
+                content_hash: None,
+                favorite: false,
+                play_count: 0,
+                last_played_at: None,
             }],
         };
         let new = Library {
@@ -1417,6 +1448,13 @@ mod tests {
                     album: None,
                     duration: None,
                     missing: false,
+                    source_kind: "user".into(),
+                    storage_kind: "linked".into(),
+                    source_path: None,
+                    content_hash: None,
+                    favorite: false,
+                    play_count: 0,
+                    last_played_at: None,
                 },
             ]
             .into(),

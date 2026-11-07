@@ -1,3 +1,4 @@
+// @req FR-22.1, FR-22.2 — Compact inherits locale and localizes transport/accessibility labels
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { FramePreview, type PreviewFrame } from "../playback/framePreview";
@@ -5,6 +6,7 @@ import { isVideoItem, resolveMedia } from "../native";
 import { formatTime } from "./Transport";
 import { PlaybackAudioEngine } from "../playback/audioEngine";
 import { relativeSeekTarget } from "../playback/relativeSeek";
+import { useI18n, localizeError } from "../i18n";
 
 export function CompactTransport({
   onFull,
@@ -22,6 +24,7 @@ export function CompactTransport({
   onFullscreen: () => void;
 }) {
   const now = usePlaybackStore((state) => state.nowPlaying);
+  const { t, locale } = useI18n();
   const video = isVideoItem(now.item);
   const footer = useRef<HTMLElement>(null);
   const dragging = useRef<number | null>(null);
@@ -130,7 +133,7 @@ export function CompactTransport({
     now.state === "error";
   const skip = (delta: number) => {
     if (skipDisabled || dragging.current !== null) return;
-    const media = PlaybackAudioEngine.getInstance().getMediaElement();
+    const media = PlaybackAudioEngine.getInstance().getActiveMediaElement();
     if (!media) return;
     const target = relativeSeekTarget(media, delta);
     if (target !== null) usePlaybackStore.getState().seek(target);
@@ -140,13 +143,13 @@ export function CompactTransport({
     <footer
       ref={footer}
       className={`compact-transport ${video ? "overlay" : "audio-compact"} ${hidden ? "controls-hidden" : ""}`}
-      aria-label="ควบคุมการเล่นแบบกระชับ"
+      aria-label={t("compact.label")}
     >
       {!video ? (
         <div className="compact-artwork">
           <span aria-hidden="true">♫</span>
-          <strong>{now.item?.title || "เปิดไฟล์เพื่อเริ่มเล่น"}</strong>
-          {!now.item ? <button onClick={onOpen}>เปิดไฟล์</button> : null}
+          <strong>{now.item?.title || t("compact.openFile")}</strong>
+          {!now.item ? <button onClick={onOpen}>{t("compact.openButton")}</button> : null}
         </div>
       ) : null}
       <div className="compact-seek">
@@ -161,18 +164,18 @@ export function CompactTransport({
             {shownFrame?.image ? (
               <img
                 src={shownFrame.image}
-                alt={`ภาพตัวอย่างที่ ${formatTime(target)}`}
+            alt={t("compact.previewAt", { time: formatTime(target) })}
               />
             ) : (
               <span>
-                {frame?.failed ? "ภาพตัวอย่างไม่พร้อม" : "กำลังอ่านเฟรม…"}
+                {frame?.failed ? t("compact.previewUnavailable") : t("compact.readingFrame")}
               </span>
             )}
             <time>{formatTime(target)}</time>
           </div>
         ) : null}
         <input
-          aria-label="ตำแหน่งเล่น"
+          aria-label={t("transport.position")}
           type="range"
           min="0"
           max={duration}
@@ -229,8 +232,8 @@ export function CompactTransport({
       <div className="compact-controls">
         <button
           className="skip-ten"
-          aria-label="ย้อน 10 วินาที"
-          title="ย้อน 10 วินาที"
+          aria-label={t("compact.backTen")}
+          title={t("compact.backTen")}
           disabled={skipDisabled}
           onClick={() => skip(-10)}
         >
@@ -238,7 +241,7 @@ export function CompactTransport({
         </button>
         <button
           className="compact-play"
-          aria-label={now.state === "playing" ? "หยุดชั่วคราว" : "เล่น"}
+          aria-label={now.state === "playing" ? t("transport.pause") : t("transport.play")}
           onClick={() =>
             void usePlaybackStore.getState().togglePlay().catch(report)
           }
@@ -247,8 +250,8 @@ export function CompactTransport({
         </button>
         <button
           className="skip-ten"
-          aria-label="ข้าม 10 วินาที"
-          title="ข้าม 10 วินาที"
+          aria-label={t("compact.forwardTen")}
+          title={t("compact.forwardTen")}
           disabled={skipDisabled}
           onClick={() => skip(10)}
         >
@@ -259,13 +262,13 @@ export function CompactTransport({
         </time>
         <div className="compact-volume">
           <button
-            aria-label={now.muted ? "เปิดเสียง" : "ปิดเสียง"}
+            aria-label={now.muted ? t("transport.unmute") : t("transport.mute")}
             onClick={() => usePlaybackStore.getState().toggleMute()}
           >
             {now.muted ? "🔇" : "🔊"}
           </button>
           <input
-            aria-label="ระดับเสียง"
+            aria-label={t("transport.volume")}
             type="range"
             min="0"
             max="1"
@@ -277,8 +280,8 @@ export function CompactTransport({
           />
         </div>
         <button
-          aria-label={fullscreen ? "ออกจากเต็มจอ" : "เต็มจอ"}
-          title={fullscreen ? "ออกจากเต็มจอ (Esc)" : "เต็มจอ"}
+          aria-label={fullscreen ? t("compact.exitFullscreen") : t("compact.fullscreen")}
+          title={fullscreen ? `${t("compact.exitFullscreen")} (Esc)` : t("compact.fullscreen")}
           aria-pressed={fullscreen}
           disabled={switching}
           onClick={onFullscreen}
@@ -286,8 +289,8 @@ export function CompactTransport({
           ⛶
         </button>
         <button
-          aria-label="กลับ Full"
-          title="กลับ Full"
+          aria-label={t("compact.backFull")}
+          title={t("compact.backFull")}
           disabled={switching}
           onClick={onFull}
         >
@@ -296,7 +299,7 @@ export function CompactTransport({
       </div>
       {now.error ? (
         <p className="error" role="alert">
-          {now.error}
+          {localizeError(now.error, locale)}
         </p>
       ) : null}
     </footer>
