@@ -87,6 +87,42 @@ afterEach(() => {
 });
 
 describe("standalone surfaces (mocked IPC; native evidence is separate)", () => {
+  it("orders reopened listening data and produces deterministic recommendations", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    const fixture = [
+      { ...track, id: "a", title: "Alpha", artist: "Artist", album: "Album", playCount: 3, lastPlayedAt: 100, favorite: true },
+      { ...track, id: "b", title: "Beta", artist: "Artist", album: "Other", playCount: 1, lastPlayedAt: 300 },
+      { ...track, id: "c", title: "Charlie", artist: "Artist", album: "Album", playCount: 0, lastPlayedAt: null },
+    ];
+    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : undefined);
+    render(<App />);
+    const titles = async (heading: string) => {
+      const section = (await screen.findByText(heading)).parentElement!;
+      await waitFor(() => expect(section.querySelectorAll(".track-row").length).toBeGreaterThan(0));
+      return Array.from(section.querySelectorAll(".track-row"), row => row.textContent ?? "");
+    };
+    const recent = await titles("Recently played");
+    expect(recent[0]).toContain("Beta"); expect(recent[1]).toContain("Alpha");
+    const most = await titles("Most played");
+    expect(most[0]).toContain("Alpha"); expect(most[1]).toContain("Beta");
+    const recommended = await titles("Recommended for you");
+    expect(recommended[0]).toContain("Charlie"); expect(recommended[1]).toContain("Beta");
+  });
+
+  it("filters reopened favorites and renders persisted USER and OFFLINE badges", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    const fixture = [
+      { ...track, id: "fav", title: "Saved Favorite", favorite: true, sourceKind: "user", storageKind: "managed" },
+      { ...track, id: "other", title: "Not Favorite", favorite: false, sourceKind: "user", storageKind: "linked" },
+    ];
+    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : undefined);
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: /Favorites/ }));
+    expect(await screen.findByText("Saved Favorite")).not.toBeNull();
+    expect(screen.queryByText("Not Favorite")).toBeNull();
+    expect(screen.getByText("USER")).not.toBeNull();
+    expect(screen.getByText("OFFLINE")).not.toBeNull();
+  });
   it("relinks a missing row after confirmation and preserves queue identities and playlists", async () => {
     const replacement = { ...track, path: "C:\\new\\one.wav", missing: false };
     const missing = { ...track, missing: true };
@@ -257,6 +293,9 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
       expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(1);
     });
     expect(invoke).toHaveBeenCalledWith("record_listen", { id: "listened-track" });
+    await updateTime(5);
+    await updateTime(6);
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "record_listen")).toHaveLength(1);
   });
 
   it("counts both overlap decks only while each deck is audible, ignoring silent preload", async () => {
