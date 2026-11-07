@@ -1,10 +1,17 @@
+---
+version: "0.1.1b"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
+status: "maintenance"
+---
+
 # LOCAL_MODEL_LEDGER.md — anti-error-loop (file-based degrade path)
+
 
 ledger ของ dispatch งานให้ local model (Ollama) ตาม SPEC--LOCAL-LLM-DISPATCH-V2 §6/§10
 (**สเปกย้ายไปอยู่ `G:/Rwang/docs/` แล้ว 2026-07-03** — เป็นเอกสารชั้น orchestrator ไม่ใช่ของ target repo).
-machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jsonl) — ไฟล์นี้เป็น human-readable view.
+`orchestration/ledger.json` is not in this repository. The tracked machine-readable log is [root `orchestration/ledger.jsonl`](../../orchestration/ledger.jsonl); this file is its human-readable view.
 ก่อน dispatch → `python orchestration/recall_mistakes.py --task "<คำอธิบาย task>"` แล้วฉีดผลเข้า prompt.
-**อัปเดต 2026-07-03:** จาก benchmark v2 (74 dispatch จริง, 7 micro-task × 4 prompt-variant × 6 โมเดล) — ดู [REPORT V2](REPORT--LOCAL-LLM-DISPATCH.md)
+**อัปเดต 2026-07-03:** จาก benchmark v2 (74 dispatch จริง, 7 micro-task × 4 prompt-variant × 6 โมเดล) — ดู [REPORT V2](../rca/REPORT--LOCAL-LLM-DISPATCH.md)
 
 ## ✅ POOL (ผ่านการวัดจริง)
 | ลำดับ | model | pass-rate (v-plain, gate tsc+visible+holdout) | median warm | VRAM | บทบาท |
@@ -42,3 +49,9 @@ machine-readable SSOT = [orchestration/ledger.jsonl](../orchestration/ledger.jso
 - เฉพาะ **pure/self-contained micro-task** ที่ acceptance ตรวจอัตโนมัติได้ · `maxReworkRounds: 1` → escalate (pool ถัดไป → T2 Sonnet → T3 Opus)
 - Verify Gate: `tsc --strict` + assertion บน visible + holdout (`orchestration/verify_gate.mjs`) — empty/garbage/special-token = fail เสมอ
 - embedding สำหรับ retrieval: `bge-m3` (1.2GB co-resident กับโมเดล 9B ได้)
+
+## CHANGELOG
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 0.1.1b | 2026-11-07 | maintenance | Correct the benchmark report link and distinguish the absent ledger.json from the tracked ledger.jsonl | working tree | Codex |

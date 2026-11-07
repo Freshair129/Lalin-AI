@@ -1,7 +1,7 @@
 ---
-version: "0.1.1b"
+version: "0.1.2b"
 created_at: "2026-09-27T13:20:47+07:00,Codex,3bb4414"
-last_update: "2026-09-27T13:49:47+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -14,9 +14,10 @@ attributes:
 
 ## Symptom
 
-PR #25 still lacks Windows runtime evidence that the Play receiver rejects a
-real mapped network-drive path and a local reparse path resolving to that remote
-target before granting or applying media.
+The S3 handoff changes merged in PR #25 (`78ed550`) still lack Windows runtime
+evidence that the Play receiver rejects a real mapped network-drive path and a
+local reparse path resolving to that remote target before granting or applying
+media.
 
 ## Evidence
 
@@ -65,3 +66,9 @@ The independent second-host named-pipe probe is prepared in
 `tools/verify/lalin-play-remote-pipe-client.ps1`, but it does not close these
 filesystem gates. Do not claim the mapped-drive or reparse-point gate passes
 until both runtime cases pass on Windows.
+
+## CHANGELOG
+
+| Version | Date | Status | Summary | Commit Hash | Agent |
+|---|---|---|---|---|---|
+| 0.1.2b | 2026-11-07 | beta | Identify PR #25 integration while retaining the mapped-drive and reparse runtime evidence gap | working tree | Codex |

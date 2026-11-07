@@ -1,6 +1,10 @@
 mod handoff;
 mod library;
+mod library_store;
+mod local_media_store;
 mod migration;
+pub mod smart_medley;
+mod smart_medley_store;
 
 use library::LibraryState;
 use std::{path::PathBuf, sync::Mutex};
@@ -269,6 +273,7 @@ pub fn run() {
             show(app)
         }))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(Mutex::new(Presentation {
             compact: false,
             full: PhysicalSize::new(1120, 740),
@@ -297,7 +302,9 @@ pub fn run() {
             g3_test_trace(app.handle(), "native_setup_started");
             let library = library::initialize(app.handle()).map_err(std::io::Error::other)?;
             g3_test_trace(app.handle(), "library_initialized");
-            app.manage(LibraryState(Mutex::new(library)));
+            let data_dir = library::app_data_directory(app.handle())
+                .map_err(std::io::Error::other)?;
+            app.manage(LibraryState(Mutex::new(library), data_dir));
             let open = MenuItem::with_id(app, "open", "เปิด Lalin Play", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "ออกจาก Lalin Play", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
@@ -345,7 +352,16 @@ pub fn run() {
             library::get_library,
             library::select_media,
             library::remove_library_track,
+            library::set_track_favorite,
+            library::record_listen,
+            library::list_youtube_links,
+            library::add_youtube_link,
+            library::remove_youtube_link,
+            library::open_youtube_link,
+            library::get_cache_settings,
+            library::set_cache_settings,
             library::resolve_media,
+            smart_medley::analyze_smart_medley_pair,
             migration::preview_play_migration,
             migration::prepare_play_migration,
             migration::apply_play_migration,

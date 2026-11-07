@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Doc Version** | 1.0.5 |
+| **Doc Version** | 1.0.6 |
 | **Status** | Active |
 | **Author** | Boss |
 | **Created** | 2026-06-28 |
-| **Last Updated** | 2026-10-27 |
+| **Last Updated** | 2026-11-07 |
 | **Approved By** | — |
 
 | Version | Date | Author | Changes |
@@ -21,6 +21,7 @@
 | 1.0.3 | 2026-10-20 | Codex | เพิ่มลิงก์ Slice B2 design และระบุว่า piecewise warp ยังไม่ implement |
 | 1.0.4 | 2026-10-21 | Codex | บันทึก Slice B2 implementation และคง licensed-audio/native desktop acceptance เป็น pending |
 | 1.0.5 | 2026-10-27 | Codex | บันทึก PR #35, synthetic native Tauri UAT, และคง licensed-vocal A/B เป็น pending |
+| 1.0.6 | 2026-11-07 | Codex | ระบุว่า piecewise beat-warp implement แล้ว และคง listening acceptance เป็น pending |
 
 ---
 
@@ -173,7 +174,7 @@ uv pip install demucs psola pedalboard
 
 ### 🔴 เฟส C — ขั้นสูง (ถ้าจำเป็น)
 - [ ] pyworld formant-preserving สำหรับ pitch-shift มากๆ — Slice B1 มีผล benchmark synthetic แล้ว; ยังไม่รวมใน production จนกว่าจะผ่าน A/B กับเสียงร้องจริง
-- [ ] Piecewise beat-warp (ถ้าจะสู้ drift จริง)
+- [x] Piecewise beat-warp implemented; product listening acceptance ยัง pending — ทำ A/B ด้วย licensed vocal และ instrumental beat ที่จับคู่กันก่อนอ้างคุณภาพ
 - [ ] RVC singing voice conversion (consent-first + BYOM) — ดู §8
 
 ---

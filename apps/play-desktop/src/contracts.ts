@@ -1,18 +1,44 @@
 // @req FR-16 — Media Player contracts (Lalin Play)
 // @req FR-16W — Windows Integration contracts
 // @req FR-17 — Playback EQ contracts
+// @req FR-20.4, FR-21.1 — Persistable local playback-mixer and spatial-mode contracts
+// @req PLAY-22, PLAY-25 — Queue occurrence identity and crossfade settings
 
 export type PlaybackState = "idle" | "playing" | "paused" | "loading" | "error";
 export type PlaybackRepeatMode = "off" | "one" | "all";
+export type SpatialMode = "stereo" | "virtual-7.1";
+export type PlaybackTransitionMode = "off" | "smooth" | "manual" | "medley";
+
+export interface PlaybackTransitionSettings {
+  mode: PlaybackTransitionMode;
+  durationSeconds: number;
+}
+
+export function createDefaultTransitionSettings(): PlaybackTransitionSettings {
+  return { mode: "off", durationSeconds: 5 };
+}
+
+export interface PlaybackMixer {
+  mediaGain: number;
+  mediaMuted: boolean;
+  spatialMode: SpatialMode;
+}
+
+export function createDefaultMixer(): PlaybackMixer {
+  return { mediaGain: 1, mediaMuted: false, spatialMode: "stereo" };
+}
 
 export interface MediaItem {
   kind?: "audio" | "video";
   id: string;
+  queueEntryId?: string;
   title: string;
   artist?: string;
   album?: string;
   duration?: number;
   url: string;
+  cueInSeconds?: number;
+  cueOutSeconds?: number;
   sourceKind?: "upload" | "workspace" | "output" | "voice" | "custom";
   sourcePath?: string;
   ext?: string;
@@ -24,6 +50,7 @@ export interface PlaybackQueue {
   currentIndex: number;
   repeatMode: PlaybackRepeatMode;
   shuffle: boolean;
+  revision?: number;
 }
 
 export interface NowPlaying {

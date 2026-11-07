@@ -5,7 +5,10 @@
   "windows": ["main"],
   "permissions": [
     "core:event:default", "allow-get-library", "allow-select-media",
-    "allow-remove-library-track", "allow-resolve-media", "allow-set-surface",
+    "allow-remove-library-track", "allow-set-track-favorite", "allow-record-listen",
+    "allow-list-youtube-links", "allow-add-youtube-link", "allow-remove-youtube-link",
+    "allow-open-youtube-link", "allow-get-cache-settings", "allow-set-cache-settings",
+    "allow-resolve-media", "allow-set-surface",
     "allow-preview-play-migration", "allow-prepare-play-migration",
     "allow-apply-play-migration", "allow-commit-play-migration",
     "allow-rollback-play-migration", "allow-recover-play-migration",

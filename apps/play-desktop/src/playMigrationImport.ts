@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { PlaybackEQ, PlaybackQueue } from "./contracts";
+import type { PlaybackQueue } from "./contracts";
 import {
   PLAY_EQ_KEY,
   PLAY_QUEUE_KEY,
@@ -24,9 +24,6 @@ export async function importPlayMigration(
   const oldQueueRaw = localStorage.getItem(PLAY_QUEUE_KEY);
   const oldEqRaw = localStorage.getItem(PLAY_EQ_KEY);
   const oldResumeRaw = localStorage.getItem(PLAY_RESUME_KEY);
-  const initialStore = usePlaybackStore.getState();
-  const oldQueue = initialStore.queue;
-  const oldEq = initialStore.eq;
   const transactionId = crypto.randomUUID();
   let prepared: MigrationPreview;
   try {
@@ -39,7 +36,7 @@ export async function importPlayMigration(
       allowRepeat,
     });
   } catch (prepareError) {
-    await recoverLostPrepare(transactionId, oldQueue, oldEq, prepareError);
+    await recoverLostPrepare(transactionId, prepareError);
     throw prepareError;
   }
   if (prepared.transactionId !== transactionId) {
@@ -48,7 +45,7 @@ export async function importPlayMigration(
 
   if (!samePreparedPreview(preview, prepared)) {
     try {
-      await rollbackAndRestore(transactionId, oldQueue, oldEq);
+      await rollbackAndRestore(transactionId);
     } catch (error) {
       throw new Error(`Preview changed and recovery is pending; restart Lalin Play: ${String(error)}`);
     }
@@ -60,23 +57,22 @@ export async function importPlayMigration(
   let committed = false;
   let commitAttempted = false;
   try {
-    usePlaybackStore.getState().stop();
     localStorage.setItem(PLAY_QUEUE_KEY, JSON.stringify(nextQueue));
     localStorage.setItem(PLAY_EQ_KEY, JSON.stringify(nextEq));
     localStorage.setItem(PLAY_RESUME_KEY, "true");
     await invoke("apply_play_migration", { transactionId });
-    usePlaybackStore.getState().replaceFromMigration(nextQueue, nextEq);
     commitAttempted = true;
     await invoke("commit_play_migration", { transactionId });
     committed = true;
+    usePlaybackStore.getState().replaceFromMigration(nextQueue, nextEq);
   } catch (error) {
     if (!committed) {
       if (commitAttempted) {
-        const recovered = await recoverCommit(transactionId, oldQueue, oldEq, error);
+        const recovered = await recoverCommit(transactionId, error);
         if (recovered) return acknowledge(transactionId);
       }
       try {
-        await rollbackAndRestore(transactionId, oldQueue, oldEq);
+        await rollbackAndRestore(transactionId);
       } catch (rollbackError) {
         throw new Error(
           `นำเข้าไม่สำเร็จและ rollback ยังไม่เสร็จ ข้อมูลกู้คืนยังอยู่; ปิดแล้วเปิด Lalin Play เพื่อกู้คืน: ${String(rollbackError)}`,
@@ -93,9 +89,6 @@ export async function undoLastPlayMigration(): Promise<{ cleanupPending: boolean
   const oldQueueRaw = localStorage.getItem(PLAY_QUEUE_KEY);
   const oldEqRaw = localStorage.getItem(PLAY_EQ_KEY);
   const oldResumeRaw = localStorage.getItem(PLAY_RESUME_KEY);
-  const initialStore = usePlaybackStore.getState();
-  const oldQueue = initialStore.queue;
-  const oldEq = initialStore.eq;
   const transactionId = crypto.randomUUID();
   let prepared: MigrationRecovery;
   try {
@@ -106,12 +99,12 @@ export async function undoLastPlayMigration(): Promise<{ cleanupPending: boolean
       oldResumeRaw,
     });
   } catch (prepareError) {
-    await recoverLostPrepare(transactionId, oldQueue, oldEq, prepareError);
+    await recoverLostPrepare(transactionId, prepareError);
     throw prepareError;
   }
   if (prepared.transactionId !== transactionId || !prepared.restoreRawStorage) {
     try {
-      await rollbackAndRestore(transactionId, oldQueue, oldEq);
+      await rollbackAndRestore(transactionId);
     } catch (error) {
       throw new Error(`Undo preparation is incomplete; restart Lalin Play: ${String(error)}`);
     }
@@ -121,23 +114,22 @@ export async function undoLastPlayMigration(): Promise<{ cleanupPending: boolean
   let committed = false;
   let commitAttempted = false;
   try {
-    usePlaybackStore.getState().stop();
     applyRawStorage(prepared.newQueueRaw ?? null, prepared.newEqRaw ?? null, prepared.newResumeRaw ?? null);
     const previousQueue = loadQueueIgnoringResumeFlag();
     const previousEq = loadPersistedEQ();
     await invoke("apply_play_migration", { transactionId });
-    usePlaybackStore.getState().replaceFromMigration(previousQueue, previousEq);
     commitAttempted = true;
     await invoke("commit_play_migration", { transactionId });
     committed = true;
+    usePlaybackStore.getState().replaceFromMigration(previousQueue, previousEq);
   } catch (error) {
     if (!committed) {
       if (commitAttempted) {
-        const recovered = await recoverCommit(transactionId, oldQueue, oldEq, error);
+        const recovered = await recoverCommit(transactionId, error);
         if (recovered) return acknowledge(transactionId);
       }
       try {
-        await rollbackAndRestore(transactionId, oldQueue, oldEq);
+        await rollbackAndRestore(transactionId);
       } catch (rollbackError) {
         throw new Error(
           `Undo did not finish and recovery is pending; restart Lalin Play: ${String(rollbackError)}`,
@@ -170,8 +162,6 @@ function restoreKey(key: string, value: string | null): void {
 
 async function recoverLostPrepare(
   transactionId: string,
-  oldQueue: PlaybackQueue,
-  oldEq: PlaybackEQ,
   originalError: unknown,
 ): Promise<void> {
   try {
@@ -181,7 +171,6 @@ async function recoverLostPrepare(
         throw new Error("an unexpected migration journal was found");
       }
       restoreOldStorage(recovery);
-      usePlaybackStore.getState().replaceFromMigration(oldQueue, oldEq);
       await invoke("ack_play_migration", { transactionId });
     }
   } catch (recoveryError) {
@@ -193,8 +182,6 @@ async function recoverLostPrepare(
 
 async function recoverCommit(
   transactionId: string,
-  oldQueue: PlaybackQueue,
-  oldEq: PlaybackEQ,
   originalError: unknown,
 ): Promise<boolean> {
   let recovery: MigrationRecovery | null;
@@ -213,7 +200,6 @@ async function recoverCommit(
     return true;
   }
   restoreOldStorage(recovery);
-  usePlaybackStore.getState().replaceFromMigration(oldQueue, oldEq);
   return false;
 }
 
@@ -255,13 +241,10 @@ function samePreparedPreview(a: MigrationPreview, b: MigrationPreview): boolean 
 
 async function rollbackAndRestore(
   transactionId: string,
-  oldQueue: PlaybackQueue,
-  oldEq: PlaybackEQ,
 ): Promise<void> {
   const recovery = await invoke<MigrationRecovery>("rollback_play_migration", {
     transactionId,
   });
   restoreOldStorage(recovery);
-  usePlaybackStore.getState().replaceFromMigration(oldQueue, oldEq);
   await invoke("ack_play_migration", { transactionId });
 }

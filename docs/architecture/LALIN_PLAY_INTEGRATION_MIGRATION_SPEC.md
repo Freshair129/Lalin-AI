@@ -1,7 +1,7 @@
 ---
-version: "0.2.16b"
+version: "0.2.17b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-27T14:03:11+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -118,10 +118,11 @@ Security and lifecycle implementation status:
   the production remote-rejection mode and the same permissive test DACL denies
   the same remote path with `ERROR_ACCESS_DENIED`; a local open still succeeds.
   This isolates the remote-rejection flag from DACL denial. An ignored
-  different-host probe and PowerShell client are prepared with the same-DACL
-  positive control and target denial. One server-listener attempt timed out
-  after 180 seconds before a complete client result arrived, so remote rejection
-  remains NOT_VERIFIED. A separate interactive logon session remains unverified.
+  different-host probe and PowerShell client were prepared with the same-DACL
+  positive control and target denial. That earlier server-listener attempt timed
+  out before a complete client result; PR #25 later recorded cross-host pipe
+  denial 1/1 PASS and different-logon-session ACL denial 1/1 PASS. Mapped/reparse
+  runtime and playback parity remain open.
   The isolated paired owner-restart test verifies that a command applied before
   its ACK is read is not blindly replayed after a new owner session starts.
 - A conflicting first-instance endpoint is rejected. Same-user malicious code
@@ -172,19 +173,20 @@ duplicate/conflicting IDs, owner-session query checks, bounded history/snapshots
 protected same-logon DACL creation, a local restricted-token denial when the
 allowed logon SID is absent, the remote-client-rejection flag, and an opt-in
 loopback SMB/UNC runtime denial with identical-DACL remote and local positive
-controls. Drive
-classification is tested with fixed, remote, unknown and invalid values; the
-ignored mapped-drive and reparse tests compile but are NOT_RUN. The local
-negative ACL case does not exercise a separate interactive logon session; the
-loopback SMB probe does not use a different remote machine. The second-host listener timed out after 180 seconds without a complete client result; remote rejection remains NOT_VERIFIED.
+controls. Drive classification is tested with fixed, remote, unknown and
+invalid values; the ignored mapped-drive and reparse tests compile but are
+NOT_RUN. At this earlier testing snapshot, the local negative ACL and loopback
+SMB probes had not established different-logon or different-host denial. PR #25
+later recorded the different-logon-session ACL and cross-host pipe-denial probes
+PASS 1/1 each.
 Live
 cross-process cold/warm delivery, FIFO, ACK/STATE
 reconciliation including a dropped ACK while the owner remains live, a command applied before a lost ACK
 followed by owner restart and no blind replay, and URL/UNC-shaped invalid path
 rejection are verified in the isolated Windows paired test. Same-host SMB/UNC
-pipe rejection is verified by the dedicated runtime probe. A separate
-interactive logon session or remote machine, Studio/API exit during active
-playback, audible parity and Cast regression remain **NOT VERIFIED**.
+pipe rejection is verified by the dedicated runtime probe. Mapped-drive/reparse
+runtime, Studio/API exit during active playback, audible parity and Cast
+regression remain **NOT VERIFIED**.
 
 ## 3. Approved S2 opt-in migration envelope v1
 
@@ -269,6 +271,7 @@ does not open, copy, parse or edit either product's WebView profile files.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.17b | 2026-11-07 | beta | Reconcile earlier S3 timeout notes with PR #25 cross-host and different-logon-session ACL passes; retain open path and playback gates | working tree | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Specify second-host pipe probe and distinguish compiled mapped/reparse runtime tests from execution | based on 3bb4414 | Codex |
 | 0.2.14b | 2026-09-27 | beta | Verify loopback SMB/UNC rejection with a remote positive control and local access; retain separate-session and parity gates | based on a75c540 | Codex |

@@ -1,7 +1,7 @@
 ---
-version: "0.2.3b"
+version: "0.2.5b"
 created_at: "2026-07-06T04:08:00+07:00,ATHER"
-last_update: "2026-10-28T00:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 attributes:
   doc_type: "execution-backlog"
@@ -31,6 +31,25 @@ attributes:
 - `v0.1.0` ปิดแล้ว
 - `v0.2.0` ปิดแล้ว
 - Remix Phase A/B ปิดแล้ว
+- Lalin Play Windows EQ / CMF Buds Pro 2 gap analysis ปิดแล้วในฐานะงานวิเคราะห์เอกสาร ณ 2026-10-19; การ audition ผ่าน CMF endpoint ยัง `NOT_VERIFIED` และ system-wide EQ / ANC ยังอยู่นอก scope ปัจจุบัน (ดู [สถานะ Lalin Play](LALIN_PLAY_DOCUMENTATION.md#eq-gap-for-windows-audio-and-cmf-buds-pro-2))
+
+### Current milestone override — Lalin Play local-first
+
+The active Play milestone is local-only runtime readiness: Play must open and
+play user-selected local media offline, without Studio, FastAPI or Ollama. This
+is the execution priority already within the approved PRD goal; it does not
+change product acceptance.
+
+PR #25 merged the S2/S3 implementation and focused evidence into `main` on
+2026-10-20 (`78ed550`, head `d241a74`): S2 recovery at five child-process
+termination checkpoints, journal/undo-snapshot/history write-failure coverage,
+cross-host pipe denial (1/1 PASS), and different-logon-session ACL denial
+(1/1 PASS). G3 remains **PARTIAL**: mapped-drive/reparse runtime cases,
+Studio/API exit during active playback and audible parity remain open. These
+lanes are deferred while local-first readiness is pursued, not passed or
+cancelled. S4–S7 remain **NOT_RUN**. See the [Play execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md)
+and [traceability matrix](../validation/LALIN_PLAY_TRACEABILITY.md) for the
+evidence boundaries and remaining gates.
 
 ### Remaining
 
@@ -264,6 +283,13 @@ Roadmap จะถือว่า “ใกล้เสร็จจริง” �
 
 ## Immediate Next Action
 
+สำหรับ milestone Lalin Play local-first:
+
+1. ปิด local-only readiness checks และบันทึก evidence โดยไม่พึ่ง Studio/API/network
+2. อัปเดตสถานะ candidate ให้แยก local usability ออกจาก integration/release gates
+3. เปิด S2/S3/G3 เฉพาะเมื่อเลือกทำ Studio integration หรือ release milestone
+
+หลังจาก milestone นี้ หากเดินต่อใน feature track เดิม:
 PR #31 (B1), PR #32 (B2 design), และ PR #35 (B2 implementation) merge แล้ว. Synthetic native desktop acceptance ผ่าน; งานถัดไปก่อนเลือก B3 คือ licensed-vocal A/B listening:
 
 `Slice B2 acceptance — licensed-vocal A/B`
@@ -274,10 +300,17 @@ PR #31 (B1), PR #32 (B2 design), และ PR #35 (B2 implementation) merge แ�
 
 ## Version Diff
 
+- `0.2.5b` (2026-11-07): reconcile PR #25's merged S2/G3 evidence with the remaining open gates.
+- `0.2.4b` (2026-11-07): rebased the Lalin Play local-first/CR-006..008 work onto main; kept merged Music B2 next action and Play local-first milestone together.
+- `0.1.4b` (2026-10-19): closed the Lalin Play Windows EQ / CMF Buds Pro 2 documentation gap-analysis item while keeping product acceptance gaps explicit.
+- `0.1.3b` (2026-10-19): reconciled the Play local-first note with then-available S2/G3 evidence and retained remaining gates.
+- `0.1.2b` (2026-10-19): reconciled the priority note with the latest G3 blocker evidence and kept partial/not-run statuses distinct from deferred scheduling.
+- `0.1.1b` (2026-10-02): prioritized the local-first Play milestone without changing the approved product scope.
 - `+` แตกงาน roadmap ที่เหลือเป็น execution tracks / slices
 - `+` ระบุ dependency และ verification standard
 - `+` ชี้ next action ที่คุ้มที่สุดตอนนี้อย่างชัดเจน
 - `+` บันทึกว่า Slice A/B merge แล้ว และ Slice C ได้รับอนุมัติให้ implement แบบ manual mapping
 - `+` ปิด Track A ถึง Slice C และเพิ่มผล benchmark/decision evidence สำหรับ Track B Slice B1
 - `+` อัปเดต Slice B2 หลัง PR #35 merge และบันทึก synthetic native Tauri acceptance; licensed-vocal A/B ยังคง pending
+- `+` กำหนด Lalin Play local-first เป็น active milestone และเลื่อน S2/S3/G3 เป็น deferred lanes
 

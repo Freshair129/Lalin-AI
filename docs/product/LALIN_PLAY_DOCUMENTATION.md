@@ -1,7 +1,7 @@
 ---
-version: "0.2.21b"
+version: "0.3.22b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-09-30T04:27:25+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -16,17 +16,20 @@ attributes:
 
 Lalin Play เป็น local audio/video player แยกจาก Studio/Cast มีสอง surface
 Full และ Compact ใช้ playback owner เดียวกัน ปัจจุบัน source อยู่ที่
-`apps/play-desktop` ใน `Freshair129/Lalin-AI` branch `codex/lalin-play-split`.
-เป็น standalone runtime candidate ไม่ใช่การแยก repository ที่เสร็จแล้ว
+`apps/play-desktop` ใน `Freshair129/Lalin-AI`; approved source baseline เริ่มจาก
+branch `codex/lalin-play-split` (`f5a6681`). PR #25 นำ S2/G3 follow-up
+(`d241a74`) เข้า `main` ด้วย merge commit `78ed550` เมื่อ 2026-10-20.
+การ merge นี้ไม่ได้ทำให้การแยก repository เสร็จแล้ว
 
-| รายการ | สถานะ ณ 2026-09-20 |
+| รายการ | สถานะ / หลักฐานล่าสุด |
 |---|---|
 | Source commit | `f5a66819ad58b481635733dd29e1658d67e29e3d` (`f5a6681`) |
-| Publication | commit และ push branch ข้างต้นแล้ว; remote SHA ตรงกันในรอบ push |
+| Publication | Baseline `f5a6681` was pushed on the original split branch; PR #25 (`d241a74`) merged into Lalin-AI `main` as `78ed550`; no separate Play repository export has occurred |
 | App identity | `lalin-play.exe`, `ai.lalin.play`, app version `0.1.0` |
 | Runtime | Rust/Tauri v2 shell + React + HTML media/Web Audio; ไม่ใช่ Rust decoder |
-| Latest recorded checks | 48 frontend / 7 Rust tests และ frontend build ผ่านในรอบก่อน commit; native build/screenshot มีรายงานแยก |
-| Split phases | S1 LOCAL PASS, S2 PARTIAL, S3–S7 NOT_RUN ตาม ADR-004 |
+| Candidate checks | Snapshot 2026-09-26: Studio frontend 6/6, Play frontend 23/23, Play Rust 31/31, Studio native handoff 6/6, API file tests 10/10; builds/format checks passed. Paired Windows handoff 1/1 on 2026-09-27; see foundation report for limits |
+| Current milestone | Local-first candidate: ใช้งานไฟล์ในเครื่องแบบ offline โดยไม่พึ่ง Studio/FastAPI/Ollama |
+| Split phases | S1 LOCAL PASS; S2/S3 remain partial; G3 PARTIAL. PR #25 evidence is integrated in `main`: five child-process recovery checkpoints, journal/undo-snapshot/history write-failure tests, cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1 PASS. Mapped/reparse runtime, Studio/API exit during playback and audible parity remain open. S4–S7 NOT_RUN |
 | Original Studio player | ยังอยู่ ห้ามใช้เอกสารนี้เป็นคำสั่งลบ |
 | New repo / installer / updater / release | ยังไม่มี execution evidence; ห้ามตีความ branch push เป็น independent release |
 
@@ -35,6 +38,67 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 ห้ามแก้ hash/จำนวน tests ย้อนหลังให้ดูเหมือนทดสอบบน binary ใหม่
 รายงานเอกสารรอบ 2026-09-20 ไม่ได้รัน runtime tests หรือเปลี่ยน app version; ดู checks รอบ 2026-09-26 ด้านล่าง
 
+## Current milestone decision — local-first
+
+The active deliverable is local Play usability: launch the standalone candidate,
+open user-selected local media and use the locally supported Full/Compact
+surfaces without Studio, FastAPI, Ollama or a network connection. This follows
+the approved PRD local-media goal and reprioritizes execution; it does not change
+product acceptance or cancel the approved Studio integration, migration or
+release requirements. This register does not claim that the local-first checks
+have passed.
+
+| Lane | Latest evidence | Current milestone |
+|---|---|---|
+| S2 migration | PR #25 evidence is integrated in `main`: recovery at five child-process termination checkpoints and journal, undo-snapshot and history write-failure tests; power-loss durability, remaining storage failures and actual Studio transfer remain open | Further work deferred |
+| S3 / G3 handoff | PR #25 evidence is integrated in `main`: cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1 PASS; mapped/reparse runtime, Studio/API exit during playback and audible parity remain open, so G3 is PARTIAL | Further work deferred |
+| S4–S7 | Export, source removal, installer, updater and release acceptance have not run | NOT_RUN / deferred |
+
+Deferral is a scheduling decision, not a status upgrade. Keep the original
+Studio player and source consumers in place until a later integration milestone
+passes its acceptance gates. The additional evidence merged into `main` in PR
+#25 as `78ed550` (head `d241a74`) on 2026-10-20. The earlier 2026-09-29 SMB ingress blocker remains a
+historical result, not the latest probe status. See the [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md)
+and [traceability matrix](../validation/LALIN_PLAY_TRACEABILITY.md) for the
+remaining gates.
+
+## EQ gap for Windows audio and CMF Buds Pro 2
+
+**Gap-analysis work item: CLOSED (2026-10-19).** The documentation review is
+complete against approved PRD §4.9 and the current Play implementation. This
+closes the analysis task only; the device audition and the separate system-wide
+EQ/ANC capabilities below remain unimplemented or unverified.
+
+| Capability | Current state | Gap / acceptance boundary |
+|---|---|---|
+| EQ for audio played inside Lalin Play | Implemented as a 10-band Web Audio filter chain with preamp/limiter; Windows reported CMF Buds Pro 2 as the default output, while Play exposed only “Windows default” ([engine](../../apps/play-desktop/src/playback/audioEngine.ts), [EQ panel](../../apps/play-desktop/src/components/PlaybackEQPanel.tsx), [settings](../../apps/play-desktop/src/components/PlaybackSettings.tsx)) | A 5-second 1 kHz tone with EQ active and +6 dB at 1 kHz played to completion in the isolated Tauri build. User confirmation of audible output through the earbuds is still pending, so endpoint/EQ acceptance remains NOT_VERIFIED; see the local probe below |
+| EQ for all Windows audio | Not implemented; Play's EQ processes only media owned by its playback engine | Current PLAY-01..13 criteria do not require system-wide audio processing. Treat it as a separate product capability and acceptance scope |
+| CMF ANC control | Not implemented; Play has no CMF-specific device-control path | ANC mode changes are outside Play's current requirements and remain controlled by the earbuds or their supported companion software |
+
+The approved [PRD §4.9](PRD.md) requires Play's own EQ and output continuity
+across its Full/Compact surfaces. It does not claim system-wide Windows EQ or
+earbud ANC control. A successful EQ audition through the CMF endpoint would
+prove only audio rendered by Lalin Play.
+
+### Local Windows output probe — 2026-10-19
+
+- Windows Settings listed `Headphones — CMF Buds Pro 2` as the default output
+  with system volume at 28. No Windows output or volume setting was changed.
+- Play's output selector exposed only `อุปกรณ์เริ่มต้นของ Windows`; it did not
+  expose a device-specific CMF entry.
+- The Tauri debug build used repository source `61151edf69c5d0e66acaa976c6be42ca4fb46a47`
+  and an isolated app identifier `ai.lalin.play.acceptance`. Binary SHA-256:
+  `DC98A72316C5B8181AC12D627DDC79C61F67DB881A3ECFF6EF8AFF88573F4DF2`.
+- With EQ active and the 1 kHz band at +6 dB, Play loaded a generated 1.5-second
+  1 kHz tone and entered `PLAYING` while Windows default was CMF Buds Pro 2.
+- A repeat probe loaded and directly played a generated 5-second 1 kHz tone
+  with the same EQ state. Play showed `LOADING`, then `PLAYING` with total
+  duration `0:05`; after the tone ended, the UI returned to `IDLE` at `0:05`.
+- The repeat used Play's Windows-default route; no Windows output or volume
+  setting was changed. UI playback completion does not prove audible output
+  through the earbuds. User confirmation remains required, acceptance stays
+  **NOT_VERIFIED**, and no app test suite was run.
+
 ## แผนที่เอกสาร
 
 | ต้องการทราบ | เอกสารเจ้าของข้อมูล | สถานะ |
@@ -42,14 +106,21 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 | Product scope / acceptance | [PRD §4.9](PRD.md#49-lalin-play--standalone-local-media-player-approved), [SRS](SRS.md) | Approved requirements; acceptance ยังไม่ครบ |
 | Architecture / split gates | [ADR-004](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) | Approved direction; implementation partial |
 | Video / Compact / fullscreen | [CR-003](CR-003--LALIN_PLAY_LOCAL_VIDEO.md), [CR-004](CR-004--LALIN_PLAY_MINIMAL_COMPACT_PREVIEW.md), [Sitemap](../design/LALIN_SITEMAP_SOT.md) | Approved, implemented locally |
+| Mixer / virtual surround / ENG/TH UI | [CR-006](CR-006--LALIN_PLAY_SONAR_MIXER_SPATIAL_AUDIO.md) | Approved and implemented locally; automated checks recorded, Windows headphone/audio acceptance NOT_RUN |
+| Dashboard / Genesis catalog / RustFS-ready media / cache / favorites | [CR-007](CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md) | Approved; Genesis relational catalog adapter passes `cargo check`; Dashboard, RustFS adapter, real cache, hybrid search and native offline acceptance remain open; YouTube download/cache requires separate prior written approval |
+| Mobile remote / phone-hosted files / YouTube playlist references / crossfade | [CR-008](CR-008--LALIN_PLAY_MOBILE_REMOTE_HOST_CROSSFADE.md) | Approved 2026-10-20; Smooth, Manual DJ and cue-based Medley controls build locally; W1-A automation is closed (focused 19/19, full 102/102), while mobile/security and native listening acceptance remain open |
+| Browser-first remote architecture | [ADR-006](../architecture/ADR-006-LALIN-PLAY-BROWSER-FIRST-MOBILE-REMOTE.md), [SIS](../architecture/LALIN_PLAY_MOBILE_REMOTE_SIS.md) | Candidate; browser path avoids native iOS distribution; TLS mode and W0-B/C review remain open |
+| Mobile remote onboarding / user flows | [Functional Flow](../design/LALIN_PLAY_MOBILE_REMOTE_FUNCTIONAL_FLOW_SPEC.md) | Candidate; current pairing needs trusted page plus in-page invite scan; one-scan QR and persistent pairing are not promised |
+| CR-008 execution waves / readiness | [Wave DAG](../architecture/LALIN_PLAY_CR008_EXECUTION_DAG.md) | Candidate implementation plan updated with browser-first docs and Astra findings; W0-B/C remain BLOCKED and no remote wave starts |
 | Requirements → code → tests | [Play traceability](../validation/LALIN_PLAY_TRACEABILITY.md) | Current evidence map; not a blanket PASS |
 | Current API/storage and Studio integration | [Integration/migration contract](../architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md) | Approved S2 migration and S3 handoff implemented locally; live parity and recovery gates remain open |
-| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Integrated Play Rust 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open |
-| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [cross-session ACL RCA](../../.brain/rca/2026-09-30-lalin-play-cross-session-acl-evidence-gap.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, and cross-host pipe denial with positive control (Win32 5) plus same-host access pass; the separate-logon attempt failed at `runas` with Win32 1326 before pipe contact; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
+| S2 implementation evidence | [Migration evidence](../validation/LALIN_PLAY_S2_MIGRATION.md) | Historical integrated Play Rust snapshot: 35 passed/1 ignored; five child-process termination checkpoints and initial journal, undo-snapshot and retryable history-write failures pass; power-loss, other writes and actual Studio transfer remain open; this is not the current branch Rust suite result |
+| S3 handoff evidence | [Traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [execution DAG](../architecture/LALIN_PLAY_EXECUTION_DAG.md), [cross-session ACL RCA](../../.brain/rca/2026-09-30-lalin-play-cross-session-acl-evidence-gap.md), [concurrent-client RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-concurrent-client-launch.md) and [mapped/reparse runtime RCA](../../.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md) | Isolated Windows paired cold/warm delivery, lost-ACK QUERY/STATE reconciliation against a live owner, sequential and four-client concurrent queue order by ACK revision, no cold launch while the pipe is busy, duplicate handling, owner restart, live URL/UNC-shaped invalid-path rejection with unchanged STATE, local restricted-token ACL denial, loopback SMB/UNC denial, cross-host pipe denial 1/1 and different-logon-session ACL denial 1/1 in PR #25 (`78ed550`); the first `runas` attempt failed with Win32 1326 before pipe contact, and a later ACL probe passed; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during active playback and audible parity remain NOT_VERIFIED; process-interrupted lost ACK with no blind replay is covered by the paired test |
 | Extraction inventory / recovery / license gate | [Separation handoff](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md) | Repository export and source removal are not performed; standalone integration remains local |
 | Installer / signed update / release | [Release runbook](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) | Candidate; signing and distribution gates open |
 | User operation / troubleshooting | [User guide](../guides/LALIN_PLAY_USER_GUIDE.md) | Current candidate behavior |
 | Developer setup / provenance | [Play README](../../apps/play-desktop/README.md) | Current candidate behavior |
+| Website preview | [`apps/lalin-play-site/`](../../apps/lalin-play-site/README.md) | Draft landing, Terms and Privacy pages; legal review pending and pages are marked not for publication |
 | Historical runtime evidence | [Foundation](../validation/LALIN_PLAY_STANDALONE_FOUNDATION.md), [Video](../validation/LALIN_PLAY_LOCAL_VIDEO.md), [Compact](../validation/LALIN_PLAY_MINIMAL_COMPACT.md), [Fullscreen/skip](../validation/LALIN_PLAY_FULLSCREEN_SKIP.md) | Local evidence with explicit limitations |
 
 ## วิธีอ่านสถานะและลำดับงานต่อ
@@ -60,10 +131,25 @@ Full และ Compact ใช้ playback owner เดียวกัน ปั�
 - **candidate** = รายละเอียดหรือ release gates ที่ยังรออนุมัติตาม R5; approved S2/S3 code remains subject to runtime acceptance.
 - **BLOCKED** ใน checklist = ต้องเติม decision/evidence ก่อนผ่าน gate ไม่ใช่รายงานว่า agent ทำงานต่อไม่ได้.
 
-ลำดับ: verify remaining S2 power-loss and write-failure cases plus S3 separate-session/mapped-reparse, Studio/API exit during playback, audible parity and relink acceptance →
-license/provenance + S4 export → S5 clean-checkout/regression → S6 scoped removal →
-S7 installer/update. แยก authorization สำหรับ remote creation, deletion,
-merge และ publication จากการอนุมัติเอกสารเสมอ
+ลำดับปัจจุบัน: local-only readiness และ evidence → คงสถานะ integration/release
+gates เป็น deferred. เมื่อเปิด integration จึงค่อยทำ S2 power-loss/remaining
+write recovery และ live transfer; จากนั้น revalidate S3 paired IPC บน baseline
+ปัจจุบัน เติม mapped/reparse runtime, Studio/API exit ระหว่าง playback และ
+audible parity → license/provenance + S4 export → S5 clean-checkout/regression
+→ S6 scoped removal → S7 installer/update. แยก authorization สำหรับ remote
+creation, deletion, merge และ publication จากการอนุมัติเอกสารเสมอ
+
+## Current documentation version diff — 2026-10-19
+
+| Document | Before → after |
+|---|---|
+| Agent instructions | 0.2.2b → 0.2.5b |
+| Repository Architecture SOT | 0.4.3b → 0.4.4b |
+| Execution backlog | 0.1.0b → 0.1.4b |
+| Execution DAG | 0.2.4b → 0.3.2b |
+| Documentation register | 0.2.2b → 0.3.5b |
+| Play traceability | 0.2.2b → 0.2.3b |
+| PRD / ADR-004 / application versions | No change; approved scope remains intact |
 
 เอกสารครบในแง่ coverage ของหัวข้อที่ตรวจพบ ไม่ได้ปิดงาน implementation หรือ
 แทนที่การตัดสินใจเรื่อง license, release signing และการทดสอบที่ยังขาด
@@ -157,8 +243,8 @@ Tauri event/API bridge, command authorization and native pipe creation remains
 unconfirmed. See the
 [registration readiness RCA](../../.brain/rca/2026-09-27-lalin-play-handoff-registration-readiness.md).
 
-G3 remains **PARTIAL**. The implementation follow-up is in draft PR #25 and
-unmerged.
+G3 remains **PARTIAL**. This 2026-09-27 record predates PR #25's merge; PR #25
+later merged on 2026-10-20 as `78ed550`.
 Ordinary Studio playback remains enabled; no Play parity, source removal, or
 release acceptance is claimed.
 
@@ -196,8 +282,9 @@ At that earlier paired run, G3 remained **PARTIAL**, not playback parity.
 Cross-session/unauthorized and remote-client rejection, invalid-path and
 mapped-drive/reparse runtime cases, ACK loss across process interruption,
 Studio/API exit during active playback and audible parity were still open.
-PR #25 is open and draft. Keep ordinary Studio playback enabled; do not merge or
-remove its playback owner until full parity is proven.
+At this 2026-09-27 record PR #25 was draft; it later merged on 2026-10-20 as
+`78ed550`. Keep ordinary Studio playback enabled; do not remove its playback
+owner until full parity is proven.
 
 ## G3 receiver invalid-path follow-up — 2026-09-27
 
@@ -254,8 +341,8 @@ S2 child-process termination at five journal/catalog checkpoints now recovers to
 the expected catalog before store initialization. Tests also verify initial
 journal-write failure leaves no journal; undo-snapshot failure remains retryable;
 import-history failure can be retried without a duplicate export ID. Power-loss
-durability and other storage-write cases remain open. PR #25 remains draft pending
-those gates. Keep ordinary Studio
+durability and other storage-write cases remain open. PR #25 later merged on
+2026-10-20 as `78ed550`; the remaining gates are still open. Keep ordinary Studio
 playback enabled; no playback parity, source removal or release is claimed.
 
 ## G3 lost ACK across Play owner restart — 2026-09-27
@@ -409,7 +496,7 @@ commit หรือ push ในรอบจัดเอกสารนี้ ไ
 |---|---|
 | Changed/new Markdown set | 14 files; 6 new documents and 8 updated Markdown documents |
 | Internal relative file links in that set | 100 references, no missing file targets; external URLs/heading anchors not revalidated |
-| Canonical acceptance coverage | 33 exact unique IDs: PLAY-01..10, PLAY-V01..10, PLAY-C01..13 |
+| Canonical acceptance coverage | 36 exact unique IDs: PLAY-01..13, PLAY-V01..10, PLAY-C01..13 |
 | Code/test path references in matrix | 28 path references exist in standalone source tree |
 | YAML metadata | All 14 Markdown frontmatter blocks contain required metadata fields |
 | BLUEPRINT | YAML parses; original Studio owner retained alongside standalone entry |
@@ -495,7 +582,9 @@ Windows host. The client first proves the UNC/SMB route can reach a pipe with
 the test DACL, then expects `ERROR_ACCESS_DENIED` on the pipe using production
 remote-rejection mode; the server also verifies local access. The server test
 and script are prepared. The listener timed out after 180 seconds without a
-complete client result, so remote rejection remains NOT_VERIFIED. Mapped-drive
+complete client result, so remote rejection was NOT_VERIFIED at that checkpoint.
+PR #25 later recorded cross-host pipe denial 1/1 PASS and different-logon-
+session ACL denial 1/1 PASS (`78ed550`). Mapped-drive
 and reparse runtime tests compile but remain NOT_RUN because their fixtures were
 not provisioned.
 
@@ -583,9 +672,11 @@ The opt-in Windows cross-host test passed on `DESKTOP-VETATMQ` with a second
 Windows host. The server accepted the positive-control connection and exact
 result `control=0;target=5`, then confirmed same-host access to the protected
 target pipe still worked. This proves the remote-pipe-denial subgate for the
-tested pair; it does not close G3. A separate interactive logon session,
-mapped/reparse runtime cases, Studio/API exit during playback and audible parity
-remain open. Keep ordinary Studio playback enabled.
+tested pair; it does not close G3. At this cross-host-only checkpoint, the
+different-logon-session ACL probe was still open; a later probe passed 1/1 and
+was integrated by PR #25 (`78ed550`). Mapped/reparse runtime cases, Studio/API
+exit during playback and audible parity remain open. Keep ordinary Studio
+playback enabled.
 
 ## Current documentation version diff — 2026-09-30 G3 cross-host denial
 
@@ -626,6 +717,29 @@ tests and remains **NOT_RUN** until the local account launches the client.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.22b | 2026-11-07 | beta | Reconcile PR #25's merged S2/G3 evidence and current code map; register the unpublished Play site draft while retaining runtime and release gates | working tree | Codex |
+| 0.3.21b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
+| 0.3.20b | 2026-10-20 | beta | Add browser-first ADR, SIS and functional flow; refine the CR-008 plan while retaining W0-B/C and remote-start gates | working tree | Codex |
+| 0.3.19b | 2026-10-20 | beta | Record final DAG review: all CR-008 implementation lanes remain BLOCKED until the content-pinned snapshot and W0 contracts pass review | working tree | Codex |
+| 0.3.18b | 2026-10-20 | beta | Refine the CR-008 execution DAG from independent review: pin snapshot contents, add PLAY-19 adapter lane, and gate remote data flows on protocol/security tests | working tree | Codex |
+| 0.3.17b | 2026-10-20 | beta | Link the CR-008 execution DAG and expose the open baseline, contract and PLAY-19 readiness gates | working tree | Codex |
+| 0.3.16b | 2026-10-20 | beta | Record the local Smooth, Manual DJ and cue-based Medley implementation slice; retain mobile/security/native acceptance gates | working tree | Codex |
+| 0.3.15b | 2026-10-20 | beta | Record local queue occurrence IDs and Smooth crossfade build while retaining remote, phone-host, Manual DJ/Medley and runtime gates | working tree | Codex |
+| 0.3.14b | 2026-10-20 | beta | Record CR-008 approval and PLAY-21..27 requirements; begin implementation while retaining security, mobile and native acceptance gates | working tree | Codex |
+| 0.3.13b | 2026-10-20 | beta | Document partial CR-007 Home dashboard, history, favorites, source badges and YouTube link UI; retain object-store/cache/hybrid gates and index CR-008 design | working tree | Codex |
+| 0.3.12b | 2026-10-20 | beta | Add candidate CR-008 design for paired mobile remote, phone-file host, YouTube playlist references and dual-deck transitions | working tree | Codex |
+| 0.3.11b | 2026-10-20 | beta | Record approved CR-007 and amended GenesisBlockDB/RustFS architecture; code and native acceptance remain in progress | working tree | Codex |
+| 0.3.10b | 2026-10-20 | beta | Add doc-first CR-007 proposal for dashboard, offline library, authorized sources, cache, favorites and badges | working tree | Codex |
+| 0.3.9b | 2026-10-20 | beta | Record CR-006 approval, exact 14-file/81-test and build pass; retain native audio acceptance gap | working tree | Codex |
+| 0.3.8b | 2026-10-20 | beta | Record CR-006 approval and local mixer, virtual HRTF and ENG/TH implementation; retain native audio acceptance gap | working tree | Codex |
+| 0.3.7b | 2026-10-20 | beta | Extend candidate CR-006 with ENG/TH localization for all Lalin Play UI, ENG default, and persisted language selection | working tree | Codex |
+| 0.3.6b | 2026-10-20 | beta | Register CR-006 as a proposed Sonar-inspired in-app mixer and headphone virtual-surround scope pending approval | working tree | Codex |
+| 0.3.5b | 2026-10-19 | beta | Record the completed 5-second Windows-default EQ playback probe while keeping audible acceptance NOT_VERIFIED | working tree | Codex |
+| 0.3.4b | 2026-10-19 | beta | Record the isolated Windows CMF default-output probe and retain NOT_VERIFIED audible acceptance | working tree | Codex |
+| 0.3.3b | 2026-10-19 | beta | Close the Windows EQ / CMF Buds Pro 2 gap-analysis work item while retaining the unverified device audition and out-of-scope system-wide EQ/ANC gaps | working tree | Codex |
+| 0.3.2b | 2026-10-19 | beta | Reconcile Play status with unmerged S2/S3 follow-up evidence and retain remaining gates | working tree | Codex |
+| 0.3.1b | 2026-10-19 | beta | Reconcile milestone status with GitHub's SMB ingress blocker evidence; distinguish deferred work from unrun or partial gates | working tree | Codex |
+| 0.3.0b | 2026-10-02 | beta | Record local-first Play as the active milestone and defer integration/release gates without changing approved scope | working tree | Codex |
 | 0.2.21b | 2026-09-30 | beta | Record runas credential failure before pipe contact and retain G3 playback gates | based on 20516d0 | Codex |
 | 0.2.20b | 2026-09-30 | beta | Record cross-host remote-pipe denial with positive control and same-host access; retain playback-parity gates | based on 0c83509 | Codex |
 | 0.2.19b | 2026-09-27 | beta | Record second-host listener timeout without claiming remote rejection; retain mapped/reparse and playback gates | based on ef5f87b | Codex |

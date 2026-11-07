@@ -1,7 +1,7 @@
 ---
-version: "0.2.17b"
+version: "0.2.18b"
 created_at: "2026-09-20T19:35:00+07:00,LALIN,8429010"
-last_update: "2026-09-30T04:27:25+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -95,7 +95,7 @@ output settings and dark native controls.
 | Full library/playlist UI, queue, EQ, Full/Compact | Implemented; partial native/manual coverage, not full PLAY-01–09 acceptance |
 | Opt-in Studio queue/EQ export/import and atomic rollback | Implemented locally; child-process termination at five transaction checkpoints and directory-level recovery pass; power-loss, remaining writes and live transfer NOT RUN |
 | Missing-file relink, persisted per-mode window bounds | NOT IMPLEMENTED; bounds currently process-local |
-| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; same-host loopback SMB/UNC client is denied with a working remote positive control and local access; cross-host listener timed out before a client result, so remote rejection remains NOT_VERIFIED; mapped/reparse tests compile but are NOT_RUN; separate-logon-session, Studio/API exit during playback and audible parity NOT_VERIFIED |
+| Native Studio named pipe, same-session ACL, FIFO/ACK/reconciliation | Isolated paired process passed cold/warm delivery, ACK/STATE recovery after dropping a command ACK, same-ID duplicate handling, sequential and four-client concurrent queue order by ACK revision, applied command followed by process restart with no blind replay, busy-pipe no-relaunch behavior, and live URL/UNC-shaped path rejection with unchanged STATE; local restricted-token client without the allowed logon SID receives `ERROR_ACCESS_DENIED`; same-host loopback SMB/UNC client is denied with a working remote positive control and local access; PR #25 later recorded cross-host pipe denial and different-logon-session ACL denial PASS 1/1 each; mapped/reparse tests compile but are NOT_RUN; Studio/API exit during playback and audible parity NOT_VERIFIED |
 | Cold/warm Studio-to-Play lifecycle and Studio/API exit | Isolated cold/warm paired control-plane test passed; Studio/API exit during active playback and audible parity NOT_VERIFIED |
 | Device removal/recovery, native output selection, TV/gamepad and codec coverage | NOT RUN on this candidate |
 | Standalone remote checkout, export SHA, license/notices audit | NOT RUN |
@@ -359,10 +359,11 @@ Preserve Studio playback.
 The ignored Windows probe waited for a client under a different logon SID in
 the same desktop session. `runas /user:DESKTOP-VETATMQ\pc` returned Win32 1326
 before the client script opened the control pipe. The server received no
-result and timed out after 180 seconds; this is not ACL evidence. The
-`LalinPipeProbe0930` local account is absent. Retry only after creating and
-verifying a temporary standard account on the server host. The full Play Rust
-suite passed **35/35** with **6 ignored**; formatting, test-binary compilation
+result and timed out after 180 seconds; this is not ACL evidence. A later
+different-logon-session ACL probe passed 1/1 in PR #25 (`78ed550`). The
+`LalinPipeProbe0930` local account was absent during that failed attempt. The
+full Play Rust suite in the 2026-09-30 snapshot passed **35/35** with **6
+ignored**; formatting, test-binary compilation
 and PowerShell parsing passed. Cross-host pipe denial passed separately;
 mapped/reparse runtime cases, Studio/API exit during active playback and audible
 parity remain open. Preserve Studio playback.
@@ -371,6 +372,7 @@ parity remain open. Preserve Studio playback.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.18b | 2026-11-07 | beta | Reconcile earlier listener and runas attempts with PR #25 denial passes while retaining mapped/reparse and playback gates | working tree | Codex |
 | 0.2.17b | 2026-09-30 | beta | Record the runas credential failure and keep separate-logon ACL acceptance open | based on 20516d0 | Codex |
 | 0.2.16b | 2026-09-27 | beta | Record the timed-out second-host listener attempt without claiming remote rejection | based on ef5f87b | Codex |
 | 0.2.15b | 2026-09-27 | beta | Prepare a second-host named-pipe probe and record unrun mapped/reparse runtime tests | based on 3bb4414 | Codex |

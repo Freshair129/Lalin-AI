@@ -1,7 +1,7 @@
 ---
-version: "0.4.3b"
+version: "0.4.5b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
-last_update: "2026-09-25T19:20:01+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -143,10 +143,11 @@ See [approved plan](LALIN_PLAY_COMMAND_DELIVERY_PLAN.md) and
 [ADR-004](ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md) defines the approved target for a separately installed
 `lalin-play` application with one owner shared by Full/Compact, local-file access
 without the Studio API, and a thin native Studio command adapter.
-`apps/play-desktop/` is current additive candidate source on `codex/lalin-play-split`,
-not the replacement for the retained Studio owner or a permanent umbrella app.
-Candidate commit `f5a6681` has been pushed to the Lalin-AI branch; this is not an
-export to the proposed `Freshair129/lalin-play` repository. See the
+`apps/play-desktop/` is additive candidate source in `main` from baseline
+`f5a6681`, not the replacement for the retained Studio owner or a permanent
+umbrella app. PR #25 merged the G3 follow-up (`d241a74`) into `main` as
+`78ed550` on 2026-10-20; its integration does not transfer playback ownership
+or export source to the proposed `Freshair129/lalin-play` repository. See the
 [current document/status register](../product/LALIN_PLAY_DOCUMENTATION.md) and
 [pending handoff](LALIN_PLAY_SEPARATION_HANDOFF.md).
 
@@ -208,6 +209,8 @@ The repository name is no longer a compatibility identifier; it is now `Lalin-AI
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.4.5b | 2026-11-07 | beta | Record PR #25 S2/G3 integration in main while retaining Studio owner and independent repository export gates | working tree | Codex |
+| 0.4.4b | 2026-10-19 | beta | Reconcile Play source ownership with the main baseline and separate follow-up branch evidence | working tree | Codex |
 | 0.4.3b | 2026-09-25 | beta | Record local S3 handoff while retaining Studio playback until native parity evidence | uncommitted | Codex |
 | 0.4.2b | 2026-09-20 | beta | Reconcile existing candidate source versus future export and link current handoff status | based on f5a6681 | LALIN |
 | 0.4.1b | 2026-09-20 | beta | Record independent candidate manifests and preserve existing Studio ownership | based on 8429010 | LALIN |

@@ -28,6 +28,10 @@
 // @req FR-17.10 — Real spectrum analyser
 // @req FR-17.11 — Real-time EQ parameter updates
 // @req FR-17.12 — Isolation from mastering parameters
+// @req FR-20.2, FR-20.3, FR-20.4 — Single-owner media/master mixer state and persistence
+// @req FR-21.3, FR-21.4 — Spatial-mode state and safe fallback reporting
+// @req PLAY-14 — Track successful audible listens once per playback session.
+// @req PLAY-22, PLAY-25, PLAY-26 — Stable queue entries and deterministic transition coordination
 
 import { create } from "zustand";
 import {
@@ -36,29 +40,107 @@ import {
   type PlaybackQueue,
   type PlaybackRepeatMode,
   type PlaybackEQ,
+  type PlaybackMixer,
+  type SpatialMode,
+  type PlaybackTransitionSettings,
   DEFAULT_EQ_PRESETS,
   createDefaultEQ,
+  createDefaultMixer,
+  createDefaultTransitionSettings,
   clampGain,
   EQ_FREQUENCIES,
 } from "../contracts";
 import { PlaybackAudioEngine, type AudioOutputDevice } from "./audioEngine";
-import { resolveMedia } from "../native";
+import { isVideoItem, resolveMedia } from "../native";
 
 export const STORAGE_QUEUE_KEY = "lalin-play:v1:queue";
 export const STORAGE_EQ_KEY = "lalin-play:v1:eq";
+export const STORAGE_MIXER_KEY = "lalin-play:v1:mixer";
+export const STORAGE_TRANSITION_SETTINGS_KEY = "lalin-play:v1:transition";
+
+function createQueueEntryId(): string {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  } catch {}
+  return `queue-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function ensureQueueEntryIds(items: MediaItem[]): MediaItem[] {
+  const seen = new Set<string>();
+  return items.map((item) => {
+    let queueEntryId = item.queueEntryId;
+    if (!queueEntryId || seen.has(queueEntryId)) queueEntryId = createQueueEntryId();
+    seen.add(queueEntryId);
+    return queueEntryId === item.queueEntryId ? item : { ...item, queueEntryId };
+  });
+}
+
+function withUniqueQueueEntryId(item: MediaItem, items: MediaItem[]): MediaItem {
+  const ids = new Set(items.map((entry) => entry.queueEntryId).filter((id): id is string => !!id));
+  return item.queueEntryId && !ids.has(item.queueEntryId)
+    ? item
+    : { ...item, queueEntryId: createQueueEntryId() };
+}
+
+function nextQueueRevision(queue: PlaybackQueue): number {
+  return (Number.isSafeInteger(queue.revision) && (queue.revision ?? 0) >= 0 ? queue.revision! : 0) + 1;
+}
+
+export function loadPersistedTransitionSettings(): PlaybackTransitionSettings {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_TRANSITION_SETTINGS_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const durationSeconds = typeof parsed.durationSeconds === "number" && Number.isFinite(parsed.durationSeconds)
+        ? Math.max(2, Math.min(12, Math.round(parsed.durationSeconds)))
+        : 5;
+      const mode = parsed.mode === "smooth" || parsed.mode === "manual" || parsed.mode === "medley" ? parsed.mode : "off";
+      return { mode, durationSeconds };
+    }
+  } catch {}
+  return createDefaultTransitionSettings();
+}
+
+function persistTransitionSettings(settings: PlaybackTransitionSettings): void {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(STORAGE_TRANSITION_SETTINGS_KEY, JSON.stringify(settings));
+  } catch {}
+}
+
+export function loadPersistedMixer(): PlaybackMixer {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_MIXER_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        mediaGain: typeof parsed.mediaGain === "number" && Number.isFinite(parsed.mediaGain)
+          ? Math.max(0, Math.min(1.5, parsed.mediaGain)) : 1,
+        mediaMuted: Boolean(parsed.mediaMuted),
+        spatialMode: parsed.spatialMode === "virtual-7.1" ? "virtual-7.1" : "stereo",
+      };
+    }
+  } catch {}
+  return createDefaultMixer();
+}
+
+function persistMixer(mixer: PlaybackMixer) {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(STORAGE_MIXER_KEY, JSON.stringify(mixer));
+  } catch {}
+}
 
 export function loadPersistedQueue(): PlaybackQueue {
   try {
     if (localStorage.getItem("lalin-play:v1:resume") !== "true") {
-      return { items: [], currentIndex: -1, repeatMode: "off", shuffle: false };
+      return { items: [], currentIndex: -1, repeatMode: "off", shuffle: false, revision: 0 };
     }
     const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_QUEUE_KEY) : null;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed.items)) {
-        const validItems: MediaItem[] = parsed.items.filter(
+        const validItems: MediaItem[] = ensureQueueEntryIds(parsed.items.filter(
           (it: any) => it && typeof it.id === "string" && typeof it.url === "string"
-        );
+        ));
         let idx = typeof parsed.currentIndex === "number" ? parsed.currentIndex : -1;
         if (validItems.length === 0 || idx < 0 || idx >= validItems.length) {
           idx = -1;
@@ -68,6 +150,7 @@ export function loadPersistedQueue(): PlaybackQueue {
           currentIndex: idx,
           repeatMode: parsed.repeatMode === "one" || parsed.repeatMode === "all" ? parsed.repeatMode : "off",
           shuffle: Boolean(parsed.shuffle),
+          revision: Number.isSafeInteger(parsed.revision) && parsed.revision >= 0 ? parsed.revision : 0,
         };
       }
     }
@@ -77,6 +160,7 @@ export function loadPersistedQueue(): PlaybackQueue {
     currentIndex: -1,
     repeatMode: "off",
     shuffle: false,
+    revision: 0,
   };
 }
 
@@ -126,7 +210,10 @@ export function persistEQ(eq: PlaybackEQ) {
 export interface PlaybackStoreState {
   queue: PlaybackQueue;
   nowPlaying: NowPlaying;
+  playSession: number;
   eq: PlaybackEQ;
+  mixer: PlaybackMixer;
+  spatialNotice: "fallback-stereo" | null;
   isOpen: boolean;
   availableOutputDevices: AudioOutputDevice[];
 
@@ -154,6 +241,14 @@ export interface PlaybackStoreState {
   toggleShuffle: () => void;
   refreshOutputDevices: () => Promise<void>;
   setOutputDevice: (deviceId: string) => Promise<boolean>;
+  transitionSettings: PlaybackTransitionSettings;
+  isTransitioning: boolean;
+  crossfader: number;
+  transitionTargetQueueEntryId: string | null;
+  setTransitionSettings: (settings: PlaybackTransitionSettings) => void;
+  prepareNextDeck: (targetIndex?: number) => Promise<void>;
+  setCrossfader: (value: number) => void;
+  setCuePoints: (index: number, cueInSeconds: number | undefined, cueOutSeconds: number | undefined) => void;
 
   // EQ Actions
   setBandGain: (index: number, db: number) => void;
@@ -163,19 +258,122 @@ export interface PlaybackStoreState {
   saveCustomPreset: (name: string) => void;
   deleteCustomPreset: (name: string) => void;
   resetEQ: () => void;
+  setMediaGain: (gain: number) => void;
+  toggleMediaMute: () => void;
+  setSpatialMode: (mode: SpatialMode) => boolean;
 }
 
 const initialQueue = loadPersistedQueue();
 const initialEQ = loadPersistedEQ();
+const initialMixer = loadPersistedMixer();
+const initialTransitionSettings = loadPersistedTransitionSettings();
 const engine = PlaybackAudioEngine.getInstance();
 let loadGeneration = 0;
+let smoothTransitionGeneration = 0;
+let smoothTransitionTarget: { token: number; outgoingEntryId: string; incomingEntryId: string; key: string } | null = null;
+let blockedTransitionKey: string | null = null;
+let shuffleTargetCache: { key: string; index: number } | null = null;
+
+function cancelPlannedTransition(): void {
+  smoothTransitionGeneration++;
+  smoothTransitionTarget = null;
+  blockedTransitionKey = null;
+  shuffleTargetCache = null;
+  engine.cancelTransition();
+  usePlaybackStore.setState({ isTransitioning: false, crossfader: 0, transitionTargetQueueEntryId: null });
+}
+
+function nextSmoothQueueIndex(queue: PlaybackQueue): number | null {
+  if (queue.repeatMode === "one" || queue.items.length < 2) return null;
+  if (queue.shuffle) {
+    const key = `${queue.items[queue.currentIndex]?.queueEntryId ?? "none"}:${queue.revision ?? 0}`;
+    if (shuffleTargetCache?.key === key) return shuffleTargetCache.index;
+    const candidates = queue.items.map((_, index) => index).filter((index) => index !== queue.currentIndex);
+    const index = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+    shuffleTargetCache = index === null ? null : { key, index };
+    return index;
+  }
+  const nextIndex = queue.currentIndex + 1;
+  if (nextIndex < queue.items.length) return nextIndex;
+  return queue.repeatMode === "all" ? 0 : null;
+}
+
+function maybeStartSmoothTransition(time: number, state: PlaybackStoreState): void {
+  const current = state.queue.items[state.queue.currentIndex];
+  const nextIndex = nextSmoothQueueIndex(state.queue);
+  if (
+    (state.transitionSettings.mode !== "smooth" && state.transitionSettings.mode !== "medley") ||
+    state.nowPlaying.state !== "playing" ||
+    !current?.queueEntryId ||
+    isVideoItem(current) ||
+    nextIndex === null ||
+    smoothTransitionTarget
+  ) return;
+  const next = state.queue.items[nextIndex];
+  if (!next?.queueEntryId || isVideoItem(next)) return;
+  const attemptKey = `${current.queueEntryId}:${next.queueEntryId}:${state.transitionSettings.mode}:${state.queue.revision ?? 0}`;
+  if (blockedTransitionKey === attemptKey) return;
+  const duration = engine.getDuration() || state.nowPlaying.duration;
+  const cueOut = state.transitionSettings.mode === "medley"
+    ? Math.min(duration, Number.isFinite(current.cueOutSeconds) ? current.cueOutSeconds! : duration)
+    : duration;
+  const remaining = cueOut - time;
+  if (!Number.isFinite(remaining) || remaining < 2 || remaining > state.transitionSettings.durationSeconds) return;
+
+  const token = ++smoothTransitionGeneration;
+  smoothTransitionTarget = {
+    token,
+    outgoingEntryId: current.queueEntryId,
+    incomingEntryId: next.queueEntryId,
+    key: attemptKey,
+  };
+  usePlaybackStore.setState({ transitionTargetQueueEntryId: next.queueEntryId });
+  const fadeSeconds = Math.max(2, Math.min(state.transitionSettings.durationSeconds, remaining));
+  const nextDuration = Number.isFinite(next.duration) && (next.duration ?? 0) > 0 ? next.duration! : Number.MAX_SAFE_INTEGER;
+  const incomingStartTime = state.transitionSettings.mode === "medley"
+    ? Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), next.cueInSeconds ?? 0))
+    : 0;
+  void resolveMedia(next).then((url) => {
+    const latest = usePlaybackStore.getState();
+    if (
+      token !== smoothTransitionGeneration ||
+      (latest.transitionSettings.mode !== "smooth" && latest.transitionSettings.mode !== "medley") ||
+      latest.queue.items[latest.queue.currentIndex]?.queueEntryId !== current.queueEntryId ||
+      !latest.queue.items.some((item) => item.queueEntryId === next.queueEntryId) ||
+      latest.nowPlaying.state !== "playing"
+    ) return;
+    return engine.crossfadeTo(url, fadeSeconds, incomingStartTime, {
+      mediaId: next.id,
+      queueEntryId: next.queueEntryId!,
+      sessionId: state.playSession + 1,
+      duration: next.duration ?? 0,
+    }).then((completed) => {
+      if (!completed && token === smoothTransitionGeneration) {
+        smoothTransitionTarget = null;
+        blockedTransitionKey = attemptKey;
+        usePlaybackStore.setState({ isTransitioning: false, transitionTargetQueueEntryId: null });
+      }
+    });
+  }).catch(() => {
+    if (token === smoothTransitionGeneration) {
+      smoothTransitionTarget = null;
+      blockedTransitionKey = attemptKey;
+      usePlaybackStore.setState({ isTransitioning: false, transitionTargetQueueEntryId: null });
+    }
+  });
+}
 
 async function loadItem(item: MediaItem) {
   const generation = ++loadGeneration;
   try {
     const url = await resolveMedia(item);
     if (generation !== loadGeneration) return;
-    await engine.loadAndPlay(url);
+    await engine.loadAndPlay(url, 0, isVideoItem(item) ? "video" : "audio", {
+      mediaId: item.id,
+      queueEntryId: item.queueEntryId ?? item.id,
+      sessionId: usePlaybackStore.getState().playSession,
+      duration: item.duration ?? 0,
+    });
   } catch (error) {
     if (generation === loadGeneration) throw error;
   }
@@ -183,6 +381,13 @@ async function loadItem(item: MediaItem) {
 
 // Apply initial EQ to engine (stored in engine state and applied on graph creation)
 engine.applyEQ(initialEQ);
+engine.applyMixer(initialMixer);
+try {
+  if (typeof localStorage !== "undefined" && localStorage.getItem("lalin-play:v1:resume") === "true" && initialQueue.items.length > 0) {
+    persistQueue(initialQueue);
+  }
+} catch {}
+persistTransitionSettings(initialTransitionSettings);
 
 export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
   // Attach audio engine events
@@ -212,6 +417,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         duration: engine.getDuration() || state.nowPlaying.duration,
       },
     }));
+    maybeStartSmoothTransition(time, get());
   });
 
   engine.on("durationchange", (duration: number) => {
@@ -231,6 +437,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
   });
 
   engine.on("devicelost", () => {
+    cancelPlannedTransition();
     set((state) => ({
       nowPlaying: {
         ...state.nowPlaying,
@@ -240,9 +447,64 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     get().refreshOutputDevices();
   });
 
+  engine.on("spatialfallback", () => {
+    const mixer = { ...get().mixer, spatialMode: "stereo" as const };
+    persistMixer(mixer);
+    set({ mixer, spatialNotice: "fallback-stereo" });
+  });
+
+  engine.on("transitionstart", () => set({ isTransitioning: true }));
+
+  engine.on("transitioncancel", () => {
+    if (smoothTransitionTarget) blockedTransitionKey = smoothTransitionTarget.key;
+    smoothTransitionGeneration++;
+    smoothTransitionTarget = null;
+    set({ isTransitioning: false, crossfader: 0, transitionTargetQueueEntryId: null });
+  });
+
+  engine.on("transitionend", () => {
+    const plan = smoothTransitionTarget;
+    smoothTransitionTarget = null;
+    smoothTransitionGeneration++;
+    const { queue } = get();
+    const incomingIndex = plan
+      ? queue.items.findIndex((item) => item.queueEntryId === plan.incomingEntryId)
+      : -1;
+    const stillOnOutgoing = plan && queue.items[queue.currentIndex]?.queueEntryId === plan.outgoingEntryId;
+    if (plan && stillOnOutgoing && incomingIndex >= 0) {
+      const item = queue.items[incomingIndex];
+      const nextQueue: PlaybackQueue = {
+        ...queue,
+        currentIndex: incomingIndex,
+        revision: nextQueueRevision(queue),
+      };
+      persistQueue(nextQueue);
+      set((state) => ({
+        queue: nextQueue,
+        playSession: state.playSession + 1,
+        isTransitioning: false,
+        crossfader: 0,
+        transitionTargetQueueEntryId: null,
+        nowPlaying: {
+          ...state.nowPlaying,
+          item,
+          state: "playing",
+          currentTime: engine.getCurrentTime(),
+          duration: engine.getDuration() || item.duration || 0,
+          error: undefined,
+        },
+      }));
+      return;
+    }
+    set({ isTransitioning: false, crossfader: 0, transitionTargetQueueEntryId: null });
+  });
+
   engine.on("ended", () => {
+    cancelPlannedTransition();
+    set({ isTransitioning: false });
     const { queue } = get();
     if (queue.repeatMode === "one") {
+      set((state) => ({ playSession: state.playSession + 1 }));
       engine.seek(0);
       engine.play().catch(() => {});
       return;
@@ -283,37 +545,132 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       playbackRate: 1,
       activeOutputDeviceId: "",
     },
+    playSession: 0,
     eq: initialEQ,
+    mixer: initialMixer,
+    transitionSettings: initialTransitionSettings,
+    isTransitioning: false,
+    crossfader: 0,
+    transitionTargetQueueEntryId: null,
+    spatialNotice: null,
     isOpen: false,
     availableOutputDevices: [{ deviceId: "", label: "Default Audio Output" }],
 
     setOpen: (open: boolean) => set({ isOpen: open }),
 
+    setTransitionSettings: (settings: PlaybackTransitionSettings) => {
+      cancelPlannedTransition();
+      const nextSettings: PlaybackTransitionSettings = {
+        mode: settings.mode === "smooth" || settings.mode === "manual" || settings.mode === "medley" ? settings.mode : "off",
+        durationSeconds: Number.isFinite(settings.durationSeconds)
+          ? Math.max(2, Math.min(12, Math.round(settings.durationSeconds)))
+          : 5,
+      };
+      persistTransitionSettings(nextSettings);
+      set({ transitionSettings: nextSettings, isTransitioning: false });
+    },
+
+    prepareNextDeck: async (targetIndex?: number) => {
+      const { queue, transitionSettings, nowPlaying } = get();
+      if (transitionSettings.mode !== "manual" || nowPlaying.state !== "playing" || smoothTransitionTarget) return;
+      const current = queue.items[queue.currentIndex];
+      const nextIndex = Number.isInteger(targetIndex) && targetIndex! >= 0 && targetIndex! < queue.items.length && targetIndex !== queue.currentIndex
+        ? targetIndex!
+        : nextSmoothQueueIndex(queue);
+      if (!current?.queueEntryId || isVideoItem(current) || nextIndex === null) return;
+      const next = queue.items[nextIndex];
+      if (!next?.queueEntryId || isVideoItem(next)) return;
+      const token = ++smoothTransitionGeneration;
+      const attemptKey = `${current.queueEntryId}:${next.queueEntryId}:manual:${queue.revision ?? 0}`;
+      smoothTransitionTarget = { token, outgoingEntryId: current.queueEntryId, incomingEntryId: next.queueEntryId, key: attemptKey };
+      set({ crossfader: 0, transitionTargetQueueEntryId: next.queueEntryId });
+      try {
+        const url = await resolveMedia(next);
+        const latest = get();
+        if (
+          token !== smoothTransitionGeneration ||
+          latest.transitionSettings.mode !== "manual" ||
+          latest.queue.items[latest.queue.currentIndex]?.queueEntryId !== current.queueEntryId ||
+          !latest.queue.items.some((item) => item.queueEntryId === next.queueEntryId) ||
+          latest.nowPlaying.state !== "playing"
+        ) return;
+        const nextDuration = Number.isFinite(next.duration) && (next.duration ?? 0) > 0 ? next.duration! : Number.MAX_SAFE_INTEGER;
+        const cueIn = Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), next.cueInSeconds ?? 0));
+        const ready = await engine.prepareManualDeck(url, cueIn, {
+          mediaId: next.id,
+          queueEntryId: next.queueEntryId,
+          sessionId: get().playSession + 1,
+          duration: next.duration ?? 0,
+        });
+        if (!ready && token === smoothTransitionGeneration) {
+          smoothTransitionTarget = null;
+          set({ transitionTargetQueueEntryId: null });
+        }
+      } catch {
+        if (token === smoothTransitionGeneration) {
+          smoothTransitionTarget = null;
+          set({ transitionTargetQueueEntryId: null });
+        }
+      }
+    },
+
+    setCrossfader: (value: number) => {
+      if (get().nowPlaying.state !== "playing") return;
+      const crossfader = Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+      set({ crossfader });
+      engine.setManualCrossfader(crossfader);
+    },
+
+    setCuePoints: (index: number, cueInSeconds: number | undefined, cueOutSeconds: number | undefined) => {
+      const { queue } = get();
+      if (index < 0 || index >= queue.items.length) return;
+      cancelPlannedTransition();
+      const item = queue.items[index];
+      const max = Number.isFinite(item.duration) && (item.duration ?? 0) > 0 ? item.duration! : Number.MAX_SAFE_INTEGER;
+      let cueIn = Number.isFinite(cueInSeconds) ? Math.max(0, Math.min(Math.max(0, max - 0.1), cueInSeconds!)) : undefined;
+      let cueOut = Number.isFinite(cueOutSeconds) ? Math.max(Math.min(max, 2), Math.min(max, Math.max(0, cueOutSeconds!))) : undefined;
+      if (cueIn !== undefined && cueOut !== undefined && cueOut <= cueIn) cueIn = Math.max(0, cueOut - 0.1);
+      const items = queue.items.map((entry, entryIndex) => entryIndex === index
+        ? { ...entry, cueInSeconds: cueIn, cueOutSeconds: cueOut }
+        : entry);
+      const nextQueue = { ...queue, items, revision: nextQueueRevision(queue) };
+      persistQueue(nextQueue);
+      set({ queue: nextQueue });
+    },
+
     play: async (item: MediaItem) => {
+      cancelPlannedTransition();
       engine.stop();
       const { queue } = get();
-      const existingIdx = queue.items.findIndex((i) => i.id === item.id || i.url === item.url);
+      const existingIdx = item.queueEntryId
+        ? queue.items.findIndex((entry) => entry.queueEntryId === item.queueEntryId)
+        : queue.items.findIndex((entry) => entry.id === item.id || entry.url === item.url);
       let nextQueue: PlaybackQueue;
       let targetIdx: number;
+      let queuedItem: MediaItem;
 
       if (existingIdx !== -1) {
         targetIdx = existingIdx;
-        nextQueue = { ...queue, currentIndex: targetIdx };
+        queuedItem = queue.items[targetIdx];
+        nextQueue = { ...queue, currentIndex: targetIdx, revision: nextQueueRevision(queue) };
       } else {
         targetIdx = queue.items.length;
+        queuedItem = withUniqueQueueEntryId(item, queue.items);
         nextQueue = {
           ...queue,
-          items: [...queue.items, item],
+          items: [...queue.items, queuedItem],
           currentIndex: targetIdx,
+          revision: nextQueueRevision(queue),
         };
       }
 
       persistQueue(nextQueue);
       set({
         queue: nextQueue,
+        playSession: get().playSession + 1,
         nowPlaying: {
           ...get().nowPlaying,
-          item,
+          item: queuedItem,
           state: "loading",
           currentTime: 0,
           duration: item.duration ?? 0,
@@ -322,7 +679,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       });
 
       try {
-        await loadItem(item);
+        await loadItem(queuedItem);
       } catch (err: any) {
         set((state) => ({
           nowPlaying: { ...state.nowPlaying, state: "error", error: String(err?.message ?? err) },
@@ -331,11 +688,12 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     playNext: (item: MediaItem) => {
+      cancelPlannedTransition();
       const { queue } = get();
       const insertAt = queue.currentIndex >= 0 ? queue.currentIndex + 1 : 0;
       const nextItems = [...queue.items];
-      nextItems.splice(insertAt, 0, item);
-      const nextQueue = { ...queue, items: nextItems };
+      nextItems.splice(insertAt, 0, withUniqueQueueEntryId(item, queue.items));
+      const nextQueue = { ...queue, items: nextItems, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
     },
@@ -345,10 +703,12 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
      * When queue has items but nothing is playing, currentIndex remains -1 and nowPlaying.item remains null.
      */
     addToQueue: (item: MediaItem) => {
+      cancelPlannedTransition();
       const { queue } = get();
       const nextQueue = {
         ...queue,
-        items: [...queue.items, item],
+        items: [...queue.items, withUniqueQueueEntryId(item, queue.items)],
+        revision: nextQueueRevision(queue),
       };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
@@ -361,13 +721,14 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     removeFromQueue: (index: number) => {
       const { queue, nowPlaying } = get();
       if (index < 0 || index >= queue.items.length) return;
+      cancelPlannedTransition();
 
       const nextItems = queue.items.filter((_, i) => i !== index);
 
       // Case 1: Removed item was before the currently playing item
       if (index < queue.currentIndex) {
         const nextIndex = queue.currentIndex - 1;
-        const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex };
+        const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex, revision: nextQueueRevision(queue) };
         persistQueue(nextQueue);
         set({ queue: nextQueue });
         return;
@@ -375,7 +736,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
 
       // Case 2: Removed item was after the currently playing item
       if (index > queue.currentIndex) {
-        const nextQueue = { ...queue, items: nextItems };
+        const nextQueue = { ...queue, items: nextItems, revision: nextQueueRevision(queue) };
         persistQueue(nextQueue);
         set({ queue: nextQueue });
         return;
@@ -386,7 +747,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         // Queue is completely empty now
         loadGeneration++;
         engine.stop();
-        const nextQueue: PlaybackQueue = { ...queue, items: [], currentIndex: -1 };
+        const nextQueue: PlaybackQueue = { ...queue, items: [], currentIndex: -1, revision: nextQueueRevision(queue) };
         persistQueue(nextQueue);
         set({
           queue: nextQueue,
@@ -408,13 +769,14 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         nextIndex = nextItems.length - 1;
       }
       const nextItem = nextItems[nextIndex];
-      const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex };
+      const nextQueue = { ...queue, items: nextItems, currentIndex: nextIndex, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
 
       const wasActive = nowPlaying.state === "playing" || nowPlaying.state === "loading";
       engine.stop();
       set({
         queue: nextQueue,
+        ...(wasActive ? { playSession: get().playSession + 1 } : {}),
         nowPlaying: {
           ...nowPlaying,
           item: nextItem,
@@ -443,6 +805,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         fromIndex < 0 || fromIndex >= queue.items.length ||
         toIndex < 0 || toIndex >= queue.items.length
       ) return;
+      cancelPlannedTransition();
 
       const nextItems = [...queue.items];
       const [moved] = nextItems.splice(fromIndex, 1);
@@ -457,12 +820,13 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         nextCurrentIndex++;
       }
 
-      const nextQueue = { ...queue, items: nextItems, currentIndex: nextCurrentIndex };
+      const nextQueue = { ...queue, items: nextItems, currentIndex: nextCurrentIndex, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
     },
 
     clearQueue: () => {
+      cancelPlannedTransition();
       loadGeneration++;
       engine.stop();
       const nextQueue: PlaybackQueue = {
@@ -470,6 +834,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
         currentIndex: -1,
         repeatMode: "off",
         shuffle: false,
+        revision: nextQueueRevision(get().queue),
       };
       persistQueue(nextQueue);
       set({
@@ -486,15 +851,17 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     playAtIndex: async (index: number) => {
+      cancelPlannedTransition();
       const { queue } = get();
       if (index < 0 || index >= queue.items.length) return;
       engine.stop();
       const item = queue.items[index];
-      const nextQueue = { ...queue, currentIndex: index };
+      const nextQueue = { ...queue, currentIndex: index, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
 
       set({
         queue: nextQueue,
+        playSession: get().playSession + 1,
         nowPlaying: {
           ...get().nowPlaying,
           item,
@@ -528,12 +895,14 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
 
     pause: () => {
       loadGeneration++;
+      if (!engine.isTransitioning()) cancelPlannedTransition();
       const loading = get().nowPlaying.state === "loading";
       engine.pause();
       if (loading) set(state => ({ nowPlaying: { ...state.nowPlaying, state: "idle" } }));
     },
 
     stop: () => {
+      cancelPlannedTransition();
       loadGeneration++;
       engine.stop();
       set((state) => ({
@@ -542,18 +911,22 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     replaceFromMigration: (queue: PlaybackQueue, eq: PlaybackEQ) => {
+      cancelPlannedTransition();
       loadGeneration++;
       engine.stop();
       engine.applyEQ(eq);
+      const items = ensureQueueEntryIds(queue.items);
+      const nextQueue = { ...queue, items, revision: nextQueueRevision(get().queue) };
+      persistQueue(nextQueue);
       set((state) => ({
-        queue,
+        queue: nextQueue,
         eq,
         nowPlaying: {
           ...state.nowPlaying,
-          item: queue.items[queue.currentIndex] ?? null,
+          item: nextQueue.items[nextQueue.currentIndex] ?? null,
           state: "idle",
           currentTime: 0,
-          duration: queue.items[queue.currentIndex]?.duration ?? 0,
+          duration: nextQueue.items[nextQueue.currentIndex]?.duration ?? 0,
           error: undefined,
         },
       }));
@@ -580,6 +953,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       if (queue.items.length === 0) return;
       // If played more than 3 seconds, restart current track
       if (nowPlaying.currentTime > 3) {
+        set((state) => ({ playSession: state.playSession + 1 }));
         engine.seek(0);
         return;
       }
@@ -592,6 +966,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     seek: (timeSec: number) => {
+      cancelPlannedTransition();
       const dur = get().nowPlaying.duration || 0;
       const clamped = Math.max(0, dur > 0 ? Math.min(dur, timeSec) : Math.max(0, timeSec));
       engine.seek(clamped);
@@ -626,15 +1001,17 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     setRepeatMode: (mode: PlaybackRepeatMode) => {
+      cancelPlannedTransition();
       const { queue } = get();
-      const nextQueue = { ...queue, repeatMode: mode };
+      const nextQueue = { ...queue, repeatMode: mode, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
     },
 
     toggleShuffle: () => {
+      cancelPlannedTransition();
       const { queue } = get();
-      const nextQueue = { ...queue, shuffle: !queue.shuffle };
+      const nextQueue = { ...queue, shuffle: !queue.shuffle, revision: nextQueueRevision(queue) };
       persistQueue(nextQueue);
       set({ queue: nextQueue });
     },
@@ -757,6 +1134,29 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       engine.applyEQ(defaultEQ);
       persistEQ(defaultEQ);
       set({ eq: defaultEQ });
+    },
+
+    setMediaGain: (gain: number) => {
+      const mixer = { ...get().mixer, mediaGain: Math.max(0, Math.min(1.5, Number.isFinite(gain) ? gain : 1)) };
+      engine.setMediaGain(mixer.mediaGain);
+      persistMixer(mixer);
+      set({ mixer });
+    },
+
+    toggleMediaMute: () => {
+      const mixer = { ...get().mixer, mediaMuted: !get().mixer.mediaMuted };
+      engine.setMediaMuted(mixer.mediaMuted);
+      persistMixer(mixer);
+      set({ mixer });
+    },
+
+    setSpatialMode: (mode: SpatialMode) => {
+      const ok = engine.setSpatialMode(mode);
+      const nextMode = ok ? mode : "stereo";
+      const mixer = { ...get().mixer, spatialMode: nextMode };
+      persistMixer(mixer);
+      set({ mixer, spatialNotice: ok ? null : "fallback-stereo" });
+      return ok;
     },
   };
 });

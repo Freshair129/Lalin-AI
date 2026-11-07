@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-youtube-link"
+description = "Enables the add_youtube_link command without any pre-configured scope."
+commands.allow = ["add_youtube_link"]
+
+[[permission]]
+identifier = "deny-add-youtube-link"
+description = "Denies the add_youtube_link command without any pre-configured scope."
+commands.deny = ["add_youtube_link"]

@@ -1,43 +1,99 @@
 ---
-version: "0.2.27b"
+version: "0.3.4b"
 created_at: "2026-09-26T05:06:00+07:00,Codex,43121cc"
-last_update: "2026-09-30T06:33:36+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "lalin-play"
   doc_type: "execution-plan"
-  scope: "Recovered S2 migration and S3 Studio-to-Play handoff"
+  scope: "Local-first Play milestone with deferred S2/S3 integration and release lanes"
 ---
 
-# Lalin Play S2/S3 execution DAG
+# Lalin Play execution DAG — local-first milestone
 
 ## Goal, complexity and risk
 
-Deliver the approved S2 queue/EQ migration and S3 Studio-to-Play native
-named-pipe handoff from the recovered local commits, then establish lifecycle
-and playback parity evidence. The Studio player route stays available until the
-integrated native path passes the parity gate.
+Deliver a usable local-first Play candidate that opens and plays user-selected
+local media without Studio, API or network availability. S2 queue/EQ migration,
+S3 Studio-to-Play handoff and G3 native parity remain approved future lanes,
+but are not prerequisites for this milestone.
 
-- Complexity: **C-3**, architecture-driven.
-- Risk: **HIGH** — cross-process IPC, same-session authorization, local-file
+- Complexity: **C-2**, documentation-driven milestone with focused local validation.
+- Risk: **MEDIUM** for local runtime readiness; deferred S2/S3 lanes remain
+  **HIGH** because they involve cross-process IPC, authorization, local-file
   access and recovery of user playback state.
-- Baseline: clean `main` at `43121cc97acb535d3b9d232d246ce54df9e3d48d`.
+- Historical S2/S3 integration baseline: clean `main` at
+  `43121cc97acb535d3b9d232d246ce54df9e3d48d`.
 - Approved S2 source: `cf3c3b549bb00938ef0d21a1218891c411d06a61`.
 - Approved S3 source: `b7f568819e4ccb084de75e7323b2c4877acfef66`.
 - Exclude unrelated recovered WER commit `624d187da4aee92f29f47f217d6579e4d7f8e66`.
 
 [ASSUMPTIONS]
 
-1. The recovered commits are starting points to reconcile with current `main`,
-   not proof that their old verification still passes on today's baseline.
-2. S2 and S3 may edit overlapping app/docs/native files; all integration is
-   serialized on a separate branch after both implementation lanes finish.
-3. Scope includes opening the implementation PR and merging only after its
-   review and required checks are ready. Removing the Studio route, deleting Play
-   source, and releasing the app remain outside this execution.
+1. The recovered commits are historical starting points to reconcile with
+   current `main`, not proof that their old verification passes on a later
+   baseline.
+2. S2 and S3 can edit overlapping app/docs/native files; any future integration
+   remains serialized on a separate branch.
+3. Deferring S2/S3 is a milestone decision, not a product-scope deletion.
+   Removing the Studio route, deleting Play source, and releasing the app remain
+   outside this execution.
 
-## Dependency graph
+## Active local-first path
+
+The active deliverable is local-first Play usability, not a completed Studio
+integration or public release. This is an execution priority; this document
+update does not claim that the local-first acceptance checks have passed.
+
+### In scope
+
+- Launch Play while Studio/API are unavailable.
+- Open and play user-selected local audio/video.
+- Keep the single playback owner and Full/Compact state continuity for the
+  locally supported surfaces.
+- Record focused local tests/builds and document the limits honestly.
+
+### Deferred by scope
+
+- Further S2 old-state queue/EQ migration and live transfer work. PR #25 merged
+  evidence for five child-process termination checkpoints and journal,
+  undo-snapshot and history write-failure tests; power-loss durability,
+  remaining storage failures and live Studio-to-Play transfer remain open.
+- Further S3 Studio sender/receiver integration and G3 paired-process parity,
+  including mapped-drive/reparse runtime cases, Studio/API exit during active
+  playback and audible parity.
+- S4–S7 repository export, source removal, installer, updater and release.
+
+Deferral changes the work priority; it does not rewrite evidence status. S2/S3
+remain partial with the limits recorded below. G3 remains **PARTIAL**: PR #25
+merged into `main` on 2026-10-20 as `78ed550` (head `d241a74`) and records
+cross-host pipe denial 1/1 PASS and different-logon-session ACL denial 1/1
+PASS. Mapped-drive/reparse runtime cases, Studio/API exit during active playback
+and audible parity remain open.
+S4–S7 remain **NOT_RUN**. Nothing here authorizes deleting the existing Studio
+playback path.
+
+```mermaid
+flowchart TD
+  L0["L0: verify local candidate baseline"]
+  L1["L1: launch without Studio/API/network"]
+  L2["L2: local media, library and Full/Compact checks"]
+  L3["L3: record local-first evidence and handoff"]
+  D1["D1: deferred S2 migration"]
+  D2["D2: deferred S3/G3 integration and parity"]
+  R["R: deferred S4-S7 export and release"]
+  L0 --> L1 --> L2 --> L3
+  L3 -. future integration .-> D1
+  D1 -. future handoff .-> D2
+  D2 -. future release .-> R
+```
+
+## Historical S2/S3 dependency graph
+
+The original S2/S3 lanes remain below as the reviewed future execution path.
+They are not dispatched work for the local-first milestone. Their historical
+baseline is `43121cc97acb535d3b9d232d246ce54df9e3d48d`.
 
 ```mermaid
 flowchart TD
@@ -58,7 +114,10 @@ flowchart TD
   G1 --> G2 --> G3 --> G4
 ```
 
-## Parallel work lanes
+## Historical parallel work lanes
+
+These assignments describe the original implementation plan and are inactive
+while the local-first milestone is being pursued.
 
 | Lane | Owner | Isolated branch/worktree | Scope and exit evidence |
 |---|---|---|---|
@@ -70,7 +129,7 @@ Each implementation lane works only in its assigned worktree. Agents do not
 push, merge into `main`, remove the Studio playback path, or claim real process
 parity from mocked/unit evidence.
 
-## Serial gates and acceptance
+## Historical serial gates and acceptance
 
 ### G0 — source and workspace gate
 
@@ -265,7 +324,8 @@ gates. Record export, PR, merge and release states independently.
 - **G4 — evidence updated locally:** this DAG, the Play status register,
   traceability, foundation report and registration readiness RCA now record the
   successful paired boundary, earlier test-build/fixture causes and remaining
-  gates. PR #25 is still open and draft; no merge or release is claimed.
+  gates. At this 2026-09-27 record PR #25 was draft; it later merged on
+  2026-10-20 as `78ed550`. This test does not establish parity or release acceptance.
 
 ## Execution status — 2026-09-27 G3 receiver path-rejection follow-up
 
@@ -295,8 +355,9 @@ gates. Record export, PR, merge and release states independently.
   active playback and audible parity remain unverified. Preserve Studio
   playback; this control-plane result does not prove audio parity.
 - **G4 — evidence updated locally:** this DAG, the status register, foundation,
-  traceability and new acceptance-gap RCA record the result. PR #25 remains
-  open and draft; no merge or release is claimed.
+  traceability and new acceptance-gap RCA record the result. At this
+  2026-09-27 record PR #25 was draft; it later merged on 2026-10-20 as
+  `78ed550`. The remaining acceptance gates stay open.
 
 ## Execution status — 2026-09-27 G3 concurrent-client ordering follow-up
 
@@ -338,7 +399,8 @@ gates. Record export, PR, merge and release states independently.
   the Studio playback owner before full parity is proven.
 - **G4 — evidence updated locally:** the integration spec, this DAG, status
   register, foundation, traceability and RCA record the fix and exact test
-  boundary. PR #25 remains draft until the remaining acceptance gates pass.
+  boundary. This note predates PR #25's merge on 2026-10-20 (`78ed550`); the
+  remaining acceptance gates stay open.
 
 ## Execution status — 2026-09-27 G3 live UNC-shaped path rejection
 
@@ -628,7 +690,15 @@ token through thread impersonation. G3 remains PARTIAL: mapped-drive/reparse
 runtime cases, Studio/API exit during active playback and audible playback
 parity remain open. Keep Studio playback enabled.
 
-## Definition of done for this execution
+## Definition of done for the local-first milestone
+
+- Play launches and plays selected local media with Studio/API unavailable.
+- The locally supported Full/Compact surfaces use the intended single playback
+  owner and preserve their recorded local state behavior.
+- Focused local tests/builds and limitations are recorded with exact evidence.
+- S2/S3/G3 and S4–S7 remain explicitly deferred rather than implied complete.
+
+## Historical S2/S3 definition of done
 
 - S2 and S3 changes are reviewed together on an isolated integration branch.
 - Requested automated lifecycle/migration checks and affected builds are
@@ -642,6 +712,12 @@ parity remain open. Keep Studio playback enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.4b | 2026-11-07 | beta | Reconcile S2/G3 execution summary with PR #25 merge evidence and retain all open runtime, durability and parity gates | working tree | Codex |
+| 0.3.3b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
+| 0.3.2b | 2026-10-19 | beta | Reconcile current G3/S2 status with the unmerged follow-up branch evidence while retaining open parity and release gates | working tree | Codex |
+| 0.3.1b | 2026-10-19 | beta | Reconcile local-first priority with the latest remote SMB probe evidence; keep G3 partial and integration/release gates open | working tree | Codex |
+| 0.3.0b | 2026-10-02 | beta | Make local-first Play the active milestone and defer S2/S3/G3 and S4-S7 without changing approved product scope | working tree | Codex |
+| 0.2.5b | 2026-09-29 | beta | Identify the server SMB ingress policy blocker and record scoped retry conditions; keep G3 open | based on 4455414 | Codex |
 | 0.2.27b | 2026-09-30 | beta | Verify same-session distinct-Logon-SID named-pipe ACL denial and owner positive control; retain remaining parity gates | based on c669602 | Codex |
 | 0.2.26b | 2026-09-30 | beta | Record separate-logon probe blocked by local runas credentials; require verified temporary standard account and keep G3 partial | based on 20516d0 | Codex |
 | 0.2.25b | 2026-09-30 | beta | Pass the paired cross-host named-pipe denial probe with positive control and local-access check; retain other G3 gates | based on 0c83509 | Codex |

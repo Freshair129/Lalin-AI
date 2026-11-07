@@ -238,6 +238,17 @@ The bounded implementation uses disposed-instance/request-target checks rather
 than a global preview service. See [CR-004 evidence](../validation/LALIN_PLAY_MINIMAL_COMPACT.md)
 for tests, MP4/WebM screenshots and outstanding device/performance checks.
 
+## 13. Approved audio-only crossfade decoder exception (CR-008)
+
+CR-008 was approved on 2026-10-20. The section 10 single-element count now has a
+narrow exception for two reusable audio-only transition decks. The invariant of
+one playback owner, queue, Web Audio context, shared DSP/master/output graph and
+MediaSession remains unchanged. The persistent video element is still the only
+visible video playback path and does not overlap; the CR-004 preview remains
+paused and outside the audio graph. This exception does not add a native decoder
+or widen codec support. Implementation and runtime acceptance are tracked in
+CR-008 and the Play traceability matrix.
+
 ## 12. Approved Compact fullscreen and relative seek
 
 CR-004 Addendum A was approved on 2026-09-20 and implemented locally. Fullscreen
