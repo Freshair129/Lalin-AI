@@ -351,9 +351,12 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             library::get_library,
+            library::list_damaged_tracks,
             library::select_media,
             library::select_relink_file,
             library::relink_track,
+            library::select_restore_file,
+            library::restore_managed_track,
             library::remove_library_track,
             library::set_track_favorite,
             library::record_listen,
