@@ -74,7 +74,7 @@ const lines = [
   `Generated: ${new Date().toISOString()}`,
   "",
   "This inventory records license metadata for resolved dependencies. It is not a substitute for reviewing and satisfying each license's terms.",
-  "The Lalin Play source license is selected separately by the product owner.",
+  "Lalin Play itself is licensed under the MIT License (apps/play-desktop/LICENSE).",
   "",
   "Rust dependencies (Cargo metadata, Windows x86_64 target):",
   ...cargoPackages.map((pkg) => `- ${pkg.name} ${pkg.version} — ${pkg.license}`),

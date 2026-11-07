@@ -1,6 +1,7 @@
 [package]
 name = "lalin-play"
 version = "1.0.0"
+license = "MIT"
 description = "Lalin Play local media player"
 edition = "2021"
 

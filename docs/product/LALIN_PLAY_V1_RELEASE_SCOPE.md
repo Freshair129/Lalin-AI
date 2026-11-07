@@ -1,5 +1,5 @@
 ---
-version: "1.0.0b"
+version: "1.0.1b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "approved"
@@ -14,7 +14,7 @@ attributes:
 
 ## 1. Status and authority
 
-- **Approved by the owner on 2026-11-07** (human approval, given in the lead session and recorded in [issue #47](https://github.com/Freshair129/Lalin-AI/issues/47)) for §2 scope, §3 deferrals, §4 release values and §5 exit criteria. Still owner-open inside §4: the Play source license and the offline backup location for the updater key. Owner direction given on 2026-11-07 in the lead session: ship Lalin Play before Lalin Studio, non-commercial posture, release from `Freshair129/Lalin-AI` instead of extracting `lalin-play` first, and ship an unsigned Windows installer with a signed updater. This document turns those directions into concrete scope and values. 
+- **Approved by the owner on 2026-11-07** (human approval, given in the lead session and recorded in [issue #47](https://github.com/Freshair129/Lalin-AI/issues/47)) for §2 scope, §3 deferrals, §4 release values and §5 exit criteria. Still owner-open inside §4: the offline backup location for the updater key. (Source license decided: MIT, 2026-11-07.) Owner direction given on 2026-11-07 in the lead session: ship Lalin Play before Lalin Studio, non-commercial posture, release from `Freshair129/Lalin-AI` instead of extracting `lalin-play` first, and ship an unsigned Windows installer with a signed updater. This document turns those directions into concrete scope and values. 
 - It is the "explicitly approved reduced-scope release documented" that [runbook R0](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md) allows instead of completing ADR-004 S2–S6. ADR-004 itself is not superseded: S4 export, S5 clean-checkout verification and S6 removal remain the long-term plan and are deferred, not cancelled.
 - Requirements stay as approved in [PRD](PRD.md) §PLAY. This document only selects which of them gate v1.0.
 
@@ -67,7 +67,7 @@ attributes:
 | Asset names | `Lalin-Play_1.0.0_x64-setup.exe`, `.exe.sig`, `latest-play.json`, `SHA256SUMS.txt`, `THIRD_PARTY_NOTICES.txt` |
 | Updater key custody | New Play-only minisign keypair; private key in gitignored `keys/lalin-play-updater.key` on the owner PC + GitHub secret `PLAY_TAURI_SIGNING_PRIVATE_KEY`(+ password); offline backup copy chosen by owner. Never shared with Studio. |
 | OS code signing | **Unsigned** for v1.0 (owner decision); SmartScreen "Unknown publisher" warning documented in the user guide and release notes |
-| License / notices | Play source license: owner to choose; third-party notices generated from Cargo + npm dependency metadata by a script in `tools/verify/`; no models or user data in the bundle |
+| License / notices | Play source license: **MIT** (owner decision 2026-11-07, `apps/play-desktop/LICENSE`); third-party notices generated from Cargo + npm dependency metadata by a script in `tools/verify/`; no models or user data in the bundle |
 | Privacy | Play sends no telemetry and makes network calls only for update checks and opening YouTube links in the browser; stated in the user guide and About dialog |
 
 ## 5. Exit criteria for v1.0
@@ -81,5 +81,6 @@ attributes:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.0.1b | 2026-11-07 | approved | Record owner license decision: Lalin Play source is MIT | working tree | Claude |
 | 1.0.0b | 2026-11-07 | approved | Owner approved scope, deferrals, release values and exit criteria; license and key backup location remain open | working tree | Claude |
 | 0.1.0b | 2026-11-07 | candidate | Propose reduced-scope Play v1.0 release from Lalin-AI: in-scope gates, deferrals, R0 release values and exit criteria | working tree | Claude |
