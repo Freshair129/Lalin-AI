@@ -1,7 +1,7 @@
 ---
-version: "0.3.12b"
+version: "0.3.13b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Codex"
+last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
@@ -62,7 +62,7 @@ suite's provenance or establish full Studio/Play playback parity.
 
 | ID | Code/tests | Evidence and status | Remaining exit work |
 |---|---|---|---|
-| PLAY-01 | UI, Native, Owner | F: LOCAL PASS without backend, audible WAV confirmed | Repeat clean-machine/release qualification; later video audio not inferred |
+| PLAY-01 | UI, Native, Owner | PARTIAL P1.3 2026-11-08: base `main` `5d6e223e6d1e2367f5c10a46caed35facc3c2a80`; Vitest 16 files / 121 tests PASS, `npx.cmd tsc --noEmit` PASS. Existing mocked IPC Full/Compact continuity test passes. L3 records this partial result. | L0 Cargo `test --offline --locked --lib --tests`: 91 passed / 6 ignored + 3 integration passed. L1 debug process/window stayed alive 21 seconds with Studio process and API port 8756 absent; isolated app-data directory was not created, so launch acceptance is incomplete. Static network proof, L2 generated WAV import/play integration and owner audible check NOT_RUN. |
 | PLAY-02 | UI, State, Native | F + selection/catalog/playlist tests: PARTIAL | Full playlist/catalog native matrix and edge cases |
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
@@ -74,7 +74,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-10 | v1.0 NSIS installer, updater UI/config, signed release workflow and metadata promotion workflow | Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass; real key ceremony, published draft, A→B update and clean-VM install NOT_RUN | Release build/signature, R1 CI, clean install/uninstall, signed A→B, tampered-signature rejection, state retention and clean-VM qualification remain NOT_RUN |
 | PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
 | PLAY-12 | Spatial, Owner | HRTF graph and ramp/fallback tests pass with fake AudioContext as part of the 14-file/81-test pass; audible/native behavior NOT_RUN | Compare Stereo and Virtual 7.1 on selected headphones; measure CPU/latency and listen for artifacts |
-| PLAY-13 | Locale, UI | 14-file/81-test pass covers ENG default, TH switch/persistence, Full/Compact continuity and visible mixer mute labels; visible app-owned text is routed through typed catalog | Review every view/tooltip/error at runtime in both locales and verify restart persistence |
+| PLAY-13 | Locale, UI | PARTIAL P1.3: existing `defaults to English, persists changes, and updates the document language` and `defaults to English and switches the shared locale without changing playback` pass in mocked frontend suite. | Runtime screenshot matrix and visual review NOT_RUN: Vite TCP accepted but HTTP request timed out with zero bytes; real reload/restart persistence and all views remain unverified. |
 
 ## Dashboard, GenesisBlockDB and object storage (CR-007)
 
@@ -82,7 +82,7 @@ suite's provenance or establish full Studio/Play playback parity.
 |---|---|---|---|
 | PLAY-14 | `App.tsx`, `usePlaybackStore.ts`, Genesis history rows | PARTIAL; 2026-11-07: Rust `genesis_catalog_settings_history_and_links_survive_reopen` PASS (two listens and history rows after reopen); Vitest 16 files / 107 tests PASS: `orders reopened listening data and produces deterministic recommendations`, `records a listen only after attributed deck time is audible`, `counts both overlap decks only while each deck is audible, ignoring silent preload` | Ordering/recommendation UI uses mocked IPC; native threshold/seek/repeat and recommendation acceptance NOT_RUN |
 | PLAY-15 | Genesis relational catalog | Automated PASS 2026-11-07 after re-pinning `genesis-block-native` to Freshair129/GenesisBlock main `3b61ee9` (GenesisBlock#283, fixes Lalin-AI#46): `genesis_catalog_settings_history_and_links_survive_reopen`, `listen_favorite_and_remove_batches_roll_back_on_invalid_mutation` and `v1_fixture_data_survives_upgrade_and_reopen` PASS; full Rust suite (lane F:\cargo-lanes\lalin-play, `cargo test --locked --lib --tests`) 84 passed / 0 failed / 6 ignored + 3 integration passed; `cargo fmt --check` clean | Native migration/restart acceptance NOT_RUN (owner checklist P1.6) |
-| PLAY-16 | `library_store.rs`, native commands, `App.tsx` | PARTIAL; 2026-11-07: Rust `youtube_policy_accepts_only_official_https_authorities` and `genesis_catalog_settings_history_and_links_survive_reopen` PASS, including unknown-id lookup and add/remove reopen; full Rust suite 83 passed / 1 failed / 6 ignored | Command-level unknown-id/open and native open/persistence acceptance NOT_RUN; official YouTube playlist metadata import tracked by CR-008 PLAY-24 |
+| PLAY-16 | `library_store.rs`, native commands, `App.tsx` | PARTIAL; 2026-11-07: Rust `youtube_policy_accepts_only_official_https_authorities` and `genesis_catalog_settings_history_and_links_survive_reopen` PASS, including unknown-id lookup and add/remove reopen; later 2026-11-07 Rust suite recorded under PLAY-15: 84 passed / 0 failed / 6 ignored plus 3 integration passed; not rerun in P1.3 | Command-level unknown-id/open and native open/persistence acceptance NOT_RUN; official YouTube playlist metadata import tracked by CR-008 PLAY-24 |
 | PLAY-17 | Authorized-source cache | PARTIAL | Settings exist in candidate code; provider capability model, cache storage and bounded LRU eviction remain open |
 | PLAY-18 | `library_store.rs`, `native.ts`, `App.tsx`, `styles.css` | PARTIAL; 2026-11-07: Rust `genesis_catalog_settings_history_and_links_survive_reopen` PASS for favorite on/off; Vitest `filters reopened favorites and renders persisted USER and OFFLINE badges` PASS with mocked IPC (16 files / 107 tests) | Native import/filter acceptance NOT_RUN; mocked IPC does not prove runtime restart; links are not playable tracks |
 | PLAY-19 | `local_media_store.rs` | PARTIAL; local content-addressed object-store implementation exists; RustFS S3 adapter and authenticated Range streaming are absent | Add RustFS S3 integration, resumable upload/publication and authenticated Range streaming; complete offline/native acceptance |
@@ -96,8 +96,8 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-22 | `contracts.ts`, `usePlaybackStore.ts` | PARTIAL; queue occurrences receive unique persisted IDs, duplicate tracks remain distinct, and local queue revisions advance on edits; `npm run build` PASS | Remote protocol, idempotent request/revision handling, stale-snapshot response, reconnect and security acceptance |
 | PLAY-23 | Phone media transfer | NOT_IMPLEMENTED | Resumable verified copy, authenticated range stream, offline-after-copy and phone-disconnect behavior |
 | PLAY-24 | YouTube playlist references | NOT_IMPLEMENTED; CR-007 has external YouTube links only | Official Data API pagination/auth/quota/expiry handling and explicit local-track mapping; no media playback/download/cache |
-| PLAY-25 | `audioEngine.ts`, `usePlaybackStore.ts`, `PlaybackSettings.tsx`, `audioEngineTransition.test.ts`, `usePlaybackStoreTransition.test.ts` | PARTIAL; Off is default; Smooth/Medley expose 2–12 seconds; two audio decks share one EQ/spatial/limiter/master/output graph; equal-power gains use AudioContext time and commit one queue advance; transition tests exist and the 2026-11-07 handoff reports Vitest 16 files/102 tests PASS | Native audible/output acceptance NOT_RUN; buffer readiness, decoder failure, end-of-track and long-play behavior need runtime evidence |
-| PLAY-26 | `audioEngine.ts`, `usePlaybackStore.ts`, `PlaybackSettings.tsx`, transition tests | PARTIAL; pause freezes the fade; seek/stop/queue edits/repeat/shuffle/output loss cancel it; Manual DJ prepares a selected queue occurrence in deck B and uses an equal-power A/B fader; Medley persists cue-in/out per queue occurrence; video does not overlap | Native cancellation checks and audible per-deck listen accounting NOT_RUN; Manual DJ/Medley failure and pause-resume behavior need runtime evidence |
+| PLAY-25 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3: 28 transition tests PASS, including readiness wait/error, pause/resume, `commits the incoming deck once when the outgoing track ends during a fade`, and existing failed-transition queue test. Fake AudioContext/media and mocked native resolution; 121 frontend tests PASS. | Integrated decoder failure through fallback queue advance, buffer timeout and native audible/output acceptance NOT_RUN. |
+| PLAY-26 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3: fake media test `keeps deck A active when manual deck B fails to load`; mocked store tests `clears the manual target when deck B fails to prepare`, `cancels prepared manual deck on %s` (seek, stop, queue edit), `cancels a medley transition on %s change` (repeat, shuffle), and `starts medley at zero when the next cue-in is missing`; transition suite 28 PASS. | Invalid cue-in at cue-out, real native cancellation and owner audible checks NOT_RUN. |
 | PLAY-27 | `smart_medley.rs`, `smart_medley_store.rs`, `tests/smart_medley.rs` | PARTIAL; Smart Medley code and tests are present; the 2026-11-07 handoff reports 71 Rust tests passed and 2 Smart Medley tests failed, so the Rust suite is not PASS | Resolve the 2 failures; confidence-bound BPM/key/cue benchmarks, representative fixtures and audible listening acceptance remain NOT_RUN |
 | PLAY-V01 | Native, UI | V + Rust: PARTIAL | Complete picker/folder/drop/security native matrix beyond classification fixtures |
 | PLAY-V02 | Video, UI | V + App: LOCAL PASS | New codec/device layouts not certified |
@@ -192,10 +192,23 @@ Mapped-drive/reparse runtime cases and Studio/API exit during active playback
 remain NOT_RUN; audible playback parity remains NOT_VERIFIED. G3 remains
 PARTIAL, and Studio playback stays enabled.
 
+## P1.3 deferred feature inspection (2026-11-08)
+
+Source search of `apps/play-desktop/src` found no frontend invocation of registered
+`get_cache_settings`, `set_cache_settings`, or `analyze_smart_medley_pair`. The
+visible YouTube Links view is an external-link feature, not playlist import.
+This source search does not prove all deferred features are unreachable or that
+they cannot corrupt v1.0 data; the runtime review and exit criterion 3 remain
+NOT_RUN. The initial Cargo run was deferred while active Cargo/Rust processes had unqualified
+concurrent write growth. At initial preflight C:/E:/F: free bytes were 103227117568 /
+132364374016 / 2011794325504, respectively, before accounting for concurrent
+growth. The later Cargo run acquired the lane lock at 03:25:22 and released it at 03:31:13 ICT, with 91 unit passed / 6 ignored and 3 integration passed. The debug executable started at 03:31:51 (PID 38760), had window title Lalin Play and a nonzero window handle at 10 and 21 seconds, and was terminated at 03:32:13 (exit -1). Isolated APPDATA/LOCALAPPDATA were under `F:\cargo-lanes\lalin-play\tmp\p13-native-smoke-20261108-033151`; no `ai.lalin.play` directory was found there. Thus app-data and crash-log acceptance are NOT_RUN. The smoke held the lock 03:31:51?03:32:13. No generated WAV evidence was produced.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.13b | 2026-11-08 | beta | Record partial P1.3 frontend transition evidence, unrun gates and corrected historical PLAY-16 suite result | working tree | Codex |
 | 0.3.12b | 2026-11-07 | beta | Re-pin Genesis to 3b61ee9 (GenesisBlock#283); PLAY-15 v1 fixture upgrade/reopen now PASS | working tree | Claude |
 | 0.3.11b | 2026-11-07 | beta | Record Genesis restart and rollback results, v1 replay failure, formatting and mocked UI evidence; retain native acceptance gaps | working tree | Codex |
 | 0.3.10b | 2026-11-07 | beta | Record mocked dashboard/favorites tests and unrun Genesis restart, migration, rollback and URL tests; retain runtime and Cargo admission gaps | working tree | Codex |
