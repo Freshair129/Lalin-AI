@@ -1,5 +1,5 @@
 ---
-version: "0.3.4b"
+version: "0.3.5b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -69,7 +69,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
 | PLAY-06 | Single-instance plus native handoff | Isolated paired process passed cold/warm delivery, lost-ACK QUERY/STATE recovery while the owner is live, same-ID duplicate suppression, sequential four-file ordering, four independent concurrent clients with queue order matching unique increasing ACK revisions, no cold launch while the pipe is occupied, owner restart after lost ACK with no blind replay, and live URL/UNC-shaped invalid-path rejection with unchanged STATE; local restricted-token pipe client without the allowed logon SID is denied with `ERROR_ACCESS_DENIED`; loopback and cross-host pipe denial pass; cross-host pipe denial and different-logon-session ACL denial each passed 1/1 in PR #25 (`78ed550`) | Mapped-drive/reparse runtime tests compile but are NOT_RUN; Studio/API exit during playback and audible parity NOT_VERIFIED; CLI forwarding remains absent |
 | PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
-| PLAY-08 | Native resolve + UI error; `select_relink_file`/`relink_track` (`library.rs`, `library_store.rs`, `media_validation.rs`), relink UI in `App.tsx`/`Transport.tsx` | F/V + App: PARTIAL; linked-track relink implemented per [LALIN_PLAY_RELINK_SPEC.md](../design/LALIN_PLAY_RELINK_SPEC.md) v0.3.1b; Rust 83 passed/0 failed/6 ignored and vitest 16 files/105 tests pass (2026-11-07, F: lane) | Native relink across local drives and playback NOT_RUN; managed-object recovery is gap PLAY-08-M |
+| PLAY-08 | Native resolve + UI error; `select_relink_file`/`relink_track` (`library.rs`, `library_store.rs`, `media_validation.rs`), relink UI in `App.tsx`/`Transport.tsx` | F/V + App: PARTIAL; linked-track relink implemented per [LALIN_PLAY_RELINK_SPEC.md](../design/LALIN_PLAY_RELINK_SPEC.md) v0.3.1b; Rust 83 passed/0 failed/6 ignored and vitest 16 files/105 tests pass (2026-11-07, F: lane) | Native relink across local drives and playback NOT_RUN; managed-object recovery PLAY-08-M specified in [LALIN_PLAY_MANAGED_RECOVERY_SPEC.md](../design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md), NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
 | PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
 | PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
@@ -196,6 +196,7 @@ PARTIAL, and Studio playback stays enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.5b | 2026-11-07 | beta | Link PLAY-08-M managed recovery spec | working tree | Claude |
 | 0.3.4b | 2026-11-07 | beta | PLAY-08 linked relink implemented with automated evidence; native acceptance and PLAY-08-M remain open | working tree | Claude |
 | 0.3.3b | 2026-11-07 | beta | Link the PLAY-08 relink implementation spec; implementation still open | working tree | Claude |
 | 0.3.2b | 2026-11-07 | beta | Reconcile traceability rows with PR #25 integration, local object-store/Smart Medley code and existing transition tests; preserve current failure and runtime boundaries | working tree | Codex |

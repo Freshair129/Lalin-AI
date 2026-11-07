@@ -1,5 +1,5 @@
 ---
-version: "0.10.30b"
+version: "0.10.31b"
 created_at: "2026-07-22T00:00:00+07:00,Codex,uncommitted"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -59,6 +59,7 @@ attributes:
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
 - `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: approved (owner, 2026-11-07) reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values).
 - `docs/design/LALIN_PLAY_RELINK_SPEC.md`: PLAY-08 relink implementation spec (stable track ids, shared path validation, queue patching, acceptance tests).
+- `docs/design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md`: PLAY-08-M managed-object recovery (read-only damaged listing, identical-bytes restore; no W0-D change).
 
 ## Current Lalin UI Docs
 
@@ -180,6 +181,7 @@ These are not deleted. They moved to `docs/archive/` during Phase 1:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.10.31b | 2026-11-07 | beta | Index the PLAY-08-M managed recovery spec | working tree | Claude |
 | 0.10.30b | 2026-11-07 | beta | Index the candidate Play v1.0 release-scope decision | working tree | Claude |
 | 0.10.29b | 2026-11-07 | beta | Index the PLAY-08 relink implementation spec | working tree | Claude |
 | 0.10.28b | 2026-11-07 | beta | Reconcile Play documentation/status entries, register the unpublished site draft and correct Alertmanager monitoring evidence | working tree | Codex |
