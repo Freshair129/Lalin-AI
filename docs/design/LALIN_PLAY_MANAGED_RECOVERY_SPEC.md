@@ -1,5 +1,5 @@
 ---
-version: "0.1.0b"
+version: "0.1.1b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -74,8 +74,37 @@ Rust: (1) committed publication + deleted object → listed as `missing`; restor
 TypeScript: Repair notice and panel; restore success updates library and leaves queue/playlists unchanged; mismatch shows "Import as new track"; Compact hint; en/th parity.
 Native/manual (owner, P1.6): delete a managed object on disk, restart, repair from the original file, play it.
 
+## 6. Implementation and test-round evidence (2026-11-07)
+
+PLAY-08-M implementation is present on `codex/lalin-play-managed-recovery` at
+`33eb1ba`; the test round remains **PARTIAL**, pending the missing tests below.
+Native owner acceptance P1.6 is NOT_RUN. No release acceptance is implied.
+
+- Rust items 1-5: `recovery_missing_preserves_rows_history_and_journals`,
+  `recovery_corrupt_quarantines_original_and_restores_bytes`,
+  `recovery_mismatch_writes_nothing`,
+  `recovery_uncommitted_and_retired_are_ineligible`, and
+  `recovery_failure_after_quarantine_restores_original`. Item 1 snapshots track
+  and play-history rows plus all publication journal files, not every Genesis table.
+- Rust item 6: NOT_RUN: a test exercising `import_selected` itself for a damaged
+  row is still required. The existing same-file reimport test covers retirement,
+  not this case.
+- Rust item 7: existing visibility tests passed, including
+  `conflicting_partial_genesis_row_stays_hidden_and_requires_reconciliation`,
+  `failure_after_genesis_readback_before_receipt_stays_hidden_then_startup_reconciles`,
+  and `removed_publication_stays_absent_after_restart_without_deleting_object_bytes`;
+  a recovery-specific matrix for every non-recoverable class remains outstanding.
+- TypeScript: `shows repair panel and restores without changing queue or playlists`,
+  `offers import as a new track on recovery mismatch`, `shows the compact recovery hint`,
+  `provides every recovery label in both locales`, and `localizes every recovery error
+  in English and Thai` use mocked IPC. The mismatch test checks the offer with cancel.
+- Local run: Vitest 16 files/110 passed; `tsc --noEmit` and `cargo fmt --check`
+  passed; Cargo `--offline --locked --lib --tests`: 85 unit passed, 6 ignored,
+  3 integration passed, 0 failed; doc-tests not run.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.1b | 2026-11-07 | beta | Record implemented recovery and partial automated test evidence; retain re-import, full visibility matrix and native acceptance gaps | working tree | Codex |
 | 0.1.0b | 2026-11-07 | beta | Define PLAY-08-M managed-object recovery without amending frozen W0-D: read-only damaged listing, identical-bytes restore at the content address, re-import repair, UI and tests | working tree | Claude |

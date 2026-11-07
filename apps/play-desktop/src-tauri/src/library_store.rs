@@ -2387,6 +2387,149 @@ mod tests {
         crate::local_media_store::prepare_publication(directory, object, track).unwrap()
     }
 
+    fn recovery_fixture(directory: &Path) -> (Track, std::path::PathBuf, std::path::PathBuf) {
+        let prepared = prepared_fixture(directory);
+        let object = directory.join(&prepared.object_receipt.relative_path);
+        let source = directory.join("fixture.mp3");
+        let track = publish_prepared(directory, &prepared).unwrap();
+        (track, source, object)
+    }
+
+    fn journal_snapshot(directory: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
+        let root = directory.join("media/publications");
+        let mut files: Vec<_> = fs::read_dir(root)
+            .unwrap()
+            .map(|entry| {
+                let path = entry.unwrap().path().join("journal.jsonl");
+                (path.clone(), fs::read(path).unwrap())
+            })
+            .collect();
+        files.sort_by(|a, b| a.0.cmp(&b.0));
+        files
+    }
+
+    #[test]
+    fn recovery_missing_preserves_rows_history_and_journals() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        set_favorite(dir.path(), &track.id, true).unwrap();
+        let played = record_listen(dir.path(), &track.id).unwrap();
+        let rows = relink_rows(dir.path());
+        let journals = journal_snapshot(dir.path());
+        fs::remove_file(&object).unwrap();
+        let damaged = list_damaged_tracks(dir.path()).unwrap();
+        assert_eq!(damaged.len(), 1);
+        assert_eq!(damaged[0].reason, "missing");
+        assert!(read_catalog(dir.path()).unwrap().tracks.is_empty());
+        let result =
+            restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(()))
+                .unwrap();
+        assert_eq!(result.id, track.id);
+        assert!(result.favorite);
+        assert_eq!(result.play_count, 1);
+        assert_eq!(result.last_played_at, Some(played));
+        assert_eq!(relink_rows(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn recovery_corrupt_quarantines_original_and_restores_bytes() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        assert_eq!(
+            list_damaged_tracks(dir.path()).unwrap()[0].reason,
+            "corrupt"
+        );
+        restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(())).unwrap();
+        assert_eq!(fs::read(&object).unwrap(), fs::read(source).unwrap());
+        let entries: Vec<_> = fs::read_dir(dir.path().join("media/quarantine"))
+            .unwrap()
+            .collect();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            fs::read(entries[0].as_ref().unwrap().path()).unwrap(),
+            b"corrupt bytes"
+        );
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
+    }
+
+    #[test]
+    fn recovery_mismatch_writes_nothing() {
+        let dir = tempdir().unwrap();
+        let (track, _, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        let other = dir.path().join("different.mp3");
+        fs::write(&other, b"different").unwrap();
+        let rows = relink_rows(dir.path());
+        let journals = journal_snapshot(dir.path());
+        assert_eq!(
+            restore_managed_track(dir.path(), &track.id, other.to_str().unwrap(), |_| Ok(()))
+                .unwrap_err(),
+            "recovery:content-mismatch"
+        );
+        assert_eq!(fs::read(object).unwrap(), b"corrupt bytes");
+        assert!(!dir.path().join("media/quarantine").exists());
+        assert_eq!(relink_rows(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+    }
+
+    #[test]
+    fn recovery_failure_after_quarantine_restores_original() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        assert_eq!(
+            restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Err(
+                "injected".into()
+            ))
+            .unwrap_err(),
+            "recovery:write-failed"
+        );
+        assert_eq!(fs::read(object).unwrap(), b"corrupt bytes");
+        assert!(read_catalog(dir.path()).unwrap().tracks.is_empty());
+        assert_eq!(
+            list_damaged_tracks(dir.path()).unwrap()[0].reason,
+            "corrupt"
+        );
+    }
+
+    #[test]
+    fn recovery_uncommitted_and_retired_are_ineligible() {
+        let dir = tempdir().unwrap();
+        let prepared = prepared_fixture(dir.path());
+        inject_publication_failpoint(PublicationFailpoint::AfterGenesisReadbackBeforeReceipt);
+        assert!(publish_prepared(dir.path(), &prepared).is_err());
+        let source = dir.path().join("fixture.mp3");
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+        assert_eq!(
+            restore_managed_track(
+                dir.path(),
+                &prepared.track.id,
+                source.to_str().unwrap(),
+                |_| Ok(())
+            )
+            .unwrap_err(),
+            "recovery:not-recoverable"
+        );
+        // Commit and then retire the same publication.
+        publish_prepared(dir.path(), &prepared).unwrap();
+        remove_track(dir.path(), &prepared.track.id).unwrap();
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+        assert_eq!(
+            restore_managed_track(
+                dir.path(),
+                &prepared.track.id,
+                source.to_str().unwrap(),
+                |_| Ok(())
+            )
+            .unwrap_err(),
+            "recovery:not-recoverable"
+        );
+    }
+
     #[test]
     fn new_database_registers_v1_then_upgrades_to_v3() {
         let directory = tempdir().unwrap();
