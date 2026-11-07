@@ -1,5 +1,5 @@
 ---
-version: "0.3.5b"
+version: "0.3.7b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -71,7 +71,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
 | PLAY-08 | Native resolve + UI error; `select_relink_file`/`relink_track` (`library.rs`, `library_store.rs`, `media_validation.rs`), relink UI in `App.tsx`/`Transport.tsx` | F/V + App: PARTIAL; linked-track relink implemented per [LALIN_PLAY_RELINK_SPEC.md](../design/LALIN_PLAY_RELINK_SPEC.md) v0.3.1b; Rust 83 passed/0 failed/6 ignored and vitest 16 files/105 tests pass (2026-11-07, F: lane) | Native relink across local drives and playback NOT_RUN; managed-object recovery PLAY-08-M specified in [LALIN_PLAY_MANAGED_RECOVERY_SPEC.md](../design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md), NOT_IMPLEMENTED |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
-| PLAY-10 | Packaging disabled, updater unavailable | NOT_IMPLEMENTED / NOT_RUN | Independent installer/signed A→B update and release runbook |
+| PLAY-10 | v1.0 NSIS installer, updater UI/config, signed release workflow and metadata promotion workflow | Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass; real key ceremony, published draft, A→B update and clean-VM install NOT_RUN | Release build/signature, R1 CI, clean install/uninstall, signed A→B, tampered-signature rejection, state retention and clean-VM qualification remain NOT_RUN |
 | PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
 | PLAY-12 | Spatial, Owner | HRTF graph and ramp/fallback tests pass with fake AudioContext as part of the 14-file/81-test pass; audible/native behavior NOT_RUN | Compare Stereo and Virtual 7.1 on selected headphones; measure CPU/latency and listen for artifacts |
 | PLAY-13 | Locale, UI | 14-file/81-test pass covers ENG default, TH switch/persistence, Full/Compact continuity and visible mixer mute labels; visible app-owned text is routed through typed catalog | Review every view/tooltip/error at runtime in both locales and verify restart persistence |
@@ -196,6 +196,9 @@ PARTIAL, and Studio playback stays enabled.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.7b | 2026-11-07 | beta | Merge main: keep PLAY-08-M spec link and PLAY-10 release smoke evidence | working tree | Claude |
+| 0.3.6b | 2026-11-07 | beta | Record PLAY-10 local release smoke (guard, NSIS build, signature/tamper, bundle contents) | working tree | Claude |
+| 0.3.5b | 2026-11-07 | beta | Trace P1.4 installer/updater implementation and keep all release qualification evidence NOT_RUN | working tree | Codex |
 | 0.3.5b | 2026-11-07 | beta | Link PLAY-08-M managed recovery spec | working tree | Claude |
 | 0.3.4b | 2026-11-07 | beta | PLAY-08 linked relink implemented with automated evidence; native acceptance and PLAY-08-M remain open | working tree | Claude |
 | 0.3.3b | 2026-11-07 | beta | Link the PLAY-08 relink implementation spec; implementation still open | working tree | Claude |

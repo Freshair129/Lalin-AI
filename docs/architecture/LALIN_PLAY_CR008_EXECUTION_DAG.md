@@ -1,7 +1,7 @@
 ---
-version: "0.1.81b"
+version: "0.1.82b"
 created_at: "2026-10-20T00:00:00+07:00,Codex"
-last_update: "2026-10-26T20:24:48+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "candidate"
 superseded_by: null
 attributes:
@@ -1278,6 +1278,9 @@ Exact reviewed patch hashes:
 | `benchmarks/smart-medley/fixture/cases.json` | `6e5d1a1778ee5a71a011a465087411e5b692dadea15cc924f7cbfaab8c81beb4` |
 | `benchmarks/smart-medley/main.rs` | `5699dbaee024665a9872e61d50e4dff1de9a672fbcb78e882706a30c51853877` |
 | `benchmarks/smart-medley/run.ps1` | `5f89f1a4ac497324b96780c84c9dc165c29676850207bc88030fc074bfbb0d68` |
+
+> **Re-pin required (2026-11-07, lead):** for the Play v1.0 installer the benchmark binary is gated behind the `smart-medley-benchmark` Cargo feature (`required-features`) so it is not built or bundled by default; `run.ps1` now passes `--features smart-medley-benchmark` and its SHA-256 is `af44f409311edb4438119c02f5ca51c319200ba305e5c2df8e45c4e2bbed1148`. W2-C benchmark evidence is NOT_RUN and Smart Medley is deferred to v1.1, so the pinned harness must be re-reviewed and re-pinned before any benchmark run.
+
 | `benchmarks/smart-medley/evidence.schema.json` | `f3963ca647fd7d68d650d1f592bbaf108b1b1772879f6236bbe057d9cf064e84` |
 | `benchmarks/smart-medley/README.md` | `e125931ab5c26594b0e34fe8a8d1365156bb5a448323a0398898d253bda4ef8c` |
 
@@ -1535,6 +1538,7 @@ Astra returned exact-source `PASS`. Independent package-scoped verification on N
 
 | Version | Date | Status | Summary | Source |
 |---|---|---|---|---|
+| 0.1.82b | 2026-11-07 | candidate — Smart Medley deferred to v1.1 | Benchmark binary feature-gated for the Play v1.0 installer; run.ps1 hash changed; harness must be re-pinned before W2-C runs | lead (Claude) |
 | 0.1.81b | 2026-10-26 | candidate — exact contract review PASS; firewall scope proposal drafted; W0-C remains BLOCKED | Propose a temporary TCP/4443 LAN allow and disable only the two matching broad rules; leave all unrelated rules untouched; seek independent review before owner approval | Firewall audit A24F06FD2F4ED025E83926EE0485BDF39617673CA7E132F1B0E46DA48F688356 + exact proposal hash |
 | 0.1.76b | 2026-10-26 | candidate — iPhone-only device evidence accepted for progression checkpoint; Android floor deferred to W1-C/product-release acceptance; network/security and principal gates remain OPEN | Reconcile active W0-C criteria and current disposition with the owner checkpoint; keep Android support and separate security/contract gates | Owner direction + exact-hash Astra review pending |
 | 0.1.75b | 2026-10-26 | candidate — owner accepts iPhone-only device evidence for next review gate; W0-C remains BLOCKED | Reconcile iPhone-only device-evidence decision into the readiness register; preserve Android support scope and network/security/principal gates | Owner direction + exact-hash reviewer disposition pending |

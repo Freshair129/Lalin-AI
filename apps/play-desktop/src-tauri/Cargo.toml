@@ -1,11 +1,15 @@
 [package]
 name = "lalin-play"
-version = "0.1.0"
+version = "1.0.0"
+license = "MIT"
+default-run = "lalin-play"
 description = "Lalin Play local media player"
 edition = "2021"
 
 [features]
 g3-test-app-data-dir = []
+# Developer benchmark harness only; not built or bundled by default (Smart Medley is deferred for v1.0).
+smart-medley-benchmark = []
 
 [lib]
 name = "lalin_play_lib"
@@ -14,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [[bin]]
 name = "smart-medley-benchmark"
 path = "../benchmarks/smart-medley/main.rs"
+required-features = ["smart-medley-benchmark"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -31,6 +36,7 @@ sha2 = "0.11.1"
 symphonia = { version = "=0.6.1", default-features = false, features = ["aac", "aiff", "flac", "isomp4", "mp3", "ogg", "pcm", "vorbis", "wav"] }
 rustfft = "=6.4.1"
 tauri-plugin-opener = "2.7.2"
+tauri-plugin-updater = "2.10.1"
 uuid = { version = "1", features = ["v4"] }
 
 [target.'cfg(windows)'.dependencies]

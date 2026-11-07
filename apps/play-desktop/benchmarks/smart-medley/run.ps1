@@ -90,7 +90,7 @@ if (-not $profileValid) {
 }
 
 $manifest = Join-Path $PSScriptRoot '..\..\src-tauri\Cargo.toml'
-cargo run --manifest-path $manifest --release --bin smart-medley-benchmark -- `
+cargo run --manifest-path $manifest --release --features smart-medley-benchmark --bin smart-medley-benchmark -- `
     --input $InputFile `
     --sha256 $Sha256 `
     --cache-dir $cacheDirectory `

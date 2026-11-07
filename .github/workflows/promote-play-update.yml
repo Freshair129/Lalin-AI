@@ -1,0 +1,56 @@
+name: Promote Lalin Play update metadata
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published Play release tag, for example play-v1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: windows-latest
+    steps:
+      - name: Verify published release and update metadata
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAY_RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if ($env:PLAY_RELEASE_TAG -notmatch '^play-v\d+\.\d+\.\d+$') { throw "Input must be a stable play-vX.Y.Z tag." }
+          $release = gh release view $env:PLAY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName,isDraft,assets | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($release.tagName -cne $env:PLAY_RELEASE_TAG -or $release.isDraft) { throw "The supplied Play release must exist and be published." }
+          if (-not ($release.assets | Where-Object name -eq "latest-play.json")) { throw "The published Play release has no latest-play.json asset." }
+
+          $version = $env:PLAY_RELEASE_TAG.Substring("play-v".Length)
+          $temporary = Join-Path $env:RUNNER_TEMP "play-update-promotion"
+          New-Item -ItemType Directory -Path $temporary -Force | Out-Null
+          gh release download $env:PLAY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --pattern latest-play.json --dir $temporary
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifestPath = Join-Path $temporary "latest-play.json"
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+          $platform = $manifest.platforms.'windows-x86_64'
+          $expectedInstaller = "https://github.com/Freshair129/Lalin-AI/releases/download/$env:PLAY_RELEASE_TAG/Lalin-Play_${version}_x64-setup.exe"
+          if ($manifest.version -cne $version -or [string]::IsNullOrWhiteSpace($platform.signature) -or $platform.url -cne $expectedInstaller) {
+            throw "The update metadata does not match the supplied published tag and installer asset."
+          }
+
+          $channel = gh release view play-updates --repo $env:GITHUB_REPOSITORY --json tagName,isDraft | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($channel.isDraft) { throw "The play-updates channel release must be published before promotion." }
+          gh release upload play-updates $manifestPath --repo $env:GITHUB_REPOSITORY --clobber
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $verifyDirectory = Join-Path $temporary "verify"
+          New-Item -ItemType Directory -Path $verifyDirectory -Force | Out-Null
+          gh release download play-updates --repo $env:GITHUB_REPOSITORY --pattern latest-play.json --dir $verifyDirectory
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $sourceHash = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
+          $promotedHash = (Get-FileHash -LiteralPath (Join-Path $verifyDirectory "latest-play.json") -Algorithm SHA256).Hash
+          if ($sourceHash -cne $promotedHash) { throw "Promoted latest-play.json did not match the published tag metadata." }
+          Write-Host "Promoted $env:PLAY_RELEASE_TAG metadata to the play-updates channel."
