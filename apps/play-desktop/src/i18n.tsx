@@ -121,6 +121,25 @@ const en = {
   "relink.error.differentContent": "The selected file has different content from the original.",
   "relink.error.managedUnsupported": "Offline managed tracks cannot be relinked.",
   "relink.error.writeFailed": "Could not save the new media location.",
+  "recovery.notice": "{count} offline files need repair",
+  "recovery.panelTitle": "Repair offline files",
+  "recovery.openPanel": "Open Repair panel",
+  "recovery.compactHint": "{count} offline files need repair. Switch to Full to repair.",
+  "recovery.reasonMissing": "Managed object is missing",
+  "recovery.reasonCorrupt": "Managed object is corrupt",
+  "recovery.noSourcePath": "Original source path not recorded",
+  "recovery.restore": "Restore from file…",
+  "recovery.success": "Offline track restored. Queue and playlist references were kept.",
+  "recovery.empty": "No offline files need repair.",
+  "recovery.importMismatchConfirm": "This file differs from the offline object. Import it as a new track?",
+  "recovery.importedNew": "Imported as a new track.",
+  "recovery.error.notRecoverable": "This offline track is not eligible for recovery.",
+  "recovery.error.invalidPath": "The selected file path is invalid.",
+  "recovery.error.notLocal": "Choose a file on a local drive.",
+  "recovery.error.unsupportedType": "This media type is not supported.",
+  "recovery.error.contentMismatch": "The selected file does not match the original offline content.",
+  "recovery.error.writeFailed": "Could not restore the offline file.",
+  "recovery.error.verifyFailed": "The restored offline file did not pass verification. The previous object was restored.",
   "error.resolveNotInLibrary": "This file is not in the permitted library. Add it to the library again.",
   "error.resolveMissing": "File not found. Choose it from its new location.",
   "error.resolveMoved": "The file moved or is outside the selected scope. Relink it from Full.",
@@ -422,6 +441,25 @@ const th: Record<keyof typeof en, string> = {
   "relink.error.differentContent": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับไฟล์เดิม",
   "relink.error.managedUnsupported": "ไม่รองรับการเชื่อมไฟล์ใหม่ให้เพลงออฟไลน์ที่จัดการโดย Lalin Play",
   "relink.error.writeFailed": "บันทึกตำแหน่งไฟล์ใหม่ไม่สำเร็จ",
+  "recovery.notice": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
+  "recovery.panelTitle": "ซ่อมแซมไฟล์ออฟไลน์",
+  "recovery.openPanel": "เปิดหน้าซ่อมแซม",
+  "recovery.compactHint": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
+  "recovery.reasonMissing": "ไม่พบ object ที่จัดการไว้",
+  "recovery.reasonCorrupt": "object ที่จัดการไว้เสียหาย",
+  "recovery.noSourcePath": "ไม่มีการบันทึกตำแหน่งไฟล์ต้นฉบับ",
+  "recovery.restore": "กู้คืนจากไฟล์…",
+  "recovery.success": "กู้คืนเพลงออฟไลน์แล้ว โดยคงรายการในคิวและเพลย์ลิสต์ไว้",
+  "recovery.empty": "ไม่มีไฟล์ออฟไลน์ที่ต้องซ่อมแซม",
+  "recovery.importMismatchConfirm": "ไฟล์นี้มีเนื้อหาไม่ตรงกับ object ออฟไลน์ ต้องการนำเข้าเป็นเพลงใหม่หรือไม่?",
+  "recovery.importedNew": "นำเข้าเป็นเพลงใหม่แล้ว",
+  "recovery.error.notRecoverable": "เพลงออฟไลน์นี้ไม่เข้าเงื่อนไขการกู้คืน",
+  "recovery.error.invalidPath": "ตำแหน่งไฟล์ที่เลือกไม่ถูกต้อง",
+  "recovery.error.notLocal": "เลือกไฟล์จากไดรฟ์ภายในเครื่องเท่านั้น",
+  "recovery.error.unsupportedType": "ไม่รองรับชนิดสื่อนี้",
+  "recovery.error.contentMismatch": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับต้นฉบับออฟไลน์",
+  "recovery.error.writeFailed": "กู้คืนไฟล์ออฟไลน์ไม่สำเร็จ",
+  "recovery.error.verifyFailed": "ไฟล์ออฟไลน์ที่กู้คืนไม่ผ่านการตรวจสอบ และคืน object เดิมแล้ว",
   "error.resolveNotInLibrary": "ไฟล์นี้ไม่ได้อยู่ในคลังที่อนุญาต กรุณาเพิ่มไฟล์เข้าในคลังอีกครั้ง",
   "error.resolveMissing": "ไม่พบไฟล์ กรุณาเลือกไฟล์จากตำแหน่งใหม่",
   "error.resolveMoved": "ไฟล์ย้ายตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเชื่อมใหม่จาก Full",
@@ -687,6 +725,18 @@ export function localizeError(value: unknown, locale: Locale): string {
     });
   }
   for (const [prefix, key] of relinkPrefixes) {
+    if (normalized.startsWith(prefix)) return translate(locale, key);
+  }
+  const recoveryPrefixes: Array<[string, TranslationKey]> = [
+    ["recovery:not-recoverable", "recovery.error.notRecoverable"],
+    ["recovery:invalid-path", "recovery.error.invalidPath"],
+    ["recovery:not-local", "recovery.error.notLocal"],
+    ["recovery:unsupported-type", "recovery.error.unsupportedType"],
+    ["recovery:content-mismatch", "recovery.error.contentMismatch"],
+    ["recovery:write-failed", "recovery.error.writeFailed"],
+    ["recovery:verify-failed", "recovery.error.verifyFailed"],
+  ];
+  for (const [prefix, key] of recoveryPrefixes) {
     if (normalized.startsWith(prefix)) return translate(locale, key);
   }
   const key = exact[normalized];

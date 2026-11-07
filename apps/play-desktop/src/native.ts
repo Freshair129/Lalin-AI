@@ -29,6 +29,17 @@ export interface YoutubeLink {
   addedAt: number;
 }
 
+export interface DamagedTrack {
+  id: string;
+  title: string;
+  artist: string | null;
+  album: string | null;
+  contentHash: string;
+  ext: string;
+  reason: "missing" | "corrupt";
+  sourcePath: string | null;
+}
+
 export async function getLibrary(): Promise<LocalTrack[]> {
   const library = await invoke<{ version: number; tracks: LocalTrack[] }>(
     "get_library",
@@ -36,8 +47,24 @@ export async function getLibrary(): Promise<LocalTrack[]> {
   return library.tracks;
 }
 
+export async function listDamagedTracks(): Promise<DamagedTrack[]> {
+  return invoke<DamagedTrack[]>("list_damaged_tracks");
+}
+
 export async function selectRelinkFile(id: string): Promise<string | null> {
   return invoke<string | null>("select_relink_file", { id });
+}
+
+export async function selectRestoreFile(id: string): Promise<string | null> {
+  return invoke<string | null>("select_restore_file", { id });
+}
+
+export async function restoreManagedTrack(id: string, path: string): Promise<LocalTrack> {
+  return invoke<LocalTrack>("restore_managed_track", { id, path });
+}
+
+export async function importSelectedFile(path: string): Promise<LocalTrack[]> {
+  return invoke<LocalTrack[]>("select_media", { folder: false, path });
 }
 
 export async function relinkTrack(
