@@ -1,7 +1,19 @@
 // @tested FR-22.1, FR-22.2
 import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { I18nProvider, localizeError, STORAGE_LOCALE_KEY, useI18n } from "./i18n";
+import { I18nProvider, localizeError, STORAGE_LOCALE_KEY, useI18n, type TranslationKey } from "./i18n";
+
+const recoveryLabels: TranslationKey[] = [
+  "recovery.notice", "recovery.panelTitle", "recovery.openPanel", "recovery.compactHint",
+  "recovery.reasonMissing", "recovery.reasonCorrupt", "recovery.noSourcePath", "recovery.restore",
+  "recovery.success", "recovery.empty", "recovery.importMismatchConfirm", "recovery.importedNew",
+  "recovery.error.notRecoverable", "recovery.error.invalidPath", "recovery.error.notLocal",
+  "recovery.error.unsupportedType", "recovery.error.contentMismatch", "recovery.error.writeFailed", "recovery.error.verifyFailed",
+];
+function RecoveryLabels() {
+  const { t } = useI18n();
+  return <>{recoveryLabels.map((key) => <span data-testid={key} key={key}>{t(key, { count: 2 })}</span>)}</>;
+}
 
 function LocaleProbe() {
   const { locale, setLocale, t } = useI18n();
@@ -17,6 +29,29 @@ function LocaleProbe() {
 beforeEach(() => localStorage.clear());
 
 describe("Lalin Play localization", () => {
+  it("provides every recovery label in both locales", () => {
+    const first = render(<I18nProvider><RecoveryLabels /></I18nProvider>);
+    const english = recoveryLabels.map((key) => screen.getByTestId(key).textContent);
+    first.unmount();
+    localStorage.setItem(STORAGE_LOCALE_KEY, "th");
+    render(<I18nProvider><RecoveryLabels /></I18nProvider>);
+    recoveryLabels.forEach((key, index) => {
+      const thai = screen.getByTestId(key).textContent;
+      expect(english[index]).toBeTruthy();
+      expect(thai).toBeTruthy();
+      expect(thai).not.toBe(english[index]);
+      expect(thai).not.toContain("{count}");
+    });
+  });
+  it("localizes every recovery error in English and Thai", () => {
+    for (const code of ["not-recoverable", "invalid-path", "not-local", "unsupported-type", "content-mismatch", "write-failed", "verify-failed"]) {
+      const message = `recovery:${code}`;
+      expect(localizeError(message, "en")).not.toBe(message);
+      expect(localizeError(message, "th")).not.toBe(message);
+      expect(localizeError(message, "en")).not.toBe(localizeError(message, "th"));
+    }
+  });
+
   it("localizes every relink code and native resolve error in both locales", () => {
     const codes = ["unknown-track", "retired-track", "invalid-path", "not-local", "not-a-file", "unsupported-type", "different-content", "managed-unsupported", "write-failed", "duplicate:Song"];
     const nativeErrors = [
