@@ -12,7 +12,8 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use std::{
     collections::{HashMap, HashSet},
-    fs,
+    fs::{self, File, OpenOptions as FsOpenOptions},
+    io::copy,
     path::{Component, Path, PathBuf},
     sync::{Arc, Mutex, OnceLock},
     time::{SystemTime, UNIX_EPOCH},
@@ -94,6 +95,26 @@ pub struct CacheSettings {
     pub quota_bytes: u64,
     pub used_bytes: u64,
     pub authorized_sources: u32,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DamagedTrack {
+    pub id: String,
+    pub title: String,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub content_hash: String,
+    pub ext: String,
+    pub reason: String,
+    pub source_path: Option<String>,
+}
+
+struct ManagedRecoveryCandidate {
+    track: Track,
+    damaged: DamagedTrack,
+    prepared: crate::local_media_store::PreparedPublicationV1,
+    object_path: PathBuf,
 }
 
 fn databases() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<Storage>>>> {
@@ -786,6 +807,367 @@ fn managed_row_is_visible(
         }
     }
     Ok(publication_rows.len() == prepared.plan.expected_rows.len())
+}
+
+fn managed_recovery_candidate(
+    database: &Storage,
+    directory: &Path,
+    row: &Value,
+) -> Result<Option<ManagedRecoveryCandidate>, String> {
+    if row.get("storage_kind").and_then(Value::as_str) != Some("managed") {
+        return Ok(None);
+    }
+    let Some(publication_id) = row.get("publication_id").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    let Some(track_id) = row.get("id").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    if publication_is_retired(database, publication_id)? || track_is_retired(database, track_id)? {
+        return Ok(None);
+    }
+    let prepared = match crate::local_media_store::load_publication(directory, publication_id) {
+        Ok(Some(prepared)) => prepared,
+        Ok(None) | Err(_) => return Ok(None),
+    };
+    let Some(receipt) = prepared.commit_receipt.as_ref() else {
+        return Ok(None);
+    };
+    if !crate::local_media_store::receipt_checksum_is_valid(receipt)
+        || row.get("content_hash").and_then(Value::as_str)
+            != Some(prepared.plan.whole_sha256.as_str())
+    {
+        return Ok(None);
+    }
+
+    // Keep the same receipt, index, row-set and payload checks as the frozen
+    // visibility predicate, while classifying the object's missing/corrupt bytes.
+    let publication_rows = query_rows(
+        database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "publication_id",
+            Value::String(publication_id.into()),
+        )],
+        MAX_TRACKS as u32,
+    )?;
+    let hash_rows = query_rows(
+        database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "content_hash",
+            Value::String(prepared.plan.whole_sha256.clone()),
+        )],
+        MAX_TRACKS as u32,
+    )?;
+    if !crate::local_media_store::index_entries_match(&prepared, &publication_rows, &hash_rows) {
+        return Ok(None);
+    }
+    for expected in &prepared.plan.expected_rows {
+        let Some(planned_row) = publication_rows.iter().find(|candidate| {
+            candidate.get("id").and_then(Value::as_str) == Some(expected.row_id.as_str())
+        }) else {
+            return Ok(None);
+        };
+        let Ok(row_digest) = crate::local_media_store::visible_row_digest(directory, planned_row)
+        else {
+            return Ok(None);
+        };
+        if crate::local_media_store::validate_row(directory, &prepared, planned_row).is_err()
+            || row_digest != expected.row_digest
+        {
+            return Ok(None);
+        }
+    }
+    if publication_rows.len() != prepared.plan.expected_rows.len() {
+        return Ok(None);
+    }
+
+    let object_path = match checked_managed_path(directory, &prepared.object_receipt.relative_path)
+    {
+        Ok(path) => path,
+        Err(_) => return Ok(None),
+    };
+    let reason = match fs::metadata(&object_path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => "missing",
+        Err(_) => return Ok(None),
+        Ok(metadata) if !metadata.is_file() => return Ok(None),
+        Ok(metadata) if metadata.len() != prepared.plan.byte_length => "corrupt",
+        Ok(_) => match crate::media_validation::sha256_file(&object_path) {
+            Ok(hash) if hash != prepared.plan.whole_sha256 => "corrupt",
+            Ok(_) | Err(_) => return Ok(None),
+        },
+    };
+    let Ok(track) = track_from_row(directory, row) else {
+        return Ok(None);
+    };
+    let Some(ext) = object_path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(str::to_owned)
+    else {
+        return Ok(None);
+    };
+    let damaged = DamagedTrack {
+        id: track.id.clone(),
+        title: track.title.clone(),
+        artist: track.artist.clone(),
+        album: track.album.clone(),
+        content_hash: prepared.plan.whole_sha256.clone(),
+        ext,
+        reason: reason.into(),
+        source_path: track.source_path.clone(),
+    };
+    Ok(Some(ManagedRecoveryCandidate {
+        track,
+        damaged,
+        prepared,
+        object_path,
+    }))
+}
+
+fn damaged_candidate_for_id(
+    database: &Storage,
+    directory: &Path,
+    id: &str,
+) -> Result<Option<ManagedRecoveryCandidate>, String> {
+    let rows = query_rows(
+        database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "id",
+            Value::String(id.into()),
+        )],
+        1,
+    )?;
+    rows.first()
+        .map(|row| managed_recovery_candidate(database, directory, row))
+        .transpose()
+        .map(Option::flatten)
+}
+
+pub fn list_damaged_tracks(directory: &Path) -> Result<Vec<DamagedTrack>, String> {
+    let database = open_database(directory)?;
+    let database = database.lock().map_err(|error| error.to_string())?;
+    let mut damaged = raw_track_rows(&database)?
+        .iter()
+        .filter_map(
+            |row| match managed_recovery_candidate(&database, directory, row) {
+                Ok(Some(candidate)) => Some(Ok(candidate.damaged)),
+                Ok(None) => None,
+                Err(error) => Some(Err(error)),
+            },
+        )
+        .collect::<Result<Vec<_>, _>>()?;
+    damaged.sort_by(|left, right| {
+        left.title
+            .to_lowercase()
+            .cmp(&right.title.to_lowercase())
+            .then(left.id.cmp(&right.id))
+    });
+    Ok(damaged)
+}
+
+pub fn damaged_track_for_id(directory: &Path, id: &str) -> Result<Option<DamagedTrack>, String> {
+    let database = open_database(directory)?;
+    let database = database.lock().map_err(|error| error.to_string())?;
+    Ok(damaged_candidate_for_id(&database, directory, id)?.map(|candidate| candidate.damaged))
+}
+
+pub fn find_damaged_track_by_hash(directory: &Path, hash: &str) -> Result<Option<Track>, String> {
+    let database = open_database(directory)?;
+    let database = database.lock().map_err(|error| error.to_string())?;
+    let rows = query_rows(
+        &database,
+        "tracks",
+        TRACK_COLUMNS,
+        vec![genesis_block_native::RelationalFilter::equal(
+            "content_hash",
+            Value::String(hash.into()),
+        )],
+        MAX_TRACKS as u32,
+    )?;
+    for row in &rows {
+        if let Some(candidate) = managed_recovery_candidate(&database, directory, row)? {
+            return Ok(Some(candidate.track));
+        }
+    }
+    Ok(None)
+}
+
+fn write_recovery_object(
+    source: &Path,
+    destination: &Path,
+    expected_hash: &str,
+    expected_bytes: u64,
+) -> Result<(), String> {
+    let parent = destination
+        .parent()
+        .ok_or_else(|| "recovery:write-failed".to_string())?;
+    fs::create_dir_all(parent).map_err(|_| "recovery:write-failed")?;
+    let temporary = parent.join(format!(".restore-{}.tmp", Uuid::new_v4()));
+    let result = (|| {
+        let mut input = File::open(source).map_err(|_| "recovery:write-failed")?;
+        let mut output = FsOpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)
+            .map_err(|_| "recovery:write-failed")?;
+        let copied = copy(&mut input, &mut output).map_err(|_| "recovery:write-failed")?;
+        output.sync_all().map_err(|_| "recovery:write-failed")?;
+        drop(output);
+        if copied != expected_bytes
+            || crate::media_validation::sha256_file(&temporary)
+                .map_err(|_| "recovery:write-failed")?
+                != expected_hash
+        {
+            return Err("recovery:content-mismatch".to_string());
+        }
+        if destination.exists() {
+            return Err("recovery:write-failed".into());
+        }
+        fs::rename(&temporary, destination).map_err(|_| "recovery:write-failed")?;
+        Ok(())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&temporary);
+    }
+    result
+}
+
+fn rollback_recovery_object(
+    destination: &Path,
+    quarantine: Option<&Path>,
+    object_installed: bool,
+) -> Result<(), String> {
+    if object_installed {
+        fs::remove_file(destination).map_err(|error| error.to_string())?;
+    }
+    if let Some(quarantine) = quarantine {
+        fs::rename(quarantine, destination).map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn restore_managed_track<AllowFile>(
+    directory: &Path,
+    id: &str,
+    source_path: &str,
+    allow_file: AllowFile,
+) -> Result<Track, String>
+where
+    AllowFile: FnOnce(&Path) -> Result<(), String>,
+{
+    let database = open_database(directory).map_err(|_| "recovery:write-failed")?;
+    let database = database.lock().map_err(|_| "recovery:write-failed")?;
+    let candidate = damaged_candidate_for_id(&database, directory, id)
+        .map_err(|_| "recovery:not-recoverable")?
+        .ok_or("recovery:not-recoverable")?;
+    let source =
+        crate::media_validation::validate_media_file(source_path).map_err(|error| match error {
+            crate::media_validation::MediaFileValidationError::InvalidPath
+            | crate::media_validation::MediaFileValidationError::NotFound
+            | crate::media_validation::MediaFileValidationError::NotAFile => {
+                "recovery:invalid-path"
+            }
+            crate::media_validation::MediaFileValidationError::ForbiddenNamespace
+            | crate::media_validation::MediaFileValidationError::NotLocal => "recovery:not-local",
+            crate::media_validation::MediaFileValidationError::UnsupportedType => {
+                "recovery:unsupported-type"
+            }
+        })?;
+    let source_hash =
+        crate::media_validation::sha256_file(&source).map_err(|_| "recovery:invalid-path")?;
+    if source_hash != candidate.damaged.content_hash {
+        return Err("recovery:content-mismatch".into());
+    }
+
+    let mut quarantined = None;
+    let mut quarantine_dir_created = false;
+    if candidate.damaged.reason == "corrupt" {
+        let quarantine_dir = directory.join("media").join("quarantine");
+        let quarantine_dir_existed = quarantine_dir.is_dir();
+        fs::create_dir_all(&quarantine_dir).map_err(|_| "recovery:write-failed")?;
+        quarantine_dir_created = !quarantine_dir_existed;
+        let quarantine = quarantine_dir.join(format!(
+            "{}.{}.{}",
+            candidate.damaged.content_hash,
+            candidate.damaged.ext,
+            now_millis()
+        ));
+        if quarantine.exists() {
+            if !quarantine_dir_existed {
+                let _ = fs::remove_dir(&quarantine_dir);
+            }
+            return Err("recovery:write-failed".into());
+        }
+        if fs::rename(&candidate.object_path, &quarantine).is_err() {
+            if !quarantine_dir_existed {
+                let _ = fs::remove_dir(&quarantine_dir);
+            }
+            return Err("recovery:write-failed".into());
+        }
+        quarantined = Some(quarantine);
+    }
+
+    let mut object_installed = false;
+    let restore_result = (|| {
+        write_recovery_object(
+            &source,
+            &candidate.object_path,
+            &candidate.damaged.content_hash,
+            candidate.prepared.plan.byte_length,
+        )?;
+        object_installed = true;
+        let rows = query_rows(
+            &database,
+            "tracks",
+            TRACK_COLUMNS,
+            vec![genesis_block_native::RelationalFilter::equal(
+                "id",
+                Value::String(id.into()),
+            )],
+            1,
+        )
+        .map_err(|_| "recovery:verify-failed")?;
+        let row = rows.first().ok_or("recovery:verify-failed")?;
+        if !managed_row_is_visible(&database, directory, row)
+            .map_err(|_| "recovery:verify-failed")?
+        {
+            return Err("recovery:verify-failed".into());
+        }
+        let track =
+            track_from_row(directory, row).map_err(|_| "recovery:verify-failed".to_string())?;
+        allow_file(&candidate.object_path).map_err(|_| "recovery:write-failed")?;
+        Ok(track)
+    })();
+
+    match restore_result {
+        Ok(track) => Ok(track),
+        Err(error) => {
+            let rollback = rollback_recovery_object(
+                &candidate.object_path,
+                quarantined.as_deref(),
+                object_installed,
+            );
+            if let Err(rollback_error) = rollback {
+                return Err(format!(
+                    "recovery:write-failed: rollback failed: {rollback_error}"
+                ));
+            }
+            if quarantine_dir_created {
+                if let Some(quarantine) = quarantined.as_deref() {
+                    if let Some(quarantine_dir) = quarantine.parent() {
+                        let _ = fs::remove_dir(quarantine_dir);
+                    }
+                }
+            }
+            Err(error)
+        }
+    }
 }
 
 fn read_catalog_from(database: &Storage, directory: &Path) -> Result<Library, String> {
@@ -1911,6 +2293,29 @@ mod tests {
         )
     }
 
+    fn recovery_namespace_snapshot(directory: &Path) -> Vec<(String, Vec<Value>)> {
+        let database = open_database(directory).unwrap();
+        let database = database.lock().unwrap();
+        let schema = database.get_relational_schema(NAMESPACE).unwrap().unwrap();
+        let mut tables = schema
+            .tables
+            .into_iter()
+            .map(|table| {
+                let columns: Vec<_> = table
+                    .columns
+                    .iter()
+                    .map(|column| column.name.as_str())
+                    .collect();
+                let mut rows =
+                    query_rows(&database, &table.name, &columns, vec![], 100_000).unwrap();
+                rows.sort_by_key(|row| row.to_string());
+                (table.name, rows)
+            })
+            .collect::<Vec<_>>();
+        tables.sort_by(|a, b| a.0.cmp(&b.0));
+        tables
+    }
+
     fn relink_for_test(
         directory: &Path,
         id: &str,
@@ -2159,6 +2564,301 @@ mod tests {
             last_played_at: None,
         };
         crate::local_media_store::prepare_publication(directory, object, track).unwrap()
+    }
+
+    fn recovery_fixture(directory: &Path) -> (Track, std::path::PathBuf, std::path::PathBuf) {
+        let prepared = prepared_fixture(directory);
+        let object = directory.join(&prepared.object_receipt.relative_path);
+        let source = directory.join("fixture.mp3");
+        let track = publish_prepared(directory, &prepared).unwrap();
+        (track, source, object)
+    }
+
+    fn journal_snapshot(directory: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
+        let root = directory.join("media/publications");
+        let mut files: Vec<_> = fs::read_dir(root)
+            .unwrap()
+            .map(|entry| {
+                let path = entry.unwrap().path().join("journal.jsonl");
+                (path.clone(), fs::read(path).unwrap())
+            })
+            .collect();
+        files.sort_by(|a, b| a.0.cmp(&b.0));
+        files
+    }
+
+    fn media_snapshot(directory: &Path) -> Vec<(PathBuf, Option<Vec<u8>>)> {
+        fn visit(root: &Path, path: &Path, result: &mut Vec<(PathBuf, Option<Vec<u8>>)>) {
+            if !path.exists() {
+                return;
+            }
+            for entry in fs::read_dir(path).unwrap() {
+                let path = entry.unwrap().path();
+                if path.is_dir() {
+                    result.push((path.strip_prefix(root).unwrap().to_path_buf(), None));
+                    visit(root, &path, result);
+                } else {
+                    result.push((
+                        path.strip_prefix(root).unwrap().to_path_buf(),
+                        Some(fs::read(path).unwrap()),
+                    ));
+                }
+            }
+        }
+        let root = directory.join("media");
+        let mut result = Vec::new();
+        visit(&root, &root, &mut result);
+        result.sort_by(|a, b| a.0.cmp(&b.0));
+        result
+    }
+
+    #[test]
+    fn recovery_excludes_every_nonrecoverable_hidden_class_without_writes() {
+        use sha2::{Digest, Sha256};
+        for case in [
+            "no publication_id",
+            "retired publication",
+            "missing journal",
+            "no receipt",
+            "invalid receipt checksum",
+            "row-set conflict",
+        ] {
+            let dir = tempdir().unwrap();
+            let prepared = prepared_fixture(dir.path());
+            let track = publish_prepared(dir.path(), &prepared).unwrap();
+            let source = dir.path().join("fixture.mp3");
+            let object = dir.path().join(&prepared.object_receipt.relative_path);
+            fs::remove_file(object).unwrap();
+            let journal = journal_snapshot(dir.path()).remove(0).0;
+            match case {
+                "no publication_id" | "row-set conflict" => {
+                    let db = open_database(dir.path()).unwrap();
+                    let db = db.lock().unwrap();
+                    let mut row = raw_track_rows(&db).unwrap().remove(0);
+                    if case == "no publication_id" {
+                        row["publication_id"] = Value::Null;
+                    } else {
+                        row["title"] = json!("conflicting title");
+                    }
+                    apply(
+                        &db,
+                        vec![mutation(
+                            "tracks",
+                            RelationalMutationKind::Upsert,
+                            row,
+                            None,
+                        )],
+                    )
+                    .unwrap();
+                }
+                "retired publication" => {
+                    let db = open_database(dir.path()).unwrap();
+                    let db = db.lock().unwrap();
+                    apply(&db, vec![mutation("track_retirements", RelationalMutationKind::Upsert,
+                        json!({"id": prepared.plan.publication_id, "track_id": track.id, "content_hash": track.content_hash, "retired_at": 1}), None)]).unwrap();
+                }
+                "missing journal" => {
+                    fs::remove_file(&journal).unwrap();
+                }
+                "no receipt" => {
+                    let text = fs::read_to_string(&journal).unwrap();
+                    fs::write(&journal, format!("{}\n", text.lines().next().unwrap())).unwrap();
+                }
+                "invalid receipt checksum" => {
+                    let text = fs::read_to_string(&journal).unwrap();
+                    let mut lines = text.lines();
+                    let first = lines.next().unwrap();
+                    let mut line: Value = serde_json::from_str(lines.next().unwrap()).unwrap();
+                    line["event"]["receipt"]["checksum"] = json!("0".repeat(64));
+                    let payload = json!({"version": line["version"], "sequence": line["sequence"], "publicationId": line["publicationId"], "event": line["event"]});
+                    let digest = Sha256::digest(serde_json::to_vec(&payload).unwrap());
+                    line["checksum"] = json!(digest
+                        .iter()
+                        .map(|byte| format!("{byte:02x}"))
+                        .collect::<String>());
+                    fs::write(&journal, format!("{first}\n{line}\n")).unwrap();
+                    assert_eq!(
+                        crate::local_media_store::load_publication(
+                            dir.path(),
+                            &prepared.plan.publication_id
+                        )
+                        .unwrap_err(),
+                        "PUBLICATION_RECEIPT_CHECKSUM_MISMATCH"
+                    );
+                }
+                _ => unreachable!(),
+            }
+            let rows = recovery_namespace_snapshot(dir.path());
+            let media = media_snapshot(dir.path());
+            assert!(
+                list_damaged_tracks(dir.path()).unwrap().is_empty(),
+                "{case}"
+            );
+            assert_eq!(
+                restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(()))
+                    .unwrap_err(),
+                "recovery:not-recoverable",
+                "{case}"
+            );
+            assert_eq!(recovery_namespace_snapshot(dir.path()), rows, "{case}");
+            assert_eq!(media_snapshot(dir.path()), media, "{case}");
+        }
+    }
+
+    #[test]
+    fn recovery_missing_preserves_rows_history_and_journals() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        set_favorite(dir.path(), &track.id, true).unwrap();
+        let played = record_listen(dir.path(), &track.id).unwrap();
+        let rows = recovery_namespace_snapshot(dir.path());
+        let journals = journal_snapshot(dir.path());
+        fs::remove_file(&object).unwrap();
+        let damaged = list_damaged_tracks(dir.path()).unwrap();
+        assert_eq!(damaged.len(), 1);
+        assert_eq!(damaged[0].reason, "missing");
+        assert!(read_catalog(dir.path()).unwrap().tracks.is_empty());
+        let result =
+            restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(()))
+                .unwrap();
+        assert_eq!(result.id, track.id);
+        assert!(result.favorite);
+        assert_eq!(result.play_count, 1);
+        assert_eq!(result.last_played_at, Some(played));
+        assert_eq!(recovery_namespace_snapshot(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn recovery_corrupt_quarantines_original_and_restores_bytes() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        assert_eq!(
+            list_damaged_tracks(dir.path()).unwrap()[0].reason,
+            "corrupt"
+        );
+        restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(())).unwrap();
+        assert_eq!(fs::read(&object).unwrap(), fs::read(source).unwrap());
+        let entries: Vec<_> = fs::read_dir(dir.path().join("media/quarantine"))
+            .unwrap()
+            .collect();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            fs::read(entries[0].as_ref().unwrap().path()).unwrap(),
+            b"corrupt bytes"
+        );
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
+    }
+
+    #[test]
+    fn reimport_repairs_damaged_managed_row_without_changing_records() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        set_favorite(dir.path(), &track.id, true).unwrap();
+        let played = record_listen(dir.path(), &track.id).unwrap();
+        fs::remove_file(&object).unwrap();
+        let rows = recovery_namespace_snapshot(dir.path());
+        let journals = journal_snapshot(dir.path());
+        let source_path = source.to_string_lossy().to_string();
+        let publication_id =
+            crate::local_media_store::publication_id_for_import(&source_path, &source).unwrap();
+        let staged =
+            crate::local_media_store::stage_local_file(dir.path(), &publication_id, &source)
+                .unwrap();
+        let repaired = crate::library::repair_imported_managed_track(
+            dir.path(),
+            &source,
+            &publication_id,
+            &staged.manifest.whole_sha256,
+            |_| Ok(()),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(repaired.id, track.id);
+        assert!(repaired.favorite);
+        assert_eq!(repaired.play_count, 1);
+        assert_eq!(repaired.last_played_at, Some(played));
+        assert_eq!(fs::read(&object).unwrap(), fs::read(&source).unwrap());
+        assert_eq!(recovery_namespace_snapshot(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks[0].id, track.id);
+    }
+
+    #[test]
+    fn recovery_mismatch_writes_nothing() {
+        let dir = tempdir().unwrap();
+        let (track, _, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        let other = dir.path().join("different.mp3");
+        fs::write(&other, b"different").unwrap();
+        let rows = relink_rows(dir.path());
+        let journals = journal_snapshot(dir.path());
+        assert_eq!(
+            restore_managed_track(dir.path(), &track.id, other.to_str().unwrap(), |_| Ok(()))
+                .unwrap_err(),
+            "recovery:content-mismatch"
+        );
+        assert_eq!(fs::read(object).unwrap(), b"corrupt bytes");
+        assert!(!dir.path().join("media/quarantine").exists());
+        assert_eq!(relink_rows(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+    }
+
+    #[test]
+    fn recovery_failure_after_quarantine_restores_original() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        fs::write(&object, b"corrupt bytes").unwrap();
+        assert_eq!(
+            restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Err(
+                "injected".into()
+            ))
+            .unwrap_err(),
+            "recovery:write-failed"
+        );
+        assert_eq!(fs::read(object).unwrap(), b"corrupt bytes");
+        assert!(read_catalog(dir.path()).unwrap().tracks.is_empty());
+        assert_eq!(
+            list_damaged_tracks(dir.path()).unwrap()[0].reason,
+            "corrupt"
+        );
+    }
+
+    #[test]
+    fn recovery_uncommitted_and_retired_are_ineligible() {
+        let dir = tempdir().unwrap();
+        let prepared = prepared_fixture(dir.path());
+        inject_publication_failpoint(PublicationFailpoint::AfterGenesisReadbackBeforeReceipt);
+        assert!(publish_prepared(dir.path(), &prepared).is_err());
+        let source = dir.path().join("fixture.mp3");
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+        assert_eq!(
+            restore_managed_track(
+                dir.path(),
+                &prepared.track.id,
+                source.to_str().unwrap(),
+                |_| Ok(())
+            )
+            .unwrap_err(),
+            "recovery:not-recoverable"
+        );
+        // Commit and then retire the same publication.
+        publish_prepared(dir.path(), &prepared).unwrap();
+        remove_track(dir.path(), &prepared.track.id).unwrap();
+        assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
+        assert_eq!(
+            restore_managed_track(
+                dir.path(),
+                &prepared.track.id,
+                source.to_str().unwrap(),
+                |_| Ok(())
+            )
+            .unwrap_err(),
+            "recovery:not-recoverable"
+        );
     }
 
     #[test]

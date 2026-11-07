@@ -77,6 +77,7 @@ beforeEach(() => {
   vi.mocked(invoke).mockImplementation(async (command) => {
     if (command === "get_library") return { version: 1, tracks: [track] };
     if (command === "resolve_media") return track.path;
+    if (command === "list_damaged_tracks") return [];
     return undefined;
   });
 });
@@ -123,6 +124,65 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
     expect(screen.getByText("USER")).not.toBeNull();
     expect(screen.getByText("OFFLINE")).not.toBeNull();
   });
+
+  it("shows repair panel and restores without changing queue or playlists", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    const damaged = { id: track.id, title: track.title, artist: null, album: null, contentHash: "hash", ext: "wav", reason: "missing", sourcePath: track.path };
+    usePlaybackStore.setState({ queue: { items: [{ id: track.id, title: track.title, url: "old", queueEntryId: "first" }], currentIndex: 0, repeatMode: "off", shuffle: false, revision: 1 } });
+    const queue = structuredClone(usePlaybackStore.getState().queue);
+    const playlist = JSON.stringify({ version: 1, playlists: [] });
+    localStorage.setItem("lalin-play:v1:playlists", playlist);
+    let restored = false;
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "get_library") return { version: 1, tracks: restored ? [track] : [] };
+      if (command === "list_damaged_tracks") return restored ? [] : [damaged];
+      if (command === "select_restore_file") return track.path;
+      if (command === "restore_managed_track") { restored = true; return track; }
+      return undefined;
+    });
+    render(<App />);
+    expect(await screen.findByText("1 offline files need repair")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Open Repair panel" }));
+    expect(screen.getByText("Managed object is missing")).not.toBeNull();
+    expect(screen.getByText(track.path)).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Restore from file/ }));
+    expect(await screen.findByText("Offline track restored. Queue and playlist references were kept.")).not.toBeNull();
+    expect(usePlaybackStore.getState().queue).toEqual(queue);
+    expect(localStorage.getItem("lalin-play:v1:playlists")).toBe(playlist);
+    await openAllTracks();
+    expect(await screen.findByText(track.title)).not.toBeNull();
+  });
+
+  it("offers import as a new track on recovery mismatch", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    const damaged = { id: track.id, title: track.title, artist: null, album: null, contentHash: "hash", ext: "wav", reason: "corrupt", sourcePath: track.path };
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "get_library") return { version: 1, tracks: [] };
+      if (command === "list_damaged_tracks") return [damaged];
+      if (command === "select_restore_file") return track.path;
+      if (command === "restore_managed_track") throw new Error("recovery:content-mismatch");
+      return undefined;
+    });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open Repair panel" }));
+    fireEvent.click(screen.getByRole("button", { name: /Restore from file/ }));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(expect.stringContaining("Import it as a new track?")));
+  });
+
+  it("shows the compact recovery hint", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "get_library") return { version: 1, tracks: [] };
+      if (command === "list_damaged_tracks") return [{ id: track.id, title: track.title, reason: "missing" }];
+      return undefined;
+    });
+    render(<App />);
+    await screen.findByText("1 offline files need repair");
+    fireEvent.click(screen.getByRole("button", { name: /Compact/ }));
+    expect(await screen.findByText("1 offline files need repair. Switch to Full to repair.")).not.toBeNull();
+  });
+
   it("relinks a missing row after confirmation and preserves queue identities and playlists", async () => {
     const replacement = { ...track, path: "C:\\new\\one.wav", missing: false };
     const missing = { ...track, missing: true };
@@ -145,6 +205,7 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
         if (attempts++ === 0) throw new Error("relink:different-content");
         return replacement;
       }
+      if (command === "list_damaged_tracks") return [];
       return undefined;
     });
     render(<App />);
@@ -365,6 +426,7 @@ describe("Compact fullscreen (native IPC mocked)", () => {
           });
         return false;
       }
+      if (command === "list_damaged_tracks") return [];
       return undefined;
     });
     fireEvent.click(enter);
@@ -401,6 +463,7 @@ describe("Compact fullscreen (native IPC mocked)", () => {
       if (command === "set_compact_fullscreen")
         throw new Error("native transition failed");
       if (command === "get_compact_fullscreen") return true;
+      if (command === "list_damaged_tracks") return [];
       return undefined;
     });
     fireEvent.click(screen.getByRole("button", { name: "เต็มจอ" }));
