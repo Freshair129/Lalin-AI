@@ -5,6 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:event:default", "allow-get-library", "allow-select-media",
+    "allow-select-relink-file", "allow-relink-track", "allow-analyze-smart-medley-pair",
     "allow-remove-library-track", "allow-set-track-favorite", "allow-record-listen",
     "allow-list-youtube-links", "allow-add-youtube-link", "allow-remove-youtube-link",
     "allow-open-youtube-link", "allow-get-cache-settings", "allow-set-cache-settings",

@@ -13,7 +13,7 @@ import { PlayMigrationImport } from "./components/PlayMigrationImport";
 import { VideoStage } from "./components/VideoStage";
 import { CompactTransport } from "./components/CompactTransport";
 import { Transport, formatTime } from "./components/Transport";
-import { addYoutubeLink, getLibrary, listYoutubeLinks, mediaItem, openYoutubeLink, removeYoutubeLink, isVideoItem, type LocalTrack, type YoutubeLink } from "./native";
+import { addYoutubeLink, getLibrary, listYoutubeLinks, mediaItem, openYoutubeLink, removeYoutubeLink, selectRelinkFile, relinkTrack, isVideoItem, type LocalTrack, type YoutubeLink } from "./native";
 import { loadPlaylists, savePlaylists, type Playlist } from "./playlists";
 import { usePlaybackStore } from "./playback/usePlaybackStore";
 import { PlaybackAudioEngine, type AudibleTimeUpdate } from "./playback/audioEngine";
@@ -62,6 +62,8 @@ function AppContent() {
     isVideoItem(state.nowPlaying.item),
   );
   const mediaId = usePlaybackStore((state) => state.nowPlaying.item?.id);
+  const currentTrack = tracks.find((track) => track.id === mediaId);
+  const canRelinkCurrent = currentTrack != null && currentTrack.storageKind !== "managed";
   const videoExpanded = expanded && hasVideo;
   useEffect(() => {
     if (!hasVideo) setExpanded(false);
@@ -73,6 +75,7 @@ function AppContent() {
   }, [hasVideo]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playlistReady, setPlaylistReady] = useState(false);
   const [playlistName, setPlaylistName] = useState("");
@@ -263,9 +266,39 @@ function AppContent() {
   const select = async (folder: boolean) => {
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
       await invoke("select_media", { folder });
       await refresh();
+    } catch (error) {
+      report(error);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const relink = async (id: string) => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const path = await selectRelinkFile(id);
+      if (path === null) return;
+      let track: LocalTrack;
+      try {
+        track = await relinkTrack(id, path, false);
+      } catch (error) {
+        const message = String(error instanceof Error ? error.message : error)
+          .replace(/^Error:\s*/, "");
+        if (message !== "relink:different-content") throw error;
+        if (!window.confirm(t("relink.confirmDifferentContent"))) return;
+        track = await relinkTrack(id, path, true);
+      }
+      setTracks((current) => current.some((item) => item.id === id)
+        ? current.map((item) => item.id === id ? track : item)
+        : [...current, track]);
+      usePlaybackStore.getState().applyRelinkedTrack(track);
+      setNotice(t("relink.success"));
     } catch (error) {
       report(error);
     } finally {
@@ -385,6 +418,16 @@ function AppContent() {
         {item.sourceKind === "user" || !item.sourceKind ? <span className="source-badge">{t("app.badgeUser")}</span> : null}
         {item.storageKind === "managed" ? <span className="source-badge offline-badge">{t("app.badgeOffline")}</span> : null}
       </div>
+      {item.missing && item.storageKind !== "managed" ? (
+        <button
+          type="button"
+          title={t("relink.pickerTitle")}
+          disabled={busy}
+          onClick={() => void relink(item.id)}
+        >
+          {t("relink.button")}
+        </button>
+      ) : null}
       <span className="album">{item.album || "—"}</span>
       <time>{item.duration == null ? "—" : formatTime(item.duration)}</time>
       <button
@@ -465,6 +508,7 @@ function AppContent() {
           </button>
         </div>
       ) : null}
+      {notice ? <div className="notice" role="status">{notice}</div> : null}
       <VideoStage
         compact={compact}
         expanded={videoExpanded}
@@ -814,10 +858,15 @@ function AppContent() {
           fullscreen={fullscreen}
           onFullscreen={() => void changeFullscreen(!fullscreen)}
           onOpen={() => void select(false)}
+          relinkHint={canRelinkCurrent}
           report={report}
         />
       ) : (
-        <Transport report={report} />
+        <Transport
+          report={report}
+          onRelink={canRelinkCurrent ? () => void relink(currentTrack.id) : undefined}
+          relinkTitle={t("relink.pickerTitle")}
+        />
       )}
     </div>
   );

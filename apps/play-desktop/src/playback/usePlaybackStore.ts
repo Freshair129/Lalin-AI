@@ -51,7 +51,7 @@ import {
   EQ_FREQUENCIES,
 } from "../contracts";
 import { PlaybackAudioEngine, type AudioOutputDevice } from "./audioEngine";
-import { isVideoItem, resolveMedia } from "../native";
+import { isVideoItem, mediaItem, resolveMedia, type LocalTrack } from "../native";
 
 export const STORAGE_QUEUE_KEY = "lalin-play:v1:queue";
 export const STORAGE_EQ_KEY = "lalin-play:v1:eq";
@@ -220,6 +220,7 @@ export interface PlaybackStoreState {
   // Actions
   setOpen: (open: boolean) => void;
   play: (item: MediaItem) => Promise<void>;
+  applyRelinkedTrack: (track: LocalTrack) => void;
   playNext: (item: MediaItem) => void;
   addToQueue: (item: MediaItem) => void;
   removeFromQueue: (index: number) => void;
@@ -269,6 +270,7 @@ const initialMixer = loadPersistedMixer();
 const initialTransitionSettings = loadPersistedTransitionSettings();
 const engine = PlaybackAudioEngine.getInstance();
 let loadGeneration = 0;
+let relinkedCurrentNeedsLoad = false;
 let smoothTransitionGeneration = 0;
 let smoothTransitionTarget: { token: number; outgoingEntryId: string; incomingEntryId: string; key: string } | null = null;
 let blockedTransitionKey: string | null = null;
@@ -639,6 +641,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     play: async (item: MediaItem) => {
+      relinkedCurrentNeedsLoad = false;
       cancelPlannedTransition();
       engine.stop();
       const { queue } = get();
@@ -685,6 +688,45 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
           nowPlaying: { ...state.nowPlaying, state: "error", error: String(err?.message ?? err) },
         }));
       }
+    },
+
+    applyRelinkedTrack: (track: LocalTrack) => {
+      const state = get();
+      const replacement = mediaItem(track);
+      const hasQueueOccurrence = state.queue.items.some((item) => item.id === track.id);
+      const queueItems = state.queue.items.map((item) => item.id === track.id
+        ? {
+            ...item,
+            kind: replacement.kind,
+            sourcePath: replacement.sourcePath,
+            url: replacement.url,
+          }
+        : item);
+      const nextQueue = hasQueueOccurrence
+        ? { ...state.queue, items: queueItems, revision: nextQueueRevision(state.queue) }
+        : state.queue;
+      if (hasQueueOccurrence) {
+        cancelPlannedTransition();
+      }
+      persistQueue(nextQueue);
+      const currentItem = state.nowPlaying.item;
+      const currentFailed = currentItem?.id === track.id && state.nowPlaying.state === "error";
+      if (currentFailed) relinkedCurrentNeedsLoad = true;
+      const nextNowPlaying = currentItem?.id === track.id
+        ? {
+            ...state.nowPlaying,
+            item: {
+              ...currentItem,
+              kind: replacement.kind,
+              sourcePath: replacement.sourcePath,
+              url: replacement.url,
+            },
+            ...(currentFailed
+              ? { state: "paused" as const, currentTime: 0, error: undefined }
+              : {}),
+          }
+        : state.nowPlaying;
+      set({ queue: nextQueue, nowPlaying: nextNowPlaying });
     },
 
     playNext: (item: MediaItem) => {
@@ -851,6 +893,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     playAtIndex: async (index: number) => {
+      relinkedCurrentNeedsLoad = false;
       cancelPlannedTransition();
       const { queue } = get();
       if (index < 0 || index >= queue.items.length) return;
@@ -886,7 +929,18 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
       if (nowPlaying.state === "playing") {
         engine.pause();
       } else if (nowPlaying.item && nowPlaying.state === "paused") {
-        await engine.play();
+        if (relinkedCurrentNeedsLoad) {
+          relinkedCurrentNeedsLoad = false;
+          const currentIndex = queue.items.findIndex((item) =>
+            nowPlaying.item?.queueEntryId
+              ? item.queueEntryId === nowPlaying.item.queueEntryId
+              : item.id === nowPlaying.item?.id,
+          );
+          if (currentIndex >= 0) await get().playAtIndex(currentIndex);
+          else await get().play(nowPlaying.item);
+        } else {
+          await engine.play();
+        }
       } else if (queue.items.length > 0) {
         const targetIdx = queue.currentIndex >= 0 ? queue.currentIndex : 0;
         await get().playAtIndex(targetIdx);
@@ -902,6 +956,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
 
     stop: () => {
+      relinkedCurrentNeedsLoad = false;
       cancelPlannedTransition();
       loadGeneration++;
       engine.stop();
