@@ -2,8 +2,8 @@
 
 use crate::smart_medley::{SmartMedleyAnalysis, ANALYZER_VERSION};
 use genesis_block_native::{
-    RelationalFilter, RelationalMutationBatch, RelationalMutationKind, RelationalQuery,
-    RelationalRowMutation, RelationalSchemaPackage,
+    RelationalFilter, RelationalMutationBatch, RelationalMutationKind, RelationalRowMutation,
+    RelationalSchemaPackage,
 };
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -39,20 +39,14 @@ pub fn load(
     let key = cache_key(media_sha256, analyzer_version)?;
     let database = crate::library_store::open_database(directory)?;
     let database = database.lock().map_err(|error| error.to_string())?;
-    let rows = database
-        .query_relational(RelationalQuery {
-            namespace: SETTINGS_NAMESPACE.into(),
-            table: SETTINGS_TABLE.into(),
-            columns: vec!["settings.id".into(), "settings.value".into()],
-            joins: vec![],
-            filters: vec![RelationalFilter::equal(
-                "settings.id",
-                Value::String(key.clone()),
-            )],
-            limit: Some(1),
-            offset: Some(0),
-        })
-        .map_err(|error| error.to_string())?;
+    let rows = crate::library_store::query_rows_at_offset(
+        &database,
+        SETTINGS_TABLE,
+        &["id", "value"],
+        vec![RelationalFilter::equal("id", Value::String(key.clone()))],
+        1,
+        0,
+    )?;
     let Some(row) = rows.first() else {
         return Ok(None);
     };

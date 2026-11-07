@@ -644,6 +644,12 @@ pub fn score_components(
     let cue_in_b_seconds = quantize_seconds(cue_in_b_seconds);
     let tempo_distance = (bpm_a / bpm_b).ln().abs();
     let tempo_compatibility = (1.0 - tempo_distance / 1.03f64.ln()).max(0.0);
+    // Snap floating-point residue at the inclusive 3% boundary to zero.
+    let tempo_compatibility = if tempo_compatibility <= 1.0e-12 {
+        0.0
+    } else {
+        tempo_compatibility
+    };
     let key_compatibility = key_compatibility(key_a, key_b);
     let phase_a = fractional_part(cue_out_a_seconds * bpm_a / 60.0);
     let phase_b = fractional_part(cue_in_b_seconds * bpm_b / 60.0);

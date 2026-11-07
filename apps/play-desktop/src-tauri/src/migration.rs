@@ -232,12 +232,14 @@ fn save_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     let bytes = serde_json::to_vec(value).map_err(|e| e.to_string())?;
     let temporary = path.with_extension("json.tmp");
     fs::write(&temporary, bytes).map_err(|_| "บันทึกไฟล์ recovery ไม่สำเร็จ".to_string())?;
-    fs::rename(&temporary, path).map_err(|_| "แทนที่ไฟล์ recovery ไม่สำเร็จ".to_string())
+    fs::rename(&temporary, path)
+        .map_err(|_| "แทนที่ไฟล์ recovery ไม่สำเร็จ".to_string())
         .and_then(|_| {
             if path.file_name().and_then(|name| name.to_str()) == Some("library-v1.json") {
                 let library: Library = read_json(path, 16 * 1024 * 1024)?;
                 crate::library_store::replace_catalog(
-                    path.parent().ok_or_else(|| "ไม่พบโฟลเดอร์ข้อมูล Play".to_string())?,
+                    path.parent()
+                        .ok_or_else(|| "ไม่พบโฟลเดอร์ข้อมูล Play".to_string())?,
                     &library,
                 )?;
             }

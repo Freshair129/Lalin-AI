@@ -353,7 +353,7 @@ fn query_rows(
     Ok(rows)
 }
 
-fn query_rows_at_offset(
+pub(crate) fn query_rows_at_offset(
     database: &Storage,
     table: &str,
     columns: &[&str],
