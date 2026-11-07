@@ -317,6 +317,31 @@ describe("smooth transition queue commit", () => {
     expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
   });
 
+  it.each([[NaN, 0], [-3, 0], [120, 119.9], [200, 119.9]])(
+    "bounds invalid medley cue-in %s to %s", async (cueIn, expected) => {
+      const queue = transitionQueue();
+      queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };
+      queue.items[1] = { ...queue.items[1]!, cueInSeconds: cueIn };
+      usePlaybackStore.setState({ queue, transitionSettings: { mode: "medley", durationSeconds: 5 } });
+      const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+      emit("timeupdate", 80);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, expected, expect.anything());
+    },
+  );
+
+  it.each([[NaN, 0], [-3, 0], [120, 119.9], [200, 119.9]])(
+    "bounds invalid manual cue-in %s to %s", async (cueIn, expected) => {
+      const queue = transitionQueue();
+      queue.items[1] = { ...queue.items[1]!, cueInSeconds: cueIn };
+      usePlaybackStore.setState({ queue, transitionSettings: { mode: "manual", durationSeconds: 5 } });
+      const prepare = vi.spyOn(engine, "prepareManualDeck").mockResolvedValue(false);
+      await usePlaybackStore.getState().prepareNextDeck();
+      expect(prepare).toHaveBeenCalledWith("asset:resolved", expected, expect.anything());
+    },
+  );
+
   it("uses medley cue-out as the transition point and the next track cue-in as its start", async () => {
     const queue = transitionQueue();
     queue.items[0] = { ...queue.items[0]!, cueOutSeconds: 84 };

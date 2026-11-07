@@ -333,7 +333,7 @@ function maybeStartSmoothTransition(time: number, state: PlaybackStoreState): vo
   const fadeSeconds = Math.max(2, Math.min(state.transitionSettings.durationSeconds, remaining));
   const nextDuration = Number.isFinite(next.duration) && (next.duration ?? 0) > 0 ? next.duration! : Number.MAX_SAFE_INTEGER;
   const incomingStartTime = state.transitionSettings.mode === "medley"
-    ? Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), next.cueInSeconds ?? 0))
+    ? Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), (Number.isFinite(next.cueInSeconds) ? next.cueInSeconds! : 0)))
     : 0;
   void resolveMedia(next).then((url) => {
     const latest = usePlaybackStore.getState();
@@ -597,7 +597,7 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
           latest.nowPlaying.state !== "playing"
         ) return;
         const nextDuration = Number.isFinite(next.duration) && (next.duration ?? 0) > 0 ? next.duration! : Number.MAX_SAFE_INTEGER;
-        const cueIn = Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), next.cueInSeconds ?? 0));
+        const cueIn = Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), (Number.isFinite(next.cueInSeconds) ? next.cueInSeconds! : 0)));
         const ready = await engine.prepareManualDeck(url, cueIn, {
           mediaId: next.id,
           queueEntryId: next.queueEntryId,

@@ -9,6 +9,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
+import { check } from "@tauri-apps/plugin-updater";
 import { listen } from "@tauri-apps/api/event";
 import { App } from "./App";
 import { PlaybackAudioEngine } from "./playback/audioEngine";
@@ -20,6 +21,7 @@ import {
 import { loadPlaylists, savePlaylists } from "./playlists";
 import { STORAGE_LOCALE_KEY } from "./i18n";
 
+vi.mock("@tauri-apps/plugin-updater", () => ({ check: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
   convertFileSrc: (path: string) =>
@@ -88,6 +90,26 @@ afterEach(() => {
 });
 
 describe("standalone surfaces (mocked IPC; native evidence is separate)", () => {
+  it("localizes managed and user source badges in Thai", async () => {
+    vi.mocked(invoke).mockImplementation(async command => command === "get_library" ? { version: 1, tracks: [{ ...track, sourceKind: "user", storageKind: "managed" }] } : command === "list_damaged_tracks" || command === "list_youtube_links" ? [] : undefined);
+    render(<App />);
+    await openAllTracks();
+    expect(await screen.findByText("\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19")).toBeTruthy();
+    expect(screen.getByText("\u0e2d\u0e2d\u0e1f\u0e44\u0e25\u0e19\u0e4c")).toBeTruthy();
+  });
+
+  it("keeps the app usable when a user-requested update check fails", async () => {
+    localStorage.setItem(STORAGE_LOCALE_KEY, "en");
+    vi.mocked(invoke).mockImplementation(async command => command === "get_library" ? { version: 1, tracks: [track] } : command === "list_damaged_tracks" || command === "list_youtube_links" ? [] : undefined);
+    vi.mocked(check).mockRejectedValueOnce(new Error("offline"));
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Settings" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Check for updates" }));
+    expect(await screen.findByText("Could not check for updates.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /All tracks/ }));
+    expect(await screen.findByText(track.title)).toBeTruthy();
+  });
+
   it("orders reopened listening data and produces deterministic recommendations", async () => {
     localStorage.setItem(STORAGE_LOCALE_KEY, "en");
     const fixture = [

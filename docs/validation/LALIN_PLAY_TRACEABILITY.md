@@ -1,5 +1,5 @@
 ---
-version: "0.3.13b"
+version: "0.3.14b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "beta"
@@ -62,7 +62,7 @@ suite's provenance or establish full Studio/Play playback parity.
 
 | ID | Code/tests | Evidence and status | Remaining exit work |
 |---|---|---|---|
-| PLAY-01 | UI, Native, Owner | PARTIAL P1.3 2026-11-08: base `main` `5d6e223e6d1e2367f5c10a46caed35facc3c2a80`; Vitest 16 files / 121 tests PASS, `npx.cmd tsc --noEmit` PASS. Existing mocked IPC Full/Compact continuity test passes. L3 records this partial result. | L0 Cargo `test --offline --locked --lib --tests`: 91 passed / 6 ignored + 3 integration passed. L1 debug process/window stayed alive 21 seconds with Studio process and API port 8756 absent; isolated app-data directory was not created, so launch acceptance is incomplete. Static network proof, L2 generated WAV import/play integration and owner audible check NOT_RUN. |
+| PLAY-01 | UI, Native, Owner | PARTIAL P1.3 round 2: frontend static source guard checks hard-coded Studio API endpoints; mocked IPC UI remains usable after a user-triggered updater failure. Frontend Vitest 19 files / 134 tests PASS; TypeScript no-emit PASS. Previous L0 evidence remains below. | L1 isolated feature-build native smoke NOT_RUN: applicable OS/runtime floor and feature-specific write/growth evidence were not qualified for a new Cargo build. L2 generated WAV/native import and UI playback integration NOT_RUN; owner audible check NOT_RUN. Prior L0: 91 passed / 6 ignored + 3 integration passed. |
 | PLAY-02 | UI, State, Native | F + selection/catalog/playlist tests: PARTIAL | Full playlist/catalog native matrix and edge cases |
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
@@ -74,7 +74,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-10 | v1.0 NSIS installer, updater UI/config, signed release workflow and metadata promotion workflow | Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass; real key ceremony, published draft, A→B update and clean-VM install NOT_RUN | Release build/signature, R1 CI, clean install/uninstall, signed A→B, tampered-signature rejection, state retention and clean-VM qualification remain NOT_RUN |
 | PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
 | PLAY-12 | Spatial, Owner | HRTF graph and ramp/fallback tests pass with fake AudioContext as part of the 14-file/81-test pass; audible/native behavior NOT_RUN | Compare Stereo and Virtual 7.1 on selected headphones; measure CPU/latency and listen for artifacts |
-| PLAY-13 | Locale, UI | PARTIAL P1.3: existing `defaults to English, persists changes, and updates the document language` and `defaults to English and switches the shared locale without changing playback` pass in mocked frontend suite. | Runtime screenshot matrix and visual review NOT_RUN: Vite TCP accepted but HTTP request timed out with zero bytes; real reload/restart persistence and all views remain unverified. |
+| PLAY-13 | Locale, UI | PARTIAL P1.3 round 2: 52 mocked-IPC Edge captures across EN/TH and 1280/360, including empty queue; [inventory and limits](evidence/play-v1-p13/README.md). EN default and TH reload persistence observed. Thai USER/OFFLINE badges localized; 360 navigation made horizontally scrollable to give the content pane width; Vitest coverage and frontend checks PASS. | Full per-image visual and language review, complete dialog coverage, below-fold updater capture, native restart persistence and native visual acceptance NOT_RUN. Terms including Compact, Full and migration remain English in TH. |
 
 ## Dashboard, GenesisBlockDB and object storage (CR-007)
 
@@ -96,8 +96,8 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-22 | `contracts.ts`, `usePlaybackStore.ts` | PARTIAL; queue occurrences receive unique persisted IDs, duplicate tracks remain distinct, and local queue revisions advance on edits; `npm run build` PASS | Remote protocol, idempotent request/revision handling, stale-snapshot response, reconnect and security acceptance |
 | PLAY-23 | Phone media transfer | NOT_IMPLEMENTED | Resumable verified copy, authenticated range stream, offline-after-copy and phone-disconnect behavior |
 | PLAY-24 | YouTube playlist references | NOT_IMPLEMENTED; CR-007 has external YouTube links only | Official Data API pagination/auth/quota/expiry handling and explicit local-track mapping; no media playback/download/cache |
-| PLAY-25 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3: 28 transition tests PASS, including readiness wait/error, pause/resume, `commits the incoming deck once when the outgoing track ends during a fade`, and existing failed-transition queue test. Fake AudioContext/media and mocked native resolution; 121 frontend tests PASS. | Integrated decoder failure through fallback queue advance, buffer timeout and native audible/output acceptance NOT_RUN. |
-| PLAY-26 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3: fake media test `keeps deck A active when manual deck B fails to load`; mocked store tests `clears the manual target when deck B fails to prepare`, `cancels prepared manual deck on %s` (seek, stop, queue edit), `cancels a medley transition on %s change` (repeat, shuffle), and `starts medley at zero when the next cue-in is missing`; transition suite 28 PASS. | Invalid cue-in at cue-out, real native cancellation and owner audible checks NOT_RUN. |
+| PLAY-25 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3 round 2: integrated store + engine test injects an incoming decoder error during Smooth; outgoing remains active and its end advances queue once. AudioContext/media and native resolution are mocked. Frontend suite 134 PASS. | Buffer timeout integrated fallback and native audible/output acceptance NOT_RUN. |
+| PLAY-26 | `audioEngine.ts`, `usePlaybackStore.ts`, transition tests | PARTIAL P1.3 round 2: Medley and Manual tests cover NaN, negative, equal-to-duration and greater-than-duration cue-in; NaN now falls back to zero and finite values are bounded. Existing cancellation tests remain passing. | Invalid cue-in relative to cue-out, real native cancellation and owner audible checks NOT_RUN. |
 | PLAY-27 | `smart_medley.rs`, `smart_medley_store.rs`, `tests/smart_medley.rs` | PARTIAL; Smart Medley code and tests are present; the 2026-11-07 handoff reports 71 Rust tests passed and 2 Smart Medley tests failed, so the Rust suite is not PASS | Resolve the 2 failures; confidence-bound BPM/key/cue benchmarks, representative fixtures and audible listening acceptance remain NOT_RUN |
 | PLAY-V01 | Native, UI | V + Rust: PARTIAL | Complete picker/folder/drop/security native matrix beyond classification fixtures |
 | PLAY-V02 | Video, UI | V + App: LOCAL PASS | New codec/device layouts not certified |
@@ -204,10 +204,17 @@ concurrent write growth. At initial preflight C:/E:/F: free bytes were 103227117
 132364374016 / 2011794325504, respectively, before accounting for concurrent
 growth. The later Cargo run acquired the lane lock at 03:25:22 and released it at 03:31:13 ICT, with 91 unit passed / 6 ignored and 3 integration passed. The debug executable started at 03:31:51 (PID 38760), had window title Lalin Play and a nonzero window handle at 10 and 21 seconds, and was terminated at 03:32:13 (exit -1). Isolated APPDATA/LOCALAPPDATA were under `F:\cargo-lanes\lalin-play\tmp\p13-native-smoke-20261108-033151`; no `ai.lalin.play` directory was found there. Thus app-data and crash-log acceptance are NOT_RUN. The smoke held the lock 03:31:51?03:32:13. No generated WAV evidence was produced.
 
+## P1.3 round 2 boundaries (2026-11-08)
+
+The CDP walk covers the 12 named sidebar views and Compact with mocked IPC. The mocked YouTube open button invoked `open_youtube_link` and did not change the local queue storage in each locale/viewport; this is not evidence that the operating system opened a browser. The walk did not enumerate every dialog or every state, so exit criterion 3 remains NOT_VERIFIED for PLAY-17/21?24/27. See the screenshot inventory for per-image machine observations and review gaps.
+
+The feature-gated Cargo/native smoke and generated-WAV import were not started. The existing lane record documents historical default-feature measurements and owner floors, but the required applicable OS/runtime floor, feature-specific peak write and concurrent growth bounds were not established for this run. Resume after those resource inputs are qualified, the lane lock acquired and a fresh preflight passes; use `g3-test-app-data-dir` and its required direct-child TEMP override. No real Play profile was launched by this round.
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.14b | 2026-11-08 | beta | Record partial round 2 mocked UI, transition and standalone evidence and remaining native gates | working tree | Codex |
 | 0.3.13b | 2026-11-08 | beta | Record partial P1.3 frontend transition evidence, unrun gates and corrected historical PLAY-16 suite result | working tree | Codex |
 | 0.3.12b | 2026-11-07 | beta | Re-pin Genesis to 3b61ee9 (GenesisBlock#283); PLAY-15 v1 fixture upgrade/reopen now PASS | working tree | Claude |
 | 0.3.11b | 2026-11-07 | beta | Record Genesis restart and rollback results, v1 replay failure, formatting and mocked UI evidence; retain native acceptance gaps | working tree | Codex |
