@@ -1,5 +1,5 @@
 ---
-version: "0.3.0b"
+version: "0.3.1b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -57,7 +57,7 @@ on. No code may derive a path from a linked `id` after this change. Audit result
 | Place | Finding | Required change |
 |---|---|---|
 | `library.rs` `track()` | creates `id = path` for a **new** linked track | none (creation only) |
-| `migration.rs` ~582-597 | matches existing tracks by `item.id == canonical`, then overwrites `track.id = canonical` and de-duplicates by id | match by `path == canonical` or `source_path == canonical`; keep the matched track's `id`; only a newly created track gets `id = canonical`; de-duplicate by `path`/`source_path`, never by id |
+| `migration.rs` ~582-597 | matches existing tracks by `item.id == canonical`, then overwrites `track.id = canonical` and de-duplicates by id | match by `path == canonical` or `source_path == canonical`; keep the matched track's `id`; only a newly created track gets `id = canonical`; de-duplicate by `path`/`source_path`, never by id. A matched **managed** track is queued by its id and left unchanged (its `path` stays the managed copy) |
 | `handoffReceiver.ts` `fileItem()` | `id = path`, but only for the size projection; the queued item comes from the `Track` returned by `grant_handoff_media` | none |
 | `resolve_media`, `find_track_by_source`, `native.ts` | look up by id and read `path` / `source_path` | none |
 
@@ -162,7 +162,8 @@ Rust (`library_store.rs` / `library.rs` tests):
 3. Hash mismatch without the flag → `relink:different-content` and the row is byte-for-byte unchanged;
    with the flag → succeeds and `content_hash` updates.
 4. Rejections: relative, UNC, `//`, device namespace, directory, unsupported extension, retired id,
-   unknown id, duplicate path/hash — each leaves the database unchanged.
+   unknown id, duplicate path — each leaves the database unchanged. (v1 de-duplicates linked tracks
+   by path only; two linked tracks may point to identical copies, so an equal hash is not a duplicate.)
 5. Injected failure of the relational write leaves the row unchanged (all-or-nothing).
 
 TypeScript (vitest):
@@ -182,6 +183,7 @@ running app; confirm the queued item then plays.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.1b | 2026-11-07 | beta | Record implementation: managed rows untouched by migration matching; duplicate rule is path-only; code d045adc + tests 0d0641e | working tree | Claude |
 | 0.3.0b | 2026-11-07 | beta | Limit v1 to linked tracks (missing managed rows are hidden by the W1-D visibility rule); move managed recovery to gap PLAY-08-M; specify native Rust picker command `select_relink_file` | working tree | Claude |
 | 0.2.0b | 2026-11-07 | beta | Resolve Codex blockers: migration must match by path not id; managed relink limited to content-identical restore through the content-addressed object store; add §3.7 re-import repair and tests | working tree | Claude |
 | 0.1.0b | 2026-11-07 | beta | Define PLAY-08 relink design: stable ids, shared path validation, linked/managed update rules, queue patching, error codes, registration and acceptance tests | working tree | Claude |
