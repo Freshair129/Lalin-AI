@@ -2137,6 +2137,29 @@ mod tests {
         )
     }
 
+    fn recovery_namespace_snapshot(directory: &Path) -> Vec<(String, Vec<Value>)> {
+        let database = open_database(directory).unwrap();
+        let database = database.lock().unwrap();
+        let schema = database.get_relational_schema(NAMESPACE).unwrap().unwrap();
+        let mut tables = schema
+            .tables
+            .into_iter()
+            .map(|table| {
+                let columns: Vec<_> = table
+                    .columns
+                    .iter()
+                    .map(|column| column.name.as_str())
+                    .collect();
+                let mut rows =
+                    query_rows(&database, &table.name, &columns, vec![], 100_000).unwrap();
+                rows.sort_by_key(|row| row.to_string());
+                (table.name, rows)
+            })
+            .collect::<Vec<_>>();
+        tables.sort_by(|a, b| a.0.cmp(&b.0));
+        tables
+    }
+
     fn relink_for_test(
         directory: &Path,
         id: &str,
@@ -2408,13 +2431,131 @@ mod tests {
         files
     }
 
+    fn media_snapshot(directory: &Path) -> Vec<(PathBuf, Option<Vec<u8>>)> {
+        fn visit(root: &Path, path: &Path, result: &mut Vec<(PathBuf, Option<Vec<u8>>)>) {
+            if !path.exists() {
+                return;
+            }
+            for entry in fs::read_dir(path).unwrap() {
+                let path = entry.unwrap().path();
+                if path.is_dir() {
+                    result.push((path.strip_prefix(root).unwrap().to_path_buf(), None));
+                    visit(root, &path, result);
+                } else {
+                    result.push((
+                        path.strip_prefix(root).unwrap().to_path_buf(),
+                        Some(fs::read(path).unwrap()),
+                    ));
+                }
+            }
+        }
+        let root = directory.join("media");
+        let mut result = Vec::new();
+        visit(&root, &root, &mut result);
+        result.sort_by(|a, b| a.0.cmp(&b.0));
+        result
+    }
+
+    #[test]
+    fn recovery_excludes_every_nonrecoverable_hidden_class_without_writes() {
+        use sha2::{Digest, Sha256};
+        for case in [
+            "no publication_id",
+            "retired publication",
+            "missing journal",
+            "no receipt",
+            "invalid receipt checksum",
+            "row-set conflict",
+        ] {
+            let dir = tempdir().unwrap();
+            let prepared = prepared_fixture(dir.path());
+            let track = publish_prepared(dir.path(), &prepared).unwrap();
+            let source = dir.path().join("fixture.mp3");
+            let object = dir.path().join(&prepared.object_receipt.relative_path);
+            fs::remove_file(object).unwrap();
+            let journal = journal_snapshot(dir.path()).remove(0).0;
+            match case {
+                "no publication_id" | "row-set conflict" => {
+                    let db = open_database(dir.path()).unwrap();
+                    let db = db.lock().unwrap();
+                    let mut row = raw_track_rows(&db).unwrap().remove(0);
+                    if case == "no publication_id" {
+                        row["publication_id"] = Value::Null;
+                    } else {
+                        row["title"] = json!("conflicting title");
+                    }
+                    apply(
+                        &db,
+                        vec![mutation(
+                            "tracks",
+                            RelationalMutationKind::Upsert,
+                            row,
+                            None,
+                        )],
+                    )
+                    .unwrap();
+                }
+                "retired publication" => {
+                    let db = open_database(dir.path()).unwrap();
+                    let db = db.lock().unwrap();
+                    apply(&db, vec![mutation("track_retirements", RelationalMutationKind::Upsert,
+                        json!({"id": prepared.plan.publication_id, "track_id": track.id, "content_hash": track.content_hash, "retired_at": 1}), None)]).unwrap();
+                }
+                "missing journal" => {
+                    fs::remove_file(&journal).unwrap();
+                }
+                "no receipt" => {
+                    let text = fs::read_to_string(&journal).unwrap();
+                    fs::write(&journal, format!("{}\n", text.lines().next().unwrap())).unwrap();
+                }
+                "invalid receipt checksum" => {
+                    let text = fs::read_to_string(&journal).unwrap();
+                    let mut lines = text.lines();
+                    let first = lines.next().unwrap();
+                    let mut line: Value = serde_json::from_str(lines.next().unwrap()).unwrap();
+                    line["event"]["receipt"]["checksum"] = json!("0".repeat(64));
+                    let payload = json!({"version": line["version"], "sequence": line["sequence"], "publicationId": line["publicationId"], "event": line["event"]});
+                    let digest = Sha256::digest(serde_json::to_vec(&payload).unwrap());
+                    line["checksum"] = json!(digest
+                        .iter()
+                        .map(|byte| format!("{byte:02x}"))
+                        .collect::<String>());
+                    fs::write(&journal, format!("{first}\n{line}\n")).unwrap();
+                    assert_eq!(
+                        crate::local_media_store::load_publication(
+                            dir.path(),
+                            &prepared.plan.publication_id
+                        )
+                        .unwrap_err(),
+                        "PUBLICATION_RECEIPT_CHECKSUM_MISMATCH"
+                    );
+                }
+                _ => unreachable!(),
+            }
+            let rows = recovery_namespace_snapshot(dir.path());
+            let media = media_snapshot(dir.path());
+            assert!(
+                list_damaged_tracks(dir.path()).unwrap().is_empty(),
+                "{case}"
+            );
+            assert_eq!(
+                restore_managed_track(dir.path(), &track.id, source.to_str().unwrap(), |_| Ok(()))
+                    .unwrap_err(),
+                "recovery:not-recoverable",
+                "{case}"
+            );
+            assert_eq!(recovery_namespace_snapshot(dir.path()), rows, "{case}");
+            assert_eq!(media_snapshot(dir.path()), media, "{case}");
+        }
+    }
+
     #[test]
     fn recovery_missing_preserves_rows_history_and_journals() {
         let dir = tempdir().unwrap();
         let (track, source, object) = recovery_fixture(dir.path());
         set_favorite(dir.path(), &track.id, true).unwrap();
         let played = record_listen(dir.path(), &track.id).unwrap();
-        let rows = relink_rows(dir.path());
+        let rows = recovery_namespace_snapshot(dir.path());
         let journals = journal_snapshot(dir.path());
         fs::remove_file(&object).unwrap();
         let damaged = list_damaged_tracks(dir.path()).unwrap();
@@ -2428,7 +2569,7 @@ mod tests {
         assert!(result.favorite);
         assert_eq!(result.play_count, 1);
         assert_eq!(result.last_played_at, Some(played));
-        assert_eq!(relink_rows(dir.path()), rows);
+        assert_eq!(recovery_namespace_snapshot(dir.path()), rows);
         assert_eq!(journal_snapshot(dir.path()), journals);
         assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
         assert!(list_damaged_tracks(dir.path()).unwrap().is_empty());
@@ -2454,6 +2595,40 @@ mod tests {
             b"corrupt bytes"
         );
         assert_eq!(read_catalog(dir.path()).unwrap().tracks.len(), 1);
+    }
+
+    #[test]
+    fn reimport_repairs_damaged_managed_row_without_changing_records() {
+        let dir = tempdir().unwrap();
+        let (track, source, object) = recovery_fixture(dir.path());
+        set_favorite(dir.path(), &track.id, true).unwrap();
+        let played = record_listen(dir.path(), &track.id).unwrap();
+        fs::remove_file(&object).unwrap();
+        let rows = recovery_namespace_snapshot(dir.path());
+        let journals = journal_snapshot(dir.path());
+        let source_path = source.to_string_lossy().to_string();
+        let publication_id =
+            crate::local_media_store::publication_id_for_import(&source_path, &source).unwrap();
+        let staged =
+            crate::local_media_store::stage_local_file(dir.path(), &publication_id, &source)
+                .unwrap();
+        let repaired = crate::library::repair_imported_managed_track(
+            dir.path(),
+            &source,
+            &publication_id,
+            &staged.manifest.whole_sha256,
+            |_| Ok(()),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(repaired.id, track.id);
+        assert!(repaired.favorite);
+        assert_eq!(repaired.play_count, 1);
+        assert_eq!(repaired.last_played_at, Some(played));
+        assert_eq!(fs::read(&object).unwrap(), fs::read(&source).unwrap());
+        assert_eq!(recovery_namespace_snapshot(dir.path()), rows);
+        assert_eq!(journal_snapshot(dir.path()), journals);
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks[0].id, track.id);
     }
 
     #[test]

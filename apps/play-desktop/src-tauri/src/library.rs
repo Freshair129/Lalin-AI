@@ -195,6 +195,29 @@ pub fn initialize(app: &AppHandle) -> Result<Library, String> {
     Ok(library)
 }
 
+pub(crate) fn repair_imported_managed_track<F>(
+    directory: &Path,
+    source: &Path,
+    publication_id: &str,
+    hash: &str,
+    allow_file: F,
+) -> Result<Option<Track>, String>
+where
+    F: FnOnce(&Path) -> Result<(), String>,
+{
+    let Some(damaged) = crate::library_store::find_damaged_track_by_hash(directory, hash)? else {
+        return Ok(None);
+    };
+    crate::local_media_store::discard_uncommitted_stage(directory, publication_id)?;
+    crate::library_store::restore_managed_track(
+        directory,
+        &damaged.id,
+        &source.to_string_lossy(),
+        allow_file,
+    )
+    .map(Some)
+}
+
 pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track>, String> {
     let paths = selected_files(&roots)?;
     if paths.is_empty() {
@@ -255,19 +278,13 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
                 &source_path,
             )?)
             .or(crate::library_store::find_track_by_hash(&directory, &hash)?);
-        if let Some(damaged) = crate::library_store::find_damaged_track_by_hash(&directory, &hash)?
+        if let Some(repaired) =
+            repair_imported_managed_track(&directory, source, &publication_id, &hash, |path| {
+                app.asset_protocol_scope()
+                    .allow_file(path)
+                    .map_err(|_| "recovery:write-failed".to_string())
+            })?
         {
-            crate::local_media_store::discard_uncommitted_stage(&directory, &publication_id)?;
-            let repaired = crate::library_store::restore_managed_track(
-                &directory,
-                &damaged.id,
-                &source_path,
-                |path| {
-                    app.asset_protocol_scope()
-                        .allow_file(path)
-                        .map_err(|_| "recovery:write-failed".to_string())
-                },
-            )?;
             if let Some(row) = next.tracks.iter_mut().find(|row| row.id == repaired.id) {
                 *row = repaired.clone();
             } else {
