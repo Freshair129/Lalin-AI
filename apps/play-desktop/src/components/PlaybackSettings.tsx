@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { useI18n, localizeError } from "../i18n";
+import { check, type Update } from "@tauri-apps/plugin-updater";
 
 export function PlaybackSettings({ report }: { report: (error: unknown) => void }) {
   const { t, locale } = useI18n();
@@ -16,7 +17,11 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
   const crossfader = usePlaybackStore(state => state.crossfader);
   const transitionTargetId = usePlaybackStore(state => state.transitionTargetQueueEntryId);
   const [manualTargetEntryId, setManualTargetEntryId] = useState("");
+  const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null);
+  const [updaterBusy, setUpdaterBusy] = useState(false);
+  const [updaterStatus, setUpdaterStatus] = useState("");
   useEffect(() => { void usePlaybackStore.getState().refreshOutputDevices().catch(report); }, [report]);
+  useEffect(() => () => { void availableUpdate?.close(); }, [availableUpdate]);
   const currentIndex = queue.currentIndex;
   const currentItem = queue.items[currentIndex];
   const nextSequentialIndex = currentIndex + 1 < queue.items.length
@@ -34,6 +39,38 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
     : transition.mode === "manual" ? manualTarget : queue.shuffle ? -1 : nextSequentialIndex;
   const incomingItem = queue.items[incomingIndex];
   const availableDeckItems = queue.items.map((item, index) => ({ item, index })).filter(entry => entry.index !== currentIndex);
+  const checkForUpdates = async () => {
+    setUpdaterBusy(true);
+    setUpdaterStatus(t("updater.checking"));
+    try {
+      const update = await check();
+      setAvailableUpdate(update);
+      setUpdaterStatus(update
+        ? t("updater.available", { version: update.version })
+        : t("updater.upToDate"));
+    } catch (error) {
+      setUpdaterStatus(t("updater.checkFailed"));
+      report(error);
+    } finally {
+      setUpdaterBusy(false);
+    }
+  };
+  const installUpdate = async () => {
+    if (!availableUpdate || !window.confirm(t("updater.confirmInstall", { version: availableUpdate.version }))) return;
+    setUpdaterBusy(true);
+    setUpdaterStatus(t("updater.downloading"));
+    try {
+      await availableUpdate.download();
+      setUpdaterStatus(t("updater.installing"));
+      await availableUpdate.install();
+    } catch (error) {
+      setUpdaterStatus(t("updater.installFailed"));
+      report(error);
+    } finally {
+      setAvailableUpdate(null);
+      setUpdaterBusy(false);
+    }
+  };
   return <>
     <label>{t("app.playingRate")} <select value={rate} onChange={event => usePlaybackStore.getState().setPlaybackRate(Number(event.target.value))}>{[.5,.75,1,1.25,1.5,2].map(value => <option key={value} value={value}>{value}×</option>)}</select></label>
     <label>{t("transition.mode")} <select value={transition.mode} onChange={event => usePlaybackStore.getState().setTransitionSettings({ ...transition, mode: event.target.value as typeof transition.mode })}><option value="off">{t("transition.off")}</option><option value="smooth">{t("transition.smooth")}</option><option value="manual">{t("transition.manual")}</option><option value="medley">{t("transition.medley")}</option></select></label>
@@ -56,5 +93,11 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
     </fieldset> : null}
     <label>{t("app.outputDevice")} <select value={output ?? ""} onChange={event => void usePlaybackStore.getState().setOutputDevice(event.target.value).then(ok => { if (!ok) report(localizeError("Could not select this device. Using the default device instead", locale)); }).catch(report)}>{devices.map(device => <option key={device.deviceId} value={device.deviceId}>{device.deviceId ? device.label : t("app.defaultWindowsOutput")}</option>)}</select></label>
     <button onClick={() => void usePlaybackStore.getState().refreshOutputDevices().catch(report)}>{t("app.refreshDevices")}</button>
+    <div className="settings-help">
+      <button type="button" disabled={updaterBusy} onClick={() => void checkForUpdates()}>{t("updater.check")}</button>
+      {availableUpdate ? <button type="button" disabled={updaterBusy} onClick={() => void installUpdate()}>{t("updater.install")}</button> : null}
+      {updaterStatus ? <p role="status">{updaterStatus}</p> : null}
+      <p>{t("updater.manualOnly")}</p>
+    </div>
   </>;
 }

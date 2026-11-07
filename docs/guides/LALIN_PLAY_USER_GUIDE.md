@@ -1,21 +1,21 @@
 ---
-version: "0.1.3b"
+version: "0.1.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-10-20T06:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
 status: "beta"
 superseded_by: null
 attributes:
   domain: "support"
   doc_type: "user-guide"
-  scope: "Current Windows standalone Play candidate, not a released installer"
+  scope: "Windows standalone Play v1.0.0 install and manual updater instructions; publication remains owner-gated"
 ---
 
-# คู่มือ Lalin Play — รุ่นทดสอบในเครื่อง
+# คู่มือ Lalin Play — ติดตั้งและอัปเดต v1.0.0
 
-อ้างอิง baseline source `f5a6681`, approved local CR-006 worktree และ CR-007
-implementation บางส่วนบน Windows ไม่ใช่คู่มือของ Studio player หรือ Lalin Cast
-และยังไม่มี installer/update ที่ผ่าน release gate; Dashboard, RustFS, cache และ
-Genesis graph/vector recommendations ยังอยู่ระหว่างทำ
+คู่มือนี้ใช้กับ Lalin Play standalone ไม่ใช่ Studio player หรือ Lalin Cast
+และบันทึกวิธีติดตั้ง Windows NSIS รุ่น `1.0.0` กับการตรวจอัปเดตด้วยตนเอง
+ตัว installer/release ยังต้องผ่านการตรวจและเผยแพร่โดย owner; Dashboard, RustFS,
+cache และ Genesis graph/vector recommendations ยังอยู่ระหว่างทำ
 ดู [สถานะและเอกสารทั้งหมด](../product/LALIN_PLAY_DOCUMENTATION.md)
 
 หมายเหตุ S3: Studio มีคำสั่งส่งไฟล์ไป standalone Play แยกจากปุ่มเล่นเดิม
@@ -23,22 +23,31 @@ Genesis graph/vector recommendations ยังอยู่ระหว่าง�
 
 ## เริ่มใช้งาน
 
-1. เปิด `lalin-play.exe` ที่ build จาก standalone candidate ไว้แล้ว นักพัฒนาใช้
+1. หลัง owner เผยแพร่ release ให้ดาวน์โหลด `Lalin-Play_1.0.0_x64-setup.exe`
+   จาก release `play-v1.0.0` ใน `Freshair129/Lalin-AI` และตรวจ hash กับ
+   `SHA256SUMS.txt` ใน release เดียวกันก่อนเปิด installer อย่าใช้ asset จาก draft
+   หรือแหล่ง mirror ที่ไม่ยืนยัน
+2. NSIS ติดตั้งสำหรับ user ปัจจุบันโดยไม่ต้องใช้สิทธิ์ Administrator และมี
+   WebView2 bootstrapper; การติดตั้ง WebView2 อาจต้องใช้อินเทอร์เน็ต
+3. ตัว installer ไม่ได้เซ็นด้วยใบรับรอง Windows code-signing ดังนั้น SmartScreen
+   อาจแจ้ง `Unknown publisher` ก่อนเปิดต่อ ให้ตรวจแหล่งดาวน์โหลดและ SHA256 ก่อน
+   ตัดสินใจเองว่าจะเปิดไฟล์ที่ตรวจแล้วหรือไม่
+4. เปิด `lalin-play.exe` ที่ติดตั้งแล้ว นักพัฒนาใช้
    [README](../../apps/play-desktop/README.md) เพื่อ build; หน้า Vite ใน browser
    อย่างเดียวไม่สามารถแทน native file picker/การอ่านไฟล์ของแอปได้
-2. ใน Full กด `นำเข้าไว้ฟังออฟไลน์` หรือ `นำเข้าโฟลเดอร์` แล้วเลือกสื่อ หรือ
+5. ใน Full กด `นำเข้าไว้ฟังออฟไลน์` หรือ `นำเข้าโฟลเดอร์` แล้วเลือกสื่อ หรือ
    drag/drop เข้าแอป Play สร้าง managed copy ใน app-data เพื่อให้ไฟล์ที่นำเข้า
    เปิดฟังได้เมื่อไม่มีอินเทอร์เน็ต; ไฟล์ต้นฉบับไม่ถูกย้ายหรือแก้ไข
-3. กดชื่อรายการเพื่อเล่น ข้อมูล title/artist/album ใช้ metadata ที่อ่านได้จริง
+6. กดชื่อรายการเพื่อเล่น ข้อมูล title/artist/album ใช้ metadata ที่อ่านได้จริง
    ถ้าไม่มีจะแสดงชื่อไฟล์/ไม่ระบุศิลปิน ไม่ได้ดาวน์โหลดปกหรือข้อมูลจาก Spotify
-4. หน้า Home แสดงฟังล่าสุด, ฟังบ่อย และคำแนะนำจากประวัติ/เพลงโปรดในเครื่อง;
+7. หน้า Home แสดงฟังล่าสุด, ฟังบ่อย และคำแนะนำจากประวัติ/เพลงโปรดในเครื่อง;
    ประวัติจะเพิ่มเมื่อได้ยินต่อเนื่องถึง 30 วินาที (หรือครึ่งหนึ่งของเพลงที่สั้นกว่า
    30 วินาที). กดดาวที่เพลงเพื่อเก็บ Favorites และเลือกกรองจากแถบด้านข้างได้
-5. รายการเพลงแสดง `USER` สำหรับไฟล์ที่ผู้ใช้นำเข้า และ `OFFLINE` เมื่อมี managed
+8. รายการเพลงแสดง `USER` สำหรับไฟล์ที่ผู้ใช้นำเข้า และ `OFFLINE` เมื่อมี managed
    copy ที่อยู่ในเครื่อง; สองป้ายแสดงร่วมกันได้
-6. `YouTube links` เก็บลิงก์ไว้เปิดใน YouTube ทางการเท่านั้น; Lalin Play ไม่ดาวน์โหลด
+9. `YouTube links` เก็บลิงก์ไว้เปิดใน YouTube ทางการเท่านั้น; Lalin Play ไม่ดาวน์โหลด
    ไม่แยกเสียง และไม่เล่นหรือ cache เสียง YouTube
-7. ใช้ช่องค้นหา และหมวดเพลง/ศิลปิน/อัลบั้ม จัด playlist ใน Full ได้
+10. ใช้ช่องค้นหา และหมวดเพลง/ศิลปิน/อัลบั้ม จัด playlist ใน Full ได้
    สร้างชื่อ playlist ก่อน แล้วเลือก Playlist… ที่รายการเพื่อเพิ่มไฟล์
 
 จาก Studio บน Windows ใช้เมนูคลิกขวา `Play in standalone Lalin Play`,
@@ -96,11 +105,15 @@ fullscreen. Preview ที่ decode ไม่ได้แสดงข้อค�
 - Settings มี output device ตามที่ runtime แสดง ถ้าเลือกไม่ได้ใช้ Windows
   default พร้อมข้อความ ไม่ถือว่ามีเสียงออกจริงเพียงเพราะเวลาเดิน
   มีตัวเลือกความเร็ว 0.5×–2× และปุ่มตรวจอุปกรณ์เสียงอีกครั้งด้วย
+- Settings มี `Check for updates` สำหรับตรวจรุ่นใหม่ด้วยตนเองเท่านั้น เมื่อพบรุ่น
+  ให้ตรวจ version แล้วกด `Install update` และยืนยันก่อนติดตั้ง Play จะปิดระหว่าง
+  update; ไม่มีการตรวจหรือติดตั้งอัตโนมัติเมื่อเปิดแอป
 - เปิด “คืนคิวเมื่อเปิดแอปครั้งถัดไป” หากต้องการ resume รายการ; ไม่ autoplay
   และไม่รับรองการคืนตำแหน่งเล่นล่าสุดระหว่าง restart
 - ปุ่ม X ของหน้าต่างซ่อนไป tray เพลงอาจยังเล่น ใช้ tray เปิดกลับ
   หรือ Settings → “ออกจาก Lalin Play” / เมนู Quit ที่ tray เพื่อออกจริง
-- อัปเดตในแอปยังไม่เปิดใช้ ไม่ต้องตั้งค่า firewall เพื่อเล่นไฟล์ในเครื่อง
+- ไม่ต้องตั้งค่า firewall เพื่อเล่นไฟล์ในเครื่อง; update check ติดต่อ endpoint
+  ของ release `play-updates` เฉพาะเมื่อผู้ใช้กดตรวจอัปเดต
   Play ไม่ใช่ YouTube TV receiver และไม่มีรหัสจับคู่มือถือแบบ Cast
 
 ## แก้ปัญหาเบื้องต้นอย่างไม่ทำลายข้อมูล
@@ -119,6 +132,12 @@ fullscreen. Preview ที่ decode ไม่ได้แสดงข้อค�
 | กด X แล้วโปรแกรมยังอยู่ | ปิด surface เป็น hide-to-tray; ใช้คำสั่งออกจริงเมื่อต้องการหยุด |
 
 ## ข้อมูลที่เก็บและการแจ้งปัญหา
+
+Lalin Play ไม่มี telemetry และไม่ส่ง library, file path, media, queue หรือข้อมูล
+การฟังออกจากเครื่องผ่านระบบอัปเดต การเชื่อมต่อเครือข่ายที่ Play เริ่มเองมีเพียง
+การตรวจอัปเดตเมื่อผู้ใช้กดปุ่ม และการเปิดลิงก์ YouTube ภายนอกเมื่อผู้ใช้เลือก
+เปิดลิงก์ ข้อมูลที่เว็บไซต์ YouTube เก็บเมื่อเปิดผ่าน browser อยู่ภายใต้นโยบาย
+ของ YouTube/browser นั้นเอง
 
 คลัง metadata ใหม่ใช้ GenesisBlockDB ใน app-data ของ `ai.lalin.play`; ไฟล์
 `library-v1.json` เดิมยังเก็บไว้เพื่อ migration/recovery. Managed media copies
@@ -142,6 +161,7 @@ DPI 150%, multi-monitor, touch, physical A/V sync และ output-device recove
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.4b | 2026-11-07 | beta | Add v1.0.0 per-user installer, unsigned SmartScreen notice, manual signed updater and privacy instructions; publication remains owner-gated | working tree | Codex |
 | 0.1.3b | 2026-10-20 | beta | Document partial CR-007 dashboard, history, favorite, badges, offline-copy and YouTube-link behavior; list storage/recommendation gaps | working tree | Codex |
 | 0.1.2b | 2026-10-20 | beta | Document approved CR-006 mixer, ENG/TH switch and stereo-derived virtual-surround limits; native audio evidence remains open | working tree | Codex |
 | 0.1.1b | 2026-09-25 | beta | Document explicit Studio-to-standalone actions and keep Studio playback as default pending parity | uncommitted | Codex |

@@ -745,9 +745,6 @@ function AppContent() {
               >
                 {t("app.tvPresentation")}
               </button>
-              <p>
-                {t("app.updaterNotEnabled")}
-              </p>
               <p>{t("app.trayPlayback")}</p>
               <button onClick={() => void invoke("quit_play").catch(report)}>
                 {t("app.quit")}
