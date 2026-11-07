@@ -1,5 +1,5 @@
 ---
-version: "0.2.0b"
+version: "0.3.0b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -21,6 +21,12 @@ attributes:
 - This document adds no new product scope. It fixes the implementation design so a coding
   agent can build PLAY-08 without guessing. Lead (agent) review on 2026-11-07; it is not an
   owner approval. Any behaviour outside §3 needs a CR under R5.
+- **v1 scope: linked tracks only** (files the user's library points to in place — the case where
+  files are moved). Managed (offline-imported) tracks live in Lalin's own content-addressed store;
+  when their object is missing or fails verification, `managed_row_is_visible`
+  (`library_store.rs`, W1-D rule) hides the row from the catalog by design, so there is no row to
+  relink. Recovering a lost managed object is a separate data-recovery gap
+  (`PLAY-08-M`, see §3.6) that needs a visibility/reconciliation design first.
 - Traceability: [LALIN_PLAY_TRACEABILITY.md](../validation/LALIN_PLAY_TRACEABILITY.md) PLAY-08.
 
 ## 2. Current model (facts this design relies on, branch `codex/lalin-play-cr006-008-wip`)
@@ -57,10 +63,13 @@ on. No code may derive a path from a linked `id` after this change. Audit result
 
 ### 3.2 Entry points
 
-- **Full view:** a missing track row shows a `Relink…` button (also in the row context menu if one
-  exists). It opens a native single-file picker (`tauri-plugin-dialog`, already a dependency),
-  filtered to `MEDIA_EXTENSIONS`, starting in the parent of the last known `source_path` / `path`
-  when that directory exists.
+- **Full view:** a missing **linked** track row shows a `Relink…` button (also in the row context
+  menu if one exists). The picker is opened natively in Rust, the same way `select_media` does it
+  (`app.dialog().file()…blocking_pick_file()` inside `spawn_blocking`); the frontend has no
+  `@tauri-apps/plugin-dialog` package and none is added. New command
+  `select_relink_file(app, id) -> Result<Option<String>, String>`: single file, filter
+  `MEDIA_EXTENSIONS`, Thai title like the existing pickers, starting directory = parent of the
+  row's `source_path` or `path` when that directory exists; `None` when cancelled.
 - **Playback error:** when `resolve_media` fails for the current item, the error banner offers the
   same `Relink…` action for that track id. Playback does not auto-advance past the failed item
   (existing behaviour) and the queue is unchanged.
@@ -73,6 +82,9 @@ on. No code may derive a path from a linked `id` after this change. Audit result
 
 `relink_track(app: AppHandle, id: String, path: String, accept_different_content: bool) -> Result<Track, String>`
 
+The frontend calls `select_relink_file` first, then `relink_track` with the returned path (and again
+with `accept_different_content = true` after the user confirms §3.4).
+
 Steps, all-or-nothing:
 
 1. Load the row by `id`. Errors: unknown id; id present in `track_retirements`.
@@ -83,25 +95,16 @@ Steps, all-or-nothing:
    checks where equivalent, and relink. Behaviour of existing callers must not change.
 3. Hash the new file (whole-file sha256, same helper as import).
 4. Duplicate guard: if another live track (different id) already has this canonical path as
-   `path`/`source_path`, or (managed only) this `content_hash`, return an error naming that track's
+   `path`/`source_path`, return an error naming that track's
    title. v1 never merges two tracks.
-5. Content check (linked rows only; managed rows follow step 6): if the row has a `content_hash` and it differs from the new hash, require
+5. Content check: if the row has a `content_hash` and it differs from the new hash, require
    `accept_different_content == true`; otherwise return the dedicated error code (§3.5). Linked rows
    without a stored hash skip this check and store the new hash.
 6. Apply:
    - **Linked:** update `media_path` (absolute), `source_path` (= new canonical path) and
      `content_hash` on the same row in one relational mutation batch.
-   - **Managed (v1 = restore only):** the object store is content-addressed
-     (`media/objects/sha256/<prefix>/<hash>.<ext>`), and the publisher refuses to re-bind a row to a
-     different publication (`RECONCILIATION_REQUIRED: catalog row belongs to another publication`).
-     Therefore v1 supports only a file whose sha256 equals the row's `content_hash`:
-     stage it with `stage_local_file`, write it with `finalize_object`, verify the resulting
-     `relative_path` equals the row's stored `media_path` (else `relink:managed-path-noncanonical`
-     and discard), then `discard_uncommitted_stage` for the temporary publication id. **No Genesis row
-     or publication journal is mutated**; the track simply stops being missing. A managed relink with
-     different content returns `relink:managed-content-change-unsupported` regardless of
-     `accept_different_content` (the UI suggests importing it as a new track). Re-binding a managed
-     row to new content needs a publication-rebind design and is a separate gap.
+   - **Managed:** return `relink:managed-unsupported` without writing anything (not reachable from
+     the UI in v1, because missing managed rows are hidden; the guard keeps the command safe).
 7. Allow the new path in the asset-protocol scope (same mechanism `library::initialize` uses for
    present tracks).
 8. Return the updated `Track` (`missing == false`).
@@ -127,26 +130,24 @@ empty; user-visible names never silently change.
 
 `relink:unknown-track`, `relink:retired-track`, `relink:invalid-path`, `relink:not-local`,
 `relink:not-a-file`, `relink:unsupported-type`, `relink:duplicate:<title>`,
-`relink:different-content`, `relink:managed-content-change-unsupported`,
-`relink:managed-path-noncanonical`, `relink:publish-failed`.
-
-### 3.7 Re-import of a missing managed track
-
-`import_selected` currently short-circuits when an existing managed row has the same hash and returns
-that row unchanged, so re-adding the identical file never repairs a missing managed copy. Apply the
-§3.3 managed restore in that branch when the row's object file is absent, so "add the file again"
-(the existing UI hint) also works.
+`relink:different-content`, `relink:managed-unsupported`, `relink:write-failed`.
 
 ### 3.6 Out of scope (v1)
 
 Folder/bulk relink and automatic search for moved files; merging duplicates; network/UNC media;
 relink from Compact; changing Studio's player.
 
+**PLAY-08-M (separate gap, needs design first):** recovery of a managed track whose object is
+missing/corrupt. Facts: such rows are hidden by `managed_row_is_visible`; the object store is
+content-addressed (`media/objects/sha256/<prefix>/<hash>.<ext>`); the publisher refuses to re-bind a
+row to another publication; `import_selected` short-circuits on an existing managed row with the same
+hash and returns it unchanged, so re-adding the identical file does not repair it today.
+
 ## 4. Registration checklist
 
-A new command must be added in all four places: `src-tauri/build.rs` `AppManifest::commands`,
-`lib.rs` `generate_handler!`, `capabilities/main.json` (`allow-relink-track`) and the generated
-`permissions/autogenerated/relink_track.toml`. Also fix the existing gap: `analyze_smart_medley_pair`
+Each new command (`select_relink_file`, `relink_track`) must be added in all four places: `src-tauri/build.rs` `AppManifest::commands`,
+`lib.rs` `generate_handler!`, `capabilities/main.json` (`allow-select-relink-file`, `allow-relink-track`) and the generated
+`permissions/autogenerated/<command>.toml`. Also fix the existing gap: `analyze_smart_medley_pair`
 is in `generate_handler!` but missing from `build.rs` and `main.json`.
 
 ## 5. Acceptance tests
@@ -155,18 +156,14 @@ Rust (`library_store.rs` / `library.rs` tests):
 
 1. Linked relink keeps `id`, favorite, play_count, last_played_at and `play_history` rows; `missing`
    becomes false; `resolve_media(id)` returns the new canonical path.
-2. Managed relink with matching hash restores the object at the same `media_path`, mutates no
-   Genesis row or publication journal, keeps the id, and `resolve_media` stays inside
-   `<appdata>/media`; managed relink with a different hash returns
-   `relink:managed-content-change-unsupported` with nothing written. Re-importing the identical file
-   via `import_selected` also restores a missing managed copy (§3.7).
+2. Relink of a managed row returns `relink:managed-unsupported` and writes nothing.
 2a. Migration: importing a path that equals an existing relinked track's `path` reuses that track's
    id and does not create a duplicate.
 3. Hash mismatch without the flag → `relink:different-content` and the row is byte-for-byte unchanged;
    with the flag → succeeds and `content_hash` updates.
 4. Rejections: relative, UNC, `//`, device namespace, directory, unsupported extension, retired id,
    unknown id, duplicate path/hash — each leaves the database unchanged.
-5. Injected failure during the managed restore leaves the row unchanged and no partial object visible.
+5. Injected failure of the relational write leaves the row unchanged (all-or-nothing).
 
 TypeScript (vitest):
 
@@ -185,5 +182,6 @@ running app; confirm the queued item then plays.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.0b | 2026-11-07 | beta | Limit v1 to linked tracks (missing managed rows are hidden by the W1-D visibility rule); move managed recovery to gap PLAY-08-M; specify native Rust picker command `select_relink_file` | working tree | Claude |
 | 0.2.0b | 2026-11-07 | beta | Resolve Codex blockers: migration must match by path not id; managed relink limited to content-identical restore through the content-addressed object store; add §3.7 re-import repair and tests | working tree | Claude |
 | 0.1.0b | 2026-11-07 | beta | Define PLAY-08 relink design: stable ids, shared path validation, linked/managed update rules, queue patching, error codes, registration and acceptance tests | working tree | Claude |
