@@ -1,6 +1,6 @@
 {
   "name": "lalin-play",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/plugin-updater": "2.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.2"

@@ -1,0 +1,174 @@
+name: Release Lalin Play
+
+on:
+  push:
+    tags:
+      - "play-v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-play-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate Play version, public key, and signing secret
+        shell: pwsh
+        env:
+          PLAY_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY }}
+          PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          ./tools/verify/check_play_tauri_signing_key.ps1
+          $package = Get-Content apps/play-desktop/package.json -Raw | ConvertFrom-Json
+          $lockText = Get-Content apps/play-desktop/package-lock.json -Raw
+          $lockRoot = [regex]::Match($lockText, '(?s)^\{\s*"name":\s*"lalin-play",\s*"version":\s*"([^"]+)"')
+          $lockPackage = [regex]::Match($lockText, '(?s)"packages":\s*\{\s*"":\s*\{\s*"name":\s*"lalin-play",\s*"version":\s*"([^"]+)"')
+          if (-not $lockRoot.Success -or -not $lockPackage.Success) { throw "Could not read the Lalin Play package-lock versions." }
+          $config = Get-Content apps/play-desktop/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $cargoText = Get-Content apps/play-desktop/src-tauri/Cargo.toml -Raw
+          $cargoMatch = [regex]::Match($cargoText, '(?m)^version\s*=\s*"([^"]+)"')
+          if (-not $cargoMatch.Success) { throw "Could not read the Lalin Play Cargo package version." }
+          $versions = @($package.version, $lockRoot.Groups[1].Value, $lockPackage.Groups[1].Value, $config.version, $cargoMatch.Groups[1].Value) | Select-Object -Unique
+          if ($versions.Count -ne 1) { throw "package.json, package-lock.json, Cargo.toml, and tauri.conf.json versions differ." }
+          if ($env:GITHUB_REF_NAME -cne "play-v$($package.version)") { throw "Tag $env:GITHUB_REF_NAME does not match app version $($package.version)." }
+          if ($config.plugins.updater.pubkey -eq "REPLACE_WITH_PLAY_UPDATER_PUBLIC_KEY") { throw "Play updater public-key placeholder is still configured." }
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/play-desktop/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.96.0
+
+      - name: Install Play dependencies
+        working-directory: apps/play-desktop
+        run: npm ci
+
+      - name: Run Play frontend tests
+        working-directory: apps/play-desktop
+        run: npm test
+
+      - name: Build Play frontend
+        working-directory: apps/play-desktop
+        run: npm run build
+
+      - name: Check Play Rust formatting
+        working-directory: apps/play-desktop
+        run: cargo fmt --check --manifest-path src-tauri/Cargo.toml
+
+      - name: Run Play Rust tests
+        working-directory: apps/play-desktop
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: Generate third-party notices
+        working-directory: apps/play-desktop
+        run: node ../../tools/verify/play_third_party_notices.mjs
+
+      - name: Build signed Play updater artifacts
+        working-directory: apps/play-desktop
+        shell: pwsh
+        env:
+          PLAY_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY }}
+          PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          $keyBytes = [Convert]::FromBase64String($env:PLAY_TAURI_SIGNING_PRIVATE_KEY.Trim())
+          $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+          $env:TAURI_SIGNING_PRIVATE_KEY = $strictUtf8.GetString($keyBytes)
+          $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = $env:PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          npm run tauri -- build --ci
+          $buildExitCode = $LASTEXITCODE
+          Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY -ErrorAction SilentlyContinue
+          Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
+          $keyBytes = $null
+          $strictUtf8 = $null
+          if ($buildExitCode -ne 0) { exit $buildExitCode }
+
+      - name: Prepare release assets
+        shell: pwsh
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          $config = Get-Content apps/play-desktop/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $version = $config.version
+          $tag = $env:GITHUB_REF_NAME
+          $nsisDirectory = "apps/play-desktop/src-tauri/target/release/bundle/nsis"
+          $installerCandidates = @(Get-ChildItem -LiteralPath $nsisDirectory -Filter "*-setup.exe" -File)
+          if ($installerCandidates.Count -ne 1) { throw "Expected exactly one NSIS setup executable in $nsisDirectory." }
+          $builtInstaller = $installerCandidates[0]
+          $builtSignature = "$($builtInstaller.FullName).sig"
+          if (-not (Test-Path -LiteralPath $builtSignature)) { throw "The signed updater artifact $builtSignature is missing." }
+
+          $assetDirectory = Join-Path $env:RUNNER_TEMP "lalin-play-release"
+          New-Item -ItemType Directory -Path $assetDirectory -Force | Out-Null
+          $installerName = "Lalin-Play_${version}_x64-setup.exe"
+          $installerPath = Join-Path $assetDirectory $installerName
+          $signaturePath = "$installerPath.sig"
+          Copy-Item -LiteralPath $builtInstaller.FullName -Destination $installerPath
+          Copy-Item -LiteralPath $builtSignature -Destination $signaturePath
+          Copy-Item -LiteralPath "apps/play-desktop/THIRD_PARTY_NOTICES.txt" -Destination (Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt")
+
+          $signature = [IO.File]::ReadAllText($signaturePath).Trim()
+          if ([string]::IsNullOrWhiteSpace($signature)) { throw "The updater signature is empty." }
+          $manifest = [ordered]@{
+            version = $version
+            notes = "Lalin Play $version. The Windows installer is unsigned and may show an Unknown publisher SmartScreen warning. Update checks are manual; updater packages are signed with the Play updater key."
+            pub_date = [DateTimeOffset]::UtcNow.ToString("o")
+            platforms = [ordered]@{
+              "windows-x86_64" = [ordered]@{
+                signature = $signature
+                url = "https://github.com/Freshair129/Lalin-AI/releases/download/$tag/$installerName"
+              }
+            }
+          }
+          $manifestPath = Join-Path $assetDirectory "latest-play.json"
+          $manifestJson = ConvertTo-Json -InputObject $manifest -Depth 6
+          [IO.File]::WriteAllText($manifestPath, $manifestJson + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+
+          $noticePath = Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt"
+          $checksumFiles = @($installerPath, $signaturePath, $manifestPath, $noticePath)
+          $checksumLines = foreach ($file in $checksumFiles) {
+            $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $(Split-Path -Leaf $file)"
+          }
+          [IO.File]::WriteAllText((Join-Path $assetDirectory "SHA256SUMS.txt"), ($checksumLines -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+          "PLAY_RELEASE_ASSET_DIRECTORY=$assetDirectory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Create draft GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          $config = Get-Content apps/play-desktop/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $version = $config.version
+          $assetDirectory = $env:PLAY_RELEASE_ASSET_DIRECTORY
+          $notesPath = Join-Path $env:RUNNER_TEMP "lalin-play-release-notes.md"
+          $notes = @"
+          Lalin Play $version for Windows x64.
+
+          - Per-user NSIS installer with the embedded WebView2 bootstrapper.
+          - The installer has no Windows code-signing certificate; SmartScreen may show an Unknown publisher warning. Verify the published SHA256SUMS.txt before running it.
+          - In-app update checks are manual. Update packages use the Play-only signed updater key.
+          - See docs/guides/LALIN_PLAY_USER_GUIDE.md and THIRD_PARTY_NOTICES.txt.
+          "@
+          [IO.File]::WriteAllText($notesPath, $notes, [Text.UTF8Encoding]::new($false))
+          $assets = @(
+            (Join-Path $assetDirectory "Lalin-Play_${version}_x64-setup.exe"),
+            (Join-Path $assetDirectory "Lalin-Play_${version}_x64-setup.exe.sig"),
+            (Join-Path $assetDirectory "latest-play.json"),
+            (Join-Path $assetDirectory "SHA256SUMS.txt"),
+            (Join-Path $assetDirectory "THIRD_PARTY_NOTICES.txt")
+          )
+          gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Lalin Play $version" --notes-file $notesPath @assets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

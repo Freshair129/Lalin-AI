@@ -1,4 +1,14 @@
 fn main() {
+    println!("cargo:rerun-if-changed=tauri.conf.json");
+    if std::env::var("PROFILE").is_ok_and(|profile| profile == "release") {
+        let config_path = std::path::Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap())
+            .join("tauri.conf.json");
+        let config = std::fs::read_to_string(&config_path)
+            .expect("read Play Tauri configuration for release signing guard");
+        if config.contains("REPLACE_WITH_PLAY_UPDATER_PUBLIC_KEY") {
+            panic!("release build blocked: configure the Play updater public key before building");
+        }
+    }
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "get_library",

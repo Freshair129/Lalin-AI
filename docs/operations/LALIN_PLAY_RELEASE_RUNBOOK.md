@@ -1,72 +1,99 @@
 ---
-version: "0.1.1b"
+version: "0.2.1b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
-status: "candidate"
+last_update: "2026-11-07T00:00:00+07:00,Codex"
+status: "approved reduced scope; release qualification NOT_RUN"
 superseded_by: null
 attributes:
   domain: "operations"
   doc_type: "release-runbook"
-  scope: "Proposed standalone Play Windows installer, signed updater and recovery"
+  scope: "Owner-approved reduced-scope Lalin Play v1.0 Windows installer, signed updater and release recovery"
 ---
 
-# Lalin Play release runbook — not yet executable end-to-end
+# Lalin Play v1.0 release runbook
 
 Parent: [ADR-004 S7](../architecture/ADR-004-LALIN-PLAY-REPOSITORY-SPLIT.md).
 Peers: [handoff/license gate](../architecture/LALIN_PLAY_SEPARATION_HANDOFF.md),
 [traceability](../validation/LALIN_PLAY_TRACEABILITY.md), [user guide](../guides/LALIN_PLAY_USER_GUIDE.md).
-This candidate specifies review/qualification steps, not an existing workflow or
-authorization to create keys, change repo settings, publish assets or install apps.
+The owner-approved reduced scope is recorded in
+[LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md).
+P1.4 implements the Play installer/updater and release workflows. Key ceremony,
+dependency license review, release qualification and publication remain open;
+this runbook does not claim that a release has been built or published.
 
 ## Current versus target
 
-| Area | Current `f5a6681` | Release target / required decision |
+| Area | Implemented v1.0 code-round configuration | Evidence still required |
 |---|---|---|
-| Version/identity | `0.1.0`, `ai.lalin.play`, `lalin-play.exe` | Independent Play version, unchanged app identity unless migration reviewed |
-| Packaging | `bundle.active:false`, target list `nsis`, bundle icon list empty | Review/enable Play-only NSIS packaging and icons; target list alone is not an installer |
-| Updater | No updater plugin/config/key in candidate; UI explicitly unavailable | Play-only endpoint/public key and verified signed update |
-| CI | Existing root release workflow belongs to Studio | Independent Play workflow in approved destination; no Studio/Cast artifact/key reuse |
-| Distribution | Native debug binary only | Release binary + installer + update metadata/signatures + checksums/notices |
-| Signing custody | NOT_SELECTED | Owner selects custodian/secret storage, access policy and offline recovery; never commit private keys |
-| OS code signing | NOT_SELECTED | Separate decision from updater signing; record signed/unsigned trust prompts honestly |
+| Version/identity | `1.0.0`, `ai.lalin.play`, `lalin-play.exe` | Tag `play-v1.0.0`; all app manifests must agree |
+| Platform | Windows 10 22H2+ and Windows 11, x64 | Clean-machine qualification NOT_RUN |
+| Packaging | Active NSIS; Play SVG icon outputs; `currentUser`; embedded WebView2 bootstrapper | Installer build/install/uninstall NOT_RUN |
+| Updater | Play-only updater plugin and static endpoint; signed NSIS update artifact | Signed A→B, tampered-signature and state-retention checks NOT_RUN |
+| CI | `.github/workflows/release-play.yml`; separate `.github/workflows/promote-play-update.yml` | Hosted release workflow NOT_RUN; `play-updates` promotion is a manual step after publication |
+| Assets | `Lalin-Play_1.0.0_x64-setup.exe`, `.exe.sig`, `latest-play.json`, `SHA256SUMS.txt`, `THIRD_PARTY_NOTICES.txt` | Draft generation NOT_RUN |
+| Updater key | Play-only encrypted key at ignored `keys/lalin-play-updater.key`; secrets `PLAY_TAURI_SIGNING_PRIVATE_KEY` and `PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Owner key ceremony, GitHub secrets and offline backup location remain open |
+| OS code signing | Unsigned installer for v1.0; updater artifacts use the Play key | SmartScreen warning is documented; no Authenticode publisher is claimed |
+| License and privacy | Dependency notice generator; no telemetry; network only for manual update checks and user-opened YouTube links | Owner must choose the Play source license; notice/license review remains open |
 
-## R0 — prerequisites (STOP until satisfied)
+## R0 — approved release values and remaining gates
 
-- [ ] Candidate contract/runbook reviewed; product owner and release operator named.
-- [ ] S2–S6 gates completed or an explicitly approved reduced-scope release documented.
-  Approved (owner, 2026-11-07) reduced-scope decision for v1.0: [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md).
-- [ ] Destination source SHA and clean checkout verified; no parent workspace links.
-- [ ] License/notices gate closed; no user data, models or debug-only fixtures in bundle.
-- [ ] Choose supported Windows versions/architecture, WebView2 provisioning and test machines.
-- [ ] Choose release version/tag/channel, asset naming and endpoint; record exact approved values.
-- [ ] Choose Play updater key custody/recovery and OS signing policy; test without exposing secrets.
+Reduced-scope decision: [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md) (owner-approved 2026-11-07).
 
-Unresolved choices are release blockers, not default values for the agent to invent.
+| R0 item | Approved value | State |
+|---|---|---|
+| Product owner / operator | Owner `Freshair129`; lead agent prepares; owner publishes | Set |
+| Supported platform | Windows 10 22H2+ and Windows 11, x64; NSIS `embedBootstrapper` | Set; test matrix NOT_RUN |
+| Version / tag | `1.0.0` / `play-v1.0.0`; Studio continues using `v*` | Set |
+| Channel / endpoint | Stable; dedicated rolling release `play-updates`; `https://github.com/Freshair129/Lalin-AI/releases/download/play-updates/latest-play.json` | Set; endpoint publication NOT_RUN |
+| Assets | `Lalin-Play_1.0.0_x64-setup.exe`, `.exe.sig`, `latest-play.json`, `SHA256SUMS.txt`, `THIRD_PARTY_NOTICES.txt` | Set; draft NOT_RUN |
+| Updater key custody | New Play-only minisign key; ignored local key plus the two named GitHub secrets | Script implemented; key ceremony and offline backup location remain owner-open |
+| Windows code signing | Unsigned installer; signed Play updater | Set; SmartScreen note in guide |
+| Source license | MIT (owner decision 2026-11-07, `apps/play-desktop/LICENSE`); third-party dependency notices generated from Cargo/npm metadata | Set; notices review before release |
+| Bundle contents | No models or user data in the installer | Bundle inventory NOT_RUN |
+| Privacy | No telemetry; network requests only for manual update checks and user-opened YouTube links | Documented; runtime verification NOT_RUN |
+
+The approved reduced scope allows this release path while ADR-004 S4–S6 remain
+deferred. Do not treat that scope decision as evidence for the remaining v1.0
+product or release acceptance gates.
+
+### Owner key ceremony
+
+1. From the repository root, run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/build/new_play_updater_key.ps1` on the owner PC. The script refuses to overwrite either key file, prompts for the password without echoing it, writes the private key only to ignored `keys/lalin-play-updater.key`, and commits only the public key in `tauri.conf.json`.
+2. Run the two `gh secret set` commands printed by the script. They target only `Freshair129/Lalin-AI`; the private key is sent as base64 over stdin and the password is prompted as a secure string. Do not paste either secret into chat or source files.
+3. Choose and verify an offline backup location for the private key and password before the first release. That location is still an owner decision and must not be inferred by the release workflow.
+4. Keep Studio/Cast keys separate. Never commit the private key, its password, or a generated private-key copy.
+
+The release workflow rejects a missing/invalid signing secret, a public-key
+placeholder, or a tag that differs from all app version fields. The Rust release
+build also fails while the public-key placeholder remains.
 
 ## R1 — reproducible build and draft artifacts
 
-From the independent Play root, the existing source-validation commands are:
+From `apps/play-desktop`, the release workflow runs these checks before bundling:
 
 ```powershell
-npm ci --workspaces=false
+npm ci
 npm test
 npm run build
 cargo fmt --check --manifest-path src-tauri/Cargo.toml
 cargo test --locked --manifest-path src-tauri/Cargo.toml
+node ../../tools/verify/play_third_party_notices.mjs
 ```
 
-Native debug validation currently uses `npm run tauri -- build --debug --no-bundle`.
-That command does **not** produce release installer/updater proof. Add and review
-release build/signing automation only after R0 choices; exact commands must match
-the implemented configuration and installed toolchain, not a placeholder recipe.
-
-Proposed pipeline: locked checkout/install → tests → native release build →
-NSIS packaging → updater signing → checksums/notices/SBOM inventory → **draft**
-GitHub release. Never expose private signing material in logs or repository files.
+On a Windows hosted runner, `.github/workflows/release-play.yml` validates the
+secrets/tag/version, runs the checks above, builds with
+`npm run tauri -- build --ci`, and creates a **draft** GitHub release from the
+NSIS installer, its updater signature, generated update metadata, checksums and
+third-party notice inventory. It does not modify the `play-updates` release.
+Never expose private signing material in logs or repository files.
 Record runner/toolchain/Windows/WebView2 versions, source SHA, CI run, artifact
 names/size/hash, signature verification result and release notes. Verify app,
-Cargo, npm and Tauri versions agree. Draft creation and publication require
-their own authorization; neither is performed by this documentation task.
+Cargo, npm and Tauri versions agree. The draft is not published by this workflow.
+
+After the owner publishes a qualified `play-v*` release, use the
+`Promote Lalin Play update metadata` workflow with that published tag. It checks
+the release and manifest, then uploads only `latest-play.json` to the existing
+`play-updates` release with `--clobber` and verifies the promoted file hash.
 
 ## R2 — installer and update qualification
 
@@ -122,5 +149,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.1b | 2026-11-07 | approved scope; qualification NOT_RUN | Merge with the R0 scope link; record MIT source license | working tree | Claude |
+| 0.2.0b | 2026-11-07 | approved scope; qualification NOT_RUN | Fill R0 values from the owner-approved scope and record P1.4 installer, signed updater, key ceremony and workflow steps | working tree | Codex |
 | 0.1.1b | 2026-11-07 | candidate | Link the candidate reduced-scope Play v1.0 release decision from R0 | working tree | Claude |
 | 0.1.0b | 2026-09-20 | candidate | Define release decisions, draft/installer/update tests and non-destructive recovery gates | based on f5a6681 | LALIN |

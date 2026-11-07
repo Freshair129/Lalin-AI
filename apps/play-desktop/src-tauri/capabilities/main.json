@@ -17,6 +17,7 @@
     "allow-get-play-migration-undo-status", "allow-prepare-undo-play-migration",
     "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen",
     "allow-register-handoff-owner", "allow-publish-handoff-state",
-    "allow-complete-handoff-command", "allow-grant-handoff-media"
+    "allow-complete-handoff-command", "allow-grant-handoff-media",
+    "updater:allow-check", "updater:allow-download", "updater:allow-install"
   ]
 }
