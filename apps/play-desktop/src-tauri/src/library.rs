@@ -206,7 +206,31 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
     let mut next = library.clone();
     let directory = state.1.clone();
     if next.tracks.len().saturating_add(paths.len()) > MAX_TRACKS {
-        return Err("คลังรองรับไม่เกิน 10,000 ไฟล์ในรุ่นนี้".into());
+        let mut seen_hashes = HashSet::new();
+        let mut additions = 0usize;
+        for source in &paths {
+            let hash = crate::media_validation::sha256_file(source)?;
+            if !seen_hashes.insert(hash.clone()) {
+                continue;
+            }
+            let source_path = source.to_string_lossy().to_string();
+            let exists_in_memory = next.tracks.iter().any(|candidate| {
+                candidate.path == source_path
+                    || candidate.source_path.as_deref() == Some(source_path.as_str())
+                    || candidate.content_hash.as_deref() == Some(hash.as_str())
+            });
+            if exists_in_memory
+                || crate::library_store::find_track_by_source(&directory, &source_path)?.is_some()
+                || crate::library_store::find_track_by_hash(&directory, &hash)?.is_some()
+                || crate::library_store::find_damaged_track_by_hash(&directory, &hash)?.is_some()
+            {
+                continue;
+            }
+            additions = additions.saturating_add(1);
+        }
+        if next.tracks.len().saturating_add(additions) > MAX_TRACKS {
+            return Err("คลังรองรับไม่เกิน 10,000 ไฟล์ในรุ่นนี้".into());
+        }
     }
     let mut imported = Vec::with_capacity(paths.len());
     for source in &paths {
@@ -231,6 +255,27 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
                 &source_path,
             )?)
             .or(crate::library_store::find_track_by_hash(&directory, &hash)?);
+        if let Some(damaged) = crate::library_store::find_damaged_track_by_hash(&directory, &hash)?
+        {
+            crate::local_media_store::discard_uncommitted_stage(&directory, &publication_id)?;
+            let repaired = crate::library_store::restore_managed_track(
+                &directory,
+                &damaged.id,
+                &source_path,
+                |path| {
+                    app.asset_protocol_scope()
+                        .allow_file(path)
+                        .map_err(|_| "recovery:write-failed".to_string())
+                },
+            )?;
+            if let Some(row) = next.tracks.iter_mut().find(|row| row.id == repaired.id) {
+                *row = repaired.clone();
+            } else {
+                next.tracks.push(repaired.clone());
+            }
+            imported.push(repaired);
+            continue;
+        }
         if existing.as_ref().is_some_and(|candidate| {
             candidate.storage_kind == "managed"
                 && candidate.content_hash.as_deref() == Some(hash.as_str())
@@ -291,8 +336,17 @@ pub fn get_library(state: tauri::State<'_, LibraryState>) -> Result<Library, Str
 }
 
 #[tauri::command]
-pub async fn select_media(app: AppHandle, folder: bool) -> Result<Vec<Track>, String> {
+pub async fn select_media(
+    app: AppHandle,
+    folder: bool,
+    path: Option<String>,
+) -> Result<Vec<Track>, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        if let Some(path) = path {
+            let selected = crate::media_validation::validate_media_file(&path)
+                .map_err(|error| error.relink_code())?;
+            return import_selected(&app, vec![selected]);
+        }
         let selected = if folder {
             app.dialog()
                 .file()
@@ -317,6 +371,13 @@ pub async fn select_media(app: AppHandle, folder: bool) -> Result<Vec<Track>, St
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub fn list_damaged_tracks(
+    state: tauri::State<'_, LibraryState>,
+) -> Result<Vec<crate::library_store::DamagedTrack>, String> {
+    crate::library_store::list_damaged_tracks(&state.1)
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -352,6 +413,63 @@ pub async fn select_relink_file(app: AppHandle, id: String) -> Result<Option<Str
     })
     .await
     .map_err(|_| "relink:write-failed".to_string())?
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn select_restore_file(app: AppHandle, id: String) -> Result<Option<String>, String> {
+    let directory = app.state::<LibraryState>().1.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let damaged = crate::library_store::damaged_track_for_id(&directory, &id)?
+            .ok_or("recovery:not-recoverable")?;
+        let parent_directory = damaged
+            .source_path
+            .as_deref()
+            .and_then(|path| Path::new(path).parent())
+            .filter(|path| path.is_dir())
+            .map(Path::to_path_buf);
+        let mut dialog = app
+            .dialog()
+            .file()
+            .set_title("เลือกไฟล์เดิมเพื่อกู้คืนเพลงออฟไลน์")
+            .add_filter("Audio / Video", MEDIA_EXTENSIONS);
+        if let Some(directory) = parent_directory {
+            dialog = dialog.set_directory(directory);
+        }
+        let Some(selected) = dialog.blocking_pick_file() else {
+            return Ok(None);
+        };
+        let path = selected.into_path().map_err(|_| "recovery:invalid-path")?;
+        Ok(Some(path.to_string_lossy().into_owned()))
+    })
+    .await
+    .map_err(|_| "recovery:write-failed".to_string())?
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn restore_managed_track(
+    app: AppHandle,
+    id: String,
+    path: String,
+) -> Result<Track, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<LibraryState>();
+        let mut library = state.0.lock().map_err(|_| "recovery:write-failed")?;
+        crate::migration::ensure_no_active_journal(&app).map_err(|_| "recovery:write-failed")?;
+        let track = crate::library_store::restore_managed_track(&state.1, &id, &path, |path| {
+            app.asset_protocol_scope()
+                .allow_file(path)
+                .map_err(|_| "recovery:write-failed".to_string())
+        })?;
+        if let Some(existing) = library.tracks.iter_mut().find(|track| track.id == id) {
+            *existing = track.clone();
+        } else {
+            library.tracks.push(track.clone());
+        }
+        let _ = app.emit("play-library-changed", ());
+        Ok(track)
+    })
+    .await
+    .map_err(|_| "recovery:write-failed".to_string())?
 }
 
 #[tauri::command(rename_all = "camelCase")]

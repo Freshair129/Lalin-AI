@@ -4,8 +4,9 @@
   "description": "Local Play UI only; file selection and grants are native-owned",
   "windows": ["main"],
   "permissions": [
-    "core:event:default", "allow-get-library", "allow-select-media",
+    "core:event:default", "allow-get-library", "allow-list-damaged-tracks", "allow-select-media",
     "allow-select-relink-file", "allow-relink-track", "allow-analyze-smart-medley-pair",
+    "allow-select-restore-file", "allow-restore-managed-track",
     "allow-remove-library-track", "allow-set-track-favorite", "allow-record-listen",
     "allow-list-youtube-links", "allow-add-youtube-link", "allow-remove-youtube-link",
     "allow-open-youtube-link", "allow-get-cache-settings", "allow-set-cache-settings",

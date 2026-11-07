@@ -13,7 +13,7 @@ import { PlayMigrationImport } from "./components/PlayMigrationImport";
 import { VideoStage } from "./components/VideoStage";
 import { CompactTransport } from "./components/CompactTransport";
 import { Transport, formatTime } from "./components/Transport";
-import { addYoutubeLink, getLibrary, listYoutubeLinks, mediaItem, openYoutubeLink, removeYoutubeLink, selectRelinkFile, relinkTrack, isVideoItem, type LocalTrack, type YoutubeLink } from "./native";
+import { addYoutubeLink, getLibrary, importSelectedFile, listDamagedTracks, listYoutubeLinks, mediaItem, openYoutubeLink, removeYoutubeLink, restoreManagedTrack, selectRelinkFile, selectRestoreFile, relinkTrack, isVideoItem, type DamagedTrack, type LocalTrack, type YoutubeLink } from "./native";
 import { loadPlaylists, savePlaylists, type Playlist } from "./playlists";
 import { usePlaybackStore } from "./playback/usePlaybackStore";
 import { PlaybackAudioEngine, type AudibleTimeUpdate } from "./playback/audioEngine";
@@ -38,6 +38,7 @@ type View =
   | "eq"
   | "settings"
   | "youtube"
+  | "repair"
   | `playlist:${string}`;
 
 export function App() {
@@ -50,6 +51,7 @@ function AppContent() {
     PlaybackAudioEngine.getInstance().setMediaElementLabel(t("video.label"));
   }, [locale, t]);
   const [tracks, setTracks] = useState<LocalTrack[]>([]);
+  const [damagedTracks, setDamagedTracks] = useState<DamagedTrack[]>([]);
   const [view, setView] = useState<View>("home");
   const [query, setQuery] = useState("");
   const [compact, setCompact] = useState(false);
@@ -75,6 +77,7 @@ function AppContent() {
   }, [hasVideo]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRepairLink, setShowRepairLink] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playlistReady, setPlaylistReady] = useState(false);
@@ -92,7 +95,10 @@ function AppContent() {
     heardSeconds: number;
     recorded: boolean;
   }>());
-  const report = useCallback((value: unknown) => setError(String(value)), []);
+  const report = useCallback((value: unknown) => {
+    setError(String(value));
+    setShowRepairLink(false);
+  }, []);
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window) && !("__TAURI__" in window)) return;
     let active = true;
@@ -151,7 +157,11 @@ function AppContent() {
         report,
       );
   }, [compact, hasVideo, report]);
-  const refresh = useCallback(() => getLibrary().then(setTracks), []);
+  const refresh = useCallback(async () => {
+    const [library, damaged] = await Promise.all([getLibrary(), listDamagedTracks()]);
+    setTracks(library);
+    setDamagedTracks(damaged);
+  }, []);
   const refreshYoutubeLinks = useCallback(() => listYoutubeLinks().then(setYoutubeLinks), []);
 
   useEffect(() => {
@@ -266,9 +276,10 @@ function AppContent() {
   const select = async (folder: boolean) => {
     setBusy(true);
     setError(null);
+    setShowRepairLink(false);
     setNotice(null);
     try {
-      await invoke("select_media", { folder });
+      await invoke("select_media", { folder, path: null });
       await refresh();
     } catch (error) {
       report(error);
@@ -280,6 +291,7 @@ function AppContent() {
   const relink = async (id: string) => {
     setBusy(true);
     setError(null);
+    setShowRepairLink(false);
     setNotice(null);
     try {
       const path = await selectRelinkFile(id);
@@ -299,6 +311,35 @@ function AppContent() {
         : [...current, track]);
       usePlaybackStore.getState().applyRelinkedTrack(track);
       setNotice(t("relink.success"));
+    } catch (error) {
+      report(error);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const restore = async (id: string) => {
+    setBusy(true);
+    setError(null);
+    setShowRepairLink(false);
+    setNotice(null);
+    try {
+      const path = await selectRestoreFile(id);
+      if (path === null) return;
+      try {
+        await restoreManagedTrack(id, path);
+      } catch (error) {
+        const message = String(error instanceof Error ? error.message : error)
+          .replace(/^Error:\s*/, "");
+        if (message !== "recovery:content-mismatch") throw error;
+        if (!window.confirm(t("recovery.importMismatchConfirm"))) return;
+        await importSelectedFile(path);
+        await refresh();
+        setNotice(t("recovery.importedNew"));
+        return;
+      }
+      await refresh();
+      setNotice(t("recovery.success"));
     } catch (error) {
       report(error);
     } finally {
@@ -396,6 +437,7 @@ function AppContent() {
         eq: t("app.eqTitle"),
         settings: t("app.settingsTitle"),
         youtube: t("app.youtubeLinksTitle"),
+        repair: t("recovery.panelTitle"),
       } as Record<string, string>
     )[view];
 
@@ -468,7 +510,7 @@ function AppContent() {
   return (
     <div
       ref={root}
-      className={`app ${compact ? "compact" : "full"} ${tv ? "tv" : ""} ${hasVideo ? "has-video" : ""} ${videoExpanded ? "video-expanded" : ""} ${view === "queue" || view === "eq" || view === "mixer" ? "panel-open" : ""}`}
+      className={`app ${compact ? "compact" : "full"} ${tv ? "tv" : ""} ${hasVideo ? "has-video" : ""} ${videoExpanded ? "video-expanded" : ""} ${view === "queue" || view === "eq" || view === "mixer" || view === "repair" ? "panel-open" : ""}`}
       data-surface={compact ? "compact" : "full"}
     >
       <header className="topbar" hidden={compact}>
@@ -503,12 +545,41 @@ function AppContent() {
       {error ? (
         <div className="error" role="alert">
           {localizeError(error, locale)}
-          <button aria-label={t("app.dismissError")} onClick={() => setError(null)}>
+          {showRepairLink ? (
+            <button
+              type="button"
+              className="recovery-error-link"
+              onClick={() => {
+                setError(null);
+                setShowRepairLink(false);
+                setView("repair");
+              }}
+            >
+              {t("recovery.openPanel")}
+            </button>
+          ) : null}
+          <button aria-label={t("app.dismissError")} onClick={() => {
+            setError(null);
+            setShowRepairLink(false);
+          }}>
             ×
           </button>
         </div>
       ) : null}
       {notice ? <div className="notice" role="status">{notice}</div> : null}
+      {!compact && damagedTracks.length ? (
+        <div className="recovery-notice" role="status">
+          <span>{t("recovery.notice", { count: damagedTracks.length })}</span>
+          <button type="button" onClick={() => setView("repair")}>
+            {t("recovery.openPanel")}
+          </button>
+        </div>
+      ) : null}
+      {compact && damagedTracks.length ? (
+        <div className="compact-recovery-hint" role="status">
+          {t("recovery.compactHint", { count: damagedTracks.length })}
+        </div>
+      ) : null}
       <VideoStage
         compact={compact}
         expanded={videoExpanded}
@@ -543,6 +614,14 @@ function AppContent() {
                 {label}
               </button>
             ))}
+            {damagedTracks.length ? (
+              <button
+                aria-current={view === "repair" ? "page" : undefined}
+                onClick={() => setView("repair")}
+              >
+                {t("recovery.panelTitle")} · {damagedTracks.length}
+              </button>
+            ) : null}
             <button aria-current={view === "youtube" ? "page" : undefined} onClick={() => setView("youtube")}>
               {t("app.youtubeLinks")}
             </button>
@@ -657,6 +736,27 @@ function AppContent() {
             <PlaybackEQPanel />
           ) : view === "mixer" ? (
             <PlaybackMixerPanel onOpenEQ={() => setView("eq")} report={report} />
+          ) : view === "repair" ? (
+            <section className="recovery-panel" aria-label={t("recovery.panelTitle")}>
+              <h2>{t("recovery.panelTitle")}</h2>
+              {damagedTracks.map((damaged) => (
+                <article className="recovery-item" key={damaged.id}>
+                  <div className="recovery-details">
+                    <strong>{damaged.title}</strong>
+                    <small>
+                      {t(damaged.reason === "missing" ? "recovery.reasonMissing" : "recovery.reasonCorrupt")}
+                      {damaged.artist ? ` · ${damaged.artist}` : ""}
+                      {damaged.album ? ` · ${damaged.album}` : ""}
+                    </small>
+                    <code>{damaged.sourcePath || t("recovery.noSourcePath")}</code>
+                  </div>
+                  <button type="button" disabled={busy} onClick={() => void restore(damaged.id)}>
+                    {busy ? t("app.readingFiles") : t("recovery.restore")}
+                  </button>
+                </article>
+              ))}
+              {!damagedTracks.length ? <p className="empty">{t("recovery.empty")}</p> : null}
+            </section>
           ) : view === "queue" ? (
             <section aria-label={t("app.queueLabel")}>
               <div className="list-actions">
@@ -671,12 +771,15 @@ function AppContent() {
                 <div className="track-row" key={item.queueEntryId ?? `${item.id}:${index}`}>
                   <button
                     className="track-title"
-                    onClick={() =>
-                      void usePlaybackStore
-                        .getState()
-                        .playAtIndex(index)
-                        .catch(report)
-                    }
+                    onClick={() => {
+                      if (damagedTracks.some((damaged) => damaged.id === item.id)) {
+                        setError(t("app.missingFile"));
+                        setShowRepairLink(true);
+                        return;
+                      }
+                      setShowRepairLink(false);
+                      void usePlaybackStore.getState().playAtIndex(index).catch(report);
+                    }}
                   >
                     <span>
                       {queue.currentIndex === index ? "▶" : index + 1}

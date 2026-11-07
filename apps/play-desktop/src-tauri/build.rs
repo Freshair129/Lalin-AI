@@ -2,9 +2,12 @@ fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "get_library",
+            "list_damaged_tracks",
             "select_media",
             "select_relink_file",
             "relink_track",
+            "select_restore_file",
+            "restore_managed_track",
             "remove_library_track",
             "set_track_favorite",
             "record_listen",

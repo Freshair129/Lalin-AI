@@ -642,6 +642,60 @@ main {
   border: 0;
   padding: 0 7px;
 }
+.recovery-error-link {
+  float: none !important;
+  margin-left: 14px;
+  color: #d8ff7b;
+  text-decoration: underline;
+}
+.recovery-notice,
+.compact-recovery-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #59664a;
+  background: #202919;
+  color: #d7e7c1;
+  font-size: 12px;
+}
+.recovery-notice button {
+  flex-shrink: 0;
+  padding: 5px 9px;
+}
+.compact-recovery-hint {
+  justify-content: center;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.recovery-panel > h2 {
+  margin: 0 0 14px;
+}
+.recovery-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border: 1px solid #303b29;
+  border-radius: 8px;
+  background: #171d15;
+}
+.recovery-details {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.recovery-details small {
+  color: var(--muted);
+}
+.recovery-details code {
+  overflow-wrap: anywhere;
+  color: #c1ceaF;
+  font-size: 11px;
+}
 .transport {
   border-top: 1px solid #3b452e;
   background: #1a2117;
