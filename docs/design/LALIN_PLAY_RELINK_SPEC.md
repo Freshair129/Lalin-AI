@@ -1,5 +1,5 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -46,8 +46,14 @@ Relink changes **where** a track's media is read from. It never changes the trac
 Therefore playlists, queue occurrences (`queueEntryId`), favorites, play count, last played,
 history rows and any in-flight Smart Medley pairing keyed by id remain valid with no migration.
 After a relink of a linked track, `id` and `path` differ; `id` is an opaque identifier from then
-on. No code may derive a path from a linked `id` after this change (audit `find_track_by_source`,
-migration de-duplication and `resolve_media`, which must read `path`, never `id`).
+on. No code may derive a path from a linked `id` after this change. Audit result (2026-11-07):
+
+| Place | Finding | Required change |
+|---|---|---|
+| `library.rs` `track()` | creates `id = path` for a **new** linked track | none (creation only) |
+| `migration.rs` ~582-597 | matches existing tracks by `item.id == canonical`, then overwrites `track.id = canonical` and de-duplicates by id | match by `path == canonical` or `source_path == canonical`; keep the matched track's `id`; only a newly created track gets `id = canonical`; de-duplicate by `path`/`source_path`, never by id |
+| `handoffReceiver.ts` `fileItem()` | `id = path`, but only for the size projection; the queued item comes from the `Track` returned by `grant_handoff_media` | none |
+| `resolve_media`, `find_track_by_source`, `native.ts` | look up by id and read `path` / `source_path` | none |
 
 ### 3.2 Entry points
 
@@ -79,17 +85,23 @@ Steps, all-or-nothing:
 4. Duplicate guard: if another live track (different id) already has this canonical path as
    `path`/`source_path`, or (managed only) this `content_hash`, return an error naming that track's
    title. v1 never merges two tracks.
-5. Content check: if the row has a `content_hash` and it differs from the new hash, require
+5. Content check (linked rows only; managed rows follow step 6): if the row has a `content_hash` and it differs from the new hash, require
    `accept_different_content == true`; otherwise return the dedicated error code (§3.5). Linked rows
    without a stored hash skip this check and store the new hash.
 6. Apply:
    - **Linked:** update `media_path` (absolute), `source_path` (= new canonical path) and
      `content_hash` on the same row in one relational mutation batch.
-   - **Managed:** stage and publish a new managed copy through the existing
-     `publish_prepared` pipeline (generation/publication rules unchanged) bound to the **existing id**;
-     on success update `source_path` and `content_hash`; on any failure the old row stays exactly as it
-     was and no partial managed file becomes visible. Do not write into `<appdata>/media` outside that
-     pipeline.
+   - **Managed (v1 = restore only):** the object store is content-addressed
+     (`media/objects/sha256/<prefix>/<hash>.<ext>`), and the publisher refuses to re-bind a row to a
+     different publication (`RECONCILIATION_REQUIRED: catalog row belongs to another publication`).
+     Therefore v1 supports only a file whose sha256 equals the row's `content_hash`:
+     stage it with `stage_local_file`, write it with `finalize_object`, verify the resulting
+     `relative_path` equals the row's stored `media_path` (else `relink:managed-path-noncanonical`
+     and discard), then `discard_uncommitted_stage` for the temporary publication id. **No Genesis row
+     or publication journal is mutated**; the track simply stops being missing. A managed relink with
+     different content returns `relink:managed-content-change-unsupported` regardless of
+     `accept_different_content` (the UI suggests importing it as a new track). Re-binding a managed
+     row to new content needs a publication-rebind design and is a separate gap.
 7. Allow the new path in the asset-protocol scope (same mechanism `library::initialize` uses for
    present tracks).
 8. Return the updated `Track` (`missing == false`).
@@ -115,7 +127,15 @@ empty; user-visible names never silently change.
 
 `relink:unknown-track`, `relink:retired-track`, `relink:invalid-path`, `relink:not-local`,
 `relink:not-a-file`, `relink:unsupported-type`, `relink:duplicate:<title>`,
-`relink:different-content`, `relink:publish-failed`.
+`relink:different-content`, `relink:managed-content-change-unsupported`,
+`relink:managed-path-noncanonical`, `relink:publish-failed`.
+
+### 3.7 Re-import of a missing managed track
+
+`import_selected` currently short-circuits when an existing managed row has the same hash and returns
+that row unchanged, so re-adding the identical file never repairs a missing managed copy. Apply the
+§3.3 managed restore in that branch when the row's object file is absent, so "add the file again"
+(the existing UI hint) also works.
 
 ### 3.6 Out of scope (v1)
 
@@ -135,13 +155,18 @@ Rust (`library_store.rs` / `library.rs` tests):
 
 1. Linked relink keeps `id`, favorite, play_count, last_played_at and `play_history` rows; `missing`
    becomes false; `resolve_media(id)` returns the new canonical path.
-2. Managed relink with matching hash republishes under the same id; `resolve_media` stays inside
-   `<appdata>/media`.
+2. Managed relink with matching hash restores the object at the same `media_path`, mutates no
+   Genesis row or publication journal, keeps the id, and `resolve_media` stays inside
+   `<appdata>/media`; managed relink with a different hash returns
+   `relink:managed-content-change-unsupported` with nothing written. Re-importing the identical file
+   via `import_selected` also restores a missing managed copy (§3.7).
+2a. Migration: importing a path that equals an existing relinked track's `path` reuses that track's
+   id and does not create a duplicate.
 3. Hash mismatch without the flag → `relink:different-content` and the row is byte-for-byte unchanged;
    with the flag → succeeds and `content_hash` updates.
 4. Rejections: relative, UNC, `//`, device namespace, directory, unsupported extension, retired id,
    unknown id, duplicate path/hash — each leaves the database unchanged.
-5. Injected failure during the managed publish leaves the old row and no visible partial file.
+5. Injected failure during the managed restore leaves the row unchanged and no partial object visible.
 
 TypeScript (vitest):
 
@@ -160,4 +185,5 @@ running app; confirm the queued item then plays.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-11-07 | beta | Resolve Codex blockers: migration must match by path not id; managed relink limited to content-identical restore through the content-addressed object store; add §3.7 re-import repair and tests | working tree | Claude |
 | 0.1.0b | 2026-11-07 | beta | Define PLAY-08 relink design: stable ids, shared path validation, linked/managed update rules, queue patching, error codes, registration and acceptance tests | working tree | Claude |
