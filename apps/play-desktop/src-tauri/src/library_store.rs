@@ -2110,6 +2110,162 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
+    #[test]
+    fn v1_fixture_data_survives_upgrade_and_reopen() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("genesis-play");
+        fs::create_dir_all(&root).unwrap();
+        let storage = Storage::open(OpenOptions {
+            path: root.to_string_lossy().to_string(),
+            page_cache_mb: Some(32),
+            read_only: Some(false),
+            vector_dim: Some(256),
+            retention: Some("frontier_only".into()),
+        })
+        .unwrap();
+        storage
+            .register_relational_schema(schema_package_v1())
+            .unwrap();
+        let mut track = crate::library::track(&dir.path().join("v1.wav"));
+        track.id = "v1-track".into();
+        track.favorite = true;
+        track.play_count = 2;
+        let mut values = track_values(dir.path(), &track).unwrap();
+        for field in [
+            "publication_id",
+            "publication_plan_digest",
+            "publication_state",
+            "publication_row_digest",
+        ] {
+            values.as_object_mut().unwrap().remove(field);
+        }
+        storage
+            .apply_relational_batch(RelationalMutationBatch {
+                mutation_id: Uuid::new_v4().to_string(),
+                namespace: NAMESPACE.into(),
+                schema_version: 1,
+                operations: vec![mutation(
+                    "tracks",
+                    RelationalMutationKind::Insert,
+                    values,
+                    None,
+                )],
+            })
+            .unwrap();
+        drop(storage);
+        let loaded = read_catalog(dir.path()).unwrap();
+        assert_eq!(loaded.tracks.len(), 1);
+        assert_eq!(loaded.tracks[0].id, "v1-track");
+        assert!(loaded.tracks[0].favorite);
+        assert_eq!(loaded.tracks[0].play_count, 2);
+        forget_database(dir.path());
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks[0].id, "v1-track");
+        forget_database(dir.path());
+    }
+
+    #[test]
+    fn genesis_catalog_settings_history_and_links_survive_reopen() {
+        let dir = tempdir().unwrap();
+        let mut b = crate::library::track(&dir.path().join("b.wav"));
+        b.id = "b".into();
+        b.title = "Beta".into();
+        let mut a = crate::library::track(&dir.path().join("a.wav"));
+        a.id = "a".into();
+        a.title = "Alpha".into();
+        add_track(dir.path(), &b).unwrap();
+        add_track(dir.path(), &a).unwrap();
+        set_favorite(dir.path(), "b", true).unwrap();
+        record_listen(dir.path(), "b").unwrap();
+        record_listen(dir.path(), "b").unwrap();
+        update_cache_settings(dir.path(), true, 128 * 1024 * 1024).unwrap();
+        let link = add_youtube_link(dir.path(), "https://youtu.be/example", "Example").unwrap();
+        let before = serde_json::to_value(read_catalog(dir.path()).unwrap()).unwrap();
+        let history = relink_rows(dir.path()).1;
+        assert_eq!(history.len(), 2);
+        forget_database(dir.path());
+        let after = read_catalog(dir.path()).unwrap();
+        assert_eq!(serde_json::to_value(&after).unwrap(), before);
+        assert_eq!(
+            after
+                .tracks
+                .iter()
+                .map(|t| t.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["a", "b"]
+        );
+        assert_eq!(after.tracks[1].play_count, 2);
+        assert!(after.tracks[1].favorite);
+        assert_eq!(relink_rows(dir.path()).1.len(), 2);
+        let settings = cache_settings(dir.path()).unwrap();
+        assert!(settings.enabled);
+        assert_eq!(settings.quota_bytes, 128 * 1024 * 1024);
+        assert_eq!(youtube_link_url(dir.path(), &link.id).unwrap(), link.url);
+        assert_eq!(youtube_links(dir.path()).unwrap().len(), 1);
+        set_favorite(dir.path(), "b", false).unwrap();
+        remove_youtube_link(dir.path(), &link.id).unwrap();
+        forget_database(dir.path());
+        assert!(!read_catalog(dir.path()).unwrap().tracks[1].favorite);
+        assert!(youtube_links(dir.path()).unwrap().is_empty());
+        assert!(youtube_link_url(dir.path(), &link.id).is_err());
+        forget_database(dir.path());
+    }
+
+    #[test]
+    fn listen_favorite_and_remove_batches_roll_back_on_invalid_mutation() {
+        let dir = tempdir().unwrap();
+        let mut track = crate::library::track(&dir.path().join("song.wav"));
+        track.id = "song".into();
+        add_track(dir.path(), &track).unwrap();
+        record_listen(dir.path(), "song").unwrap();
+        for operation in 0..3 {
+            let before = relink_rows(dir.path());
+            FAIL_NEXT_RELATIONAL_BATCH.with(|flag| flag.set(true));
+            let result = match operation {
+                0 => record_listen(dir.path(), "song").map(|_| ()),
+                1 => set_favorite(dir.path(), "song", true),
+                _ => remove_track(dir.path(), "song"),
+            };
+            assert!(result.is_err());
+            assert_eq!(relink_rows(dir.path()), before);
+        }
+        forget_database(dir.path());
+        assert_eq!(read_catalog(dir.path()).unwrap().tracks[0].play_count, 1);
+        assert_eq!(relink_rows(dir.path()).1.len(), 1);
+        forget_database(dir.path());
+    }
+
+    #[test]
+    fn youtube_policy_accepts_only_official_https_authorities() {
+        for host in [
+            "youtube.com",
+            "www.youtube.com",
+            "m.youtube.com",
+            "music.youtube.com",
+            "youtu.be",
+            "www.youtu.be",
+        ] {
+            assert!(
+                is_official_youtube_url(&format!("https://{host}/watch?v=1")),
+                "{host}"
+            );
+        }
+        for url in [
+            "http://youtube.com/watch",
+            "https://youtube.com.evil.test/",
+            "https://evil.test/youtube.com",
+            "https://youtube.com@evil.test/",
+            "https://user@youtube.com/",
+            "https://youtube.com:443/",
+            "not a url",
+            "https://youtube.com/redirect?x=1",
+        ] {
+            assert!(!is_official_youtube_url(url), "{url}");
+        }
+        let dir = tempdir().unwrap();
+        assert!(youtube_link_url(dir.path(), "unknown-id").is_err());
+        forget_database(dir.path());
+    }
+
     fn relink_fixture(directory: &Path) -> (Track, std::path::PathBuf) {
         let old = directory.join("missing.wav");
         let replacement = directory.join("replacement.wav");
