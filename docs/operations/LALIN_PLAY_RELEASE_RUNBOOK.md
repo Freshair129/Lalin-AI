@@ -1,7 +1,7 @@
 ---
-version: "0.2.1b"
+version: "0.2.2b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Codex"
+last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "approved reduced scope; release qualification NOT_RUN"
 superseded_by: null
 attributes:
@@ -139,6 +139,11 @@ After the owner publishes a qualified `play-v*` release, use the
 the release and manifest, then uploads only `latest-play.json` to the existing
 `play-updates` release with `--clobber` and verifies the promoted file hash.
 
+### R1 local smoke evidence (2026-11-07)
+
+Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass.
+Fixes found by the smoke: `build.rs` guard honours `TAURI_CONFIG` overrides; `default-run = "lalin-play"` (Tauri could not pick the main binary); Smart Medley benchmark binary gated behind the `smart-medley-benchmark` feature so it is not bundled.
+
 ## R2 — installer and update qualification
 
 | Case | Required observation | Status |
@@ -193,6 +198,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.2b | 2026-11-07 | approved scope; qualification NOT_RUN | Record R1 local release smoke evidence and the three fixes it found | working tree | Claude |
 | 0.2.1b | 2026-11-07 | approved scope; qualification NOT_RUN | Merge with the R0 scope link; record MIT source license | working tree | Claude |
 | 0.2.0b | 2026-11-07 | approved scope; qualification NOT_RUN | Fill R0 values from the owner-approved scope and record P1.4 installer, signed updater, key ceremony and workflow steps | working tree | Codex |
 | 0.1.1b | 2026-11-07 | candidate | Link the candidate reduced-scope Play v1.0 release decision from R0 | working tree | Claude |
