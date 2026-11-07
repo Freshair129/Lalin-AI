@@ -121,10 +121,12 @@ const en = {
   "relink.error.differentContent": "The selected file has different content from the original.",
   "relink.error.managedUnsupported": "Offline managed tracks cannot be relinked.",
   "relink.error.writeFailed": "Could not save the new media location.",
-  "recovery.notice": "{count} offline files need repair",
+  "recovery.notice.one": "{count} offline file needs repair",
+  "recovery.notice.other": "{count} offline files need repair",
   "recovery.panelTitle": "Repair offline files",
   "recovery.openPanel": "Open Repair panel",
-  "recovery.compactHint": "{count} offline files need repair. Switch to Full to repair.",
+  "recovery.compactHint.one": "{count} offline file needs repair. Switch to Full to repair.",
+  "recovery.compactHint.other": "{count} offline files need repair. Switch to Full to repair.",
   "recovery.reasonMissing": "Managed object is missing",
   "recovery.reasonCorrupt": "Managed object is corrupt",
   "recovery.noSourcePath": "Original source path not recorded",
@@ -367,8 +369,8 @@ const th: Record<keyof typeof en, string> = {
   "app.totalPlays": "จำนวนครั้งที่ฟัง",
   "app.favoriteTrack": "เพิ่ม {title} ในเพลงโปรด",
   "app.unfavoriteTrack": "นำ {title} ออกจากเพลงโปรด",
-  "app.badgeUser": "\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19",
-  "app.badgeOffline": "\u0e2d\u0e2d\u0e1f\u0e44\u0e25\u0e19\u0e4c",
+  "app.badgeUser": "ของฉัน",
+  "app.badgeOffline": "ออฟไลน์",
   "app.badgeYoutube": "YOUTUBE",
   "app.youtubeLinksTitle": "ลิงก์ YouTube",
   "app.youtubeLinksHelp": "เปิดลิงก์ใน YouTube โดยตรง Lalin Play ไม่ดาวน์โหลดหรือเล่นเสียง YouTube",
@@ -441,17 +443,19 @@ const th: Record<keyof typeof en, string> = {
   "relink.error.differentContent": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับไฟล์เดิม",
   "relink.error.managedUnsupported": "ไม่รองรับการเชื่อมไฟล์ใหม่ให้เพลงออฟไลน์ที่จัดการโดย Lalin Play",
   "relink.error.writeFailed": "บันทึกตำแหน่งไฟล์ใหม่ไม่สำเร็จ",
-  "recovery.notice": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
+  "recovery.notice.one": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
+  "recovery.notice.other": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม",
   "recovery.panelTitle": "ซ่อมแซมไฟล์ออฟไลน์",
   "recovery.openPanel": "เปิดหน้าซ่อมแซม",
-  "recovery.compactHint": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
-  "recovery.reasonMissing": "ไม่พบ object ที่จัดการไว้",
-  "recovery.reasonCorrupt": "object ที่จัดการไว้เสียหาย",
+  "recovery.compactHint.one": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
+  "recovery.compactHint.other": "มีไฟล์ออฟไลน์ {count} ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม",
+  "recovery.reasonMissing": "ไม่พบไฟล์ที่จัดเก็บไว้ในคลัง",
+  "recovery.reasonCorrupt": "ไฟล์ที่จัดเก็บไว้ในคลังเสียหาย",
   "recovery.noSourcePath": "ไม่มีการบันทึกตำแหน่งไฟล์ต้นฉบับ",
   "recovery.restore": "กู้คืนจากไฟล์…",
   "recovery.success": "กู้คืนเพลงออฟไลน์แล้ว โดยคงรายการในคิวและเพลย์ลิสต์ไว้",
   "recovery.empty": "ไม่มีไฟล์ออฟไลน์ที่ต้องซ่อมแซม",
-  "recovery.importMismatchConfirm": "ไฟล์นี้มีเนื้อหาไม่ตรงกับ object ออฟไลน์ ต้องการนำเข้าเป็นเพลงใหม่หรือไม่?",
+  "recovery.importMismatchConfirm": "ไฟล์ที่เลือกมีเนื้อหาไม่ตรงกับไฟล์ที่จัดเก็บไว้ในคลัง ต้องการนำเข้าเป็นเพลงใหม่หรือไม่?",
   "recovery.importedNew": "นำเข้าเป็นเพลงใหม่แล้ว",
   "recovery.error.notRecoverable": "เพลงออฟไลน์นี้ไม่เข้าเงื่อนไขการกู้คืน",
   "recovery.error.invalidPath": "ตำแหน่งไฟล์ที่เลือกไม่ถูกต้อง",
@@ -459,7 +463,7 @@ const th: Record<keyof typeof en, string> = {
   "recovery.error.unsupportedType": "ไม่รองรับชนิดสื่อนี้",
   "recovery.error.contentMismatch": "เนื้อหาไฟล์ที่เลือกไม่ตรงกับต้นฉบับออฟไลน์",
   "recovery.error.writeFailed": "กู้คืนไฟล์ออฟไลน์ไม่สำเร็จ",
-  "recovery.error.verifyFailed": "ไฟล์ออฟไลน์ที่กู้คืนไม่ผ่านการตรวจสอบ และคืน object เดิมแล้ว",
+  "recovery.error.verifyFailed": "ไฟล์ออฟไลน์ที่กู้คืนไม่ผ่านการตรวจสอบ ระบบคืนไฟล์เดิมให้แล้ว",
   "error.resolveNotInLibrary": "ไฟล์นี้ไม่ได้อยู่ในคลังที่อนุญาต กรุณาเพิ่มไฟล์เข้าในคลังอีกครั้ง",
   "error.resolveMissing": "ไม่พบไฟล์ กรุณาเลือกไฟล์จากตำแหน่งใหม่",
   "error.resolveMoved": "ไฟล์ย้ายตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเชื่อมใหม่จาก Full",
@@ -645,6 +649,7 @@ const th: Record<keyof typeof en, string> = {
 };
 
 export type TranslationKey = keyof typeof en;
+export type PluralTranslationKey = "recovery.notice" | "recovery.compactHint";
 type Variables = Record<string, string | number>;
 
 function readLocale(): Locale {
@@ -663,6 +668,11 @@ function translate(locale: Locale, key: TranslationKey, variables?: Variables): 
     }
   }
   return value;
+}
+
+function translatePlural(locale: Locale, key: PluralTranslationKey, count: number): string {
+  const form = new Intl.PluralRules(locale).select(count) === "one" ? "one" : "other";
+  return translate(locale, `${key}.${form}` as TranslationKey, { count });
 }
 
 export function localizeError(value: unknown, locale: Locale): string {
@@ -766,12 +776,14 @@ interface I18nValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, variables?: Variables) => string;
+  tPlural: (key: PluralTranslationKey, count: number) => string;
 }
 
 const fallback: I18nValue = {
   locale: "en",
   setLocale: () => undefined,
   t: (key, variables) => translate("en", key, variables),
+  tPlural: (key, count) => translatePlural("en", key, count),
 };
 const I18nContext = createContext<I18nValue>(fallback);
 
@@ -789,6 +801,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     locale,
     setLocale,
     t: (key, variables) => translate(locale, key, variables),
+    tPlural: (key, count) => translatePlural(locale, key, count),
   }), [locale]);
 
   useEffect(() => {

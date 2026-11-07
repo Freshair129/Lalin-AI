@@ -163,7 +163,7 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
       return undefined;
     });
     render(<App />);
-    expect(await screen.findByText("1 offline files need repair")).not.toBeNull();
+    expect(await screen.findByText("1 offline file needs repair")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Open Repair panel" }));
     expect(screen.getByText("Managed object is missing")).not.toBeNull();
     expect(screen.getByText(track.path)).not.toBeNull();
@@ -200,9 +200,9 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
       return undefined;
     });
     render(<App />);
-    await screen.findByText("1 offline files need repair");
+    await screen.findByText("1 offline file needs repair");
     fireEvent.click(screen.getByRole("button", { name: /Compact/ }));
-    expect(await screen.findByText("1 offline files need repair. Switch to Full to repair.")).not.toBeNull();
+    expect(await screen.findByText("1 offline file needs repair. Switch to Full to repair.")).not.toBeNull();
   });
 
   it("relinks a missing row after confirmation and preserves queue identities and playlists", async () => {

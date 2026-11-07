@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nProvider, localizeError, STORAGE_LOCALE_KEY, useI18n, type TranslationKey } from "./i18n";
 
 const recoveryLabels: TranslationKey[] = [
-  "recovery.notice", "recovery.panelTitle", "recovery.openPanel", "recovery.compactHint",
+  "recovery.panelTitle", "recovery.openPanel",
   "recovery.reasonMissing", "recovery.reasonCorrupt", "recovery.noSourcePath", "recovery.restore",
   "recovery.success", "recovery.empty", "recovery.importMismatchConfirm", "recovery.importedNew",
   "recovery.error.notRecoverable", "recovery.error.invalidPath", "recovery.error.notLocal",
@@ -13,6 +13,14 @@ const recoveryLabels: TranslationKey[] = [
 function RecoveryLabels() {
   const { t } = useI18n();
   return <>{recoveryLabels.map((key) => <span data-testid={key} key={key}>{t(key, { count: 2 })}</span>)}</>;
+}
+
+function RecoveryPluralLabels({ count }: { count: number }) {
+  const { tPlural } = useI18n();
+  return <>
+    <span data-testid="recovery-notice">{tPlural("recovery.notice", count)}</span>
+    <span data-testid="recovery-compact-hint">{tPlural("recovery.compactHint", count)}</span>
+  </>;
 }
 
 function LocaleProbe() {
@@ -42,6 +50,29 @@ describe("Lalin Play localization", () => {
       expect(thai).not.toBe(english[index]);
       expect(thai).not.toContain("{count}");
     });
+    expect(screen.getByTestId("recovery.reasonMissing").textContent).toBe("ไม่พบไฟล์ที่จัดเก็บไว้ในคลัง");
+    expect(screen.getByTestId("recovery.reasonCorrupt").textContent).toBe("ไฟล์ที่จัดเก็บไว้ในคลังเสียหาย");
+    for (const key of ["recovery.importMismatchConfirm", "recovery.error.verifyFailed"] as const) {
+      expect(screen.getByTestId(key).textContent).not.toContain("object");
+    }
+  });
+
+  it("uses singular English and natural Thai for one offline file", () => {
+    const view = render(<I18nProvider><RecoveryPluralLabels count={1} /></I18nProvider>);
+    expect(screen.getByTestId("recovery-notice").textContent).toBe("1 offline file needs repair");
+    expect(screen.getByTestId("recovery-compact-hint").textContent)
+      .toBe("1 offline file needs repair. Switch to Full to repair.");
+    view.rerender(<I18nProvider><RecoveryPluralLabels count={2} /></I18nProvider>);
+    expect(screen.getByTestId("recovery-notice").textContent).toBe("2 offline files need repair");
+    expect(screen.getByTestId("recovery-compact-hint").textContent)
+      .toBe("2 offline files need repair. Switch to Full to repair.");
+    view.unmount();
+
+    localStorage.setItem(STORAGE_LOCALE_KEY, "th");
+    render(<I18nProvider><RecoveryPluralLabels count={1} /></I18nProvider>);
+    expect(screen.getByTestId("recovery-notice").textContent).toBe("มีไฟล์ออฟไลน์ 1 ไฟล์ที่ต้องซ่อมแซม");
+    expect(screen.getByTestId("recovery-compact-hint").textContent)
+      .toBe("มีไฟล์ออฟไลน์ 1 ไฟล์ที่ต้องซ่อมแซม สลับไปที่ Full เพื่อซ่อมแซม");
   });
   it("localizes every recovery error in English and Thai", () => {
     for (const code of ["not-recoverable", "invalid-path", "not-local", "unsupported-type", "content-mismatch", "write-failed", "verify-failed"]) {
