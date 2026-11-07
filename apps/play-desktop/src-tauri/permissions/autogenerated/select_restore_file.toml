@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-select-restore-file"
+description = "Enables the select_restore_file command without any pre-configured scope."
+commands.allow = ["select_restore_file"]
+
+[[permission]]
+identifier = "deny-select-restore-file"
+description = "Denies the select_restore_file command without any pre-configured scope."
+commands.deny = ["select_restore_file"]

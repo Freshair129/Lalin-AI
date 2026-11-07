@@ -1,5 +1,5 @@
 ---
-version: "0.1.0b"
+version: "0.1.2b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
 last_update: "2026-11-07T00:00:00+07:00,Claude"
 status: "beta"
@@ -70,12 +70,49 @@ Recovering incomplete/uncommitted/retired/conflicting publications; recovering w
 
 ## 5. Acceptance tests
 
+Automated acceptance: **PASS** (2026-11-07); native owner acceptance: **NOT_RUN**.
+
 Rust: (1) committed publication + deleted object → listed as `missing`; restore with identical bytes → visible, same id/favorite/play_count/history, no new Genesis rows or journal entries (assert row/journal snapshots unchanged); (2) corrupted object → listed as `corrupt`; restore quarantines the old bytes and repairs; (3) different bytes → `recovery:content-mismatch`, nothing written; (4) uncommitted/retired publication → not listed and `recovery:not-recoverable`; (5) injected failure after quarantine → original bytes restored, row still hidden; (6) `import_selected` of identical bytes repairs a damaged row; (7) predicate behaviour for all non-recoverable classes unchanged (existing visibility tests still pass).
 TypeScript: Repair notice and panel; restore success updates library and leaves queue/playlists unchanged; mismatch shows "Import as new track"; Compact hint; en/th parity.
 Native/manual (owner, P1.6): delete a managed object on disk, restart, repair from the original file, play it.
+
+## 6. Implementation and test-round evidence (2026-11-07)
+
+PLAY-08-M implementation is present on `codex/lalin-play-managed-recovery` (code
+baseline `33eb1ba`); the automated test round is **PASS**. Native owner acceptance
+P1.6 is NOT_RUN. No release acceptance is implied.
+
+- Rust items 1-5: `recovery_missing_preserves_rows_history_and_journals`,
+  `recovery_corrupt_quarantines_original_and_restores_bytes`,
+  `recovery_mismatch_writes_nothing`,
+  `recovery_uncommitted_and_retired_are_ineligible`, and
+  `recovery_failure_after_quarantine_restores_original`. Item 1 snapshots every
+  table and column in the registered Play Genesis schema and all publication
+  journals, including their receipt records.
+- Rust item 6: `reimport_repairs_damaged_managed_row_without_changing_records`
+  exercises the extracted repair branch called by `import_selected`, with its
+  original staged hash and publication id, and checks identity, history, all
+  Genesis rows, journal bytes and restored object bytes.
+- Rust item 7: `recovery_excludes_every_nonrecoverable_hidden_class_without_writes`
+  covers no publication id, retired publication, missing journal, no receipt,
+  invalid receipt checksum and row-set conflict. It snapshots the registered
+  relational tables and media files/directories around listing and restore.
+  Existing visibility tests also passed, including
+  `conflicting_partial_genesis_row_stays_hidden_and_requires_reconciliation`,
+  `failure_after_genesis_readback_before_receipt_stays_hidden_then_startup_reconciles`,
+  and `removed_publication_stays_absent_after_restart_without_deleting_object_bytes`.
+- TypeScript: `shows repair panel and restores without changing queue or playlists`,
+  `offers import as a new track on recovery mismatch`, `shows the compact recovery hint`,
+  `provides every recovery label in both locales`, and `localizes every recovery error
+  in English and Thai` use mocked IPC. The mismatch test checks the offer with cancel.
+- Local run: Vitest 16 files/110 passed; `tsc --noEmit` and `cargo fmt --check`
+  passed; Cargo `--offline --locked --lib --tests`: 87 unit passed, 6 ignored,
+  3 integration passed, 0 failed; doc-tests not run.
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.1.2b | 2026-11-07 | beta | Complete re-import, non-recoverable matrix and full Genesis snapshot automated evidence; native acceptance remains open | working tree | Codex |
+| 0.1.1b | 2026-11-07 | beta | Record implemented recovery and partial automated test evidence; retain re-import, full visibility matrix and native acceptance gaps | working tree | Codex |
 | 0.1.0b | 2026-11-07 | beta | Define PLAY-08-M managed-object recovery without amending frozen W0-D: read-only damaged listing, identical-bytes restore at the content address, re-import repair, UI and tests | working tree | Claude |
