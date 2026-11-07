@@ -95,7 +95,7 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
       { ...track, id: "b", title: "Beta", artist: "Artist", album: "Other", playCount: 1, lastPlayedAt: 300 },
       { ...track, id: "c", title: "Charlie", artist: "Artist", album: "Album", playCount: 0, lastPlayedAt: null },
     ];
-    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : undefined);
+    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : command === "list_damaged_tracks" ? [] : undefined);
     render(<App />);
     const titles = async (heading: string) => {
       const section = (await screen.findByText(heading)).parentElement!;
@@ -116,7 +116,7 @@ describe("standalone surfaces (mocked IPC; native evidence is separate)", () => 
       { ...track, id: "fav", title: "Saved Favorite", favorite: true, sourceKind: "user", storageKind: "managed" },
       { ...track, id: "other", title: "Not Favorite", favorite: false, sourceKind: "user", storageKind: "linked" },
     ];
-    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : undefined);
+    vi.mocked(invoke).mockImplementation(async (command) => command === "get_library" ? { version: 1, tracks: fixture } : command === "list_damaged_tracks" ? [] : undefined);
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: /Favorites/ }));
     expect(await screen.findByText("Saved Favorite")).not.toBeNull();
