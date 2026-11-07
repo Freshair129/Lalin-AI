@@ -34,7 +34,7 @@ authorization to create keys, change repo settings, publish assets or install ap
 
 - [ ] Candidate contract/runbook reviewed; product owner and release operator named.
 - [ ] S2–S6 gates completed or an explicitly approved reduced-scope release documented.
-  Candidate reduced-scope decision for v1.0: [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md) (pending owner approval in issue #47).
+  Approved (owner, 2026-11-07) reduced-scope decision for v1.0: [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md).
 - [ ] Destination source SHA and clean checkout verified; no parent workspace links.
 - [ ] License/notices gate closed; no user data, models or debug-only fixtures in bundle.
 - [ ] Choose supported Windows versions/architecture, WebView2 provisioning and test machines.

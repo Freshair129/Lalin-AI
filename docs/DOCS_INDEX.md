@@ -57,7 +57,7 @@ attributes:
 - `docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md`: approved/locally implemented Play Window readiness, single consumer owner, and scoped native capabilities.
 - `docs/architecture/LALIN_PLAY_TV_MODE_PLAN.md`: approved TV Mode architecture, fullscreen/input adapters and native permission boundary.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
-- `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: candidate reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values); pending owner approval.
+- `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: approved (owner, 2026-11-07) reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values).
 - `docs/design/LALIN_PLAY_RELINK_SPEC.md`: PLAY-08 relink implementation spec (stable track ids, shared path validation, queue patching, acceptance tests).
 
 ## Current Lalin UI Docs
