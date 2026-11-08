@@ -59,7 +59,7 @@ product or release acceptance gates.
 ### Owner key ceremony
 
 1. From the repository root, run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/build/new_play_updater_key.ps1` on the owner PC. The script refuses to overwrite either key file, prompts for the password without echoing it, writes the private key only to ignored `keys/lalin-play-updater.key`, and commits only the public key in `tauri.conf.json`.
-2. Run the two `gh secret set` commands printed by the script. They target only `Freshair129/Lalin-AI`; the private key file is already base64-encoded by `tauri signer` and is sent as-is over stdin (do not base64 it again) and the password is prompted as a secure string. Do not paste either secret into chat or source files.
+2. Run the two `gh secret set` commands printed by the script. They target only `Freshair129/Lalin-AI`; the private key file is already base64-encoded by `tauri signer` and is sent as-is with `--body` (do not base64 it again, and do not pipe it from Windows PowerShell 5.1, which prepends a UTF-8 BOM) and the password is prompted as a secure string. Do not paste either secret into chat or source files.
 3. Choose and verify an offline backup location for the private key and password before the first release. That location is still an owner decision and must not be inferred by the release workflow.
 4. Keep Studio/Cast keys separate. Never commit the private key, its password, or a generated private-key copy.
 

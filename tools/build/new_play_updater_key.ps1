@@ -96,5 +96,6 @@ try {
 Write-Host "Play updater public key configured in apps/play-desktop/src-tauri/tauri.conf.json."
 Write-Host "Encrypted private key written to ignored path keys/lalin-play-updater.key; do not commit it."
 Write-Host "Run these commands from the repository root to set the owner-managed GitHub secrets:"
-Write-Host "(Get-Content -Raw 'keys/lalin-play-updater.key').Trim() | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY --repo Freshair129/Lalin-AI"
+# Windows PowerShell 5.1 prefixes piped text with a UTF-8 BOM, which corrupts the secret; read the file directly instead.
+Write-Host "gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY --repo Freshair129/Lalin-AI --body (Get-Content -Raw 'keys/lalin-play-updater.key').Trim()"
 Write-Host "`$secure = Read-Host 'PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD' -AsSecureString; `$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$secure); try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR(`$bstr) | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo Freshair129/Lalin-AI } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR(`$bstr) }"
