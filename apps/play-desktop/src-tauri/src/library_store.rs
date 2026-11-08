@@ -122,7 +122,7 @@ fn databases() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<Storage>>>> {
 }
 
 #[cfg(test)]
-fn forget_database(directory: &Path) {
+pub(crate) fn forget_database(directory: &Path) {
     let root = fs::canonicalize(directory.join("genesis-play")).unwrap();
     databases().lock().unwrap().remove(&root);
 }

@@ -1,0 +1,44 @@
+﻿[
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Roaming\\ai.lalin.play",
+        "Length":  null,
+        "LastWriteTimeUtc":  "\/Date(1794083512958)\/",
+        "Exists":  true
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Roaming\\ai.lalin.play\\genesis-play",
+        "Length":  null,
+        "LastWriteTimeUtc":  "\/Date(1794083513058)\/",
+        "Exists":  true
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Local\\ai.lalin.play",
+        "Length":  null,
+        "LastWriteTimeUtc":  "\/Date(1794083512119)\/",
+        "Exists":  true
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Local\\ai.lalin.play\\EBWebView",
+        "Length":  null,
+        "LastWriteTimeUtc":  "\/Date(1794085454798)\/",
+        "Exists":  true
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Roaming\\ai.lalin.play.qa",
+        "Length":  null,
+        "LastWriteTimeUtc":  null,
+        "Exists":  false
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Local\\ai.lalin.play.qa",
+        "Length":  null,
+        "LastWriteTimeUtc":  null,
+        "Exists":  false
+    },
+    {
+        "FullName":  "C:\\Users\\suanr\\AppData\\Local\\Lalin Play QA",
+        "Length":  null,
+        "LastWriteTimeUtc":  null,
+        "Exists":  false
+    }
+]

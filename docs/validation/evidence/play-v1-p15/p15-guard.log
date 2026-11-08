@@ -1,0 +1,76 @@
+   Compiling windows-sys v0.60.2
+   Compiling windows-sys v0.52.0
+   Compiling winapi-util v0.1.11
+   Compiling same-file v1.0.6
+   Compiling windows_x86_64_msvc v0.52.6
+   Compiling walkdir v2.5.0
+   Compiling tauri-utils v2.10.2
+   Compiling windows-targets v0.52.6
+   Compiling windows-sys v0.59.0
+   Compiling windows-sys v0.61.2
+   Compiling windows_x86_64_msvc v0.53.1
+   Compiling socket2 v0.6.4
+   Compiling muda v0.20.0
+   Compiling windows-targets v0.53.5
+   Compiling dirs-sys v0.5.0
+   Compiling window-vibrancy v0.8.1
+   Compiling anstyle-wincon v3.0.11
+   Compiling anstyle-query v1.1.5
+   Compiling dirs v7.0.0
+   Compiling anstream v1.0.0
+   Compiling stacker v0.1.25
+   Compiling env_logger v0.11.11
+   Compiling genesis-block-native v0.2.10 (https://github.com/Freshair129/GenesisBlock?rev=3b61ee909769b192c8021c5dc27ecc3f38f201f7#3b61ee90)
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling nu-ansi-term v0.50.3
+   Compiling pest v2.9.4
+   Compiling tracing-subscriber v0.3.23
+   Compiling mio v1.2.3
+   Compiling winreg v0.55.0
+   Compiling embed-resource v3.0.11
+   Compiling softbuffer v0.4.8
+   Compiling tokio v1.53.1
+   Compiling tray-icon v0.25.1
+   Compiling tauri-winres v0.3.6
+   Compiling pest_meta v2.9.4
+   Compiling anndists v0.1.5
+   Compiling pest_generator v2.9.4
+   Compiling hnsw_rs v0.3.5
+   Compiling tempfile v3.27.0
+   Compiling rfd v0.16.0
+   Compiling pest_derive v2.9.4
+   Compiling hyper v1.11.1
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.6
+   Compiling tokio-util v0.7.19
+   Compiling tower-http v0.6.11
+   Compiling hyper-util v0.1.20
+   Compiling tauri-runtime v2.12.2
+   Compiling hyper-rustls v0.27.10
+   Compiling axum v0.7.9
+   Compiling reqwest v0.13.5
+   Compiling tauri-runtime-wry v2.12.2
+   Compiling tauri-build v2.7.3
+   Compiling tauri-plugin v2.7.2
+   Compiling tauri-codegen v2.7.3
+   Compiling tauri v2.12.4
+   Compiling tauri-macros v2.7.3
+   Compiling tauri-plugin-fs v2.5.2
+   Compiling tauri-plugin-dialog v2.7.3
+   Compiling tauri-plugin-opener v2.7.2
+   Compiling tauri-plugin-updater v2.10.1
+   Compiling lalin-play v1.0.0 (E:\lalin\apps\play-desktop\src-tauri)
+error: failed to run custom build command for `lalin-play v1.0.0 (E:\lalin\apps\play-desktop\src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `F:\cargo-lanes\lalin-play\target\release\build\lalin-play-95f9f5e30b4871db\build-script-build` (exit code: 101)
+  --- stdout
+  cargo:rerun-if-changed=tauri.conf.json
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+
+  --- stderr
+
+  thread 'main' (40136) panicked at build.rs:16:13:
+  release build blocked: configure the Play updater public key before building
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: build failed, waiting for other jobs to finish...

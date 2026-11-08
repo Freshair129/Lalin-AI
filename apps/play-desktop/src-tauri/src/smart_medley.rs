@@ -183,7 +183,7 @@ enum AnalyzeFailure {
 /// The Tauri command only analyzes the exact current/next pair supplied by the caller.
 /// It returns a decision record and never writes queue state, schedules gain, or advances playback.
 #[tauri::command]
-pub fn analyze_smart_medley_pair(
+pub async fn analyze_smart_medley_pair(
     app: AppHandle,
     current_id: String,
     next_id: String,
@@ -191,35 +191,38 @@ pub fn analyze_smart_medley_pair(
     current_user_cues: Option<UserCueOverride>,
     next_user_cues: Option<UserCueOverride>,
 ) -> Result<SmartMedleyPairDecision, String> {
-    let state = app.state::<LibraryState>();
-    let (current, next, directory) = {
-        let library = state.0.lock().map_err(|error| error.to_string())?;
-        let current = library
-            .tracks
-            .iter()
-            .find(|track| track.id == current_id)
-            .cloned()
-            .ok_or("current track is not in the local library")?;
-        let next = library
-            .tracks
-            .iter()
-            .find(|track| track.id == next_id)
-            .cloned()
-            .ok_or("next track is not in the local library")?;
-        (current, next, state.1.clone())
-    };
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let (current, next, directory) = {
+            let library = state.0.lock().map_err(|error| error.to_string())?;
+            let current = library
+                .tracks
+                .iter()
+                .find(|track| track.id == current_id)
+                .cloned()
+                .ok_or("current track is not in the local library")?;
+            let next = library
+                .tracks
+                .iter()
+                .find(|track| track.id == next_id)
+                .cloned()
+                .ok_or("next track is not in the local library")?;
+            (current, next, state.1.clone())
+        };
 
-    let current_analysis = analyze_library_track(&current, &directory)?;
-    let next_analysis = analyze_library_track(&next, &directory)?;
-    Ok(evaluate_pair(
-        current_id,
-        next_id,
-        current_analysis,
-        next_analysis,
-        current_user_cues,
-        next_user_cues,
-        smooth_enabled,
-    ))
+        let current_analysis = analyze_library_track(&current, &directory)?;
+        let next_analysis = analyze_library_track(&next, &directory)?;
+        Ok(evaluate_pair(
+            current_id,
+            next_id,
+            current_analysis,
+            next_analysis,
+            current_user_cues,
+            next_user_cues,
+            smooth_enabled,
+        ))
+    })
+    .await
 }
 
 /// Analyze one already-authorized local file whose content hash is pinned by the library.

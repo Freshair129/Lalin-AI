@@ -1,6 +1,9 @@
 fn main() {
     println!("cargo:rerun-if-changed=tauri.conf.json");
     println!("cargo:rerun-if-env-changed=TAURI_CONFIG");
+    if std::env::var("CARGO_CFG_TARGET_ENV").is_ok_and(|target_env| target_env == "msvc") {
+        println!("cargo:rustc-link-arg-bin=lalin-play=/STACK:8388608");
+    }
     if std::env::var("PROFILE").is_ok_and(|profile| profile == "release") {
         let config_path = std::path::Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap())
             .join("tauri.conf.json");

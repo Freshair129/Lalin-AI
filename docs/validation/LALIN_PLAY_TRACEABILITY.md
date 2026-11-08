@@ -1,5 +1,5 @@
 ---
-version: "0.3.15b"
+version: "0.3.19b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "beta"
@@ -63,7 +63,7 @@ suite's provenance or establish full Studio/Play playback parity.
 | ID | Code/tests | Evidence and status | Remaining exit work |
 |---|---|---|---|
 | PLAY-01 | UI, Native, Owner | PARTIAL P1.3 round 3: feature-gated debug process ran 22 s with an isolated app-data directory and no listener on 8756; store files were created. The generated WAV passed a managed publication test and a separate mocked-IPC UI test reached playing state. Vitest 19 files / 135 tests and TypeScript no-emit PASS. See round 3 evidence below. | L2 does not connect the generated WAV to the UI/native player: command-level import, real decode, actual audio output and owner audible check remain NOT_RUN. Prior L0: 91 passed / 6 ignored + 3 integration passed. |
-| PLAY-02 | UI, State, Native | F + selection/catalog/playlist tests: PARTIAL | Full playlist/catalog native matrix and edge cases |
+| PLAY-02 | UI, State, Native | F + selection/catalog/playlist tests: PARTIAL. Issue #47 P0 import/startup stack fix: two Rust regression tests pass on a 1 MiB caller (generated WAV import/reopen; 500-row catalog reopen); full Rust suite 94 passed / 6 ignored + 3 integration passed. See P0 record below. | Full playlist/catalog native matrix and edge cases; native QA re-run of import and relaunch NOT_RUN |
 | PLAY-03 | UI, Owner, Video, EQ | F/V/C/X + App: PARTIAL | Native output-device continuity and full device matrix |
 | PLAY-04 | Owner, Transport, EQ | F + EQ suite: PARTIAL | Exhaustive queue/order/repeat/shuffle and native controls acceptance |
 | PLAY-05 | Native tray/close/Quit | F: PARTIAL (hide/restore/Quit observed) | Actively stop Studio/API during playback, full lifecycle matrix |
@@ -71,10 +71,57 @@ suite's provenance or establish full Studio/Play playback parity.
 | PLAY-07 | State, Native | F + S2 journal-phase and five child-process termination checkpoints, initial journal, undo-snapshot and retryable history-write fixtures, and S3 owner/session STATE reconciliation: PARTIAL | Corruption, power-loss durability and other untested storage failures |
 | PLAY-08 | Native resolve, linked relink and managed-object recovery (`library.rs`, `library_store.rs`, `App.tsx`) | PLAY-08-M automated PASS: Rust 87 unit passed/6 ignored and 3 integration passed, Vitest 16 files/110 tests passed; `tsc` and `cargo fmt --check` passed (2026-11-07). See [managed recovery spec](../design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md); linked relink per [spec](../design/LALIN_PLAY_RELINK_SPEC.md) v0.3.1b | Native owner delete/restart/repair/play NOT_RUN; linked relink across drives and playback NOT_RUN. Automated PASS is not native or release acceptance. |
 | PLAY-09 | Studio exporter + standalone import | S2 LOCAL AUTOMATED PASS; no live data transfer | Power-loss/app-level restart recovery, remaining native write failures, and actual Studio-to-Play transfer NOT_RUN |
-| PLAY-10 | v1.0 NSIS installer, updater UI/config, signed release workflow and metadata promotion workflow | Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass; real key ceremony, published draft, A→B update and clean-VM install NOT_RUN | Release build/signature, R1 CI, clean install/uninstall, signed A→B, tampered-signature rejection, state retention and clean-VM qualification remain NOT_RUN |
+| PLAY-10 | v1.0 NSIS installer, updater UI/config, signed release workflow and metadata promotion workflow | Local release smoke 2026-11-07 (lane F:\cargo-lanes\lalin-play, ephemeral key via `--config`, key deleted): placeholder pubkey blocks `cargo build --release`; NSIS `Lalin Play_1.0.0_x64-setup.exe` 8,171,989 B SHA-256 `0ca55fa8…0a743f`; updater `.sig` verifies, tampered copy fails; currentUser + embedBootstrapper; bundle = `lalin-play.exe` + WebView2 bootstrapper only; cargo lib 80 pass/6 ignored + integration 3 pass; vitest 16 files/105 pass. [P1.5 lead native QA run 2026-11-08](evidence/play-v1-p15/README.md) (QA identifier, ephemeral key, local endpoint, build `76fa0fa`): signed A 1.0.0 → B 1.0.1 update via UI PASS; library/favorite/playlist/EQ retained, no autoplay; same/older → up to date; tampered artifact and wrong-key signature rejected with app usable; offline, HTTP 500 and truncated download recoverable with retry; silent uninstall keeps data, delete-app-data opt-in unchecked by default, reinstall restores library and playback. | Real key ceremony, published draft, R1 CI, auto-relaunch after update (not observable in agent session), installer interruption, clean-VM and device matrix remain NOT_RUN (owner); finding: updater banner shows raw English plugin error |
+| PLAY-10-P0 (PLAY-02 import) | `src-tauri/build.rs`, `release-play.yml`, `check_play_pe_stack.mjs` | Issue #47 code round rebuilt the release executable and verified PE `SizeOfStackReserve=8388608`; workflow runs the PE guard after build. Lead native QA 2026-11-08: pre-fix QA release crashed `0xc00000fd` on first import and on every relaunch; post-fix A installed over the same data boots with the track, imports a second WAV, updates to B and plays ([evidence](evidence/play-v1-p15/README.md)) | PASS on QA build; owner clean VM pending |
 | PLAY-11 | Mixer, Owner, EQ | `npm run build` PASS; full `npm test -- --reporter=dot` PASS (14 files/81 tests); native channel audition NOT_RUN | Verify MEDIA/MASTER audibly and output-device selection/persistence in Windows runtime |
 | PLAY-12 | Spatial, Owner | HRTF graph and ramp/fallback tests pass with fake AudioContext as part of the 14-file/81-test pass; audible/native behavior NOT_RUN | Compare Stereo and Virtual 7.1 on selected headphones; measure CPU/latency and listen for artifacts |
 | PLAY-13 | Locale, UI | PARTIAL P1.3 round 3: 52 mocked-IPC Edge captures across EN/TH and 1280/360, zero clipping candidates under the documented scroll exception. Visible DOM language review and per-image lists are in the [inventory](evidence/play-v1-p13/README.md). EN default and TH reload persistence observed; visible mixed Thai labels corrected. | Complete dialog and below-fold review, native restart persistence, native visual acceptance and broad accessibility review NOT_RUN. |
+
+### P0 — Issue #47 import/startup stack overflow (2026-11-08)
+
+Trace: PLAY-02 managed import/catalog refresh and PLAY-10 Windows release
+executable/workflow.
+
+Lead QA release A (1.0.0, `ai.lalin.play.qa`) recorded Windows event 1000 with
+exception `0xc00000fd` after importing an 8-second mono WAV. The managed object,
+publication and Genesis journal had been written before the crash. Subsequent
+launches failed while Genesis reported an unverified `projection.sqlite` and
+rebuilt it from the journal. A byte-identical executable patched to an 8 MiB PE
+stack reserve reopened the same data and showed one track. Native requalification
+belongs to the lead; this code round did not install or launch the QA app.
+
+Code reading found the boot path in `src-tauri/src/lib.rs::run` called
+`library::initialize` synchronously from Tauri setup. That reaches
+`library_store::initialize_catalog` → `open_database` → Genesis
+`Storage::open` → snapshot/journal replay and projection sync. Catalog commands
+such as `get_library` also synchronously read Genesis on the main thread; the UI
+requests that refresh after `play-library-changed`. `select_media` was already
+async on Tauri's default blocking pool, but its import/publish work had no
+explicit stack guarantee. The fix routes boot, import, Genesis/library
+commands, migration recovery commands and Smart Medley analysis through a
+dedicated 16 MiB worker. Setup still waits for boot completion. No Genesis rows,
+journals, receipts or `managed_row_is_visible` behavior changed.
+
+The exact stack high-water mark is unknown because no crash dump was supplied.
+The QA evidence bounds the observed overflow above the original 1 MiB main
+thread reserve; boot with one track succeeded at 8 MiB. The release linker now
+reserves 8 MiB for defense in depth, while storage work uses a 16 MiB thread.
+Play catalog rows are read in loops and written in bounded relational batches;
+Genesis journal scanning is iterative. Genesis has recursive traversal for
+generic nested graph `Event::Batch` values, but Play catalog writes use
+`RelationalRows`; no per-row or per-journal-entry recursion was found in this
+Play path. Row count and journal length increase processing and heap work, not
+Play call depth.
+
+Automated results on this tree: `cargo fmt --check` PASS;
+`cargo test --offline --locked --lib --tests` PASS (94 unit tests, 6 ignored,
+3 integration tests); Vitest PASS (19 files, 135 tests); `npx.cmd tsc --noEmit`
+PASS; release `cargo build --offline --locked --release --bin lalin-play` PASS
+with a non-signing `TAURI_CONFIG` override; `check_play_pe_stack.mjs` PASS at
+8,388,608 bytes. The one-MiB tests exercise boot/import/reopen with a generated
+WAV and reopen after 500 relational catalog rows. They use Cargo's test profile
+and do not reproduce release GUI/event-loop frames. Installing the rebuilt
+candidate and repeating import/relaunch on QA data remains NOT_RUN.
 
 ## Dashboard, GenesisBlockDB and object storage (CR-007)
 
@@ -224,6 +271,10 @@ Lane `F:/cargo-lanes/lalin-play/LANE.md` feature-build/smoke qualification, rust
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.19b | 2026-11-08 | beta | Record lead native P1.5 QA run (updater A→B, signature rejection, retention, uninstall/reinstall) and post-fix P0 import/boot verification | working tree | Claude |
+| 0.3.18b | 2026-11-08 | beta | Record Issue #47 stack overflow diagnosis, worker isolation, PE reserve guard, regression evidence and remaining native QA | working tree | Codex |
+| 0.3.17b | 2026-11-08 | beta | Record partial P1.5 QA builds, guard and installer observations and remaining native and cleanup blockers | working tree | Codex |
+| 0.3.16b | 2026-11-08 | beta | Link blocked P1.5 attempt without claiming native updater evidence | working tree | Codex |
 | 0.3.15b | 2026-11-08 | beta | Record round 3 viewport language and clipping review, isolated feature smoke and bounded WAV publication evidence | working tree | Codex |
 | 0.3.14b | 2026-11-08 | beta | Record partial round 2 mocked UI, transition and standalone evidence and remaining native gates | working tree | Codex |
 | 0.3.13b | 2026-11-08 | beta | Record partial P1.3 frontend transition evidence, unrun gates and corrected historical PLAY-16 suite result | working tree | Codex |

@@ -302,7 +302,9 @@ pub fn run() {
         })
         .setup(|app| {
             g3_test_trace(app.handle(), "native_setup_started");
-            let library = library::initialize(app.handle()).map_err(std::io::Error::other)?;
+            let library_app = app.handle().clone();
+            let library = library::run_library_worker(move || library::initialize(&library_app))
+                .map_err(std::io::Error::other)?;
             g3_test_trace(app.handle(), "library_initialized");
             let data_dir = library::app_data_directory(app.handle())
                 .map_err(std::io::Error::other)?;
@@ -343,7 +345,10 @@ pub fn run() {
                 let app = window.app_handle().clone();
                 let paths = paths.clone();
                 tauri::async_runtime::spawn_blocking(move || {
-                    if let Err(error) = library::import_selected(&app, paths) {
+                    let import_app = app.clone();
+                    if let Err(error) = library::run_library_worker(move || {
+                        library::import_selected(&import_app, paths)
+                    }) {
                         let _ = app.emit("play-import-error", error);
                     }
                 });

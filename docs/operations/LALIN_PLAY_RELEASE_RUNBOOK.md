@@ -1,7 +1,7 @@
 ---
-version: "0.2.2b"
+version: "0.2.6b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
+last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "approved reduced scope; release qualification NOT_RUN"
 superseded_by: null
 attributes:
@@ -88,6 +88,68 @@ third-party notice inventory. It does not modify the `play-updates` release.
 The draft assets also include the Play MIT `LICENSE`, covered by the checksums.
 Never expose private signing material in logs or repository files.
 
+After `npm run tauri -- build --ci` produces the Windows executable, the
+workflow runs the PE guard before preparing release assets:
+
+```powershell
+node tools/verify/check_play_pe_stack.mjs apps/play-desktop/src-tauri/target/release/lalin-play.exe
+```
+
+The guard reads the PE optional header and fails below an 8 MiB
+`SizeOfStackReserve`.
+
+### Issue #47 P0 stack overflow code round — 2026-11-08
+
+Lead QA evidence for release A (1.0.0, `ai.lalin.play.qa`): Windows event 1000
+reported `0xc00000fd` after WAV import, with the managed object, publication
+and Genesis journal already written. Later launches failed while rebuilding
+the Genesis projection. A byte-identical executable patched to an 8 MiB PE
+reserve reopened the same data and showed one track. The exact high-water mark
+was not captured; the original main-thread reserve was 1 MiB. See the linked
+P0 defect record in [traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
+
+The source path put boot initialization and several synchronous Genesis
+catalog commands on the Tauri main thread. The import command already used the
+default blocking pool, but had no explicit stack guarantee. Boot, import,
+catalog/library commands, migration recovery commands and Smart Medley now use
+a dedicated 16 MiB worker. The release PE reserves 8 MiB as defense in depth.
+No Genesis row, journal, receipt or managed-visibility behavior changed.
+Genesis journal scan and Play relational catalog row processing use loops and
+bounded batches; no per-row or per-journal-entry recursion was found in this
+Play path. Generic nested graph `Event::Batch` traversal in Genesis remains a
+separate graph path and was not exercised by Play catalog writes.
+
+Automated code-round checks: `cargo fmt --check` PASS;
+`cargo test --offline --locked --lib --tests` PASS (94 unit passed, 6 ignored;
+3 integration passed); `npm.cmd test` PASS (19 files / 135 tests);
+`npx.cmd tsc --noEmit` PASS. A release `cargo build --offline --locked
+--release --bin lalin-play` passed on the lane with a non-signing
+`TAURI_CONFIG` override; the built PE guard reported 8,388,608 bytes. This
+compiled executable was not installed or launched. QA reinstall/import/reopen
+acceptance remains NOT_RUN for the lead.
+
+The two Rust stack guards use a 1 MiB outer caller and cover generated-WAV
+import/reopen and reopen after 500 catalog rows. They run under Cargo's test
+profile and do not reproduce optimized GUI/event-loop frames. Native QA is
+still required after installing the rebuilt release candidate.
+
+Cargo lane evidence: `F:\cargo-lanes\lalin-play\.lock` was held across the
+final Rust tests and final source release rebuild. Before final tests, free
+C/E/F were 115,095,810,048 / 132,348,358,656 / 2,001,391,894,528 bytes.
+With test bounds (C 1 GiB, E 10 MiB, F 20 GiB plus 500 GiB concurrent growth),
+projected free was 114,022,068,224 / 132,337,872,896 / 1,443,046,146,048 bytes,
+above recorded floors. Before the final release build, free C/E/F were
+114,905,927,680 / 132,348,358,656 / 2,000,722,411,520 bytes; projected free
+after release bounds (C 2 GiB, E 10 MiB, F 20 GiB plus 500 GiB concurrent
+growth) was 112,758,444,032 / 132,337,872,896 / 1,442,376,663,040, all above
+floors. After the release build, free was 114,881,032,192 /
+132,348,358,656 / 2,000,720,990,208 bytes. Release-window free delta was C
+-24,895,488, E 0, F -1,421,312 bytes. The cumulative change from final-test
+preflight through release completion was C -214,777,856, E 0,
+F -670,904,320 bytes; this includes OS and other-lane activity and is not
+attributed solely to Play. Another Cargo job on the G-Maiden lane was left
+untouched. Lane floors are C/E 53,687,091,200 and F 107,374,182,400 B.
+
 ### Local P1.4 test round — 2026-11-07 (partial)
 
 Source `898949cbe73dce49db971d63cf88ddb8d28ac6ae`, Windows, Node
@@ -146,19 +208,28 @@ Fixes found by the smoke: `build.rs` guard honours `TAURI_CONFIG` overrides; `de
 
 ## R2 — installer and update qualification
 
+P1.5 round 2 built QA A/B and observed silent A install/uninstall. Native updater
+cases remain NOT_RUN after QA CDP launch was blocked by automatic policy review;
+ephemeral key cleanup also remains blocked. [Evidence and resume conditions](../validation/evidence/play-v1-p15/README.md).
+The owner retains clean-VM and real-identifier install qualification.
+
 | Case | Required observation | Status |
 |---|---|---|
-| Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | NOT_RUN |
-| Normal user launch | No unnecessary elevation during playback/import | NOT_RUN |
-| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | NOT_RUN |
-| Signed A → B update | Installed A discovers approved B, validates signature, installs and restarts into B | NOT_RUN |
-| State retention | Library/playlist/queue/EQ retained per policy; restart never autoplays unexpectedly | NOT_RUN |
-| Same/older version | No unintended downgrade/reinstall loop | NOT_RUN |
-| Invalid signature / wrong key | Update rejected with actionable error; current installed app remains usable | NOT_RUN |
-| Offline / server error / interrupted download | Recoverable error, retry available, no corrupt partial install | NOT_RUN |
-| Installer interrupted / locked file | Defined recovery and unchanged or recoverable current install | NOT_RUN |
-| Key/channel mismatch | Reject cross-product/cross-channel metadata and artifacts | NOT_RUN |
-| Device/UI regression | DPI, multiple monitors, keyboard/touch, audio output and known issue checks from traceability | NOT_RUN |
+Evidence for the rows below: [P1.5 QA run 2026-11-08](../validation/evidence/play-v1-p15/README.md) (identifier `ai.lalin.play.qa`, ephemeral key, local endpoint, built from `76fa0fa`).
+
+| Case | Required observation | Status |
+|---|---|---|
+| Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | QA PASS (silent currentUser install, boot, import, playback); clean VM NOT_RUN (owner) |
+| Normal user launch | No unnecessary elevation during playback/import | QA PASS (currentUser install, no UAC prompt); clean VM NOT_RUN (owner) |
+| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | PASS: silent uninstall removes binary + HKCU entry, keeps app data; "Delete app data" opt-in, unchecked by default; reinstall restores library |
+| Signed A → B update | Installed A discovers approved B, validates signature, installs and restarts into B | PASS for discover/verify/install (registry + exe 1.0.1); auto-restart not observable in the agent session (Explorer cannot see the session's install path) — owner clean VM |
+| State retention | Library/playlist/queue/EQ retained per policy; restart never autoplays unexpectedly | PASS (tracks, favorite, playlist, EQ preset kept; IDLE after update and after reinstall) |
+| Same/older version | No unintended downgrade/reinstall loop | PASS (same and older → up to date, no install) |
+| Invalid signature / wrong key | Update rejected with actionable error; current installed app remains usable | PASS (both rejected; app stays 1.0.1); finding: raw English plugin error also shown in banner |
+| Offline / server error / interrupted download | Recoverable error, retry available, no corrupt partial install | PASS (offline, HTTP 500, truncated download; retry works) |
+| Installer interrupted / locked file | Defined recovery and unchanged or recoverable current install | NOT_RUN (owner clean VM) |
+| Key/channel mismatch | Reject cross-product/cross-channel metadata and artifacts | PASS (placeholder-key build guard; foreign-key signature rejected) |
+| Device/UI regression | DPI, multiple monitors, keyboard/touch, audio output and known issue checks from traceability | NOT_RUN (owner, P1.6) |
 
 Use two real signed test versions; one successful build does not prove updater
 behavior. Update restart can interrupt playback: require user confirmation and
@@ -198,6 +269,10 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.6b | 2026-11-08 | QA qualification recorded; owner clean VM NOT_RUN | Record lead native P1.5 QA run: A→B, retention, same/older, bad signature/key, offline/500/truncated, uninstall/reinstall; post-fix import/boot | working tree | Claude |
+| 0.2.5b | 2026-11-08 | qualification NOT_RUN | Record Issue #47 stack overflow worker/PE fix, lane build evidence and lead-owned native requalification gate | working tree | Codex |
+| 0.2.4b | 2026-11-08 | qualification NOT_RUN | Record QA builds, guard and partial installer evidence; preserve updater and cleanup blockers | working tree | Codex |
+| 0.2.3b | 2026-11-08 | qualification NOT_RUN | Record blocked P1.5 attempt and resume conditions | working tree | Codex |
 | 0.2.2b | 2026-11-07 | approved scope; qualification NOT_RUN | Record R1 local release smoke evidence and the three fixes it found | working tree | Claude |
 | 0.2.1b | 2026-11-07 | approved scope; qualification NOT_RUN | Merge with the R0 scope link; record MIT source license | working tree | Claude |
 | 0.2.0b | 2026-11-07 | approved scope; qualification NOT_RUN | Fill R0 values from the owner-approved scope and record P1.4 installer, signed updater, key ceremony and workflow steps | working tree | Codex |
