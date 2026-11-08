@@ -1,5 +1,5 @@
 ---
-version: "0.2.3b"
+version: "0.2.4b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "approved reduced scope; release qualification NOT_RUN"
@@ -146,15 +146,16 @@ Fixes found by the smoke: `build.rs` guard honours `TAURI_CONFIG` overrides; `de
 
 ## R2 — installer and update qualification
 
-P1.5 attempt 2026-11-08: native cases remain NOT_RUN because concurrent
-build growth was unqualified. [Partial handoff and resume conditions](../validation/evidence/play-v1-p15/README.md).
+P1.5 round 2 built QA A/B and observed silent A install/uninstall. Native updater
+cases remain NOT_RUN after QA CDP launch was blocked by automatic policy review;
+ephemeral key cleanup also remains blocked. [Evidence and resume conditions](../validation/evidence/play-v1-p15/README.md).
 The owner retains clean-VM and real-identifier install qualification.
 
 | Case | Required observation | Status |
 |---|---|---|
 | Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | NOT_RUN |
 | Normal user launch | No unnecessary elevation during playback/import | NOT_RUN |
-| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | NOT_RUN |
+| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | NOT_RUN; partial silent QA install/uninstall [evidence](../validation/evidence/play-v1-p15/README.md) |
 | Signed A → B update | Installed A discovers approved B, validates signature, installs and restarts into B | NOT_RUN |
 | State retention | Library/playlist/queue/EQ retained per policy; restart never autoplays unexpectedly | NOT_RUN |
 | Same/older version | No unintended downgrade/reinstall loop | NOT_RUN |
@@ -202,6 +203,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.4b | 2026-11-08 | qualification NOT_RUN | Record QA builds, guard and partial installer evidence; preserve updater and cleanup blockers | working tree | Codex |
 | 0.2.3b | 2026-11-08 | qualification NOT_RUN | Record blocked P1.5 attempt and resume conditions | working tree | Codex |
 | 0.2.2b | 2026-11-07 | approved scope; qualification NOT_RUN | Record R1 local release smoke evidence and the three fixes it found | working tree | Claude |
 | 0.2.1b | 2026-11-07 | approved scope; qualification NOT_RUN | Merge with the R0 scope link; record MIT source license | working tree | Claude |
