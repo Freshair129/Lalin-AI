@@ -1,5 +1,5 @@
 ---
-version: "0.2.5b"
+version: "0.2.6b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "approved reduced scope; release qualification NOT_RUN"
@@ -215,17 +215,21 @@ The owner retains clean-VM and real-identifier install qualification.
 
 | Case | Required observation | Status |
 |---|---|---|
-| Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | NOT_RUN |
-| Normal user launch | No unnecessary elevation during playback/import | NOT_RUN |
-| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | NOT_RUN; partial silent QA install/uninstall [evidence](../validation/evidence/play-v1-p15/README.md) |
-| Signed A → B update | Installed A discovers approved B, validates signature, installs and restarts into B | NOT_RUN |
-| State retention | Library/playlist/queue/EQ retained per policy; restart never autoplays unexpectedly | NOT_RUN |
-| Same/older version | No unintended downgrade/reinstall loop | NOT_RUN |
-| Invalid signature / wrong key | Update rejected with actionable error; current installed app remains usable | NOT_RUN |
-| Offline / server error / interrupted download | Recoverable error, retry available, no corrupt partial install | NOT_RUN |
-| Installer interrupted / locked file | Defined recovery and unchanged or recoverable current install | NOT_RUN |
-| Key/channel mismatch | Reject cross-product/cross-channel metadata and artifacts | NOT_RUN |
-| Device/UI regression | DPI, multiple monitors, keyboard/touch, audio output and known issue checks from traceability | NOT_RUN |
+Evidence for the rows below: [P1.5 QA run 2026-11-08](../validation/evidence/play-v1-p15/README.md) (identifier `ai.lalin.play.qa`, ephemeral key, local endpoint, built from `76fa0fa`).
+
+| Case | Required observation | Status |
+|---|---|---|
+| Clean install / launch | Play-only app, no Studio/Python/API dependency, local audio/video | QA PASS (silent currentUser install, boot, import, playback); clean VM NOT_RUN (owner) |
+| Normal user launch | No unnecessary elevation during playback/import | QA PASS (currentUser install, no UAC prompt); clean VM NOT_RUN (owner) |
+| Uninstall / reinstall | Binary/shortcut removal; explicit data-retention policy; never delete user media | PASS: silent uninstall removes binary + HKCU entry, keeps app data; "Delete app data" opt-in, unchecked by default; reinstall restores library |
+| Signed A → B update | Installed A discovers approved B, validates signature, installs and restarts into B | PASS for discover/verify/install (registry + exe 1.0.1); auto-restart not observable in the agent session (Explorer cannot see the session's install path) — owner clean VM |
+| State retention | Library/playlist/queue/EQ retained per policy; restart never autoplays unexpectedly | PASS (tracks, favorite, playlist, EQ preset kept; IDLE after update and after reinstall) |
+| Same/older version | No unintended downgrade/reinstall loop | PASS (same and older → up to date, no install) |
+| Invalid signature / wrong key | Update rejected with actionable error; current installed app remains usable | PASS (both rejected; app stays 1.0.1); finding: raw English plugin error also shown in banner |
+| Offline / server error / interrupted download | Recoverable error, retry available, no corrupt partial install | PASS (offline, HTTP 500, truncated download; retry works) |
+| Installer interrupted / locked file | Defined recovery and unchanged or recoverable current install | NOT_RUN (owner clean VM) |
+| Key/channel mismatch | Reject cross-product/cross-channel metadata and artifacts | PASS (placeholder-key build guard; foreign-key signature rejected) |
+| Device/UI regression | DPI, multiple monitors, keyboard/touch, audio output and known issue checks from traceability | NOT_RUN (owner, P1.6) |
 
 Use two real signed test versions; one successful build does not prove updater
 behavior. Update restart can interrupt playback: require user confirmation and
@@ -265,6 +269,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.6b | 2026-11-08 | QA qualification recorded; owner clean VM NOT_RUN | Record lead native P1.5 QA run: A→B, retention, same/older, bad signature/key, offline/500/truncated, uninstall/reinstall; post-fix import/boot | working tree | Claude |
 | 0.2.5b | 2026-11-08 | qualification NOT_RUN | Record Issue #47 stack overflow worker/PE fix, lane build evidence and lead-owned native requalification gate | working tree | Codex |
 | 0.2.4b | 2026-11-08 | qualification NOT_RUN | Record QA builds, guard and partial installer evidence; preserve updater and cleanup blockers | working tree | Codex |
 | 0.2.3b | 2026-11-08 | qualification NOT_RUN | Record blocked P1.5 attempt and resume conditions | working tree | Codex |
