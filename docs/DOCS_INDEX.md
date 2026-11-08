@@ -98,6 +98,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: approved S2 migration and S3 named-pipe contract with local code evidence; paired-runtime parity and recovery acceptance remain open.
 - `docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md`: candidate export inventory, retained consumers, license/notices audit and recovery record; not an executed split.
 - `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: candidate NSIS/signing/updater/draft-publication and rollback qualification; all distribution gates remain open.
+- `docs/operations/LALIN_PLAY_V1_OWNER_ACCEPTANCE.md`: owner acceptance checklist for Play v1.0 (P1.6) — clean VM install, audible checks, persistence, auto-restart after update, uninstall/reinstall.
 - `docs/guides/LALIN_PLAY_USER_GUIDE.md`: current candidate controls, local files/state and non-destructive troubleshooting.
 - `docs/product/PRD.md`: Studio baseline plus approved Play standalone requirements (§4.9); distinguish document version from application versions and partial implementation evidence.
 - `docs/product/CR-003--LALIN_PLAY_LOCAL_VIDEO.md`: approved local MP4/WebM display in Full/Compact with one persistent media element and shared EQ; implemented locally.
