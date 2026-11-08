@@ -50,6 +50,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@1.96.0
+        with:
+          components: rustfmt
 
       - name: Install Play dependencies
         working-directory: apps/play-desktop
