@@ -43,8 +43,17 @@ try {
     $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = $plainPassword
     Push-Location $appRoot
     $locationPushed = $true
-    $generatorOutput = @(& npx.cmd tauri signer generate --write-keys $privateKeyPath 2>&1)
-    $generatorExitCode = $LASTEXITCODE
+    # `tauri signer generate` ignores TAURI_SIGNING_PRIVATE_KEY_PASSWORD and prompts again unless the
+    # password is passed explicitly; --ci prevents a hidden interactive prompt. Native stderr must not
+    # become a terminating error under Windows PowerShell 5.1, so relax the preference for this call only.
+    $previousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $generatorOutput = @(& npx.cmd tauri signer generate --ci --password $plainPassword --write-keys $privateKeyPath 2>&1)
+        $generatorExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
     $generatorOutput = $null
     if ($generatorExitCode -ne 0) {
         Stop-KeySetup "Tauri signer generation failed (exit code $generatorExitCode). No key contents were printed."
@@ -98,4 +107,5 @@ Write-Host "Encrypted private key written to ignored path keys/lalin-play-update
 Write-Host "Run these commands from the repository root to set the owner-managed GitHub secrets:"
 # Windows PowerShell 5.1 prefixes piped text with a UTF-8 BOM, which corrupts the secret; read the file directly instead.
 Write-Host "gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY --repo Freshair129/Lalin-AI --body (Get-Content -Raw 'keys/lalin-play-updater.key').Trim()"
-Write-Host "`$secure = Read-Host 'PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD' -AsSecureString; `$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$secure); try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR(`$bstr) | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo Freshair129/Lalin-AI } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR(`$bstr) }"
+# Let gh prompt for the password so no PowerShell pipe (and no BOM) touches it.
+Write-Host "gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo Freshair129/Lalin-AI   # paste the password at the prompt"
