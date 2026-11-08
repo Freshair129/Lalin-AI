@@ -11,7 +11,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 const MAX_MIGRATION_BYTES: usize = 16 * 1024 * 1024;
 const MAX_JOURNAL_BYTES: u64 = 72 * 1024 * 1024;
@@ -680,119 +680,125 @@ fn undo_journal(
 }
 
 #[tauri::command]
-pub fn get_play_migration_undo_status(
-    app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
-) -> Result<UndoStatus, String> {
-    let directory = data_dir(&app)?;
-    if let Some(journal) = load_journal(&directory)? {
-        if journal.phase == Phase::Acknowledged {
-            finalize_acknowledged_journal(&directory, &journal)?;
-            fs::remove_file(journal_path(&directory)).map_err(|_| {
-                "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
-            })?;
-        } else {
+pub async fn get_play_migration_undo_status(app: AppHandle) -> Result<UndoStatus, String> {
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let directory = data_dir(&app)?;
+        if let Some(journal) = load_journal(&directory)? {
+            if journal.phase == Phase::Acknowledged {
+                finalize_acknowledged_journal(&directory, &journal)?;
+                fs::remove_file(journal_path(&directory)).map_err(|_| {
+                    "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+                })?;
+            } else {
+                return Ok(UndoStatus {
+                    available: false,
+                    reason: Some("กำลังกู้คืน migration ที่ค้างอยู่; restart Lalin Play ก่อน".into()),
+                });
+            }
+        }
+        let Some(snapshot) = load_undo_snapshot(&directory)? else {
             return Ok(UndoStatus {
                 available: false,
-                reason: Some("กำลังกู้คืน migration ที่ค้างอยู่; restart Lalin Play ก่อน".into()),
+                reason: None,
+            });
+        };
+        let current = state.0.lock().map_err(|e| e.to_string())?;
+        if !library_matches_snapshot(&current, &snapshot.new_library)? {
+            return Ok(UndoStatus {
+                available: false,
+                reason: Some("คลังเปลี่ยนหลัง migration จึงปิดการย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into()),
             });
         }
-    }
-    let Some(snapshot) = load_undo_snapshot(&directory)? else {
-        return Ok(UndoStatus {
-            available: false,
+        Ok(UndoStatus {
+            available: true,
             reason: None,
-        });
-    };
-    let current = state.0.lock().map_err(|e| e.to_string())?;
-    if !library_matches_snapshot(&current, &snapshot.new_library)? {
-        return Ok(UndoStatus {
-            available: false,
-            reason: Some("คลังเปลี่ยนหลัง migration จึงปิดการย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into()),
-        });
-    }
-    Ok(UndoStatus {
-        available: true,
-        reason: None,
+        })
     })
+    .await
 }
 
 #[tauri::command]
-pub fn prepare_undo_play_migration(
+pub async fn prepare_undo_play_migration(
     app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
     transaction_id: String,
     old_queue_raw: Option<String>,
     old_eq_raw: Option<String>,
     old_resume_raw: Option<String>,
 ) -> Result<MigrationRecovery, String> {
-    if !is_uuid(&transaction_id) {
-        return Err("transaction ID ไม่ถูกต้อง".into());
-    }
-    if old_queue_raw
-        .as_ref()
-        .is_some_and(|value| value.len() > MAX_MIGRATION_BYTES)
-        || old_eq_raw
-            .as_ref()
-            .is_some_and(|value| value.len() > 1024 * 1024)
-        || old_resume_raw
-            .as_ref()
-            .is_some_and(|value| value.len() > 64)
-    {
-        return Err("ข้อมูลเดิมเกินขนาด recovery ที่รองรับ".into());
-    }
-    let directory = data_dir(&app)?;
-    match load_journal(&directory)? {
-        Some(journal) if journal.phase == Phase::Acknowledged => {
-            finalize_acknowledged_journal(&directory, &journal)?;
-            fs::remove_file(journal_path(&directory)).map_err(|_| {
-                "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
-            })?;
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        if !is_uuid(&transaction_id) {
+            return Err("transaction ID ไม่ถูกต้อง".into());
         }
-        Some(_) => {
-            return Err("มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนย้อนกลับ".into())
+        if old_queue_raw
+            .as_ref()
+            .is_some_and(|value| value.len() > MAX_MIGRATION_BYTES)
+            || old_eq_raw
+                .as_ref()
+                .is_some_and(|value| value.len() > 1024 * 1024)
+            || old_resume_raw
+                .as_ref()
+                .is_some_and(|value| value.len() > 64)
+        {
+            return Err("ข้อมูลเดิมเกินขนาด recovery ที่รองรับ".into());
         }
-        None => {}
-    }
-    let snapshot = load_undo_snapshot(&directory)?.ok_or("ไม่มี migration ล่าสุดที่ย้อนกลับได้")?;
-    let current = state.0.lock().map_err(|e| e.to_string())?;
-    if !library_matches_snapshot(&current, &snapshot.new_library)? {
-        return Err("คลังเปลี่ยนหลัง migration จึงไม่ย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into());
-    }
-    let journal = undo_journal(
-        &snapshot,
-        &current,
-        transaction_id,
-        old_queue_raw,
-        old_eq_raw,
-        old_resume_raw,
-    );
-    save_journal(&directory, &journal)?;
-    Ok(recovery_from(journal, false))
+        let directory = data_dir(&app)?;
+        match load_journal(&directory)? {
+            Some(journal) if journal.phase == Phase::Acknowledged => {
+                finalize_acknowledged_journal(&directory, &journal)?;
+                fs::remove_file(journal_path(&directory)).map_err(|_| {
+                    "ล้าง migration recovery journal ไม่สำเร็จ; restart Lalin Play".to_string()
+                })?;
+            }
+            Some(_) => {
+                return Err("มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนย้อนกลับ".into())
+            }
+            None => {}
+        }
+        let snapshot = load_undo_snapshot(&directory)?.ok_or("ไม่มี migration ล่าสุดที่ย้อนกลับได้")?;
+        let current = state.0.lock().map_err(|e| e.to_string())?;
+        if !library_matches_snapshot(&current, &snapshot.new_library)? {
+            return Err("คลังเปลี่ยนหลัง migration จึงไม่ย้อนกลับเพื่อรักษาการแก้ไขล่าสุด".into());
+        }
+        let journal = undo_journal(
+            &snapshot,
+            &current,
+            transaction_id,
+            old_queue_raw,
+            old_eq_raw,
+            old_resume_raw,
+        );
+        save_journal(&directory, &journal)?;
+        Ok(recovery_from(journal, false))
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn preview_play_migration(
+pub async fn preview_play_migration(
     app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
     raw_json: String,
 ) -> Result<MigrationPreview, String> {
-    let envelope = parse_envelope(&raw_json)?;
-    let directory = data_dir(&app)?;
-    let history = load_history(&directory)?;
-    let existing = state.0.lock().map_err(|e| e.to_string())?.clone();
-    build_preview(
-        &envelope,
-        &existing,
-        history.export_ids.contains(&envelope.export_id),
-    )
-    .map(|(preview, _)| preview)
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let envelope = parse_envelope(&raw_json)?;
+        let directory = data_dir(&app)?;
+        let history = load_history(&directory)?;
+        let existing = state.0.lock().map_err(|e| e.to_string())?.clone();
+        build_preview(
+            &envelope,
+            &existing,
+            history.export_ids.contains(&envelope.export_id),
+        )
+        .map(|(preview, _)| preview)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn prepare_play_migration(
+pub async fn prepare_play_migration(
     app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
     raw_json: String,
     transaction_id: String,
     old_queue_raw: Option<String>,
@@ -800,165 +806,182 @@ pub fn prepare_play_migration(
     old_resume_raw: Option<String>,
     allow_repeat: bool,
 ) -> Result<MigrationPreview, String> {
-    if !is_uuid(&transaction_id) {
-        return Err("transaction ID ไม่ถูกต้อง".into());
-    }
-    if old_queue_raw
-        .as_ref()
-        .is_some_and(|value| value.len() > MAX_MIGRATION_BYTES)
-        || old_eq_raw
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        if !is_uuid(&transaction_id) {
+            return Err("transaction ID ไม่ถูกต้อง".into());
+        }
+        if old_queue_raw
             .as_ref()
-            .is_some_and(|value| value.len() > 1024 * 1024)
-        || old_resume_raw
-            .as_ref()
-            .is_some_and(|value| value.len() > 64)
-    {
-        return Err("ข้อมูลเดิมเกินขนาด recovery ที่รองรับ".into());
-    }
-    let envelope = parse_envelope(&raw_json)?;
-    let directory = data_dir(&app)?;
-    let state_guard = state.0.lock().map_err(|e| e.to_string())?;
-    let history = load_history(&directory)?;
-    let already_imported = history.export_ids.contains(&envelope.export_id);
-    if already_imported && !allow_repeat {
-        return Err("export นี้เคยนำเข้าแล้ว กรุณายืนยันการนำเข้าซ้ำใน preview".into());
-    }
-    let (mut preview, new_library) = build_preview(&envelope, &state_guard, already_imported)?;
-    match load_journal(&directory)? {
-        Some(journal) if journal.phase == Phase::Acknowledged => {
+            .is_some_and(|value| value.len() > MAX_MIGRATION_BYTES)
+            || old_eq_raw
+                .as_ref()
+                .is_some_and(|value| value.len() > 1024 * 1024)
+            || old_resume_raw
+                .as_ref()
+                .is_some_and(|value| value.len() > 64)
+        {
+            return Err("ข้อมูลเดิมเกินขนาด recovery ที่รองรับ".into());
+        }
+        let envelope = parse_envelope(&raw_json)?;
+        let directory = data_dir(&app)?;
+        let state_guard = state.0.lock().map_err(|e| e.to_string())?;
+        let history = load_history(&directory)?;
+        let already_imported = history.export_ids.contains(&envelope.export_id);
+        if already_imported && !allow_repeat {
+            return Err("export นี้เคยนำเข้าแล้ว กรุณายืนยันการนำเข้าซ้ำใน preview".into());
+        }
+        let (mut preview, new_library) = build_preview(&envelope, &state_guard, already_imported)?;
+        match load_journal(&directory)? {
+            Some(journal) if journal.phase == Phase::Acknowledged => {
+                finalize_acknowledged_journal(&directory, &journal)?;
+                fs::remove_file(journal_path(&directory)).map_err(|_| {
+                    "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string()
+                })?;
+            }
+            Some(journal) if journal.phase == Phase::Committed => {
+                return Err(
+                    "มี migration ที่ commit แล้วรอการยืนยัน recovery; restart Lalin Play ก่อนนำเข้าอีกครั้ง"
+                        .into(),
+                )
+            }
+            Some(_) => {
+                return Err(
+                    "มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนนำเข้าอีกครั้ง".into(),
+                )
+            }
+            None => {}
+        }
+        let old_library = state_guard.clone();
+        let journal = Journal {
+            version: 1,
+            transaction_id: transaction_id.clone(),
+            export_id: envelope.export_id.clone(),
+            action: TransactionAction::Import,
+            phase: Phase::Prepared,
+            ready_to_ack: false,
+            old_library,
+            new_library,
+            old_queue_raw,
+            old_eq_raw,
+            old_resume_raw,
+            restore_raw_storage: false,
+            new_queue_raw: None,
+            new_eq_raw: None,
+            new_resume_raw: None,
+            undo_source_transaction_id: None,
+            plan: preview.plan.clone(),
+            eq: preview.eq.clone(),
+        };
+        save_journal(&directory, &journal)?;
+        preview.transaction_id = Some(transaction_id);
+        Ok(preview)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn apply_play_migration(app: AppHandle, transaction_id: String) -> Result<(), String> {
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let directory = data_dir(&app)?;
+        let mut current = state.0.lock().map_err(|e| e.to_string())?;
+        let mut journal = journal_for_transaction(&directory, &transaction_id)?;
+        apply_journal_to_library(&directory, &mut current, &mut journal)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn commit_play_migration(app: AppHandle, transaction_id: String) -> Result<(), String> {
+    crate::library::run_library_worker_async(move || {
+        let directory = data_dir(&app)?;
+        let mut journal = journal_for_transaction(&directory, &transaction_id)?;
+        mark_journal_committed(&directory, &mut journal)?;
+        match journal.action {
+            TransactionAction::Import => record_import_commit(&directory, &journal)?,
+            TransactionAction::Undo => {}
+        }
+        Ok(())
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn rollback_play_migration(
+    app: AppHandle,
+    transaction_id: String,
+) -> Result<MigrationRecovery, String> {
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let directory = data_dir(&app)?;
+        let mut current = state.0.lock().map_err(|e| e.to_string())?;
+        let mut journal = journal_for_transaction(&directory, &transaction_id)?;
+        if journal.phase == Phase::Committed {
+            return Err("committed migration cannot be rolled back".into());
+        }
+        restore_journal_library(&directory, &mut current, &mut journal, false)?;
+        Ok(recovery_from(journal, false))
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn recover_play_migration(app: AppHandle) -> Result<Option<MigrationRecovery>, String> {
+    crate::library::run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::g3_test_trace(&app, "migration_recovery_invoked");
+        let directory = data_dir(&app)?;
+        let mut current = state.0.lock().map_err(|e| e.to_string())?;
+        let Some(mut journal) = load_journal(&directory)? else {
+            crate::g3_test_trace(&app, "migration_recovery_complete_no_journal");
+            return Ok(None);
+        };
+        if journal.phase == Phase::Acknowledged {
             finalize_acknowledged_journal(&directory, &journal)?;
             fs::remove_file(journal_path(&directory))
                 .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+            crate::g3_test_trace(&app, "migration_recovery_complete_acknowledged");
+            return Ok(None);
         }
-        Some(journal) if journal.phase == Phase::Committed => {
-            return Err(
-                "มี migration ที่ commit แล้วรอการยืนยัน recovery; restart Lalin Play ก่อนนำเข้าอีกครั้ง"
-                    .into(),
-            )
+        let committed = journal.phase == Phase::Committed;
+        restore_journal_library(&directory, &mut current, &mut journal, committed)?;
+        if committed && journal.action == TransactionAction::Import {
+            record_import_commit(&directory, &journal)?;
         }
-        Some(_) => {
-            return Err("มี migration recovery ค้างอยู่ กรุณา restart Lalin Play ก่อนนำเข้าอีกครั้ง".into())
+        crate::g3_test_trace(&app, "migration_recovery_complete");
+        Ok(Some(recovery_from(journal, committed)))
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn ack_play_migration(app: AppHandle, transaction_id: String) -> Result<(), String> {
+    crate::library::run_library_worker_async(move || {
+        let directory = data_dir(&app)?;
+        let mut journal = journal_for_transaction(&directory, &transaction_id)?;
+        if journal.phase != Phase::Committed && !journal.ready_to_ack {
+            return Err("migration recovery has not been applied".into());
         }
-        None => {}
-    }
-    let old_library = state_guard.clone();
-    let journal = Journal {
-        version: 1,
-        transaction_id: transaction_id.clone(),
-        export_id: envelope.export_id.clone(),
-        action: TransactionAction::Import,
-        phase: Phase::Prepared,
-        ready_to_ack: false,
-        old_library,
-        new_library,
-        old_queue_raw,
-        old_eq_raw,
-        old_resume_raw,
-        restore_raw_storage: false,
-        new_queue_raw: None,
-        new_eq_raw: None,
-        new_resume_raw: None,
-        undo_source_transaction_id: None,
-        plan: preview.plan.clone(),
-        eq: preview.eq.clone(),
-    };
-    save_journal(&directory, &journal)?;
-    preview.transaction_id = Some(transaction_id);
-    Ok(preview)
-}
-
-#[tauri::command]
-pub fn apply_play_migration(
-    app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
-    transaction_id: String,
-) -> Result<(), String> {
-    let directory = data_dir(&app)?;
-    let mut current = state.0.lock().map_err(|e| e.to_string())?;
-    let mut journal = journal_for_transaction(&directory, &transaction_id)?;
-    apply_journal_to_library(&directory, &mut current, &mut journal)
-}
-
-#[tauri::command]
-pub fn commit_play_migration(app: AppHandle, transaction_id: String) -> Result<(), String> {
-    let directory = data_dir(&app)?;
-    let mut journal = journal_for_transaction(&directory, &transaction_id)?;
-    mark_journal_committed(&directory, &mut journal)?;
-    match journal.action {
-        TransactionAction::Import => record_import_commit(&directory, &journal)?,
-        TransactionAction::Undo => {}
-    }
-    Ok(())
-}
-
-#[tauri::command]
-pub fn rollback_play_migration(
-    app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
-    transaction_id: String,
-) -> Result<MigrationRecovery, String> {
-    let directory = data_dir(&app)?;
-    let mut current = state.0.lock().map_err(|e| e.to_string())?;
-    let mut journal = journal_for_transaction(&directory, &transaction_id)?;
-    if journal.phase == Phase::Committed {
-        return Err("committed migration cannot be rolled back".into());
-    }
-    restore_journal_library(&directory, &mut current, &mut journal, false)?;
-    Ok(recovery_from(journal, false))
-}
-
-#[tauri::command]
-pub fn recover_play_migration(
-    app: AppHandle,
-    state: tauri::State<'_, LibraryState>,
-) -> Result<Option<MigrationRecovery>, String> {
-    crate::g3_test_trace(&app, "migration_recovery_invoked");
-    let directory = data_dir(&app)?;
-    let mut current = state.0.lock().map_err(|e| e.to_string())?;
-    let Some(mut journal) = load_journal(&directory)? else {
-        crate::g3_test_trace(&app, "migration_recovery_complete_no_journal");
-        return Ok(None);
-    };
-    if journal.phase == Phase::Acknowledged {
-        finalize_acknowledged_journal(&directory, &journal)?;
-        fs::remove_file(journal_path(&directory))
-            .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
-        crate::g3_test_trace(&app, "migration_recovery_complete_acknowledged");
-        return Ok(None);
-    }
-    let committed = journal.phase == Phase::Committed;
-    restore_journal_library(&directory, &mut current, &mut journal, committed)?;
-    if committed && journal.action == TransactionAction::Import {
-        record_import_commit(&directory, &journal)?;
-    }
-    crate::g3_test_trace(&app, "migration_recovery_complete");
-    Ok(Some(recovery_from(journal, committed)))
-}
-
-#[tauri::command]
-pub fn ack_play_migration(app: AppHandle, transaction_id: String) -> Result<(), String> {
-    let directory = data_dir(&app)?;
-    let mut journal = journal_for_transaction(&directory, &transaction_id)?;
-    if journal.phase != Phase::Committed && !journal.ready_to_ack {
-        return Err("migration recovery has not been applied".into());
-    }
-    if journal.phase == Phase::Committed {
-        match journal.action {
-            TransactionAction::Import => record_import_commit(&directory, &journal)?,
-            TransactionAction::Undo => {
-                if let Some(source_id) = &journal.undo_source_transaction_id {
-                    remove_undo_snapshot_for(&directory, source_id)?;
+        if journal.phase == Phase::Committed {
+            match journal.action {
+                TransactionAction::Import => record_import_commit(&directory, &journal)?,
+                TransactionAction::Undo => {
+                    if let Some(source_id) = &journal.undo_source_transaction_id {
+                        remove_undo_snapshot_for(&directory, source_id)?;
+                    }
                 }
             }
         }
-    }
-    journal.ready_to_ack = journal.phase != Phase::Committed;
-    journal.phase = Phase::Acknowledged;
-    save_journal(&directory, &journal)?;
-    finalize_acknowledged_journal(&directory, &journal)?;
-    fs::remove_file(journal_path(&directory))
-        .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
-    Ok(())
+        journal.ready_to_ack = journal.phase != Phase::Committed;
+        journal.phase = Phase::Acknowledged;
+        save_journal(&directory, &journal)?;
+        finalize_acknowledged_journal(&directory, &journal)?;
+        fs::remove_file(journal_path(&directory))
+            .map_err(|_| "ล้าง migration recovery journal ไม่สำเร็จ; restart Play".to_string())?;
+        Ok(())
+    })
+    .await
 }
 
 fn recovery_from(journal: Journal, committed: bool) -> MigrationRecovery {

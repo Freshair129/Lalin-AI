@@ -1,5 +1,5 @@
 ---
-version: "0.2.4b"
+version: "0.2.5b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
 last_update: "2026-11-08T00:00:00+07:00,Codex"
 status: "approved reduced scope; release qualification NOT_RUN"
@@ -87,6 +87,68 @@ NSIS installer, its updater signature, generated update metadata, checksums and
 third-party notice inventory. It does not modify the `play-updates` release.
 The draft assets also include the Play MIT `LICENSE`, covered by the checksums.
 Never expose private signing material in logs or repository files.
+
+After `npm run tauri -- build --ci` produces the Windows executable, the
+workflow runs the PE guard before preparing release assets:
+
+```powershell
+node tools/verify/check_play_pe_stack.mjs apps/play-desktop/src-tauri/target/release/lalin-play.exe
+```
+
+The guard reads the PE optional header and fails below an 8 MiB
+`SizeOfStackReserve`.
+
+### Issue #47 P0 stack overflow code round — 2026-11-08
+
+Lead QA evidence for release A (1.0.0, `ai.lalin.play.qa`): Windows event 1000
+reported `0xc00000fd` after WAV import, with the managed object, publication
+and Genesis journal already written. Later launches failed while rebuilding
+the Genesis projection. A byte-identical executable patched to an 8 MiB PE
+reserve reopened the same data and showed one track. The exact high-water mark
+was not captured; the original main-thread reserve was 1 MiB. See the linked
+P0 defect record in [traceability](../validation/LALIN_PLAY_TRACEABILITY.md).
+
+The source path put boot initialization and several synchronous Genesis
+catalog commands on the Tauri main thread. The import command already used the
+default blocking pool, but had no explicit stack guarantee. Boot, import,
+catalog/library commands, migration recovery commands and Smart Medley now use
+a dedicated 16 MiB worker. The release PE reserves 8 MiB as defense in depth.
+No Genesis row, journal, receipt or managed-visibility behavior changed.
+Genesis journal scan and Play relational catalog row processing use loops and
+bounded batches; no per-row or per-journal-entry recursion was found in this
+Play path. Generic nested graph `Event::Batch` traversal in Genesis remains a
+separate graph path and was not exercised by Play catalog writes.
+
+Automated code-round checks: `cargo fmt --check` PASS;
+`cargo test --offline --locked --lib --tests` PASS (94 unit passed, 6 ignored;
+3 integration passed); `npm.cmd test` PASS (19 files / 135 tests);
+`npx.cmd tsc --noEmit` PASS. A release `cargo build --offline --locked
+--release --bin lalin-play` passed on the lane with a non-signing
+`TAURI_CONFIG` override; the built PE guard reported 8,388,608 bytes. This
+compiled executable was not installed or launched. QA reinstall/import/reopen
+acceptance remains NOT_RUN for the lead.
+
+The two Rust stack guards use a 1 MiB outer caller and cover generated-WAV
+import/reopen and reopen after 500 catalog rows. They run under Cargo's test
+profile and do not reproduce optimized GUI/event-loop frames. Native QA is
+still required after installing the rebuilt release candidate.
+
+Cargo lane evidence: `F:\cargo-lanes\lalin-play\.lock` was held across the
+final Rust tests and final source release rebuild. Before final tests, free
+C/E/F were 115,095,810,048 / 132,348,358,656 / 2,001,391,894,528 bytes.
+With test bounds (C 1 GiB, E 10 MiB, F 20 GiB plus 500 GiB concurrent growth),
+projected free was 114,022,068,224 / 132,337,872,896 / 1,443,046,146,048 bytes,
+above recorded floors. Before the final release build, free C/E/F were
+114,905,927,680 / 132,348,358,656 / 2,000,722,411,520 bytes; projected free
+after release bounds (C 2 GiB, E 10 MiB, F 20 GiB plus 500 GiB concurrent
+growth) was 112,758,444,032 / 132,337,872,896 / 1,442,376,663,040, all above
+floors. After the release build, free was 114,881,032,192 /
+132,348,358,656 / 2,000,720,990,208 bytes. Release-window free delta was C
+-24,895,488, E 0, F -1,421,312 bytes. The cumulative change from final-test
+preflight through release completion was C -214,777,856, E 0,
+F -670,904,320 bytes; this includes OS and other-lane activity and is not
+attributed solely to Play. Another Cargo job on the G-Maiden lane was left
+untouched. Lane floors are C/E 53,687,091,200 and F 107,374,182,400 B.
 
 ### Local P1.4 test round — 2026-11-07 (partial)
 
@@ -203,6 +265,7 @@ A→B results, migration/recovery results, reviewer approval and published URL:
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.5b | 2026-11-08 | qualification NOT_RUN | Record Issue #47 stack overflow worker/PE fix, lane build evidence and lead-owned native requalification gate | working tree | Codex |
 | 0.2.4b | 2026-11-08 | qualification NOT_RUN | Record QA builds, guard and partial installer evidence; preserve updater and cleanup blockers | working tree | Codex |
 | 0.2.3b | 2026-11-08 | qualification NOT_RUN | Record blocked P1.5 attempt and resume conditions | working tree | Codex |
 | 0.2.2b | 2026-11-07 | approved scope; qualification NOT_RUN | Record R1 local release smoke evidence and the three fixes it found | working tree | Claude |

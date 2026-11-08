@@ -94,6 +94,9 @@ jobs:
           $strictUtf8 = $null
           if ($buildExitCode -ne 0) { exit $buildExitCode }
 
+      - name: Check Play executable stack reserve
+        run: node tools/verify/check_play_pe_stack.mjs apps/play-desktop/src-tauri/target/release/lalin-play.exe
+
       - name: Prepare release assets
         shell: pwsh
         env:

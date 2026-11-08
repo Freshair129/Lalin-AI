@@ -9,6 +9,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::Mutex,
+    thread,
 };
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
@@ -83,6 +84,32 @@ pub struct Library {
 }
 
 pub struct LibraryState(pub Mutex<Library>, pub PathBuf);
+
+const LIBRARY_WORKER_STACK_BYTES: usize = 16 * 1024 * 1024;
+
+pub(crate) fn run_library_worker<T, F>(work: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, String> + Send + 'static,
+{
+    thread::Builder::new()
+        .name("lalin-play-library".into())
+        .stack_size(LIBRARY_WORKER_STACK_BYTES)
+        .spawn(work)
+        .map_err(|error| format!("เปิด worker ของคลังไม่สำเร็จ: {error}"))?
+        .join()
+        .map_err(|_| "worker ของคลังหยุดทำงานผิดปกติ".to_string())?
+}
+
+pub(crate) async fn run_library_worker_async<T, F>(work: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, String> + Send + 'static,
+{
+    tauri::async_runtime::spawn_blocking(move || run_library_worker(work))
+        .await
+        .map_err(|error| error.to_string())?
+}
 
 pub fn supported(path: &Path) -> bool {
     path.extension()
@@ -226,8 +253,30 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
     let state = app.state::<LibraryState>();
     let mut library = state.0.lock().map_err(|e| e.to_string())?;
     crate::migration::ensure_no_active_journal(&app)?;
-    let mut next = library.clone();
     let directory = state.1.clone();
+    let imported = import_selected_paths(&mut library, &directory, paths, |path| {
+        app.asset_protocol_scope()
+            .allow_file(path)
+            .map_err(|error| error.to_string())
+    })?;
+    app.emit("play-library-changed", ())
+        .map_err(|e| e.to_string())?;
+    Ok(imported)
+}
+
+fn import_selected_paths<F>(
+    library: &mut Library,
+    directory: &Path,
+    paths: Vec<PathBuf>,
+    mut allow_file: F,
+) -> Result<Vec<Track>, String>
+where
+    F: FnMut(&Path) -> Result<(), String>,
+{
+    if paths.is_empty() {
+        return Err("ไม่พบไฟล์เสียงหรือวิดีโอที่รองรับในรายการที่เลือก".into());
+    }
+    let mut next = library.clone();
     if next.tracks.len().saturating_add(paths.len()) > MAX_TRACKS {
         let mut seen_hashes = HashSet::new();
         let mut additions = 0usize;
@@ -243,9 +292,9 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
                     || candidate.content_hash.as_deref() == Some(hash.as_str())
             });
             if exists_in_memory
-                || crate::library_store::find_track_by_source(&directory, &source_path)?.is_some()
-                || crate::library_store::find_track_by_hash(&directory, &hash)?.is_some()
-                || crate::library_store::find_damaged_track_by_hash(&directory, &hash)?.is_some()
+                || crate::library_store::find_track_by_source(directory, &source_path)?.is_some()
+                || crate::library_store::find_track_by_hash(directory, &hash)?.is_some()
+                || crate::library_store::find_damaged_track_by_hash(directory, &hash)?.is_some()
             {
                 continue;
             }
@@ -262,7 +311,7 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
         let publication_id =
             crate::local_media_store::publication_id_for_import(&source_path, source)?;
         let staged =
-            crate::local_media_store::stage_local_file(&directory, &publication_id, source)?;
+            crate::local_media_store::stage_local_file(directory, &publication_id, source)?;
         let hash = staged.manifest.whole_sha256.clone();
         let existing = next
             .tracks
@@ -274,15 +323,13 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
             })
             .cloned()
             .or(crate::library_store::find_track_by_source(
-                &directory,
+                directory,
                 &source_path,
             )?)
-            .or(crate::library_store::find_track_by_hash(&directory, &hash)?);
+            .or(crate::library_store::find_track_by_hash(directory, &hash)?);
         if let Some(repaired) =
-            repair_imported_managed_track(&directory, source, &publication_id, &hash, |path| {
-                app.asset_protocol_scope()
-                    .allow_file(path)
-                    .map_err(|_| "recovery:write-failed".to_string())
+            repair_imported_managed_track(directory, source, &publication_id, &hash, |path| {
+                allow_file(path).map_err(|_| "recovery:write-failed".to_string())
             })?
         {
             if let Some(row) = next.tracks.iter_mut().find(|row| row.id == repaired.id) {
@@ -297,7 +344,7 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
             candidate.storage_kind == "managed"
                 && candidate.content_hash.as_deref() == Some(hash.as_str())
         }) {
-            crate::local_media_store::discard_uncommitted_stage(&directory, &publication_id)?;
+            crate::local_media_store::discard_uncommitted_stage(directory, &publication_id)?;
             let existing = existing.expect("checked as present");
             if let Some(row) = next.tracks.iter_mut().find(|row| row.id == existing.id) {
                 *row = existing.clone();
@@ -313,7 +360,7 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
         } else {
             item.id = format!("offline:{hash}");
         }
-        let object_receipt = crate::local_media_store::finalize_object(&directory, &staged)?;
+        let object_receipt = crate::local_media_store::finalize_object(directory, &staged)?;
         item.path = directory
             .join(&object_receipt.relative_path)
             .to_string_lossy()
@@ -324,11 +371,9 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
         item.source_kind = "user".into();
         item.missing = false;
         let prepared =
-            crate::local_media_store::prepare_publication(&directory, object_receipt, item)?;
-        let item = crate::library_store::publish_prepared(&directory, &prepared)?;
-        app.asset_protocol_scope()
-            .allow_file(Path::new(&item.path))
-            .map_err(|e| e.to_string())?;
+            crate::local_media_store::prepare_publication(directory, object_receipt, item)?;
+        let item = crate::library_store::publish_prepared(directory, &prepared)?;
+        allow_file(Path::new(&item.path))?;
         if let Some(existing) = next.tracks.iter_mut().find(|row| row.id == item.id) {
             *existing = item.clone();
         } else {
@@ -340,16 +385,18 @@ pub fn import_selected(app: &AppHandle, roots: Vec<PathBuf>) -> Result<Vec<Track
         imported.push(item);
     }
     *library = next;
-    app.emit("play-library-changed", ())
-        .map_err(|e| e.to_string())?;
     Ok(imported)
 }
 
 #[tauri::command]
-pub fn get_library(state: tauri::State<'_, LibraryState>) -> Result<Library, String> {
-    let library = crate::library_store::read_catalog(&state.1)?;
-    *state.0.lock().map_err(|e| e.to_string())? = library.clone();
-    Ok(library)
+pub async fn get_library(app: AppHandle) -> Result<Library, String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let library = crate::library_store::read_catalog(&state.1)?;
+        *state.0.lock().map_err(|e| e.to_string())? = library.clone();
+        Ok(library)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -358,51 +405,68 @@ pub async fn select_media(
     folder: bool,
     path: Option<String>,
 ) -> Result<Vec<Track>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        if let Some(path) = path {
+    if let Some(path) = path {
+        return run_library_worker_async(move || {
             let selected = crate::media_validation::validate_media_file(&path)
                 .map_err(|error| error.relink_code())?;
-            return import_selected(&app, vec![selected]);
-        }
-        let selected = if folder {
-            app.dialog()
-                .file()
-                .set_title("เพิ่มโฟลเดอร์สื่อ — อ่านไฟล์เท่านั้น")
-                .blocking_pick_folder()
-                .map(|file| vec![file])
-        } else {
-            app.dialog()
-                .file()
-                .set_title("เพิ่มไฟล์ใน Lalin Play")
-                .add_filter("Audio / Video", MEDIA_EXTENSIONS)
-                .blocking_pick_files()
-        };
-        let Some(files) = selected else {
-            return Ok(Vec::new());
-        };
-        let paths = files
-            .into_iter()
-            .map(|file| file.into_path().map_err(|e| e.to_string()))
-            .collect::<Result<Vec<_>, _>>()?;
-        import_selected(&app, paths)
-    })
-    .await
-    .map_err(|e| e.to_string())?
+            import_selected(&app, vec![selected])
+        })
+        .await;
+    }
+
+    let dialog_app = app.clone();
+    let selected_paths =
+        tauri::async_runtime::spawn_blocking(move || -> Result<Option<Vec<PathBuf>>, String> {
+            let selected = if folder {
+                dialog_app
+                    .dialog()
+                    .file()
+                    .set_title("เพิ่มโฟลเดอร์สื่อ — อ่านไฟล์เท่านั้น")
+                    .blocking_pick_folder()
+                    .map(|file| vec![file])
+            } else {
+                dialog_app
+                    .dialog()
+                    .file()
+                    .set_title("เพิ่มไฟล์ใน Lalin Play")
+                    .add_filter("Audio / Video", MEDIA_EXTENSIONS)
+                    .blocking_pick_files()
+            };
+            let Some(files) = selected else {
+                return Ok(None);
+            };
+            let paths = files
+                .into_iter()
+                .map(|file| file.into_path().map_err(|e| e.to_string()))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(Some(paths))
+        })
+        .await
+        .map_err(|error| error.to_string())??;
+
+    let Some(paths) = selected_paths else {
+        return Ok(Vec::new());
+    };
+    run_library_worker_async(move || import_selected(&app, paths)).await
 }
 
 #[tauri::command]
-pub fn list_damaged_tracks(
-    state: tauri::State<'_, LibraryState>,
+pub async fn list_damaged_tracks(
+    app: AppHandle,
 ) -> Result<Vec<crate::library_store::DamagedTrack>, String> {
-    crate::library_store::list_damaged_tracks(&state.1)
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::list_damaged_tracks(&state.1)
+    })
+    .await
 }
 
 #[tauri::command(rename_all = "camelCase")]
 pub async fn select_relink_file(app: AppHandle, id: String) -> Result<Option<String>, String> {
     let directory = app.state::<LibraryState>().1.clone();
-    tauri::async_runtime::spawn_blocking(move || {
+    let parent_directory = run_library_worker_async(move || {
         let track = crate::library_store::track_for_relink(&directory, &id)?;
-        let parent_directory = track
+        Ok(track
             .source_path
             .as_deref()
             .and_then(|path| Path::new(path).parent())
@@ -413,7 +477,11 @@ pub async fn select_relink_file(app: AppHandle, id: String) -> Result<Option<Str
                     .parent()
                     .filter(|path| path.is_dir())
                     .map(Path::to_path_buf)
-            });
+            }))
+    })
+    .await?;
+
+    tauri::async_runtime::spawn_blocking(move || {
         let mut dialog = app
             .dialog()
             .file()
@@ -435,15 +503,19 @@ pub async fn select_relink_file(app: AppHandle, id: String) -> Result<Option<Str
 #[tauri::command(rename_all = "camelCase")]
 pub async fn select_restore_file(app: AppHandle, id: String) -> Result<Option<String>, String> {
     let directory = app.state::<LibraryState>().1.clone();
-    tauri::async_runtime::spawn_blocking(move || {
+    let parent_directory = run_library_worker_async(move || {
         let damaged = crate::library_store::damaged_track_for_id(&directory, &id)?
             .ok_or("recovery:not-recoverable")?;
-        let parent_directory = damaged
+        Ok(damaged
             .source_path
             .as_deref()
             .and_then(|path| Path::new(path).parent())
             .filter(|path| path.is_dir())
-            .map(Path::to_path_buf);
+            .map(Path::to_path_buf))
+    })
+    .await?;
+
+    tauri::async_runtime::spawn_blocking(move || {
         let mut dialog = app
             .dialog()
             .file()
@@ -468,7 +540,7 @@ pub async fn restore_managed_track(
     id: String,
     path: String,
 ) -> Result<Track, String> {
-    tauri::async_runtime::spawn_blocking(move || {
+    run_library_worker_async(move || {
         let state = app.state::<LibraryState>();
         let mut library = state.0.lock().map_err(|_| "recovery:write-failed")?;
         crate::migration::ensure_no_active_journal(&app).map_err(|_| "recovery:write-failed")?;
@@ -486,7 +558,6 @@ pub async fn restore_managed_track(
         Ok(track)
     })
     .await
-    .map_err(|_| "recovery:write-failed".to_string())?
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -496,7 +567,7 @@ pub async fn relink_track(
     path: String,
     accept_different_content: bool,
 ) -> Result<Track, String> {
-    tauri::async_runtime::spawn_blocking(move || {
+    run_library_worker_async(move || {
         let state = app.state::<LibraryState>();
         let mut library = state.0.lock().map_err(|_| "relink:write-failed")?;
         crate::migration::ensure_no_active_journal(&app).map_err(|_| "relink:write-failed")?;
@@ -520,125 +591,260 @@ pub async fn relink_track(
         Ok(track)
     })
     .await
-    .map_err(|_| "relink:write-failed".to_string())?
 }
 
 #[tauri::command]
-pub fn remove_library_track(app: AppHandle, id: String) -> Result<(), String> {
-    let state = app.state::<LibraryState>();
-    let mut library = state.0.lock().map_err(|e| e.to_string())?;
-    crate::migration::ensure_no_active_journal(&app)?;
-    let mut next = library.clone();
-    next.tracks.retain(|item| item.id != id);
-    crate::library_store::remove_track(&state.1, &id)?;
-    *library = next;
-    // ลบเฉพาะ catalog row ใน GenesisBlockDB; source media และ offline bytes ไม่ถูกลบ
-    Ok(())
+pub async fn remove_library_track(app: AppHandle, id: String) -> Result<(), String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let mut library = state.0.lock().map_err(|e| e.to_string())?;
+        crate::migration::ensure_no_active_journal(&app)?;
+        let mut next = library.clone();
+        next.tracks.retain(|item| item.id != id);
+        crate::library_store::remove_track(&state.1, &id)?;
+        *library = next;
+        // ลบเฉพาะ catalog row ใน GenesisBlockDB; source media และ offline bytes ไม่ถูกลบ
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn set_track_favorite(
-    state: tauri::State<'_, LibraryState>,
-    id: String,
-    favorite: bool,
-) -> Result<(), String> {
-    crate::library_store::set_favorite(&state.1, &id, favorite)?;
-    let mut library = state.0.lock().map_err(|e| e.to_string())?;
-    let item = library
-        .tracks
-        .iter_mut()
-        .find(|item| item.id == id)
-        .ok_or("ไม่พบเพลงนี้ในคลัง")?;
-    item.favorite = favorite;
-    Ok(())
+pub async fn set_track_favorite(app: AppHandle, id: String, favorite: bool) -> Result<(), String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::set_favorite(&state.1, &id, favorite)?;
+        let mut library = state.0.lock().map_err(|e| e.to_string())?;
+        let item = library
+            .tracks
+            .iter_mut()
+            .find(|item| item.id == id)
+            .ok_or("ไม่พบเพลงนี้ในคลัง")?;
+        item.favorite = favorite;
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn record_listen(state: tauri::State<'_, LibraryState>, id: String) -> Result<i64, String> {
-    crate::library_store::record_listen(&state.1, &id)
+pub async fn record_listen(app: AppHandle, id: String) -> Result<i64, String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::record_listen(&state.1, &id)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn list_youtube_links(
-    state: tauri::State<'_, LibraryState>,
+pub async fn list_youtube_links(
+    app: AppHandle,
 ) -> Result<Vec<crate::library_store::YoutubeLink>, String> {
-    crate::library_store::youtube_links(&state.1)
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::youtube_links(&state.1)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn add_youtube_link(
-    state: tauri::State<'_, LibraryState>,
+pub async fn add_youtube_link(
+    app: AppHandle,
     url: String,
     title: String,
 ) -> Result<crate::library_store::YoutubeLink, String> {
-    crate::library_store::add_youtube_link(&state.1, &url, &title)
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::add_youtube_link(&state.1, &url, &title)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn remove_youtube_link(
-    state: tauri::State<'_, LibraryState>,
-    id: String,
-) -> Result<(), String> {
-    crate::library_store::remove_youtube_link(&state.1, &id)
+pub async fn remove_youtube_link(app: AppHandle, id: String) -> Result<(), String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::remove_youtube_link(&state.1, &id)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn open_youtube_link(app: AppHandle, id: String) -> Result<(), String> {
+pub async fn open_youtube_link(app: AppHandle, id: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
-    let directory = app_data_directory(&app)?;
-    let url = crate::library_store::youtube_link_url(&directory, &id)?;
+    let lookup_app = app.clone();
+    let url = run_library_worker_async(move || {
+        let directory = app_data_directory(&lookup_app)?;
+        crate::library_store::youtube_link_url(&directory, &id)
+    })
+    .await?;
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub fn get_cache_settings(
-    state: tauri::State<'_, LibraryState>,
+pub async fn get_cache_settings(
+    app: AppHandle,
 ) -> Result<crate::library_store::CacheSettings, String> {
-    crate::library_store::cache_settings(&state.1)
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::cache_settings(&state.1)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn set_cache_settings(
-    state: tauri::State<'_, LibraryState>,
+pub async fn set_cache_settings(
+    app: AppHandle,
     enabled: bool,
     quota_bytes: u64,
 ) -> Result<crate::library_store::CacheSettings, String> {
-    crate::library_store::update_cache_settings(&state.1, enabled, quota_bytes)
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        crate::library_store::update_cache_settings(&state.1, enabled, quota_bytes)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn resolve_media(app: AppHandle, id: String) -> Result<String, String> {
-    let state = app.state::<LibraryState>();
-    let library = crate::library_store::read_catalog(&state.1)?;
-    let item = library
-        .tracks
-        .iter()
-        .find(|item| item.id == id)
-        .ok_or("ไฟล์นี้ไม่อยู่ในคลังที่อนุญาต กรุณาเลือกไฟล์เพิ่มอีกครั้ง")?;
-    let path = Path::new(&item.path);
-    let actual = fs::canonicalize(path).map_err(|_| "ไม่พบไฟล์นี้ กรุณาเพิ่มไฟล์จากตำแหน่งใหม่")?;
-    if !actual.is_file() || !supported(&actual) {
-        return Err("ไฟล์เปลี่ยนตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเลือกไฟล์อีกครั้ง".into());
-    }
-    if item.storage_kind == "managed" {
-        let root = fs::canonicalize(state.1.join("media")).map_err(|_| "ไม่พบคลัง offline")?;
-        if !actual.starts_with(root) {
-            return Err("ไฟล์ offline อยู่นอกคลังที่จัดการโดย Lalin Play".into());
+pub async fn resolve_media(app: AppHandle, id: String) -> Result<String, String> {
+    run_library_worker_async(move || {
+        let state = app.state::<LibraryState>();
+        let library = crate::library_store::read_catalog(&state.1)?;
+        let item = library
+            .tracks
+            .iter()
+            .find(|item| item.id == id)
+            .ok_or("ไฟล์นี้ไม่อยู่ในคลังที่อนุญาต กรุณาเลือกไฟล์เพิ่มอีกครั้ง")?;
+        let path = Path::new(&item.path);
+        let actual = fs::canonicalize(path).map_err(|_| "ไม่พบไฟล์นี้ กรุณาเพิ่มไฟล์จากตำแหน่งใหม่")?;
+        if !actual.is_file() || !supported(&actual) {
+            return Err("ไฟล์เปลี่ยนตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเลือกไฟล์อีกครั้ง".into());
         }
-    } else if actual != path {
-        return Err("ไฟล์เปลี่ยนตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเลือกไฟล์อีกครั้ง".into());
-    }
-    app.asset_protocol_scope()
-        .allow_file(&actual)
-        .map_err(|e| e.to_string())?;
-    Ok(item.path.clone())
+        if item.storage_kind == "managed" {
+            let root = fs::canonicalize(state.1.join("media")).map_err(|_| "ไม่พบคลัง offline")?;
+            if !actual.starts_with(root) {
+                return Err("ไฟล์ offline อยู่นอกคลังที่จัดการโดย Lalin Play".into());
+            }
+        } else if actual != path {
+            return Err("ไฟล์เปลี่ยนตำแหน่งหรืออยู่นอกขอบเขตที่เลือก กรุณาเลือกไฟล์อีกครั้ง".into());
+        }
+        app.asset_protocol_scope()
+            .allow_file(&actual)
+            .map_err(|e| e.to_string())?;
+        Ok(item.path.clone())
+    })
+    .await
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn generated_wav(seed: u32) -> Vec<u8> {
+        let mut samples = vec![0u8; 512];
+        samples[..4].copy_from_slice(&seed.to_le_bytes());
+        let mut wav = Vec::with_capacity(44 + samples.len());
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36u32 + samples.len() as u32).to_le_bytes());
+        wav.extend_from_slice(b"WAVEfmt ");
+        wav.extend_from_slice(&16u32.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&16_000u32.to_le_bytes());
+        wav.extend_from_slice(&32_000u32.to_le_bytes());
+        wav.extend_from_slice(&2u16.to_le_bytes());
+        wav.extend_from_slice(&16u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&(samples.len() as u32).to_le_bytes());
+        wav.extend_from_slice(&samples);
+        wav
+    }
+
+    fn on_one_mib_stack<T, F>(work: F) -> T
+    where
+        T: Send + 'static,
+        F: FnOnce() -> T + Send + 'static,
+    {
+        std::thread::Builder::new()
+            .name("lalin-play-one-mib-regression".into())
+            .stack_size(1 << 20)
+            .spawn(work)
+            .unwrap()
+            .join()
+            .expect("1 MiB caller thread must complete")
+    }
+
+    fn import_and_reopen_from_worker(root: PathBuf) -> Result<(usize, usize), String> {
+        run_library_worker(move || {
+            let mut library = crate::library_store::initialize_catalog(&root)?;
+            let source_directory = root.join("generated");
+            fs::create_dir_all(&source_directory).map_err(|error| error.to_string())?;
+            let source = source_directory.join("generated.wav");
+            fs::write(&source, generated_wav(1)).map_err(|error| error.to_string())?;
+            let paths = selected_files(&[source_directory])?;
+            let imported = import_selected_paths(&mut library, &root, paths, |_| Ok(()))?;
+            let imported_count = imported.len();
+
+            crate::library_store::forget_database(&root);
+            let reopened = crate::library_store::initialize_catalog(&root)?;
+            Ok((imported_count, reopened.tracks.len()))
+        })
+    }
+
+    fn reopen_many_catalog_rows_from_worker(
+        root: PathBuf,
+        row_count: usize,
+    ) -> Result<usize, String> {
+        run_library_worker(move || {
+            let _ = crate::library_store::initialize_catalog(&root)?;
+            let tracks = (0..row_count)
+                .map(|index| Track {
+                    kind: MediaKind::Audio,
+                    id: format!("linked:{index:04}"),
+                    path: format!("C:\\Music\\track-{index:04}.wav"),
+                    title: format!("Track {index:04}"),
+                    artist: None,
+                    album: None,
+                    duration: Some(1.0),
+                    missing: true,
+                    source_kind: "user".into(),
+                    storage_kind: "linked".into(),
+                    source_path: None,
+                    content_hash: None,
+                    favorite: false,
+                    play_count: 0,
+                    last_played_at: None,
+                })
+                .collect();
+            crate::library_store::replace_catalog(&root, &Library { version: 1, tracks })?;
+
+            crate::library_store::forget_database(&root);
+            let reopened = crate::library_store::initialize_catalog(&root)?;
+            Ok(reopened.tracks.len())
+        })
+    }
+
+    // The 1 MiB caller mirrors the original native main thread. Genesis and
+    // library work must cross the same explicit 16 MiB worker boundary used by
+    // setup and Tauri commands. Cargo test still uses its test profile and omits
+    // release GUI/event-loop frames; the PE guard checks the linked reserve.
+    #[test]
+    fn one_mib_caller_boot_imports_generated_wav_and_reopens() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path().to_path_buf();
+        let counts = on_one_mib_stack(move || import_and_reopen_from_worker(root)).unwrap();
+        assert_eq!(counts, (1, 1));
+    }
+
+    #[test]
+    fn one_mib_caller_reopens_after_five_hundred_catalog_rows() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path().to_path_buf();
+        let row_count =
+            on_one_mib_stack(move || reopen_many_catalog_rows_from_worker(root, 500)).unwrap();
+        assert_eq!(row_count, 500);
+    }
 
     #[test]
     fn video_selection_is_case_insensitive_and_does_not_admit_other_files() {
