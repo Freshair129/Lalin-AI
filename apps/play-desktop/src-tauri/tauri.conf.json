@@ -34,7 +34,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhDNTEyMDY4ODgyMTJENTMKUldSVExTR0lhQ0JSaksxczBZMlBDQmxRcWkvMU45WHF2V1NLSnd5NFc2VCtXM0UzcDBlWGVheVIK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYwNUEyNjcwREUyQ0M5NTAKUldSUXlTemVjQ1phOElzdEM3VVNST0FRQzBhbGRCY2s4RWJJbHVDZFBnYStRMDFmOTBwMERjNHcK",
       "endpoints": [
         "https://github.com/Freshair129/Lalin-AI/releases/download/play-updates/latest-play.json"
       ]
