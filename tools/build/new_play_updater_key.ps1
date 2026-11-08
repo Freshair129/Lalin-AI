@@ -76,8 +76,10 @@ if ((Get-Item -LiteralPath $privateKeyPath).Length -eq 0 -or (Get-Item -LiteralP
 }
 
 try {
+    # Tauri writes both key files base64-encoded; the config takes the encoded public key as-is.
     $publicKey = [IO.File]::ReadAllText($publicKeyPath).Trim()
-    if ($publicKey -notmatch '^untrusted comment: minisign public key') {
+    $decodedPublicKey = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($publicKey))
+    if ($decodedPublicKey -notmatch '^untrusted comment: minisign public key') {
         Stop-KeySetup "The generated public key has an unexpected format; configuration was not changed."
     }
     $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
@@ -94,5 +96,5 @@ try {
 Write-Host "Play updater public key configured in apps/play-desktop/src-tauri/tauri.conf.json."
 Write-Host "Encrypted private key written to ignored path keys/lalin-play-updater.key; do not commit it."
 Write-Host "Run these commands from the repository root to set the owner-managed GitHub secrets:"
-Write-Host "[Convert]::ToBase64String([IO.File]::ReadAllBytes('keys/lalin-play-updater.key')) | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY --repo Freshair129/Lalin-AI"
+Write-Host "(Get-Content -Raw 'keys/lalin-play-updater.key').Trim() | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY --repo Freshair129/Lalin-AI"
 Write-Host "`$secure = Read-Host 'PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD' -AsSecureString; `$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$secure); try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR(`$bstr) | gh secret set PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo Freshair129/Lalin-AI } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR(`$bstr) }"
