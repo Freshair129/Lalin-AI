@@ -14,6 +14,10 @@ if ([string]::IsNullOrWhiteSpace($env:PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD)) 
     Stop-Preflight "PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD is required for the encrypted Play updater key."
 }
 
+if ($encodedKey.TrimStart()[0] -eq [char]0xFEFF) {
+    Stop-Preflight "PLAY_TAURI_SIGNING_PRIVATE_KEY starts with a UTF-8 BOM (Windows PowerShell 5.1 pipe). Set it again with gh secret set --body from the key file."
+}
+
 try {
     $decodedBytes = [Convert]::FromBase64String($encodedKey.Trim())
     $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
