@@ -34,7 +34,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REPLACE_WITH_PLAY_UPDATER_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhDNTEyMDY4ODgyMTJENTMKUldSVExTR0lhQ0JSaksxczBZMlBDQmxRcWkvMU45WHF2V1NLSnd5NFc2VCtXM0UzcDBlWGVheVIK",
       "endpoints": [
         "https://github.com/Freshair129/Lalin-AI/releases/download/play-updates/latest-play.json"
       ]
