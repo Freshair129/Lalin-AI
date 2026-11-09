@@ -1,8 +1,8 @@
 ---
-version: "0.2.6b"
+version: "0.3.0b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-08T00:00:00+07:00,Codex"
-status: "approved reduced scope; release qualification NOT_RUN"
+last_update: "2026-11-09T08:50:00+07:00,Claude"
+status: "RELEASED play-v1.0.0 (2026-11-09); owner clean-VM acceptance NOT_RUN"
 superseded_by: null
 attributes:
   domain: "operations"
@@ -263,12 +263,24 @@ recovery path, not deleting/replacing keys ad hoc.
 Source/export SHA, version/tag, workflow/run URL, artifact hashes/signatures,
 key fingerprint (public only), OS signing status, Windows/WebView2 test matrix,
 A→B results, migration/recovery results, reviewer approval and published URL:
-**NOT_RUN**. Link this record from the Play document register when executed.
+
+| Field | Value |
+|---|---|
+| Version / tag / source | `1.0.0` / `play-v1.0.0` / `08131d19c3aeb8455505b4b5f7065c474120d4e7` |
+| Release workflow | [run 42543791827](https://github.com/Freshair129/Lalin-AI/actions/runs/42543791827) success (earlier attempts 42500174961, 42527407770, 42538453698 failed: secret BOM, missing rustfmt, double-decoded key; fixed in PRs #58–#62) |
+| Assets (SHA-256) | `Lalin-Play_1.0.0_x64-setup.exe` 8,362,091 B `acf92649…e9db256`; `.sig` `57b21d38…1ebc6`; `latest-play.json` `155f71ab…faa19`; `THIRD_PARTY_NOTICES.txt` `f855ebc6…5e24`; `LICENSE` `462413da…11078` |
+| Updater key (public) | minisign key id `F05A2670DE2CC950`; `.sig` and manifest signature use this key id |
+| OS signing | Unsigned installer (owner decision) |
+| Published | <https://github.com/Freshair129/Lalin-AI/releases/tag/play-v1.0.0>, 2026-11-09T01:45:46Z, operator: lead agent on explicit owner instruction |
+| Channel | `play-updates` release created 2026-11-09; [promotion run 42547282315](https://github.com/Freshair129/Lalin-AI/actions/runs/42547282315) success; public endpoint HTTP 200 and SHA-256 equals the tag's `latest-play.json` |
+| A→B / retention / bad signature | QA PASS under R2 (identifier `ai.lalin.play.qa`); not repeated between published releases |
+| Owner clean-VM acceptance (P1.6) | **NOT_RUN** — owner chose to publish before the session; recorded as a known limitation in the release notes |
 
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.0b | 2026-11-09 | RELEASED; owner clean VM NOT_RUN | Record play-v1.0.0 publication, assets, key id, channel promotion and the owner's publish-before-acceptance decision | working tree | Claude |
 | 0.2.6b | 2026-11-08 | QA qualification recorded; owner clean VM NOT_RUN | Record lead native P1.5 QA run: A→B, retention, same/older, bad signature/key, offline/500/truncated, uninstall/reinstall; post-fix import/boot | working tree | Claude |
 | 0.2.5b | 2026-11-08 | qualification NOT_RUN | Record Issue #47 stack overflow worker/PE fix, lane build evidence and lead-owned native requalification gate | working tree | Codex |
 | 0.2.4b | 2026-11-08 | qualification NOT_RUN | Record QA builds, guard and partial installer evidence; preserve updater and cleanup blockers | working tree | Codex |

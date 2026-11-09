@@ -57,7 +57,7 @@ attributes:
 - `docs/architecture/LALIN_PLAY_COMMAND_DELIVERY_PLAN.md`: approved/locally implemented Play Window readiness, single consumer owner, and scoped native capabilities.
 - `docs/architecture/LALIN_PLAY_TV_MODE_PLAN.md`: approved TV Mode architecture, fullscreen/input adapters and native permission boundary.
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
-- `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: approved (owner, 2026-11-07) reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values).
+- `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: approved (owner, 2026-11-07) reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values); `play-v1.0.0` RELEASED 2026-11-09 before owner P1.6.
 - `docs/design/LALIN_PLAY_RELINK_SPEC.md`: PLAY-08 relink implementation spec (stable track ids, shared path validation, queue patching, acceptance tests).
 - `docs/design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md`: PLAY-08-M managed-object recovery (read-only damaged listing, identical-bytes restore; no W0-D change).
 
@@ -97,7 +97,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/LALIN_PLAY_TRACEABILITY.md`: all 50 current PLAY criteria map to source/tests; CR-007 remains partial and S2/S3 local checks pass while live parity, recovery and native audio gates remain open.
 - `docs/architecture/LALIN_PLAY_INTEGRATION_MIGRATION_SPEC.md`: approved S2 migration and S3 named-pipe contract with local code evidence; paired-runtime parity and recovery acceptance remain open.
 - `docs/architecture/LALIN_PLAY_SEPARATION_HANDOFF.md`: candidate export inventory, retained consumers, license/notices audit and recovery record; not an executed split.
-- `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: candidate NSIS/signing/updater/draft-publication and rollback qualification; all distribution gates remain open.
+- `docs/operations/LALIN_PLAY_RELEASE_RUNBOOK.md`: NSIS/signing/updater/publication and rollback runbook; release record for `play-v1.0.0` (published 2026-11-09, owner clean-VM acceptance NOT_RUN).
 - `docs/operations/LALIN_PLAY_V1_OWNER_ACCEPTANCE.md`: owner acceptance checklist for Play v1.0 (P1.6) — clean VM install, audible checks, persistence, auto-restart after update, uninstall/reinstall.
 - `docs/guides/LALIN_PLAY_USER_GUIDE.md`: current candidate controls, local files/state and non-destructive troubleshooting.
 - `docs/product/PRD.md`: Studio baseline plus approved Play standalone requirements (§4.9); distinguish document version from application versions and partial implementation evidence.

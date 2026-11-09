@@ -1,8 +1,8 @@
 ---
-version: "1.0.1b"
+version: "1.1.0b"
 created_at: "2026-11-07T00:00:00+07:00,Claude"
-last_update: "2026-11-07T00:00:00+07:00,Claude"
-status: "approved"
+last_update: "2026-11-09T08:50:00+07:00,Claude"
+status: "approved; RELEASED play-v1.0.0"
 superseded_by: null
 attributes:
   domain: "lalin-play"
@@ -77,10 +77,15 @@ attributes:
 3. Deferred §3 features are hidden or labelled "coming later" and cannot corrupt v1.0 data.
 4. Draft release reviewed and publication approved by the owner.
 
+## 6. Release outcome (2026-11-09)
+
+`play-v1.0.0` was published on 2026-11-09 on the owner's explicit instruction ("ยืนยัน publish เลย") and its metadata promoted to `play-updates`. Exit criteria 1, 2 (CI build, QA A→B, tampered signature, uninstall/reinstall) and 4 are met; the owner clean-VM install and the owner audible/native checks (P1.6) were **not run** before publication — the owner accepted that risk, and the release notes list it as a known limitation. Evidence: [runbook release record](../operations/LALIN_PLAY_RELEASE_RUNBOOK.md#release-evidence-record-fill-only-after-execution).
+
 ## CHANGELOG
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 1.1.0b | 2026-11-09 | approved; RELEASED | Record play-v1.0.0 publication and the owner's decision to publish before P1.6 | working tree | Claude |
 | 1.0.1b | 2026-11-07 | approved | Record owner license decision: Lalin Play source is MIT | working tree | Claude |
 | 1.0.0b | 2026-11-07 | approved | Owner approved scope, deferrals, release values and exit criteria; license and key backup location remain open | working tree | Claude |
 | 0.1.0b | 2026-11-07 | candidate | Propose reduced-scope Play v1.0 release from Lalin-AI: in-scope gates, deferrals, R0 release values and exit criteria | working tree | Claude |
