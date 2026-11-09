@@ -29,6 +29,9 @@ const RESULT_VERSION: &str = "smart-medley-results/v1";
 const SAMPLE_RATE: u32 = 44_100;
 const CHANNELS: u16 = 2;
 const DEFAULT_CROSSFADE_SECONDS: f64 = 5.0;
+const SYNTHETIC_TONICS_A: [u8; 20] = [
+    0, 5, 10, 3, 8, 1, 6, 11, 4, 9, 2, 7, 0, 5, 2, 3, 8, 1, 6, 11,
+];
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -199,17 +202,7 @@ fn generate(out: &Path) -> Result<(), String> {
         } else {
             bpm_a
         };
-        let (tonic_a, mode_a, tonic_b, mode_b) = if expected {
-            match index % 3 {
-                0 => (0, KeyMode::Major, 0, KeyMode::Major),
-                1 => (0, KeyMode::Major, 9, KeyMode::Minor),
-                _ => (0, KeyMode::Major, 7, KeyMode::Major),
-            }
-        } else if (14..17).contains(&index) {
-            (0, KeyMode::Major, 2, KeyMode::Major)
-        } else {
-            (0, KeyMode::Major, 0, KeyMode::Major)
-        };
+        let (tonic_a, mode_a, tonic_b, mode_b) = synthetic_pair_keys(index, expected);
         let mut clips = Vec::with_capacity(2);
         for side in 0..2 {
             let clip_id = format!("{pair_id}-{}", if side == 0 { "A" } else { "B" });
@@ -286,6 +279,23 @@ fn generate(out: &Path) -> Result<(), String> {
         out.display()
     );
     Ok(())
+}
+
+fn synthetic_pair_keys(index: usize, expected: bool) -> (u8, KeyMode, u8, KeyMode) {
+    // Both sides cover all 12 pitch classes while each pair keeps its intended relation.
+    let tonic_a = SYNTHETIC_TONICS_A[index];
+    let (mode_a, tonic_b, mode_b) = if expected {
+        match index % 3 {
+            0 => (KeyMode::Major, tonic_a, KeyMode::Major),
+            1 => (KeyMode::Major, (tonic_a + 9) % 12, KeyMode::Minor),
+            _ => (KeyMode::Major, (tonic_a + 7) % 12, KeyMode::Major),
+        }
+    } else if (14..17).contains(&index) {
+        (KeyMode::Major, (tonic_a + 2) % 12, KeyMode::Major)
+    } else {
+        (KeyMode::Major, tonic_a, KeyMode::Major)
+    };
+    (tonic_a, mode_a, tonic_b, mode_b)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -469,6 +479,40 @@ fn write_new_only(path: &Path, bytes: &[u8]) -> Result<(), String> {
             )
         })?;
     output.write_all(bytes).map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn synthetic_fixture_covers_all_tonics_and_preserves_pair_relations() {
+        let mut tonics_a = HashSet::new();
+        let mut tonics_b = HashSet::new();
+        for index in 0..20 {
+            let expected = index < 10;
+            let (tonic_a, mode_a, tonic_b, mode_b) = synthetic_pair_keys(index, expected);
+            tonics_a.insert(tonic_a);
+            tonics_b.insert(tonic_b);
+            if expected {
+                match index % 3 {
+                    0 => assert_eq!((tonic_b, mode_b), (tonic_a, KeyMode::Major)),
+                    1 => assert_eq!((tonic_b, mode_b), ((tonic_a + 9) % 12, KeyMode::Minor)),
+                    _ => assert_eq!((tonic_b, mode_b), ((tonic_a + 7) % 12, KeyMode::Major)),
+                }
+                assert_eq!(mode_a, KeyMode::Major);
+            } else if (14..17).contains(&index) {
+                assert_eq!(mode_a, KeyMode::Major);
+                assert_eq!(mode_b, KeyMode::Major);
+                assert_eq!(tonic_b, (tonic_a + 2) % 12);
+            } else {
+                assert_eq!((tonic_b, mode_b), (tonic_a, KeyMode::Major));
+            }
+        }
+        let all_tonics: HashSet<u8> = (0..12).collect();
+        assert_eq!(tonics_a, all_tonics);
+        assert_eq!(tonics_b, all_tonics);
+    }
 }
 
 fn parent_dir(path: &Path) -> &Path {

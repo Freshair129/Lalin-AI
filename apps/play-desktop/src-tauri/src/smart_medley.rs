@@ -21,11 +21,16 @@ use symphonia::core::{
 };
 use tauri::{AppHandle, Manager};
 
-pub const ANALYZER_VERSION: &str = "smart-medley-0.1.0";
+pub const ANALYZER_VERSION: &str = "smart-medley-0.2.0";
 const ANALYSIS_SAMPLE_RATE: u32 = 22_050;
 const FFT_SIZE: usize = 2_048;
 const FFT_HOP: usize = 512;
+const CHROMA_FFT_SIZE: usize = 8_192;
+const CHROMA_FFT_HOP: usize = 8_192;
+const CHROMA_MIN_FREQUENCY_HZ: f64 = 100.0;
 const ENERGY_BLOCK_SAMPLES: usize = ANALYSIS_SAMPLE_RATE as usize / 2;
+const MIN_KEY_DURATION_SECONDS: f64 = 8.0;
+const MIN_ACTIVE_BLOCK_RATIO_FOR_FULL_CONFIDENCE: f64 = 0.25;
 const BPM_CONFIDENCE_FLOOR: f64 = 0.80;
 const KEY_CONFIDENCE_FLOOR: f64 = 0.75;
 const CUE_CONFIDENCE_FLOOR: f64 = 0.80;
@@ -860,11 +865,14 @@ fn map_symphonia_failure(error: SymphoniaError) -> AnalyzeFailure {
 
 struct FeatureAccumulator {
     fft: Arc<dyn Fft<f32>>,
+    chroma_fft: Arc<dyn Fft<f32>>,
     ring: Vec<f32>,
     next_ring_index: usize,
     filled_samples: usize,
     samples_since_frame: usize,
+    samples_since_chroma_frame: usize,
     fft_buffer: Vec<Complex<f32>>,
+    chroma_fft_buffer: Vec<Complex<f32>>,
     previous_magnitudes: Vec<f32>,
     onset_strength: Vec<f64>,
     chroma: [f64; 12],
@@ -882,13 +890,17 @@ impl FeatureAccumulator {
     fn new() -> Self {
         let mut planner = FftPlanner::<f32>::new();
         let fft = planner.plan_fft_forward(FFT_SIZE);
+        let chroma_fft = planner.plan_fft_forward(CHROMA_FFT_SIZE);
         Self {
             fft,
-            ring: vec![0.0; FFT_SIZE],
+            chroma_fft,
+            ring: vec![0.0; CHROMA_FFT_SIZE],
             next_ring_index: 0,
             filled_samples: 0,
             samples_since_frame: 0,
+            samples_since_chroma_frame: 0,
             fft_buffer: vec![Complex::new(0.0, 0.0); FFT_SIZE],
+            chroma_fft_buffer: vec![Complex::new(0.0, 0.0); CHROMA_FFT_SIZE],
             previous_magnitudes: vec![0.0; FFT_SIZE / 2 + 1],
             onset_strength: Vec::new(),
             chroma: [0.0; 12],
@@ -940,19 +952,27 @@ impl FeatureAccumulator {
             self.energy_samples = 0;
         }
         self.ring[self.next_ring_index] = finite;
-        self.next_ring_index = (self.next_ring_index + 1) % FFT_SIZE;
-        self.filled_samples = (self.filled_samples + 1).min(FFT_SIZE);
+        self.next_ring_index = (self.next_ring_index + 1) % CHROMA_FFT_SIZE;
+        self.filled_samples = (self.filled_samples + 1).min(CHROMA_FFT_SIZE);
         self.samples_since_frame += 1;
-        if self.filled_samples == FFT_SIZE && self.samples_since_frame >= FFT_HOP {
-            self.process_frame();
+        if self.filled_samples >= FFT_SIZE && self.samples_since_frame >= FFT_HOP {
+            self.process_onset_frame();
             self.samples_since_frame = 0;
+        }
+        self.samples_since_chroma_frame += 1;
+        if self.filled_samples == CHROMA_FFT_SIZE
+            && self.samples_since_chroma_frame >= CHROMA_FFT_HOP
+        {
+            self.process_chroma_frame();
+            self.samples_since_chroma_frame = 0;
         }
     }
 
-    fn process_frame(&mut self) {
+    fn process_onset_frame(&mut self) {
         let denominator = (FFT_SIZE - 1) as f32;
+        let start = (self.next_ring_index + CHROMA_FFT_SIZE - FFT_SIZE) % CHROMA_FFT_SIZE;
         for index in 0..FFT_SIZE {
-            let sample = self.ring[(self.next_ring_index + index) % FFT_SIZE];
+            let sample = self.ring[(start + index) % CHROMA_FFT_SIZE];
             let window = 0.5 - 0.5 * (std::f32::consts::TAU * index as f32 / denominator).cos();
             self.fft_buffer[index] = Complex::new(sample * window, 0.0);
         }
@@ -963,13 +983,30 @@ impl FeatureAccumulator {
             let prior = self.previous_magnitudes[bin];
             flux += f64::from((magnitude - prior).max(0.0));
             self.previous_magnitudes[bin] = magnitude;
-            let frequency = bin as f64 * ANALYSIS_SAMPLE_RATE as f64 / FFT_SIZE as f64;
-            if (55.0..=2_000.0).contains(&frequency) && magnitude > 0.0 {
-                let midi = (69.0 + 12.0 * (frequency / 440.0).log2()).round() as i32;
-                self.chroma[midi.rem_euclid(12) as usize] += f64::from(magnitude);
-            }
         }
         self.onset_strength.push(flux);
+    }
+
+    fn process_chroma_frame(&mut self) {
+        let denominator = (CHROMA_FFT_SIZE - 1) as f32;
+        for index in 0..CHROMA_FFT_SIZE {
+            let sample = self.ring[(self.next_ring_index + index) % CHROMA_FFT_SIZE];
+            let window = 0.5 - 0.5 * (std::f32::consts::TAU * index as f32 / denominator).cos();
+            self.chroma_fft_buffer[index] = Complex::new(sample * window, 0.0);
+        }
+        self.chroma_fft.process(&mut self.chroma_fft_buffer);
+        for bin in 1..=CHROMA_FFT_SIZE / 2 {
+            let magnitude = self.chroma_fft_buffer[bin].norm();
+            let frequency = bin as f64 * ANALYSIS_SAMPLE_RATE as f64 / CHROMA_FFT_SIZE as f64;
+            if (CHROMA_MIN_FREQUENCY_HZ..=2_000.0).contains(&frequency) && magnitude > 0.0 {
+                // Weight each bin by its distance from the nearest semitone centre so window
+                // leakage near a semitone boundary cannot be credited to the neighbouring class.
+                let midi_exact = 69.0 + 12.0 * (frequency / 440.0).log2();
+                let midi = midi_exact.round();
+                let weight = (1.0 - 2.0 * (midi_exact - midi).abs()).max(0.0);
+                self.chroma[(midi as i32).rem_euclid(12) as usize] += f64::from(magnitude) * weight;
+            }
+        }
     }
 
     fn duration_seconds(&self) -> f64 {
@@ -988,13 +1025,37 @@ impl FeatureAccumulator {
                 .push((self.energy_sum / self.energy_samples as f64).sqrt());
         }
         let frame_rate = ANALYSIS_SAMPLE_RATE as f64 / FFT_HOP as f64;
+        let activity_scale = activity_confidence_scale(&self.energy_blocks);
+        let mut bpm = estimate_bpm(&self.onset_strength, frame_rate);
+        if let Some(estimate) = &mut bpm {
+            estimate.confidence *= activity_scale;
+        }
+        let mut key = if duration_seconds >= MIN_KEY_DURATION_SECONDS {
+            estimate_key(&self.chroma)
+        } else {
+            None
+        };
+        if let Some(estimate) = &mut key {
+            estimate.confidence *= activity_scale;
+        }
         DecodedFeatures {
             duration_seconds,
-            bpm: estimate_bpm(&self.onset_strength, frame_rate),
-            key: estimate_key(&self.chroma),
+            bpm,
+            key,
             cues: estimate_cues(&self.energy_blocks, duration_seconds),
         }
     }
+}
+
+fn activity_confidence_scale(energy: &[f64]) -> f64 {
+    let peak = energy.iter().copied().fold(0.0_f64, f64::max);
+    if energy.is_empty() || peak < 1.0e-4 {
+        return 0.0;
+    }
+    let threshold = (peak * 0.06).max(0.0005);
+    let active_blocks = energy.iter().filter(|value| **value >= threshold).count();
+    let active_ratio = active_blocks as f64 / energy.len() as f64;
+    (active_ratio / MIN_ACTIVE_BLOCK_RATIO_FOR_FULL_CONFIDENCE).clamp(0.0, 1.0)
 }
 
 fn estimate_bpm(onsets: &[f64], frame_rate: f64) -> Option<BpmEstimate> {
@@ -1007,8 +1068,12 @@ fn estimate_bpm(onsets: &[f64], frame_rate: f64) -> Option<BpmEstimate> {
     if energy < 1.0e-9 {
         return None;
     }
-    let min_lag = (frame_rate * 60.0 / 180.0).round().max(1.0) as usize;
-    let max_lag = (frame_rate * 60.0 / 60.0).round() as usize;
+    // Keep one correlation bin outside each legal endpoint so parabolic refinement can
+    // estimate 60 and 180 BPM without clamping the true peak onto a search boundary.
+    let min_lag = ((frame_rate * 60.0 / 180.0).floor() as usize)
+        .saturating_sub(1)
+        .max(1);
+    let max_lag = (frame_rate * 60.0 / 60.0).ceil() as usize + 1;
     let mut correlations = Vec::with_capacity(max_lag - min_lag + 1);
     for lag in min_lag..=max_lag {
         let mut numerator = 0.0;
@@ -1028,37 +1093,40 @@ fn estimate_bpm(onsets: &[f64], frame_rate: f64) -> Option<BpmEstimate> {
             0.0
         });
     }
-    let best_index = correlations
+    if correlations.len() < 3 {
+        return None;
+    }
+    // Ignore the guard bins when selecting a BPM; they exist only for interpolation.
+    let best_index = correlations[1..correlations.len() - 1]
         .iter()
         .enumerate()
         .max_by(|left, right| left.1.total_cmp(right.1))?
-        .0;
+        .0
+        + 1;
     let best_correlation = correlations[best_index].clamp(0.0, 1.0);
     if best_correlation < 0.05 {
         return None;
     }
+    let best_index = resolve_tempo_octave(&correlations, min_lag, best_index);
+    let best_correlation = correlations[best_index].clamp(0.0, 1.0);
     let lag = min_lag + best_index;
-    let delta = if best_index > 0 && best_index + 1 < correlations.len() {
-        let before = correlations[best_index - 1];
-        let peak = correlations[best_index];
-        let after = correlations[best_index + 1];
-        let divisor = before - 2.0 * peak + after;
-        if divisor.abs() > 1.0e-12 {
-            (0.5 * (before - after) / divisor).clamp(-0.5, 0.5)
-        } else {
-            0.0
-        }
-    } else {
-        0.0
-    };
-    let bpm = 60.0 * frame_rate / (lag as f64 + delta);
-    if !(60.0..=180.0).contains(&bpm) {
+    let delta = parabolic_peak_delta(&correlations, best_index);
+    let refined_lag = lag as f64 + delta;
+    let raw_bpm = 60.0 * frame_rate / refined_lag;
+    // Allow lag-quantization error of up to 1% at the edges, then report inside 60–180.
+    if !(59.4..=181.8).contains(&raw_bpm) {
         return None;
     }
+    let bpm = raw_bpm.clamp(60.0, 180.0);
     let secondary_peak = correlations
         .iter()
         .enumerate()
-        .filter(|(index, _)| index.abs_diff(best_index) > 2)
+        .filter(|(index, _)| {
+            *index > 0
+                && *index + 1 < correlations.len()
+                && index.abs_diff(best_index) > 2
+                && !tempo_harmonic_lag((min_lag + *index) as f64, refined_lag)
+        })
         .map(|(_, value)| value.max(0.0))
         .fold(0.0_f64, f64::max);
     let separation = ((best_correlation - secondary_peak) / best_correlation).clamp(0.0, 1.0);
@@ -1067,6 +1135,52 @@ fn estimate_bpm(onsets: &[f64], frame_rate: f64) -> Option<BpmEstimate> {
         bpm: quantize_bpm(bpm),
         confidence: confidence.clamp(0.0, 0.99),
     })
+}
+
+fn resolve_tempo_octave(correlations: &[f64], min_lag: usize, slow_index: usize) -> usize {
+    let slow_lag = (min_lag + slow_index) as f64;
+    let slow_correlation = correlations[slow_index].max(0.0);
+    let mut faster_candidate = None;
+    for index in 1..slow_index {
+        let fast_lag = (min_lag + index) as f64;
+        let ratio = slow_lag / fast_lag;
+        // A strictly periodic beat also peaks at 2x and 3x its lag; prefer the beat itself.
+        if (ratio - 2.0).abs() > 0.08 && (ratio - 3.0).abs() > 0.12 {
+            continue;
+        }
+        let fast_correlation = correlations[index].max(0.0);
+        let is_local_peak = fast_correlation >= correlations[index - 1]
+            && fast_correlation >= correlations[index + 1];
+        if is_local_peak
+            && fast_correlation >= slow_correlation * 0.75
+            && faster_candidate.map_or(true, |(_, best)| fast_correlation > best)
+        {
+            faster_candidate = Some((index, fast_correlation));
+        }
+    }
+    faster_candidate.map_or(slow_index, |(index, _)| index)
+}
+
+fn parabolic_peak_delta(correlations: &[f64], index: usize) -> f64 {
+    if index == 0 || index + 1 >= correlations.len() {
+        return 0.0;
+    }
+    let before = correlations[index - 1];
+    let peak = correlations[index];
+    let after = correlations[index + 1];
+    let divisor = before - 2.0 * peak + after;
+    if divisor.abs() > 1.0e-12 {
+        (0.5 * (before - after) / divisor).clamp(-0.5, 0.5)
+    } else {
+        0.0
+    }
+}
+
+fn tempo_harmonic_lag(left: f64, right: f64) -> bool {
+    let ratio = left.max(right) / left.min(right);
+    [2.0, 3.0]
+        .into_iter()
+        .any(|multiple| (ratio - multiple).abs() <= 0.10)
 }
 
 fn estimate_key(chroma: &[f64; 12]) -> Option<KeyEstimate> {
@@ -1483,4 +1597,4 @@ mod formula_tests {
 
 #[cfg(test)]
 #[path = "smart_medley_rca_probe.rs"]
-mod rca_probe;
+mod analyzer_regression_tests;

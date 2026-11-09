@@ -1,6 +1,5 @@
-//! RCA diagnostics for the Smart Medley analyzer (ignored by default).
+//! Permanent synthetic regression sweeps for the Smart Medley analyzer.
 //! See `.brain/rca/2026-11-09-lalin-play-smart-medley-analyzer-confidence.md`.
-//! Run: `cargo test --lib smart_medley::rca_probe -- --ignored --nocapture --test-threads=1`.
 use super::*;
 
 const SR: u32 = 44_100;
@@ -22,7 +21,7 @@ struct Synth {
     fade_ms: f64,
 }
 
-fn render(s: Synth) -> Vec<f32> {
+fn render(s: Synth, duration_seconds: f64) -> Vec<f32> {
     let (scale, profile): ([i32; 7], &[f64; 12]) = if s.minor {
         ([0, 2, 3, 5, 7, 8, 10], &MINOR_P)
     } else {
@@ -59,10 +58,12 @@ fn render(s: Synth) -> Vec<f32> {
         })
         .collect();
     let frames_per_beat = SR as f64 * 60.0 / s.bpm;
-    let mut out = vec![0.0_f32; SR as usize * 60];
+    let mut out = vec![0.0_f32; (SR as f64 * duration_seconds) as usize];
+    let active_start = (duration_seconds * 0.1).min(2.0) * SR as f64;
+    let active_end = (duration_seconds * 0.9).min(52.0) * SR as f64;
     let mut beat = 0.0_f64;
     for (frame, slot) in out.iter_mut().enumerate() {
-        let active = frame >= 2 * SR as usize && frame < 52 * SR as usize;
+        let active = frame as f64 >= active_start && (frame as f64) < active_end;
         let v = if active && beat < pulse_len as f64 {
             let v = pulse[beat as usize];
             beat += 1.0;
@@ -79,45 +80,16 @@ fn render(s: Synth) -> Vec<f32> {
     out
 }
 
-fn analyze(samples: &[f32]) -> (FeatureAccumulator, Option<BpmEstimate>, Option<KeyEstimate>) {
+fn analyze(samples: &[f32]) -> DecodedFeatures {
     let mut acc = FeatureAccumulator::new();
     for s in samples {
         acc.push_input(*s, SR);
     }
-    let frame_rate = ANALYSIS_SAMPLE_RATE as f64 / FFT_HOP as f64;
-    let bpm = estimate_bpm(&acc.onset_strength, frame_rate);
-    let key = estimate_key(&acc.chroma);
-    (acc, bpm, key)
-}
-
-fn key_detail(chroma: &[f64; 12]) -> String {
-    let total: f64 = chroma.iter().sum();
-    let c = chroma.map(|v| v / total);
-    let mut cand = Vec::new();
-    for t in 0..12 {
-        cand.push((pearson_rotated(&c, &MAJOR_P, t), t, "maj"));
-        cand.push((pearson_rotated(&c, &MINOR_P, t), t, "min"));
-    }
-    cand.sort_by(|a, b| b.0.total_cmp(&a.0));
-    let chroma_s: Vec<String> = c.iter().map(|v| format!("{:.3}", v)).collect();
-    format!(
-        "top=[{} {} {:.3}] [{} {} {:.3}] [{} {} {:.3}] chroma=[{}]",
-        cand[0].1,
-        cand[0].2,
-        cand[0].0,
-        cand[1].1,
-        cand[1].2,
-        cand[1].0,
-        cand[2].1,
-        cand[2].2,
-        cand[2].0,
-        chroma_s.join(" ")
-    )
+    acc.finish(samples.len() as f64 / SR as f64)
 }
 
 #[test]
-#[ignore]
-fn probe_key() {
+fn generator_key_sweep_covers_all_tonics_modes_and_octaves() {
     let base = Synth {
         bpm: 120.0,
         tonic: 0,
@@ -127,78 +99,64 @@ fn probe_key() {
         pulse_seconds: 0.18,
         fade_ms: 0.0,
     };
-    println!("== generator-faithful, all tonics ==");
+    let mut minimum_confidence = 1.0_f64;
+    let mut cases = 0;
     for minor in [false, true] {
         for tonic in 0..12 {
-            let (acc, _, key) = analyze(&render(Synth {
-                tonic,
-                minor,
-                ..base
-            }));
-            println!(
-                "tonic={tonic:2} minor={minor} conf={:.3} est={:?} {}",
-                key.as_ref().map(|k| k.confidence).unwrap_or(-1.0),
-                key.as_ref().map(|k| (k.key.tonic, k.key.mode)),
-                key_detail(&acc.chroma)
-            );
+            for octave_shift in [-1, 0, 1] {
+                // A 0.18 s pure-sine burst is spectrally ~±5.5 Hz wide, wider than half a
+                // semitone below ~250 Hz, so the low octave uses 0.30 s notes; the generator's
+                // own register (octave 0) keeps its 0.18 s pulses.
+                let pulse_seconds = if octave_shift < 0 { 0.30 } else { 0.18 };
+                let features = analyze(&render(
+                    Synth {
+                        tonic,
+                        minor,
+                        octave_shift,
+                        pulse_seconds,
+                        ..base
+                    },
+                    8.0,
+                ));
+                let estimate = features.key.unwrap_or_else(|| {
+                    panic!(
+                        "no key estimate for tonic={tonic}, minor={minor}, octave={octave_shift}"
+                    )
+                });
+                let expected_mode = if minor {
+                    KeyMode::Minor
+                } else {
+                    KeyMode::Major
+                };
+                let correct =
+                    estimate.key.tonic == tonic as u8 && estimate.key.mode == expected_mode;
+                assert!(
+                    correct || estimate.confidence < KEY_CONFIDENCE_FLOOR,
+                    "wrong high-confidence key for tonic={tonic}, minor={minor}, octave={octave_shift}: got {:?} at {:.3}",
+                    estimate.key,
+                    estimate.confidence
+                );
+                assert!(
+                    correct,
+                    "wrong key for tonic={tonic}, minor={minor}, octave={octave_shift}: got {:?} at {:.3}",
+                    estimate.key,
+                    estimate.confidence
+                );
+                assert!(
+                    estimate.confidence >= KEY_CONFIDENCE_FLOOR,
+                    "low key confidence for tonic={tonic}, minor={minor}, octave={octave_shift}: {:.3}",
+                    estimate.confidence
+                );
+                minimum_confidence = minimum_confidence.min(estimate.confidence);
+                cases += 1;
+            }
         }
     }
-    println!("== C major variants ==");
-    for (label, s) in [
-        (
-            "octave+1",
-            Synth {
-                octave_shift: 1,
-                ..base
-            },
-        ),
-        (
-            "octave-1",
-            Synth {
-                octave_shift: -1,
-                ..base
-            },
-        ),
-        (
-            "no-emphasis",
-            Synth {
-                tonic_emphasis: 1.0,
-                ..base
-            },
-        ),
-        (
-            "fade5ms",
-            Synth {
-                fade_ms: 5.0,
-                ..base
-            },
-        ),
-    ] {
-        let (acc, _, key) = analyze(&render(s));
-        println!(
-            "{label:12} conf={:.3} {}",
-            key.as_ref().map(|k| k.confidence).unwrap_or(-1.0),
-            key_detail(&acc.chroma)
-        );
-    }
-    // Pure theory: ideal K-S profile chroma itself and generator 7-note chroma.
-    let ideal_major = MAJOR_P;
-    println!("ideal KS-major chroma: {}", key_detail(&ideal_major));
-    let mut seven = [0.0; 12];
-    for i in [0usize, 2, 4, 5, 7, 9, 11] {
-        seven[i] = MAJOR_P[i] * if i == 0 { 2.0 } else { 1.0 };
-    }
-    println!("seven-note emph2 (amplitude): {}", key_detail(&seven));
-    let mut seven1 = [0.0; 12];
-    for i in [0usize, 2, 4, 5, 7, 9, 11] {
-        seven1[i] = MAJOR_P[i];
-    }
-    println!("seven-note emph1 (amplitude): {}", key_detail(&seven1));
+    println!("key sweep: {cases} cases, minimum confidence {minimum_confidence:.3}");
 }
 
 #[test]
-#[ignore]
-fn probe_bpm() {
+fn generator_bpm_sweep_has_no_octave_errors_and_meets_confidence_floor() {
     let base = Synth {
         bpm: 120.0,
         tonic: 9,
@@ -208,18 +166,89 @@ fn probe_bpm() {
         pulse_seconds: 0.18,
         fade_ms: 0.0,
     };
-    for bpm in [
-        60.0, 63.0, 66.0, 70.0, 75.0, 80.0, 90.0, 96.0, 100.0, 110.0, 118.0, 120.0, 123.0, 124.0,
-        126.0, 128.0, 130.0, 140.0, 150.0, 160.0, 174.0,
-    ] {
-        let (acc, est, _) = analyze(&render(Synth { bpm, ..base }));
-        let frame_rate = ANALYSIS_SAMPLE_RATE as f64 / FFT_HOP as f64;
-        let lag_exact = 60.0 * frame_rate / bpm;
-        println!(
-            "bpm={bpm:5.1} lag={lag_exact:6.2} est={:?} frames={}",
-            est.as_ref()
-                .map(|e| (e.bpm, (e.confidence * 1000.0).round() / 1000.0)),
-            acc.onset_strength.len()
+    let mut tempos: Vec<f64> = (60..=180).step_by(3).map(f64::from).collect();
+    tempos.extend((118..=132).map(f64::from));
+    tempos.sort_by(f64::total_cmp);
+    tempos.dedup();
+    let mut minimum_confidence = 1.0_f64;
+    let mut maximum_error_percent = 0.0_f64;
+    for bpm in &tempos {
+        let truth = *bpm;
+        let features = analyze(&render(Synth { bpm: truth, ..base }, 20.0));
+        let estimate = features
+            .bpm
+            .unwrap_or_else(|| panic!("no BPM estimate at {truth} BPM"));
+        let error_percent = (estimate.bpm - truth).abs() / truth * 100.0;
+        assert!(
+            error_percent <= 1.5,
+            "BPM estimate {:.1} at {bpm:.1} is off by {error_percent:.2}%",
+            estimate.bpm
         );
+        assert!(
+            estimate.confidence >= BPM_CONFIDENCE_FLOOR,
+            "BPM confidence {:.3} is below {:.2} at {bpm:.1} BPM (estimate {:.1})",
+            estimate.confidence,
+            BPM_CONFIDENCE_FLOOR,
+            estimate.bpm
+        );
+        minimum_confidence = minimum_confidence.min(estimate.confidence);
+        maximum_error_percent = maximum_error_percent.max(error_percent);
     }
+    println!(
+        "BPM sweep: {} tempos, minimum confidence {minimum_confidence:.3}, maximum error {maximum_error_percent:.2}%",
+        tempos.len()
+    );
+}
+
+#[test]
+fn noise_silence_heavy_and_short_clips_fail_closed() {
+    let base = Synth {
+        bpm: 120.0,
+        tonic: 0,
+        minor: false,
+        octave_shift: 0,
+        tonic_emphasis: 2.0,
+        pulse_seconds: 0.18,
+        fade_ms: 0.0,
+    };
+
+    let mut state = 0x9e37_79b9_7f4a_7c15_u64;
+    let noise = (0..SR as usize * 20)
+        .map(|_| {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            (((state >> 32) as u32 as i32) as f64 / i32::MAX as f64 * 0.18) as f32
+        })
+        .collect::<Vec<_>>();
+    assert_below_confidence_floors(&analyze(&noise), "broadband noise");
+
+    let mut sparse = render(base, 20.0);
+    let pulse_end = 2 * SR as usize + (SR as f64 * base.pulse_seconds) as usize;
+    for (index, sample) in sparse.iter_mut().enumerate() {
+        if !(2 * SR as usize..pulse_end).contains(&index) {
+            *sample = 0.0;
+        }
+    }
+    assert_below_confidence_floors(&analyze(&sparse), "one pulse in a silence-heavy clip");
+
+    let short = render(base, 4.0);
+    assert_below_confidence_floors(&analyze(&short), "four-second clip");
+}
+
+fn assert_below_confidence_floors(features: &DecodedFeatures, label: &str) {
+    assert!(
+        features
+            .bpm
+            .map_or(true, |estimate| estimate.confidence < BPM_CONFIDENCE_FLOOR),
+        "{label} returned BPM confidence at or above the floor: {:?}",
+        features.bpm
+    );
+    assert!(
+        features
+            .key
+            .map_or(true, |estimate| estimate.confidence < KEY_CONFIDENCE_FLOOR),
+        "{label} returned key confidence at or above the floor: {:?}",
+        features.key
+    );
 }
