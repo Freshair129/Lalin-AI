@@ -1,8 +1,13 @@
 // @req PLAY-15 — Native catalog reads are served by GenesisBlockDB.
 // @req PLAY-16 — YouTube references use the official external-link commands.
 // @req PLAY-18 — Persisted favorite and source metadata are exposed to the UI.
+// @req PLAY-27 — Smart Medley analysis returns a recommendation for one local track pair.
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
-import type { MediaItem } from "./contracts";
+import type {
+  MediaItem,
+  SmartMedleyPairDecision,
+  SmartMedleyUserCueOverride,
+} from "./contracts";
 
 export interface LocalTrack {
   kind?: "audio" | "video";
@@ -45,6 +50,22 @@ export async function getLibrary(): Promise<LocalTrack[]> {
     "get_library",
   );
   return library.tracks;
+}
+
+export async function analyzeSmartMedleyPair(
+  currentId: string,
+  nextId: string,
+  smoothEnabled: boolean,
+  currentUserCues?: SmartMedleyUserCueOverride,
+  nextUserCues?: SmartMedleyUserCueOverride,
+): Promise<SmartMedleyPairDecision> {
+  return invoke<SmartMedleyPairDecision>("analyze_smart_medley_pair", {
+    currentId,
+    nextId,
+    smoothEnabled,
+    currentUserCues,
+    nextUserCues,
+  });
 }
 
 export async function listDamagedTracks(): Promise<DamagedTrack[]> {

@@ -1,8 +1,8 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-11-09T10:00:00+07:00,Claude"
 last_update: "2026-11-09T10:00:00+07:00,Claude"
-status: "approved direction (owner, 2026-11-09); §4 evidence numbers candidate pending owner confirmation"
+status: "approved (owner, 2026-11-09)"
 superseded_by: null
 attributes:
   domain: "lalin-play"
@@ -51,7 +51,7 @@ All new strings exist in English and Thai in `src/i18n.tsx`; ENG remains the def
 4. Existing Rust Smart Medley tests and full suites stay green; `npm test`, `npm run build`, `cargo fmt --check`, `cargo test --locked` pass.
 5. `docs/validation/LALIN_PLAY_TRACEABILITY.md` PLAY-27 row updated (code + automated evidence; native/evidence NOT_RUN), and the user guide gains a short Experimental section.
 
-## 4. Reduced v1.1 evidence contract (candidate — owner to confirm numbers)
+## 4. Reduced v1.1 evidence contract (owner-approved 2026-11-09)
 
 Thresholds below are the owner-accepted W0-F values; only the host, fixture size/source and listening panel are reduced.
 
@@ -71,4 +71,5 @@ Evidence lives under `docs/validation/evidence/play-v1.1-smart-medley/` as JSONL
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-11-09 | approved | Owner approved the §4 reduced evidence numbers ("อนุมัติตามนี้"); code integration implemented | working tree | Claude |
 | 0.1.0b | 2026-11-09 | approved direction; §4 candidate | Smart Medley v1.1 UI integration behind an Experimental gate and a reduced evidence contract | working tree | Claude |

@@ -116,6 +116,15 @@ fullscreen. Preview ที่ decode ไม่ได้แสดงข้อค�
   ของ release `play-updates` เฉพาะเมื่อผู้ใช้กดตรวจอัปเดต
   Play ไม่ใช่ YouTube TV receiver และไม่มีรหัสจับคู่มือถือแบบ Cast
 
+## Experimental: Smart Medley
+
+Enable Smart Medley in Settings → Experimental, then select it under Track
+transition. It estimates transitions for local library audio from BPM, key, and
+cue analysis. User cue points take priority. If analysis is unavailable or a
+pair is unsupported, Play uses Smooth crossfade and keeps the current queue
+order. The estimate may not match the beat. Smart Medley remains experimental
+until automated, native, and owner listening evidence is complete.
+
 ## แก้ปัญหาเบื้องต้นอย่างไม่ทำลายข้อมูล
 
 | อาการ | สิ่งที่ทำได้ตอนนี้ / ข้อจำกัด |

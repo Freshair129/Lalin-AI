@@ -1,10 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MediaItem, PlaybackQueue } from "../contracts";
-import { resolveMedia } from "../native";
+import type { MediaItem, PlaybackQueue, SmartMedleyPairDecision } from "../contracts";
+import { analyzeSmartMedleyPair, resolveMedia } from "../native";
 import { PlaybackAudioEngine } from "./audioEngine";
-import { STORAGE_QUEUE_KEY, usePlaybackStore } from "./usePlaybackStore";
+import {
+  loadPersistedExperimentalSettings,
+  loadPersistedTransitionSettings,
+  STORAGE_EXPERIMENTAL_SETTINGS_KEY,
+  STORAGE_QUEUE_KEY,
+  STORAGE_TRANSITION_SETTINGS_KEY,
+  usePlaybackStore,
+} from "./usePlaybackStore";
 
 vi.mock("../native", () => ({
+  analyzeSmartMedleyPair: vi.fn(),
   isVideoItem: (item: { kind?: string } | null) => item?.kind === "video",
   resolveMedia: vi.fn().mockResolvedValue("asset:resolved"),
 }));
@@ -37,9 +45,78 @@ function transitionQueue(): PlaybackQueue {
   };
 }
 
+function smartMedleyDecision(
+  overrides: Partial<SmartMedleyPairDecision> = {},
+): SmartMedleyPairDecision {
+  const analysis = {
+    analysisVersion: "smart-medley-0.1.0",
+    mediaSha256: "a".repeat(64),
+    durationSeconds: 100,
+    bpm: 120,
+    bpmConfidence: 0.95,
+    key: { tonicSemitone: 0, mode: "major" as const },
+    keyConfidence: 0.92,
+    cueInSeconds: 0,
+    cueOutSeconds: 84,
+    cueConfidence: 0.9,
+    availability: "ready" as const,
+    fallbackReason: null,
+  };
+  return {
+    currentTrackId: "current-track",
+    nextTrackId: "incoming-track",
+    mode: "smart-medley",
+    eligible: true,
+    reason: "eligible-current-next-pair",
+    score: {
+      tempoCompatibility: 1,
+      keyCompatibility: 1,
+      cuePhaseCompatibility: 1,
+      confidenceFloor: 0.9,
+      compatibilityScore: 0.82,
+    },
+    current: analysis,
+    next: { ...analysis, mediaSha256: "b".repeat(64) },
+    currentCueInSeconds: 0,
+    currentCueOutSeconds: 84,
+    nextCueInSeconds: 14,
+    nextCueOutSeconds: 100,
+    ...overrides,
+  };
+}
+
+function smartLibraryQueue(): PlaybackQueue {
+  const queue = transitionQueue();
+  queue.items = queue.items.map((item) => ({
+    ...item,
+    sourceKind: "custom",
+    sourcePath: `C:\\music\\${item.id}.wav`,
+  }));
+  return queue;
+}
+
+async function flushMicrotasks(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+function enableSmartMode(queue = smartLibraryQueue()): void {
+  usePlaybackStore.setState((state) => ({
+    ...state,
+    queue,
+    nowPlaying: { ...state.nowPlaying, item: queue.items[0]!, state: "playing", duration: 100 },
+  }));
+  usePlaybackStore.getState().setExperimentalSmartMedley(true);
+  usePlaybackStore.getState().setTransitionSettings({ mode: "smart", durationSeconds: 5 });
+}
+
 beforeEach(() => {
   localStorage.clear();
+  vi.mocked(analyzeSmartMedleyPair).mockReset();
+  vi.mocked(analyzeSmartMedleyPair).mockResolvedValue(smartMedleyDecision());
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+  usePlaybackStore.getState().setExperimentalSmartMedley(false);
   usePlaybackStore.getState().setTransitionSettings({ mode: "off", durationSeconds: 5 });
   usePlaybackStore.setState((state) => ({
     queue: transitionQueue(),
@@ -60,6 +137,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  usePlaybackStore.getState().setExperimentalSmartMedley(false);
   usePlaybackStore.getState().setTransitionSettings({ mode: "off", durationSeconds: 5 });
   vi.restoreAllMocks();
 });
@@ -369,5 +447,203 @@ describe("smooth transition queue commit", () => {
     expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
     finishCrossfade(false);
     await Promise.resolve();
+  });
+});
+
+describe("Smart Medley experimental transition", () => {
+  it("defaults the experimental gate off and coerces a saved smart mode to smooth", () => {
+    localStorage.removeItem(STORAGE_EXPERIMENTAL_SETTINGS_KEY);
+    localStorage.setItem(STORAGE_TRANSITION_SETTINGS_KEY, JSON.stringify({ mode: "smart", durationSeconds: 7 }));
+    expect(loadPersistedExperimentalSettings()).toEqual({ smartMedley: false });
+    expect(loadPersistedTransitionSettings()).toEqual({ mode: "smooth", durationSeconds: 7 });
+
+    localStorage.setItem(STORAGE_EXPERIMENTAL_SETTINGS_KEY, JSON.stringify({ smartMedley: true }));
+    expect(loadPersistedTransitionSettings()).toEqual({ mode: "smart", durationSeconds: 7 });
+  });
+
+  it("persists the gate and falls back to smooth when the gate is turned off", () => {
+    usePlaybackStore.getState().setExperimentalSmartMedley(true);
+    usePlaybackStore.getState().setTransitionSettings({ mode: "smart", durationSeconds: 8 });
+    expect(JSON.parse(localStorage.getItem(STORAGE_EXPERIMENTAL_SETTINGS_KEY)!)).toEqual({ smartMedley: true });
+
+    usePlaybackStore.getState().setExperimentalSmartMedley(false);
+    expect(usePlaybackStore.getState().transitionSettings).toEqual({ mode: "smooth", durationSeconds: 8 });
+    expect(JSON.parse(localStorage.getItem(STORAGE_TRANSITION_SETTINGS_KEY)!)).toEqual({ mode: "smooth", durationSeconds: 8 });
+  });
+
+  it("prefetches the local current/next pair and uses eligible cue recommendations", async () => {
+    const queue = smartLibraryQueue();
+    queue.items[0] = { ...queue.items[0]!, cueInSeconds: 3, cueOutSeconds: 90 };
+    queue.items[1] = { ...queue.items[1]!, cueInSeconds: 12 };
+    vi.mocked(analyzeSmartMedleyPair).mockResolvedValue(smartMedleyDecision({
+      currentCueOutSeconds: 84,
+      nextCueInSeconds: 14,
+    }));
+    enableSmartMode(queue);
+    const queueEntryIds = usePlaybackStore.getState().queue.items.map((item) => item.queueEntryId);
+    const mediaGain = usePlaybackStore.getState().mixer.mediaGain;
+    await flushMicrotasks();
+
+    expect(analyzeSmartMedleyPair).toHaveBeenCalledWith(
+      "current-track",
+      "incoming-track",
+      true,
+      { cueInSeconds: 3, cueOutSeconds: 90 },
+      { cueInSeconds: 12, cueOutSeconds: undefined },
+    );
+    expect(usePlaybackStore.getState().queue.items.map((item) => item.queueEntryId)).toEqual(queueEntryIds);
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().mixer.mediaGain).toBe(mediaGain);
+    expect(usePlaybackStore.getState().nowPlaying.item?.id).toBe("current-track");
+
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+    emit("timeupdate", 80);
+    await flushMicrotasks();
+
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 14, {
+      mediaId: "incoming-track",
+      queueEntryId: "entry-incoming",
+      sessionId: 5,
+      duration: 120,
+    });
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+  });
+
+  it("uses the ordinary smooth crossfade for a fallback decision", async () => {
+    vi.mocked(analyzeSmartMedleyPair).mockResolvedValue(smartMedleyDecision({
+      mode: "smooth-fallback",
+      eligible: false,
+      reason: "incompatible-key",
+    }));
+    enableSmartMode();
+    await flushMicrotasks();
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+  });
+
+  it("bounds Smart Medley cue-out and cue-in to their track durations", async () => {
+    vi.mocked(analyzeSmartMedleyPair).mockResolvedValue(smartMedleyDecision({
+      currentCueOutSeconds: 140,
+      nextCueInSeconds: 200,
+    }));
+    enableSmartMode();
+    await flushMicrotasks();
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 119.9, expect.anything());
+  });
+
+  it("returns to Smooth if the recommended cue-out has already passed", async () => {
+    vi.mocked(analyzeSmartMedleyPair).mockResolvedValue(smartMedleyDecision({
+      currentCueOutSeconds: 84,
+      nextCueInSeconds: 14,
+    }));
+    enableSmartMode();
+    await flushMicrotasks();
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 83);
+    await flushMicrotasks();
+    expect(crossfade).not.toHaveBeenCalled();
+    expect(usePlaybackStore.getState().smartMedleyStatus.phase).toBe("fallback");
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+  });
+
+  it("keeps playback running and uses smooth after analysis rejects", async () => {
+    vi.mocked(analyzeSmartMedleyPair).mockRejectedValue(new Error("analysis unavailable"));
+    enableSmartMode();
+    await flushMicrotasks();
+    expect(usePlaybackStore.getState().smartMedleyStatus.phase).toBe("fallback");
+
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+    expect(usePlaybackStore.getState().queue.currentIndex).toBe(0);
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+  });
+
+  it("falls back to smooth if the decision is still pending at transition time", async () => {
+    let resolveDecision!: (decision: SmartMedleyPairDecision) => void;
+    vi.mocked(analyzeSmartMedleyPair).mockReturnValue(new Promise((resolve) => {
+      resolveDecision = resolve;
+    }));
+    enableSmartMode();
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+    resolveDecision(smartMedleyDecision());
+    await flushMicrotasks();
+  });
+
+  it("matches Smooth by skipping analysis and crossfade for video queue items", async () => {
+    const queue = smartLibraryQueue();
+    queue.items[1] = { ...queue.items[1]!, kind: "video" };
+    enableSmartMode(queue);
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(analyzeSmartMedleyPair).not.toHaveBeenCalled();
+    expect(crossfade).not.toHaveBeenCalled();
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+  });
+
+  it("uses Smooth for non-library items without calling the analyzer", async () => {
+    const queue = smartLibraryQueue();
+    queue.items[0] = { ...queue.items[0]!, sourceKind: "workspace" };
+    enableSmartMode(queue);
+    const crossfade = vi.spyOn(engine, "crossfadeTo").mockResolvedValue(false);
+
+    emit("timeupdate", 96);
+    await flushMicrotasks();
+
+    expect(analyzeSmartMedleyPair).not.toHaveBeenCalled();
+    expect(crossfade).toHaveBeenCalledWith("asset:resolved", 4, 0, expect.anything());
+    expect(usePlaybackStore.getState().nowPlaying.state).toBe("playing");
+  });
+
+  it("discards a stale pair result and serializes the next analysis request", async () => {
+    let resolveOld!: (decision: SmartMedleyPairDecision) => void;
+    let resolveNew!: (decision: SmartMedleyPairDecision) => void;
+    vi.mocked(analyzeSmartMedleyPair)
+      .mockReturnValueOnce(new Promise((resolve) => { resolveOld = resolve; }))
+      .mockReturnValueOnce(new Promise((resolve) => { resolveNew = resolve; }));
+    const queue = smartLibraryQueue();
+    enableSmartMode(queue);
+    expect(analyzeSmartMedleyPair).toHaveBeenCalledTimes(1);
+
+    usePlaybackStore.getState().setCuePoints(0, 2, 90);
+    expect(analyzeSmartMedleyPair).toHaveBeenCalledTimes(1);
+    expect(usePlaybackStore.getState().smartMedleyStatus.phase).toBe("analyzing");
+
+    resolveOld(smartMedleyDecision({ currentCueOutSeconds: 55 }));
+    await flushMicrotasks();
+    expect(analyzeSmartMedleyPair).toHaveBeenCalledTimes(2);
+    expect(usePlaybackStore.getState().smartMedleyStatus.phase).toBe("analyzing");
+
+    resolveNew(smartMedleyDecision({ currentCueOutSeconds: 80, nextCueInSeconds: 13 }));
+    await flushMicrotasks();
+    expect(usePlaybackStore.getState().smartMedleyStatus.phase).toBe("match");
+    expect(usePlaybackStore.getState().smartMedleyStatus.decision?.currentCueOutSeconds).toBe(80);
   });
 });
