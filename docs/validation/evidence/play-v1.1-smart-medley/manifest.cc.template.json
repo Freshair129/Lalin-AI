@@ -1,0 +1,959 @@
+{
+  "schemaVersion": "smart-medley-evidence/v1",
+  "source": "creative-commons",
+  "licence": "Creative Commons; exact licence recorded per clip",
+  "pairs": [
+    {
+      "pairId": "CC-01",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-01-A",
+          "path": "audio/replace-CC-01-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-01-B",
+          "path": "audio/replace-CC-01-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-02",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-02-A",
+          "path": "audio/replace-CC-02-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-02-B",
+          "path": "audio/replace-CC-02-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-03",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-03-A",
+          "path": "audio/replace-CC-03-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-03-B",
+          "path": "audio/replace-CC-03-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-04",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-04-A",
+          "path": "audio/replace-CC-04-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-04-B",
+          "path": "audio/replace-CC-04-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-05",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-05-A",
+          "path": "audio/replace-CC-05-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-05-B",
+          "path": "audio/replace-CC-05-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-06",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-06-A",
+          "path": "audio/replace-CC-06-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-06-B",
+          "path": "audio/replace-CC-06-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-07",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-07-A",
+          "path": "audio/replace-CC-07-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-07-B",
+          "path": "audio/replace-CC-07-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-08",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-08-A",
+          "path": "audio/replace-CC-08-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-08-B",
+          "path": "audio/replace-CC-08-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-09",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-09-A",
+          "path": "audio/replace-CC-09-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-09-B",
+          "path": "audio/replace-CC-09-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-10",
+      "stratum": "clear-rhythmic",
+      "expectedEligibility": true,
+      "clips": [
+        {
+          "clipId": "CC-10-A",
+          "path": "audio/replace-CC-10-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-10-B",
+          "path": "audio/replace-CC-10-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-11",
+      "stratum": "non-music",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-11-A",
+          "path": "audio/replace-CC-11-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-11-B",
+          "path": "audio/replace-CC-11-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-12",
+      "stratum": "non-music",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-12-A",
+          "path": "audio/replace-CC-12-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-12-B",
+          "path": "audio/replace-CC-12-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-13",
+      "stratum": "non-music",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-13-A",
+          "path": "audio/replace-CC-13-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-13-B",
+          "path": "audio/replace-CC-13-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-14",
+      "stratum": "non-music",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-14-A",
+          "path": "audio/replace-CC-14-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-14-B",
+          "path": "audio/replace-CC-14-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": null,
+          "tonic": null,
+          "mode": null,
+          "cueInWindow": null,
+          "cueOutWindow": null,
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-15",
+      "stratum": "low-confidence-challenge",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-15-A",
+          "path": "audio/replace-CC-15-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-15-B",
+          "path": "audio/replace-CC-15-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-16",
+      "stratum": "low-confidence-challenge",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-16-A",
+          "path": "audio/replace-CC-16-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-16-B",
+          "path": "audio/replace-CC-16-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-17",
+      "stratum": "low-confidence-challenge",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-17-A",
+          "path": "audio/replace-CC-17-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-17-B",
+          "path": "audio/replace-CC-17-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-18",
+      "stratum": "high-confidence-incompatible",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-18-A",
+          "path": "audio/replace-CC-18-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-18-B",
+          "path": "audio/replace-CC-18-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-19",
+      "stratum": "high-confidence-incompatible",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-19-A",
+          "path": "audio/replace-CC-19-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-19-B",
+          "path": "audio/replace-CC-19-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    },
+    {
+      "pairId": "CC-20",
+      "stratum": "high-confidence-incompatible",
+      "expectedEligibility": false,
+      "clips": [
+        {
+          "clipId": "CC-20-A",
+          "path": "audio/replace-CC-20-A.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        },
+        {
+          "clipId": "CC-20-B",
+          "path": "audio/replace-CC-20-B.wav",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "sourceUrl": "https://replace-with-source-page",
+          "licence": "CC BY 4.0 - replace with exact licence",
+          "attribution": "REPLACE: creator, title, and required attribution",
+          "bpm": 120,
+          "tonic": 0,
+          "mode": "major",
+          "cueInWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "cueOutWindow": {
+            "minSeconds": 0,
+            "maxSeconds": 0
+          },
+          "allowedKeys": [],
+          "notes": "REPLACE with held-out reference and annotation notes"
+        }
+      ],
+      "notes": "REPLACE with pair-level construction and label rationale before freeze"
+    }
+  ]
+}
