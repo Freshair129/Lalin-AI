@@ -1,9 +1,59 @@
 // @req FR-22.2 — Localized playback settings and output-device errors
 // @req PLAY-25 — Persisted Smooth crossfade controls
+// @req PLAY-27 — Experimental Smart Medley mode, pair status, and cue settings
 import { useEffect, useState } from "react";
 import { usePlaybackStore } from "../playback/usePlaybackStore";
-import { useI18n, localizeError } from "../i18n";
+import { useI18n, localizeError, type TranslationKey } from "../i18n";
+import type { SmartMedleyPlaybackStatus } from "../contracts";
 import { check, type Update } from "@tauri-apps/plugin-updater";
+
+const smartMedleyReasonKeys: Record<string, TranslationKey> = {
+  "bpm-confidence-below-0.80": "transition.smartReason.bpmConfidence",
+  "key-confidence-below-0.75": "transition.smartReason.keyConfidence",
+  "cue-confidence-below-0.80": "transition.smartReason.cueConfidence",
+  "tempo-ratio-above-1.03": "transition.smartReason.tempoRatio",
+  "incompatible-key": "transition.smartReason.incompatibleKey",
+  "compatibility-score-below-0.70": "transition.smartReason.score",
+  "unsupported-media": "transition.smartReason.unsupported",
+  "unsupported-audio-format": "transition.smartReason.unsupported",
+  "missing-or-invalid-content-hash": "transition.smartReason.unsupported",
+  "media-has-no-stable-content-hash": "transition.smartReason.unsupported",
+  "media-hash-unavailable": "transition.smartReason.unsupported",
+  "media-is-not-local-owned-readable-audio": "transition.smartReason.unsupported",
+  "unsupported": "transition.smartReason.unsupported",
+  "unreadable-media": "transition.smartReason.unreadable",
+  "media-is-unreadable": "transition.smartReason.unreadable",
+  "audio-decode-failed": "transition.smartReason.unreadable",
+  "unreadable": "transition.smartReason.unreadable",
+  "stale-analysis-version": "transition.smartReason.stale",
+  "stale-content-hash": "transition.smartReason.stale",
+  "media-changed-during-analysis": "transition.smartReason.stale",
+  "stale": "transition.smartReason.stale",
+  "invalid-cue-range": "transition.smartReason.invalidCue",
+  "cue-window-passed": "transition.smartReason.cueWindowPassed",
+  "bpm-outside-60-180": "transition.smartReason.bpmRange",
+  "next-track-unavailable": "transition.smartReason.noNextTrack",
+};
+
+function smartMedleyStatusText(
+  status: SmartMedleyPlaybackStatus,
+  t: ReturnType<typeof useI18n>["t"],
+): string {
+  if (status.phase === "analyzing") return t("transition.smartAnalyzing");
+  if (status.phase === "match") {
+    const score = status.decision?.score?.compatibilityScore;
+    return Number.isFinite(score)
+      ? t("transition.smartMatch", { score: score!.toFixed(2) })
+      : t("transition.smartReason.unknown");
+  }
+  if (status.phase === "fallback") {
+    const reasonKey = status.reason ? smartMedleyReasonKeys[status.reason] : undefined;
+    return t("transition.smartFallback", {
+      reason: t(reasonKey ?? "transition.smartReason.unknown"),
+    });
+  }
+  return t("transition.smartWaiting");
+}
 
 export function PlaybackSettings({ report }: { report: (error: unknown) => void }) {
   const { t, locale } = useI18n();
@@ -13,6 +63,8 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
   const nowPlaying = usePlaybackStore(state => state.nowPlaying);
   const queue = usePlaybackStore(state => state.queue);
   const transition = usePlaybackStore(state => state.transitionSettings);
+  const experimental = usePlaybackStore(state => state.experimental);
+  const smartMedleyStatus = usePlaybackStore(state => state.smartMedleyStatus);
   const isTransitioning = usePlaybackStore(state => state.isTransitioning);
   const crossfader = usePlaybackStore(state => state.crossfader);
   const transitionTargetId = usePlaybackStore(state => state.transitionTargetQueueEntryId);
@@ -36,8 +88,19 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
     : retainedTargetIndex >= 0 ? retainedTargetIndex : nextSequentialIndex;
   const incomingIndex = retainedTargetIndex >= 0
     ? retainedTargetIndex
-    : transition.mode === "manual" ? manualTarget : queue.shuffle ? -1 : nextSequentialIndex;
+    : transition.mode === "manual" ? manualTarget
+      : transition.mode === "smart" && smartMedleyStatus.nextEntryId
+        ? queue.items.findIndex(item => item.queueEntryId === smartMedleyStatus.nextEntryId)
+        : queue.shuffle ? -1 : nextSequentialIndex;
   const incomingItem = queue.items[incomingIndex];
+  const smartStatusCurrentIndex = smartMedleyStatus.currentEntryId
+    ? queue.items.findIndex(item => item.queueEntryId === smartMedleyStatus.currentEntryId)
+    : currentIndex;
+  const smartStatusNextIndex = smartMedleyStatus.nextEntryId
+    ? queue.items.findIndex(item => item.queueEntryId === smartMedleyStatus.nextEntryId)
+    : incomingIndex;
+  const smartStatusCurrent = queue.items[smartStatusCurrentIndex] ?? currentItem;
+  const smartStatusNext = queue.items[smartStatusNextIndex] ?? incomingItem;
   const availableDeckItems = queue.items.map((item, index) => ({ item, index })).filter(entry => entry.index !== currentIndex);
   const checkForUpdates = async () => {
     setUpdaterBusy(true);
@@ -73,10 +136,10 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
   };
   return <>
     <label>{t("app.playingRate")} <select value={rate} onChange={event => usePlaybackStore.getState().setPlaybackRate(Number(event.target.value))}>{[.5,.75,1,1.25,1.5,2].map(value => <option key={value} value={value}>{value}×</option>)}</select></label>
-    <label>{t("transition.mode")} <select value={transition.mode} onChange={event => usePlaybackStore.getState().setTransitionSettings({ ...transition, mode: event.target.value as typeof transition.mode })}><option value="off">{t("transition.off")}</option><option value="smooth">{t("transition.smooth")}</option><option value="manual">{t("transition.manual")}</option><option value="medley">{t("transition.medley")}</option></select></label>
-    {transition.mode === "smooth" || transition.mode === "medley" ? <>
+    <label>{t("transition.mode")} <select value={transition.mode} onChange={event => usePlaybackStore.getState().setTransitionSettings({ ...transition, mode: event.target.value as typeof transition.mode })}><option value="off">{t("transition.off")}</option><option value="smooth">{t("transition.smooth")}</option><option value="manual">{t("transition.manual")}</option><option value="medley">{t("transition.medley")}</option>{experimental.smartMedley ? <option value="smart">{t("transition.smart")}</option> : null}</select></label>
+    {transition.mode === "smooth" || transition.mode === "medley" || transition.mode === "smart" ? <>
       <label>{t("transition.duration")} <input type="range" min={2} max={12} step={1} value={transition.durationSeconds} aria-label={t("transition.duration")} onChange={event => usePlaybackStore.getState().setTransitionSettings({ ...transition, durationSeconds: Number(event.target.value) })} /><output>{transition.durationSeconds}s</output></label>
-      <p className="settings-help">{t(isTransitioning ? "transition.active" : transition.mode === "medley" ? "transition.medleyHelp" : "transition.help")}</p>
+      <p className="settings-help">{t(isTransitioning ? "transition.active" : transition.mode === "medley" ? "transition.medleyHelp" : transition.mode === "smart" ? "transition.smartHelp" : "transition.help")}</p>
     </> : null}
     {transition.mode === "manual" ? <>
       <p className="settings-help">{t(isTransitioning ? "transition.manualReady" : "transition.manualHelp")}</p>
@@ -86,11 +149,23 @@ export function PlaybackSettings({ report }: { report: (error: unknown) => void 
       <button disabled={!currentItem || !incomingItem || nowPlaying.state !== "playing" || isTransitioning} onClick={() => void usePlaybackStore.getState().prepareNextDeck(manualTarget).catch(report)}>{t("transition.prepareNext")}</button>
       <label>{t("transition.crossfader")} <input type="range" min={0} max={1} step={0.01} value={crossfader} disabled={!isTransitioning || nowPlaying.state !== "playing"} aria-label={t("transition.crossfader")} onChange={event => usePlaybackStore.getState().setCrossfader(Number(event.target.value))} /><output>{Math.round(crossfader * 100)}%</output></label>
     </> : null}
-    {transition.mode === "medley" && currentItem ? <fieldset className="transition-cues">
-      <legend>{t("transition.medley")}</legend>
+    {(transition.mode === "medley" || transition.mode === "smart") && currentItem ? <fieldset className="transition-cues">
+      <legend>{t(transition.mode === "smart" ? "transition.smartCues" : "transition.medley")}</legend>
       <label>{t("transition.cueOut")} <input type="number" min={0} max={currentItem.duration ?? undefined} step={0.1} value={currentItem.cueOutSeconds ?? currentItem.duration ?? ""} onChange={event => usePlaybackStore.getState().setCuePoints(currentIndex, currentItem.cueInSeconds, event.target.value === "" ? undefined : Number(event.target.value))} /></label>
-      {incomingItem ? <label>{t("transition.cueIn")} <input type="number" min={0} max={incomingItem.duration ?? undefined} step={0.1} value={incomingItem.cueInSeconds ?? 0} onChange={event => usePlaybackStore.getState().setCuePoints(manualTarget, event.target.value === "" ? undefined : Number(event.target.value), incomingItem.cueOutSeconds)} /></label> : null}
+      {incomingItem ? <label>{t("transition.cueIn")} <input type="number" min={0} max={incomingItem.duration ?? undefined} step={0.1} value={incomingItem.cueInSeconds ?? 0} onChange={event => usePlaybackStore.getState().setCuePoints(transition.mode === "smart" ? incomingIndex : manualTarget, event.target.value === "" ? undefined : Number(event.target.value), incomingItem.cueOutSeconds)} /></label> : null}
     </fieldset> : null}
+    {transition.mode === "smart" ? <p className="settings-help" role="status">
+      {t("transition.smartPairStatus", {
+        current: smartStatusCurrent?.title ?? t("transition.currentTrack"),
+        next: smartStatusNext?.title ?? t("transition.nextTrack"),
+        status: smartMedleyStatusText(smartMedleyStatus, t),
+      })}
+    </p> : null}
+    <section className="settings-experimental">
+      <h3>{t("settings.experimental")}</h3>
+      <label><input type="checkbox" checked={experimental.smartMedley} onChange={event => usePlaybackStore.getState().setExperimentalSmartMedley(event.currentTarget.checked)} />{t("settings.experimental.smartMedley")}</label>
+      <p className="settings-help">{t("settings.experimental.smartMedleyHelp")}</p>
+    </section>
     <label>{t("app.outputDevice")} <select value={output ?? ""} onChange={event => void usePlaybackStore.getState().setOutputDevice(event.target.value).then(ok => { if (!ok) report(localizeError("Could not select this device. Using the default device instead", locale)); }).catch(report)}>{devices.map(device => <option key={device.deviceId} value={device.deviceId}>{device.deviceId ? device.label : t("app.defaultWindowsOutput")}</option>)}</select></label>
     <button onClick={() => void usePlaybackStore.getState().refreshOutputDevices().catch(report)}>{t("app.refreshDevices")}</button>
     <div className="settings-help">

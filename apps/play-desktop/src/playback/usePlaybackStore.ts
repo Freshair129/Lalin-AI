@@ -31,7 +31,7 @@
 // @req FR-20.2, FR-20.3, FR-20.4 — Single-owner media/master mixer state and persistence
 // @req FR-21.3, FR-21.4 — Spatial-mode state and safe fallback reporting
 // @req PLAY-14 — Track successful audible listens once per playback session.
-// @req PLAY-22, PLAY-25, PLAY-26 — Stable queue entries and deterministic transition coordination
+// @req PLAY-22, PLAY-25, PLAY-26, PLAY-27 — Stable queue entries and transition coordination
 
 import { create } from "zustand";
 import {
@@ -43,20 +43,33 @@ import {
   type PlaybackMixer,
   type SpatialMode,
   type PlaybackTransitionSettings,
+  type ExperimentalSettings,
+  type SmartMedleyPairDecision,
+  type SmartMedleyPlaybackStatus,
+  type SmartMedleyUserCueOverride,
   DEFAULT_EQ_PRESETS,
   createDefaultEQ,
+  createDefaultExperimentalSettings,
+  createIdleSmartMedleyStatus,
   createDefaultMixer,
   createDefaultTransitionSettings,
   clampGain,
   EQ_FREQUENCIES,
 } from "../contracts";
 import { PlaybackAudioEngine, type AudioOutputDevice } from "./audioEngine";
-import { isVideoItem, mediaItem, resolveMedia, type LocalTrack } from "../native";
+import {
+  analyzeSmartMedleyPair,
+  isVideoItem,
+  mediaItem,
+  resolveMedia,
+  type LocalTrack,
+} from "../native";
 
 export const STORAGE_QUEUE_KEY = "lalin-play:v1:queue";
 export const STORAGE_EQ_KEY = "lalin-play:v1:eq";
 export const STORAGE_MIXER_KEY = "lalin-play:v1:mixer";
 export const STORAGE_TRANSITION_SETTINGS_KEY = "lalin-play:v1:transition";
+export const STORAGE_EXPERIMENTAL_SETTINGS_KEY = "lalin-play:v1:experimental";
 
 function createQueueEntryId(): string {
   try {
@@ -86,7 +99,28 @@ function nextQueueRevision(queue: PlaybackQueue): number {
   return (Number.isSafeInteger(queue.revision) && (queue.revision ?? 0) >= 0 ? queue.revision! : 0) + 1;
 }
 
-export function loadPersistedTransitionSettings(): PlaybackTransitionSettings {
+export function loadPersistedExperimentalSettings(): ExperimentalSettings {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_EXPERIMENTAL_SETTINGS_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { smartMedley: parsed.smartMedley === true };
+    }
+  } catch {}
+  return createDefaultExperimentalSettings();
+}
+
+function persistExperimentalSettings(settings: ExperimentalSettings): void {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_EXPERIMENTAL_SETTINGS_KEY, JSON.stringify(settings));
+    }
+  } catch {}
+}
+
+export function loadPersistedTransitionSettings(
+  experimental = loadPersistedExperimentalSettings(),
+): PlaybackTransitionSettings {
   try {
     const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_TRANSITION_SETTINGS_KEY) : null;
     if (raw) {
@@ -94,7 +128,11 @@ export function loadPersistedTransitionSettings(): PlaybackTransitionSettings {
       const durationSeconds = typeof parsed.durationSeconds === "number" && Number.isFinite(parsed.durationSeconds)
         ? Math.max(2, Math.min(12, Math.round(parsed.durationSeconds)))
         : 5;
-      const mode = parsed.mode === "smooth" || parsed.mode === "manual" || parsed.mode === "medley" ? parsed.mode : "off";
+      const mode = parsed.mode === "smart"
+        ? experimental.smartMedley ? "smart" : "smooth"
+        : parsed.mode === "smooth" || parsed.mode === "manual" || parsed.mode === "medley"
+          ? parsed.mode
+          : "off";
       return { mode, durationSeconds };
     }
   } catch {}
@@ -213,6 +251,8 @@ export interface PlaybackStoreState {
   playSession: number;
   eq: PlaybackEQ;
   mixer: PlaybackMixer;
+  experimental: ExperimentalSettings;
+  smartMedleyStatus: SmartMedleyPlaybackStatus;
   spatialNotice: "fallback-stereo" | null;
   isOpen: boolean;
   availableOutputDevices: AudioOutputDevice[];
@@ -247,6 +287,7 @@ export interface PlaybackStoreState {
   crossfader: number;
   transitionTargetQueueEntryId: string | null;
   setTransitionSettings: (settings: PlaybackTransitionSettings) => void;
+  setExperimentalSmartMedley: (enabled: boolean) => void;
   prepareNextDeck: (targetIndex?: number) => Promise<void>;
   setCrossfader: (value: number) => void;
   setCuePoints: (index: number, cueInSeconds: number | undefined, cueOutSeconds: number | undefined) => void;
@@ -267,7 +308,8 @@ export interface PlaybackStoreState {
 const initialQueue = loadPersistedQueue();
 const initialEQ = loadPersistedEQ();
 const initialMixer = loadPersistedMixer();
-const initialTransitionSettings = loadPersistedTransitionSettings();
+const initialExperimentalSettings = loadPersistedExperimentalSettings();
+const initialTransitionSettings = loadPersistedTransitionSettings(initialExperimentalSettings);
 const engine = PlaybackAudioEngine.getInstance();
 let loadGeneration = 0;
 let relinkedCurrentNeedsLoad = false;
@@ -275,6 +317,8 @@ let smoothTransitionGeneration = 0;
 let smoothTransitionTarget: { token: number; outgoingEntryId: string; incomingEntryId: string; key: string } | null = null;
 let blockedTransitionKey: string | null = null;
 let shuffleTargetCache: { key: string; index: number } | null = null;
+let smartMedleyRequestInFlight: { key: string } | null = null;
+let smartMedleyDesiredKey: string | null = null;
 
 function cancelPlannedTransition(): void {
   smoothTransitionGeneration++;
@@ -300,11 +344,169 @@ function nextSmoothQueueIndex(queue: PlaybackQueue): number | null {
   return queue.repeatMode === "all" ? 0 : null;
 }
 
+interface SmartMedleyPairContext {
+  key: string;
+  current: MediaItem;
+  next: MediaItem;
+  currentUserCues: SmartMedleyUserCueOverride;
+  nextUserCues: SmartMedleyUserCueOverride;
+}
+
+function userCueOverride(item: MediaItem): SmartMedleyUserCueOverride {
+  return {
+    cueInSeconds: item.cueInSeconds,
+    cueOutSeconds: item.cueOutSeconds,
+  };
+}
+
+function smartMedleyPairContext(state: PlaybackStoreState): SmartMedleyPairContext | null {
+  const current = state.queue.items[state.queue.currentIndex];
+  const nextIndex = nextSmoothQueueIndex(state.queue);
+  const next = nextIndex === null ? undefined : state.queue.items[nextIndex];
+  if (!current?.queueEntryId || !next?.queueEntryId) return null;
+  const currentUserCues = userCueOverride(current);
+  const nextUserCues = userCueOverride(next);
+  const cueKey = JSON.stringify([
+    currentUserCues.cueInSeconds ?? null,
+    currentUserCues.cueOutSeconds ?? null,
+    nextUserCues.cueInSeconds ?? null,
+    nextUserCues.cueOutSeconds ?? null,
+  ]);
+  return {
+    key: `${current.queueEntryId}:${next.queueEntryId}:${state.queue.revision ?? 0}:${cueKey}`,
+    current,
+    next,
+    currentUserCues,
+    nextUserCues,
+  };
+}
+
+function setSmartMedleyStatus(status: SmartMedleyPlaybackStatus): void {
+  const current = usePlaybackStore.getState().smartMedleyStatus;
+  if (
+    current.phase === status.phase &&
+    current.key === status.key &&
+    current.reason === status.reason &&
+    current.decision === status.decision &&
+    current.currentEntryId === status.currentEntryId &&
+    current.nextEntryId === status.nextEntryId
+  ) return;
+  usePlaybackStore.setState({ smartMedleyStatus: status });
+}
+
+function scheduleSmartMedleyAnalysis(state: PlaybackStoreState): void {
+  if (state.transitionSettings.mode !== "smart" || !state.experimental.smartMedley) {
+    smartMedleyDesiredKey = null;
+    if (state.smartMedleyStatus.phase !== "idle" || state.smartMedleyStatus.key !== null) {
+      setSmartMedleyStatus(createIdleSmartMedleyStatus());
+    }
+    return;
+  }
+
+  const pair = smartMedleyPairContext(state);
+  if (!pair) {
+    smartMedleyDesiredKey = null;
+    setSmartMedleyStatus({ phase: "fallback", key: null, reason: "next-track-unavailable" });
+    return;
+  }
+
+  smartMedleyDesiredKey = pair.key;
+  const currentEntryId = pair.current.queueEntryId!;
+  const nextEntryId = pair.next.queueEntryId!;
+  const supported =
+    !isVideoItem(pair.current) &&
+    !isVideoItem(pair.next) &&
+    pair.current.sourceKind === "custom" &&
+    !!pair.current.sourcePath &&
+    pair.next.sourceKind === "custom" &&
+    !!pair.next.sourcePath;
+  if (!supported) {
+    setSmartMedleyStatus({
+      phase: "fallback",
+      key: pair.key,
+      currentEntryId,
+      nextEntryId,
+      reason: "unsupported-media",
+    });
+    return;
+  }
+
+  const previous = state.smartMedleyStatus;
+  if (previous.key === pair.key && (previous.phase === "match" || previous.phase === "fallback")) return;
+
+  if (smartMedleyRequestInFlight) {
+    if (previous.key !== pair.key || previous.phase !== "analyzing") {
+      setSmartMedleyStatus({ phase: "analyzing", key: pair.key, currentEntryId, nextEntryId });
+    }
+    return;
+  }
+
+  if (state.nowPlaying.state !== "playing") {
+    setSmartMedleyStatus({ phase: "idle", key: pair.key, currentEntryId, nextEntryId });
+    return;
+  }
+
+  smartMedleyRequestInFlight = { key: pair.key };
+  setSmartMedleyStatus({ phase: "analyzing", key: pair.key, currentEntryId, nextEntryId });
+  void analyzeSmartMedleyPair(
+    pair.current.id,
+    pair.next.id,
+    true,
+    pair.currentUserCues,
+    pair.nextUserCues,
+  ).then((decision: SmartMedleyPairDecision) => {
+    const latest = usePlaybackStore.getState();
+    const latestPair = smartMedleyPairContext(latest);
+    if (
+      smartMedleyDesiredKey !== pair.key ||
+      latest.transitionSettings.mode !== "smart" ||
+      !latest.experimental.smartMedley ||
+      latestPair?.key !== pair.key
+    ) return;
+    if (
+      decision.eligible &&
+      decision.mode === "smart-medley" &&
+      decision.currentTrackId === pair.current.id &&
+      decision.nextTrackId === pair.next.id
+    ) {
+      setSmartMedleyStatus({
+        phase: "match",
+        key: pair.key,
+        currentEntryId,
+        nextEntryId,
+        decision,
+      });
+    } else {
+      setSmartMedleyStatus({
+        phase: "fallback",
+        key: pair.key,
+        currentEntryId,
+        nextEntryId,
+        reason: decision.reason || "analysis-unavailable",
+        decision,
+      });
+    }
+  }).catch(() => {
+    const latest = usePlaybackStore.getState();
+    if (smartMedleyDesiredKey !== pair.key || smartMedleyPairContext(latest)?.key !== pair.key) return;
+    setSmartMedleyStatus({
+      phase: "fallback",
+      key: pair.key,
+      currentEntryId,
+      nextEntryId,
+      reason: "analysis-unavailable",
+    });
+  }).finally(() => {
+    if (smartMedleyRequestInFlight?.key === pair.key) smartMedleyRequestInFlight = null;
+    scheduleSmartMedleyAnalysis(usePlaybackStore.getState());
+  });
+}
+
 function maybeStartSmoothTransition(time: number, state: PlaybackStoreState): void {
   const current = state.queue.items[state.queue.currentIndex];
   const nextIndex = nextSmoothQueueIndex(state.queue);
   if (
-    (state.transitionSettings.mode !== "smooth" && state.transitionSettings.mode !== "medley") ||
+    (state.transitionSettings.mode !== "smooth" && state.transitionSettings.mode !== "medley" && state.transitionSettings.mode !== "smart") ||
     state.nowPlaying.state !== "playing" ||
     !current?.queueEntryId ||
     isVideoItem(current) ||
@@ -313,13 +515,40 @@ function maybeStartSmoothTransition(time: number, state: PlaybackStoreState): vo
   ) return;
   const next = state.queue.items[nextIndex];
   if (!next?.queueEntryId || isVideoItem(next)) return;
-  const attemptKey = `${current.queueEntryId}:${next.queueEntryId}:${state.transitionSettings.mode}:${state.queue.revision ?? 0}`;
+  const smartPair = state.transitionSettings.mode === "smart" ? smartMedleyPairContext(state) : null;
+  let smartDecision = smartPair &&
+    state.smartMedleyStatus.key === smartPair.key &&
+    state.smartMedleyStatus.phase === "match" &&
+    state.smartMedleyStatus.decision?.eligible === true &&
+    state.smartMedleyStatus.decision.mode === "smart-medley" &&
+    state.smartMedleyStatus.decision.currentTrackId === current.id &&
+    state.smartMedleyStatus.decision.nextTrackId === next.id
+      ? state.smartMedleyStatus.decision
+      : null;
+  const attemptKey = state.transitionSettings.mode === "smart"
+    ? smartPair?.key ?? `${current.queueEntryId}:${next.queueEntryId}:smart:${state.queue.revision ?? 0}`
+    : `${current.queueEntryId}:${next.queueEntryId}:${state.transitionSettings.mode}:${state.queue.revision ?? 0}`;
   if (blockedTransitionKey === attemptKey) return;
   const duration = engine.getDuration() || state.nowPlaying.duration;
-  const cueOut = state.transitionSettings.mode === "medley"
-    ? Math.min(duration, Number.isFinite(current.cueOutSeconds) ? current.cueOutSeconds! : duration)
-    : duration;
-  const remaining = cueOut - time;
+  const smartCueOut = smartDecision?.currentCueOutSeconds;
+  let cueOut = smartDecision && Number.isFinite(smartCueOut) && duration > 0
+    ? Math.max(0, Math.min(duration, smartCueOut!))
+    : state.transitionSettings.mode === "medley"
+      ? Math.min(duration, Number.isFinite(current.cueOutSeconds) ? current.cueOutSeconds! : duration)
+      : duration;
+  let remaining = cueOut - time;
+  if (smartDecision && Number.isFinite(remaining) && remaining < 2) {
+    setSmartMedleyStatus({
+      phase: "fallback",
+      key: smartPair!.key,
+      currentEntryId: current.queueEntryId,
+      nextEntryId: next.queueEntryId,
+      reason: "cue-window-passed",
+    });
+    smartDecision = null;
+    cueOut = duration;
+    remaining = cueOut - time;
+  }
   if (!Number.isFinite(remaining) || remaining < 2 || remaining > state.transitionSettings.durationSeconds) return;
 
   const token = ++smoothTransitionGeneration;
@@ -332,14 +561,17 @@ function maybeStartSmoothTransition(time: number, state: PlaybackStoreState): vo
   usePlaybackStore.setState({ transitionTargetQueueEntryId: next.queueEntryId });
   const fadeSeconds = Math.max(2, Math.min(state.transitionSettings.durationSeconds, remaining));
   const nextDuration = Number.isFinite(next.duration) && (next.duration ?? 0) > 0 ? next.duration! : Number.MAX_SAFE_INTEGER;
-  const incomingStartTime = state.transitionSettings.mode === "medley"
-    ? Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), (Number.isFinite(next.cueInSeconds) ? next.cueInSeconds! : 0)))
+  const smartCueIn = smartDecision?.nextCueInSeconds;
+  const cueIn = smartDecision && Number.isFinite(smartCueIn) ? smartCueIn! : next.cueInSeconds;
+  const incomingStartTime = state.transitionSettings.mode === "medley" || smartDecision
+    ? Math.max(0, Math.min(Math.max(0, nextDuration - 0.1), (Number.isFinite(cueIn) ? cueIn! : 0)))
     : 0;
   void resolveMedia(next).then((url) => {
     const latest = usePlaybackStore.getState();
     if (
       token !== smoothTransitionGeneration ||
-      (latest.transitionSettings.mode !== "smooth" && latest.transitionSettings.mode !== "medley") ||
+      (latest.transitionSettings.mode !== "smooth" && latest.transitionSettings.mode !== "medley" && latest.transitionSettings.mode !== "smart") ||
+      (state.transitionSettings.mode === "smart" && (!latest.experimental.smartMedley || smartMedleyPairContext(latest)?.key !== smartPair?.key)) ||
       latest.queue.items[latest.queue.currentIndex]?.queueEntryId !== current.queueEntryId ||
       !latest.queue.items.some((item) => item.queueEntryId === next.queueEntryId) ||
       latest.nowPlaying.state !== "playing"
@@ -390,6 +622,7 @@ try {
   }
 } catch {}
 persistTransitionSettings(initialTransitionSettings);
+persistExperimentalSettings(initialExperimentalSettings);
 
 export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
   // Attach audio engine events
@@ -550,6 +783,8 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     playSession: 0,
     eq: initialEQ,
     mixer: initialMixer,
+    experimental: initialExperimentalSettings,
+    smartMedleyStatus: createIdleSmartMedleyStatus(),
     transitionSettings: initialTransitionSettings,
     isTransitioning: false,
     crossfader: 0,
@@ -563,13 +798,29 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     setTransitionSettings: (settings: PlaybackTransitionSettings) => {
       cancelPlannedTransition();
       const nextSettings: PlaybackTransitionSettings = {
-        mode: settings.mode === "smooth" || settings.mode === "manual" || settings.mode === "medley" ? settings.mode : "off",
+        mode: settings.mode === "smart"
+          ? get().experimental.smartMedley ? "smart" : "smooth"
+          : settings.mode === "smooth" || settings.mode === "manual" || settings.mode === "medley"
+            ? settings.mode
+            : "off",
         durationSeconds: Number.isFinite(settings.durationSeconds)
           ? Math.max(2, Math.min(12, Math.round(settings.durationSeconds)))
           : 5,
       };
       persistTransitionSettings(nextSettings);
       set({ transitionSettings: nextSettings, isTransitioning: false });
+    },
+
+    setExperimentalSmartMedley: (enabled: boolean) => {
+      cancelPlannedTransition();
+      const experimental = { smartMedley: enabled };
+      const current = get().transitionSettings;
+      const transitionSettings = !enabled && current.mode === "smart"
+        ? { ...current, mode: "smooth" as const }
+        : current;
+      persistExperimentalSettings(experimental);
+      if (transitionSettings !== current) persistTransitionSettings(transitionSettings);
+      set({ experimental, transitionSettings, isTransitioning: false });
     },
 
     prepareNextDeck: async (targetIndex?: number) => {
@@ -1215,3 +1466,5 @@ export const usePlaybackStore = create<PlaybackStoreState>((set, get) => {
     },
   };
 });
+
+usePlaybackStore.subscribe((state) => scheduleSmartMedleyAnalysis(state));

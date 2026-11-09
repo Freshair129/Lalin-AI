@@ -2,12 +2,12 @@
 // @req FR-16W — Windows Integration contracts
 // @req FR-17 — Playback EQ contracts
 // @req FR-20.4, FR-21.1 — Persistable local playback-mixer and spatial-mode contracts
-// @req PLAY-22, PLAY-25 — Queue occurrence identity and crossfade settings
+// @req PLAY-22, PLAY-25, PLAY-27 — Queue occurrence identity and crossfade settings
 
 export type PlaybackState = "idle" | "playing" | "paused" | "loading" | "error";
 export type PlaybackRepeatMode = "off" | "one" | "all";
 export type SpatialMode = "stereo" | "virtual-7.1";
-export type PlaybackTransitionMode = "off" | "smooth" | "manual" | "medley";
+export type PlaybackTransitionMode = "off" | "smooth" | "manual" | "medley" | "smart";
 
 export interface PlaybackTransitionSettings {
   mode: PlaybackTransitionMode;
@@ -16,6 +16,72 @@ export interface PlaybackTransitionSettings {
 
 export function createDefaultTransitionSettings(): PlaybackTransitionSettings {
   return { mode: "off", durationSeconds: 5 };
+}
+
+export interface ExperimentalSettings {
+  smartMedley: boolean;
+}
+
+export function createDefaultExperimentalSettings(): ExperimentalSettings {
+  return { smartMedley: false };
+}
+
+export interface SmartMedleyUserCueOverride {
+  cueInSeconds?: number;
+  cueOutSeconds?: number;
+}
+
+export type SmartMedleyRecommendationMode = "smart-medley" | "smooth-fallback" | "off";
+
+export interface SmartMedleyAnalysis {
+  analysisVersion: string;
+  mediaSha256: string | null;
+  durationSeconds: number | null;
+  bpm: number | null;
+  bpmConfidence: number;
+  key: { tonicSemitone: number; mode: "major" | "minor" } | null;
+  keyConfidence: number;
+  cueInSeconds: number | null;
+  cueOutSeconds: number | null;
+  cueConfidence: number;
+  availability: "ready" | "low-confidence" | "unsupported" | "unreadable";
+  fallbackReason: string | null;
+}
+
+export interface SmartMedleyScoreComponents {
+  tempoCompatibility: number;
+  keyCompatibility: number;
+  cuePhaseCompatibility: number;
+  confidenceFloor: number;
+  compatibilityScore: number;
+}
+
+export interface SmartMedleyPairDecision {
+  currentTrackId: string;
+  nextTrackId: string;
+  mode: SmartMedleyRecommendationMode;
+  eligible: boolean;
+  reason: string;
+  score: SmartMedleyScoreComponents | null;
+  current: SmartMedleyAnalysis;
+  next: SmartMedleyAnalysis;
+  currentCueInSeconds: number | null;
+  currentCueOutSeconds: number | null;
+  nextCueInSeconds: number | null;
+  nextCueOutSeconds: number | null;
+}
+
+export interface SmartMedleyPlaybackStatus {
+  phase: "idle" | "analyzing" | "match" | "fallback";
+  key: string | null;
+  currentEntryId?: string;
+  nextEntryId?: string;
+  reason?: string;
+  decision?: SmartMedleyPairDecision;
+}
+
+export function createIdleSmartMedleyStatus(): SmartMedleyPlaybackStatus {
+  return { phase: "idle", key: null };
 }
 
 export interface PlaybackMixer {
