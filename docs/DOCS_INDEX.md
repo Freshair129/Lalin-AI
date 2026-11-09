@@ -59,6 +59,7 @@ attributes:
 - `docs/design/LALIN_RENAME_MIGRATION_PLAN.md`: product rename and compatibility plan.
 - `docs/product/LALIN_PLAY_V1_RELEASE_SCOPE.md`: approved (owner, 2026-11-07) reduced-scope Lalin Play v1.0 release decision (gates, deferrals, R0 values); `play-v1.0.0` RELEASED 2026-11-09 before owner P1.6.
 - `docs/design/LALIN_PLAY_RELINK_SPEC.md`: PLAY-08 relink implementation spec (stable track ids, shared path validation, queue patching, acceptance tests).
+- `docs/design/LALIN_PLAY_SMART_MEDLEY_V1_1_SPEC.md`: approved (owner, 2026-11-09) PLAY-27 Smart Medley v1.1 — Experimental UI integration and reduced evidence contract; evidence NOT_RUN.
 - `docs/design/LALIN_PLAY_MANAGED_RECOVERY_SPEC.md`: PLAY-08-M managed-object recovery (read-only damaged listing, identical-bytes restore; no W0-D change).
 
 ## Current Lalin UI Docs
