@@ -84,16 +84,13 @@ jobs:
           PLAY_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY }}
           PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          $keyBytes = [Convert]::FromBase64String($env:PLAY_TAURI_SIGNING_PRIVATE_KEY.Trim())
-          $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
-          $env:TAURI_SIGNING_PRIVATE_KEY = $strictUtf8.GetString($keyBytes)
+          # Tauri decodes the base64 key file content itself; pass the secret as-is (preflight already validated it).
+          $env:TAURI_SIGNING_PRIVATE_KEY = $env:PLAY_TAURI_SIGNING_PRIVATE_KEY.Trim()
           $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = $env:PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD
           npm run tauri -- build --ci
           $buildExitCode = $LASTEXITCODE
           Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY -ErrorAction SilentlyContinue
           Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
-          $keyBytes = $null
-          $strictUtf8 = $null
           if ($buildExitCode -ne 0) { exit $buildExitCode }
 
       - name: Check Play executable stack reserve
