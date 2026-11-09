@@ -10,6 +10,7 @@ edition = "2021"
 g3-test-app-data-dir = []
 # Developer benchmark harness only; not built or bundled by default (Smart Medley is deferred for v1.0).
 smart-medley-benchmark = []
+smart-medley-evidence = []
 
 [lib]
 name = "lalin_play_lib"
@@ -19,6 +20,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 name = "smart-medley-benchmark"
 path = "../benchmarks/smart-medley/main.rs"
 required-features = ["smart-medley-benchmark"]
+
+[[bin]]
+name = "smart-medley-evidence"
+path = "../benchmarks/smart-medley/evidence.rs"
+required-features = ["smart-medley-evidence"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

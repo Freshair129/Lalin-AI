@@ -28,6 +28,7 @@ struct Args {
     cache_dir: PathBuf,
     evidence_file: PathBuf,
     host_file: PathBuf,
+    evidence_root: PathBuf,
 }
 
 fn main() {
@@ -40,7 +41,7 @@ fn main() {
 fn run() -> Result<(), String> {
     let args = parse_args()?;
     let evidence_root =
-        fs::canonicalize(EVIDENCE_ROOT).map_err(|_| "evidence root is unavailable")?;
+        fs::canonicalize(&args.evidence_root).map_err(|_| "evidence root is unavailable")?;
     let input = fs::canonicalize(&args.input).map_err(|_| "pinned local input is unavailable")?;
     let cache_dir = args
         .cache_dir
@@ -384,10 +385,33 @@ fn parse_args() -> Result<Args, String> {
         cache_dir: take("--cache-dir")?.into(),
         evidence_file: take("--evidence")?.into(),
         host_file: take("--host-json")?.into(),
+        evidence_root: map
+            .get("--evidence-root")
+            .cloned()
+            .unwrap_or_else(|| EVIDENCE_ROOT.to_string())
+            .into(),
     })
 }
 
 fn host_matches_profile(host: &Value) -> bool {
+    if host.get("measuredOn").and_then(Value::as_str) == Some("hyperv-vm") {
+        let edition = host.get("edition").and_then(Value::as_str);
+        let edition_id = host.get("editionId").and_then(Value::as_str);
+        let memory_bytes = host.get("installedMemoryBytes").and_then(Value::as_u64);
+        return host.get("acceptedProfile").and_then(Value::as_bool) == Some(true)
+            && host
+                .get("osCaption")
+                .and_then(Value::as_str)
+                .is_some_and(|caption| caption.to_ascii_lowercase().contains("windows 11"))
+            && matches!(
+                (edition, edition_id),
+                (Some("Home"), Some("Core")) | (Some("Pro"), Some("Professional"))
+            )
+            && host.get("architecture").and_then(Value::as_str) == Some("AMD64")
+            && host.get("guestModel").and_then(Value::as_str) == Some("Virtual Machine")
+            && host.get("logicalProcessorCount").and_then(Value::as_u64) == Some(4)
+            && memory_bytes.is_some_and(|bytes| (8_589_934_592..9_663_676_416).contains(&bytes));
+    }
     let edition = host.get("edition").and_then(Value::as_str);
     let edition_id = host.get("editionId").and_then(Value::as_str);
     let build = host.get("build").and_then(Value::as_str);

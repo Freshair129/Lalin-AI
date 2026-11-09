@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://lalin.invalid/schemas/smart-medley-evidence-v1.json",
+  "title": "Lalin Play Smart Medley v1.1 fixture manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "source", "licence", "pairs"],
+  "properties": {
+    "schemaVersion": { "const": "smart-medley-evidence/v1" },
+    "source": { "enum": ["synthetic", "creative-commons"] },
+    "licence": { "type": "string", "minLength": 1 },
+    "pairs": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": { "$ref": "#/definitions/pair" }
+    }
+  },
+  "definitions": {
+    "cueWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minSeconds", "maxSeconds"],
+      "properties": {
+        "minSeconds": { "type": "number", "minimum": 0 },
+        "maxSeconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tonicSemitone", "mode"],
+      "properties": {
+        "tonicSemitone": { "type": "integer", "minimum": 0, "maximum": 11 },
+        "mode": { "enum": ["major", "minor"] }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clipId", "path", "sha256", "sourceUrl", "licence", "attribution",
+        "bpm", "tonic", "mode", "cueInWindow", "cueOutWindow", "allowedKeys", "notes"
+      ],
+      "properties": {
+        "clipId": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)[^:]+$" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "sourceUrl": { "type": ["string", "null"], "format": "uri" },
+        "licence": { "type": "string", "minLength": 1 },
+        "attribution": { "type": "string", "minLength": 1 },
+        "bpm": { "type": ["number", "null"], "minimum": 60, "maximum": 180 },
+        "tonic": { "type": ["integer", "null"], "minimum": 0, "maximum": 11 },
+        "mode": { "enum": ["major", "minor", null] },
+        "cueInWindow": { "oneOf": [{ "$ref": "#/definitions/cueWindow" }, { "type": "null" }] },
+        "cueOutWindow": { "oneOf": [{ "$ref": "#/definitions/cueWindow" }, { "type": "null" }] },
+        "allowedKeys": { "type": "array", "items": { "$ref": "#/definitions/key" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pairId", "stratum", "expectedEligibility", "clips", "notes"],
+      "properties": {
+        "pairId": { "type": "string", "minLength": 1 },
+        "stratum": {
+          "enum": [
+            "clear-rhythmic",
+            "ambiguous-low-confidence",
+            "ambiguous-high-confidence-compatible",
+            "high-confidence-incompatible",
+            "low-confidence-challenge",
+            "non-music",
+            "low-quality-unsupported",
+            "tempo-mismatch"
+          ]
+        },
+        "expectedEligibility": { "type": "boolean" },
+        "clips": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/definitions/clip" }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

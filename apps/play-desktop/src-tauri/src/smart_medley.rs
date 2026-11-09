@@ -537,6 +537,25 @@ fn evaluate_pair(
     decision
 }
 
+/// Evaluate two hash-pinned analyzer records with the production pair gates and score.
+/// Evidence tooling uses this entry point so the benchmark cannot copy or tune the decision logic.
+pub fn evaluate_pinned_pair(
+    current_track_id: String,
+    next_track_id: String,
+    current: SmartMedleyAnalysis,
+    next: SmartMedleyAnalysis,
+) -> SmartMedleyPairDecision {
+    evaluate_pair(
+        current_track_id,
+        next_track_id,
+        current,
+        next,
+        None,
+        None,
+        true,
+    )
+}
+
 fn effective_cues(analysis: &SmartMedleyAnalysis, user: Option<UserCueOverride>) -> EffectiveCues {
     let user_cue_in = user.and_then(|value| value.cue_in_seconds);
     let user_cue_out = user.and_then(|value| value.cue_out_seconds);

@@ -1,0 +1,7 @@
+*
+!.gitignore
+!README.md
+!manifest.schema.json
+!manifest.cc.template.json
+!summary.json
+!summary.csv

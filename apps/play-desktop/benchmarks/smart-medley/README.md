@@ -22,6 +22,24 @@ Run from PowerShell only with rights-cleared, held-out evidence inputs:
 .\run.ps1 -InputFile <local-180s-wav> -Sha256 <64-character-sha256>
 ```
 
+For the owner-approved v1.1 VM run, execute inside a Windows 11 x64 Home/Pro
+Hyper-V guest with exactly 4 logical processors and 8 GiB to under 9 GiB RAM.
+Set the VM to static memory with Dynamic Memory disabled and do not attach a
+GPU. The script checks `Win32_ComputerSystem.Model = Virtual Machine`, guest OS,
+edition, architecture, logical processor count and RAM; it records
+`measuredOn: hyperv-vm` and the processor model exposed to the guest when
+available. The guest cannot prove its Hyper-V memory mode, so configure that in
+Hyper-V Manager before running. `-EvidenceRoot` changes the local output root;
+its default remains `E:\lalin-cr008-evidence\w2-c`.
+
+```powershell
+.\run.ps1 -InputFile <local-180s-wav> -Sha256 <64-character-sha256> `
+  -Profile hyperv-v11 -EvidenceRoot <local-evidence-directory>
+```
+
+The default `-Profile strict` retains the original dated 26H2 physical-host
+checks. The `hyperv-v11` profile is additive and does not relax that default.
+
 The harness includes native analysis, cache persistence/read, result validation
 and monotonic elapsed timing. Every JSONL row uses the pinned W0-DEF v0.6.9
 record shape. Fields outside timing evidence, including fixture/annotation,
