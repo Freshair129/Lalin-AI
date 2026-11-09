@@ -153,6 +153,7 @@ These now live in `docs/design/` after Phase 1 of the repo migration:
 - `docs/validation/2026-09-23-VOICE-WORKER-MONITORING.md`: monitoring evidence — the three layers (/metrics, status gateway, Prometheus + Grafana), 7 alert rules, a 13-panel dashboard, and a drop-in kit for an existing dashboard; a real job verified end to end (RTF 0.317); Alertmanager → LINE delivery passed end to end on the real LINE API.
 - `docs/validation/2026-09-24-PRP-WORKER-INTEGRATION-GAP.md`: why PRP cannot call the worker yet — its dispatcher and observer exit 3 by design and the RuntimeInvoker adapter is M4 work gated behind WP24/WP03; the adapter is the seam, so our routes stay; five decisions listed that only PRP can make.
 - `.brain/rca/*.md`
+- `.brain/rca/2026-11-09-lalin-play-smart-medley-analyzer-confidence.md`: Smart Medley 0/10 synthetic coverage traced to low-frequency chroma leakage (key) and tempo-octave rival peaks (BPM); proposed analyzer fixes, thresholds unchanged.
 - `.brain/rca/2026-09-17-lalin-play-command-delivery.md`: reproduced cold-listener command loss and source/config evidence for playback ownership and native permission gaps.
 - `.brain/rca/2026-09-26-lalin-play-handoff-canonical-path.md`: canonical-path and drive-type guards for UNC/device reparse targets and mapped network drives; live ACL and paired-process checks remain open.
 - `.brain/rca/2026-09-27-lalin-play-mapped-reparse-runtime-coverage.md`: records the missing mapped-drive/reparse runtime fixtures, compiled opt-in tests and the blocked fixture attempt.

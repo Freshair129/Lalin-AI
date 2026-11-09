@@ -1480,3 +1480,7 @@ mod formula_tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "smart_medley_rca_probe.rs"]
+mod rca_probe;
