@@ -1,0 +1,7 @@
+block" and "No prose." So I must produce a single code block containing only the function definition, no imports, no comments beyond what's needed for clarity (though they said "Pure function, no imports", so I can include minimal inline comments if helpful). 
+
+I need to ensure that rounding is done before splitting into minutes/seconds/milliseconds. The typical approach: multiply by 1000, round to nearest integer, then divide back to get milliseconds as a float (or integer) and compute minutes = Math.floor(total / 60), seconds = Math.floor((total % 60)), ms = total - Math.floor(total). Then format each part with zero padding: minutes at least two digits, seconds two digits, milliseconds three digits.
+
+Edge cases: sec < 0 or !Number.isFinite(sec) -> return "00:00.000". Also need to handle rounding correctly for values like 659.999 (should become 10:59.999). Since we round first, 659.999 * 1000 = 659999, which rounds to 660000? Actually 659.999 * 1000 = 659999 exactly (since it's a decimal representation). But due to floating point, we might get 659998.999999... So rounding after multiplication is needed: Math.round(sec * 1000) yields the nearest integer milliseconds. Then compute minutes = Math.floor(rounded / 60), seconds = Math.floor((rounded % 60)), ms = rounded - (minutes * 60 + seconds). That ensures proper carry over.
+
+Now produce the code block:

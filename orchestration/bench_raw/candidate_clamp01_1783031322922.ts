@@ -1,0 +1,1 @@
+code block, no prose, pure function, no imports. So I will write:

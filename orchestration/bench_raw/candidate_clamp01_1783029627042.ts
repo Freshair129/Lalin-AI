@@ -1,0 +1,4 @@
+function clamp01(x: number): number {
+    if (isNaN(x)) return 0;
+    return x < 0 ? 0 : Math.min(Math.max(x, 0), 1);
+}
