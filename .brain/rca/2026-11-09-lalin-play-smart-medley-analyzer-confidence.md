@@ -1,7 +1,7 @@
 ---
 version: "0.1.0b"
 created_at: "2026-11-09T14:00:00+07:00,Claude,15776b7"
-last_update: "2026-11-09T14:00:00+07:00,Claude"
+last_update: "2026-11-10T12:00:00+07:00,Claude"
 status: "beta"
 superseded_by: null
 attributes:
@@ -119,7 +119,9 @@ worked:
 
 The cost was coverage, not safety.
 
-## Corrective actions (proposed — owner decision required)
+## Corrective actions
+
+Owner approved actions 1–4 on 2026-11-10; they are implemented in analyzer `smart-medley-0.2.0`. Result: synthetic clear coverage went from 0/10 to 9/10, and the BPM, key and cue false-confidence rows are all 0 (see the evidence README).
 
 | # | Action | Owner gate |
 |---|---|---|
@@ -131,3 +133,20 @@ The cost was coverage, not safety.
 
 None of these touches the gate thresholds (0.75 / 0.80 / 0.80 / 0.70). The
 Experimental label stays on.
+
+## Resolution (smart-medley-0.2.0)
+
+- **Key:**
+  - Chroma now comes from a dedicated 8192-point FFT (2.69 Hz bins) at a non-overlapping hop, over 100–2000 Hz.
+  - Each bin is weighted by its distance from the nearest semitone centre, so leakage across a semitone boundary is not credited to the neighbouring class.
+  - Sweep result: 72/72 cases are correct, with minimum confidence ≥ 0.77.
+  - The low octave (130–250 Hz) uses 0.30 s notes in the test. A 0.18 s sine burst is about ±5.5 Hz wide, wider than half a semitone there, so the test signal itself cannot resolve pitch. With ≥ 0.30 s notes every case passes.
+- **BPM:**
+  - Lags at 2× and 3× the beat no longer count as rivals.
+  - A local peak at 1/2 or 1/3 of the chosen lag wins when its correlation is ≥ 75% of the chosen lag's.
+  - Guard bins allow interpolation at 60 and 180 BPM, and the result is clamped inside the 60–180 range.
+  - Sweep result: 51 tempos on 20 s clips, all within ±1.5% with confidence ≥ 0.80.
+- **Fail-closed additions:**
+  - Key estimation is skipped for clips shorter than 8 s.
+  - BPM and key confidence scale down when fewer than 25% of the energy blocks are active.
+- **Remaining limit:** cue resolution is 0.5 s (energy blocks), so cue-phase compatibility is coarse. This caused the one synthetic miss (SYN-03). It is out of scope here.

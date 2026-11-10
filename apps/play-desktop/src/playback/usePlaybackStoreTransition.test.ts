@@ -49,7 +49,7 @@ function smartMedleyDecision(
   overrides: Partial<SmartMedleyPairDecision> = {},
 ): SmartMedleyPairDecision {
   const analysis = {
-    analysisVersion: "smart-medley-0.1.0",
+    analysisVersion: "smart-medley-0.2.0",
     mediaSha256: "a".repeat(64),
     durationSeconds: 100,
     bpm: 120,

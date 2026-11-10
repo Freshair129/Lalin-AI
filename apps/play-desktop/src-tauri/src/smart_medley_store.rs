@@ -240,9 +240,15 @@ mod tests {
 
     #[test]
     fn cache_id_is_stable_for_media_hash_and_analyzer_version() {
+        let media_hash = "A".repeat(64);
+        let current_key = cache_key(&media_hash, ANALYZER_VERSION).unwrap();
         assert_eq!(
-            cache_key(&"A".repeat(64), ANALYZER_VERSION).unwrap(),
-            "smart_medley_cache:smart-medley-0.1.0:dc2ad3e71d70d0711db33a9b92ac1e06b94a13fbc307f0577d53fd5c7bc34b29"
+            current_key,
+            "smart_medley_cache:smart-medley-0.2.0:9f44e89c4b0c33af752cca67652dce5b693e72868d7de95b5f4d8ab50b98b157"
+        );
+        assert_ne!(
+            current_key,
+            cache_key(&media_hash, "smart-medley-0.1.0").unwrap()
         );
     }
 }

@@ -162,6 +162,11 @@ Playback end: __________________________    analysis end: ______________________
 
 ## ผลรอบแรกบนเสียงสังเคราะห์ (lead run 2026-11-09, analyzer `smart-medley-0.1.0`)
 
+Source version `smart-medley-0.2.0` invalidates the v0.1.0 analysis cache. The
+table below remains the historical first-run result; it is not evidence for
+v0.2.0. Regenerate, freeze, evaluate, and score the fixture again before
+recording current acceptance results.
+
 รันโดย lead บนเครื่อง dev (ไม่ใช่ VM) เพื่อพิสูจน์ว่าท่อทำงานครบ: generate (40 WAV, สร้างซ้ำได้ byte เดิม) → freeze → evaluate (20 คู่, ~13 วินาที) → score ผลจริง **ยังไม่ผ่าน** และไม่ได้ปรับเกณฑ์:
 
 | แถว | ผล |
@@ -173,3 +178,23 @@ Playback end: __________________________    analysis end: ______________________
 | non-music / low-confidence fallback | PASS 2/2, 1/1 |
 
 สาเหตุจาก `results.jsonl` และ RCA [`.brain/rca/2026-11-09-lalin-play-smart-medley-analyzer-confidence.md`](../../../../.brain/rca/2026-11-09-lalin-play-smart-medley-analyzer-confidence.md): คลิป C major ทุกคลิปได้ key confidence 0.68 (< 0.75) เพราะ chroma ของ analyzer รั่วข้าม pitch class ในย่านความถี่ต่ำ และคลิป 120–132 BPM ได้ BPM confidence 0.75–0.77 (< 0.80) เพราะสูตร confidence นับ peak ที่ครึ่งความเร็วเป็นคู่แข่ง (คลิป 120 และ 132 BPM ถูกอ่านเป็น 60.1 และ 66.1) ทั้งสองข้อเป็นข้อบกพร่องของ analyzer ไม่ใช่ของ generator ต้องแก้ analyzer ก่อนเริ่มชุด Creative Commons; ชุดฟัง (`listening`) จึงยังสร้างไม่ได้เพราะไม่มีคู่ eligible
+
+## ผลบนเสียงสังเคราะห์หลังแก้ analyzer (lead run 2026-11-10, analyzer `smart-medley-0.2.0`)
+
+รันบนเครื่อง dev (ไม่ใช่ VM) ด้วย release build: generate (สร้างซ้ำได้ manifest เดิมทุก byte) → freeze (`571c77fb…5192`) → evaluate (20 คู่ ~18 วินาที เทียบ ~13 วินาทีของ v0.1.0) → score → listening (12 WAV + `answer-key.json` + `ratings.csv`) เกณฑ์ไม่ได้ปรับ
+
+| แถว | ผล |
+|---|---|
+| Clear coverage | ✅ PASS 9/10 = 90% (Wilson 59.6–98.2%) |
+| Combined coverage | ✅ PASS 9/10 |
+| Pair false-positive | INSUFFICIENT_SAMPLE 0/10 (ชุดสังเคราะห์มีคู่ ineligible ไม่ถึง 20) |
+| BPM false-confidence | ✅ PASS 0/35 |
+| Key false-confidence | ✅ PASS 0/35 |
+| Cue false-confidence | ✅ PASS 0/36 |
+| Low-confidence fallback | ✅ PASS 1/1 |
+| Non-music fallback | ✅ PASS 2/2 |
+| Low-quality | INSUFFICIENT_SAMPLE 0/0 |
+
+คู่ที่ไม่ผ่านคือ SYN-03 (B♭ → F ห่างกันคู่ห้า): BPM และคีย์ถูกและมั่นใจสูง แต่คะแนนรวม 0.663 < 0.70 เพราะ cue ของ analyzer ละเอียดแค่ 0.5 วินาที (energy block) ที่ 104 BPM ทำให้ phase ของ cue-out/cue-in ห่างกันครึ่งจังหวะ (C = 0) รวมกับ K = 0.5 ของคู่ห้า ระบบถอยไป Smooth ถูกต้อง ไม่ใช่การมั่นใจผิด ความละเอียดของ cue เป็นงานแยกในอนาคต
+
+ผลนี้เป็นหลักฐานว่าท่อและ analyzer ทำงานกับสัญญาณสังเคราะห์ ยังไม่ใช่หลักฐาน §4 ฉบับจริง ซึ่งต้องใช้ชุด Creative Commons 20 คู่ ชุดฟัง และ benchmark บน VM
