@@ -1,36 +1,35 @@
 ---
-version: "0.1.0b"
+version: "0.2.0b"
 created_at: "2026-11-08T00:00:00+07:00,Claude"
-last_update: "2026-11-08T00:00:00+07:00,Claude"
+last_update: "2026-11-21T00:00:00+07:00,Codex"
 status: "beta"
 attributes:
   domain: "lalin-play"
   doc_type: "owner-acceptance-checklist"
-  scope: "Lalin Play v1.0 owner acceptance session (roadmap P1.6): clean VM, signed draft installer, audible and persistence checks"
+  scope: "Lalin Play v1.0 owner acceptance session (roadmap P1.6): clean VM, published installer, audible and persistence checks"
 ---
 
 # Lalin Play v1.0 — owner acceptance checklist (P1.6)
 
-เอกสารนี้คือรายการที่ **เจ้าของ (owner) ต้องทดสอบเอง** ก่อนอนุมัติ publish (P1.7)
-ทุกข้อเป็นสิ่งที่ agent ทดสอบไม่ได้: เครื่องสะอาด, เสียงที่ได้ยินจริง, อุปกรณ์จริง,
-การ restart อัตโนมัติหลัง update และการ install บน identifier จริง `ai.lalin.play`.
+[Lalin Play v1.0.0](https://github.com/Freshair129/Lalin-AI/releases/tag/play-v1.0.0) เผยแพร่แล้วจาก commit `08131d1` โดยเจ้าของอนุมัติให้เผยแพร่ก่อนทดสอบ P1.6
+รายการนี้ใช้เก็บผลที่ยังค้างจากเครื่อง Windows สะอาดและอุปกรณ์เสียงจริง โดยใช้ installer ที่เผยแพร่สำหรับ `ai.lalin.play`
+ส่วน §6A ใช้ชุด QA แยกสำหรับทดสอบการอัปเดตข้ามรุ่น
 ผลอัตโนมัติและผล QA ของ lead อยู่ใน
 [LALIN_PLAY_TRACEABILITY.md](../validation/LALIN_PLAY_TRACEABILITY.md) และ
 [P1.5 evidence](../validation/evidence/play-v1-p15/README.md).
 Scope ที่ใช้ตัดสินคือ [LALIN_PLAY_V1_RELEASE_SCOPE.md](../product/LALIN_PLAY_V1_RELEASE_SCOPE.md) §2.
 
-กรอกผลแต่ละข้อเป็น **PASS / FAIL / N/A** + หมายเหตุสั้นๆ แล้ว comment สรุปลง issue #47
-(หรือส่งให้ lead บันทึกให้). FAIL ข้อไหนก็ตามใน §3–§6 = ยังไม่ publish; lead จะเปิดงานแก้แล้ว build ใหม่.
+กรอกผลแต่ละข้อเป็น **PASS / FAIL / N/A** พร้อมหมายเหตุสั้น ๆ แล้วบันทึกใน [issue #47](https://github.com/Freshair129/Lalin-AI/issues/47) หากพบ FAIL ให้ระบุขั้นตอนและหลักฐานเพื่อแก้ไขและทดสอบซ้ำ
 
-## 0. สิ่งที่ต้องทำก่อน (owner เท่านั้น)
+## 0. เตรียมการทดสอบและตรวจหลักฐาน release
 
 | # | งาน | วิธี | เสร็จ |
 |---|---|---|---|
-| 0.1 | สร้าง updater key จริง | รัน `powershell -NoProfile -ExecutionPolicy Bypass -File tools/build/new_play_updater_key.ps1` จาก root repo ([runbook R0](LALIN_PLAY_RELEASE_RUNBOOK.md#owner-key-ceremony)) แล้ว commit เฉพาะ public key ใน `tauri.conf.json` | ☐ |
-| 0.2 | ตั้ง GitHub secrets | `PLAY_TAURI_SIGNING_PRIVATE_KEY` และ `PLAY_TAURI_SIGNING_PRIVATE_KEY_PASSWORD` ใน repo `Freshair129/Lalin-AI` | ☐ |
-| 0.3 | สำรอง key แบบ offline | เลือกที่เก็บ (เช่น USB ที่เข้ารหัส) สำหรับ private key + password แล้วทดลองเปิดอ่านได้จริง | ☐ |
-| 0.4 | GitHub Actions billing | ตรวจว่า Actions รันได้ (billing ไม่ติด) | ☐ |
-| 0.5 | Draft build | push tag `play-v1.0.0` → workflow `Release Lalin Play` สร้าง **draft** release (ยังไม่ publish, `latest-play.json` ยังไม่ถูก promote). บอก lead ได้ ให้ lead push tag หลังข้อ 0.1–0.4 เสร็จ | ☐ |
+| 0.1 | Public key ของ Play | Release ใช้ key ID `F05A2670DE2CC950` ตามบันทึกใน issue #47 | ☑ |
+| 0.2 | GitHub Actions signing | การสร้าง signed updater manifest สำเร็จใน release run | ☑ |
+| 0.3 | สำรอง key แบบ offline | เลือกที่เก็บสำหรับ private key และรหัสผ่าน แล้วทดสอบกู้คืน แจ้งเฉพาะสถานะใน issue #47 | ☐ |
+| 0.4 | Release และ update channel | [Release build](https://github.com/Freshair129/Lalin-AI/actions/runs/42543791827) และ [channel promotion](https://github.com/Freshair129/Lalin-AI/actions/runs/42547282315) ผ่านสำหรับ `08131d1` | ☑ |
+| 0.5 | Installer ที่เผยแพร่ | ดาวน์โหลด `Lalin-Play_1.0.0_x64-setup.exe` และ `SHA256SUMS.txt` จาก [play-v1.0.0](https://github.com/Freshair129/Lalin-AI/releases/tag/play-v1.0.0) | ☐ |
 | 0.6 | เตรียมเครื่องทดสอบ | Windows 11 (หรือ 10 22H2+) x64 ที่สะอาด: VM ใหม่หรือเครื่องสำรอง ไม่มี Node/Rust/Python/Lalin Studio. ถ่าย snapshot ก่อนเริ่ม | ☐ |
 | 0.7 | ไฟล์ทดสอบ | เพลงที่มีสิทธิ์ใช้: MP3/FLAC/WAV อย่างละ ≥1, วิดีโอ MP4 1 ไฟล์, และไฟล์บนไดรฟ์ที่ 2 หรือ USB (สำหรับ relink) | ☐ |
 
@@ -38,7 +37,7 @@ Scope ที่ใช้ตัดสินคือ [LALIN_PLAY_V1_RELEASE_SCOPE
 
 | Field | Actual |
 |---|---|
-| Draft release / tag | `play-v1.0.0` @ `________` |
+| Published release / tag | `play-v1.0.0` @ `08131d1` |
 | Installer filename | `Lalin-Play_1.0.0_x64-setup.exe` |
 | SHA-256 (ตรงกับ `SHA256SUMS.txt`) | `________________` |
 | Windows edition / build | `________________` |
@@ -50,11 +49,11 @@ Scope ที่ใช้ตัดสินคือ [LALIN_PLAY_V1_RELEASE_SCOPE
 
 | # | ขั้นตอน | ผลที่ต้องได้ | ผล |
 |---|---|---|---|
-| 1.1 | ดาวน์โหลด installer จาก draft แล้วตรวจ SHA-256 | ตรงกับ `SHA256SUMS.txt` | |
+| 1.1 | รัน `Get-FileHash -LiteralPath .\Lalin-Play_1.0.0_x64-setup.exe -Algorithm SHA256` ในโฟลเดอร์ที่ดาวน์โหลด | ตรงกับบรรทัดของ installer ใน `SHA256SUMS.txt` | |
 | 1.2 | ดับเบิลคลิก installer | SmartScreen "Unknown publisher" (คาดไว้แล้ว — unsigned v1.0) → More info → Run anyway; **ไม่มี UAC prompt** (currentUser install) | |
 | 1.3 | ติดตั้งจนจบ แล้วเปิดจาก Start menu | แอปเปิด, ภาษาเริ่มต้นเป็น English, ไม่มี error banner, ไม่ต้องลง Studio/Python/Node | |
 | 1.4 | Settings → About | เวอร์ชัน 1.0.0, มี license MIT + third-party notices, ข้อความ privacy (ไม่เก็บ telemetry) | |
-| 1.5 | Settings → Check for updates | "Lalin Play is up to date." (draft ยังไม่ promote metadata) หรือ error ที่อ่านเข้าใจได้ — **ไม่ crash** | |
+| 1.5 | Settings → Check for updates โดยเชื่อมต่ออินเทอร์เน็ต | ขึ้นว่าเป็นรุ่นล่าสุดเมื่อช่อง stable ยังชี้ไป v1.0.0 หากมีรุ่นใหม่ ให้บันทึกรุ่นที่เสนอ และคง v1.0.0 ไว้เพื่อทดสอบส่วนที่เหลือ | |
 
 ## 2. Import, library, relink (PLAY-01/02/08/18)
 
@@ -126,7 +125,7 @@ Scope ที่ใช้ตัดสินคือ [LALIN_PLAY_V1_RELEASE_SCOPE
 | # | ขั้นตอน | ผลที่ต้องได้ | ผล |
 |---|---|---|---|
 | 6B.1 | Settings → Apps → Lalin Play → Uninstall (ไม่ติ๊ก Delete app data) | ลบโปรแกรม; `%APPDATA%\ai.lalin.play` ยังอยู่ | |
-| 6B.2 | ติดตั้ง draft installer ใหม่ | library/playlist/favorite กลับมา; เล่นได้ | |
+| 6B.2 | ติดตั้ง installer v1.0.0 ที่เผยแพร่ใหม่ | library/playlist/favorite กลับมา; เล่นได้ | |
 
 ## 7. สรุปผลและการตัดสิน
 
@@ -139,11 +138,12 @@ Scope ที่ใช้ตัดสินคือ [LALIN_PLAY_V1_RELEASE_SCOPE
 | §5 Persistence | | | | |
 | §6 Update/uninstall | | | | |
 
-- **อนุมัติ publish** (P1.7) ได้เมื่อ §1–§6 ไม่มี FAIL และข้อ 0.1–0.4 เสร็จ.
-- FAIL → แจ้ง lead พร้อมข้อ, ภาพหน้าจอ และ log (`%APPDATA%\ai.lalin.play` ห้ามส่งไฟล์เพลงหรือข้อมูลส่วนตัว).
-  Lead จะแก้, ลบ draft/tag ที่ล้มเหลวเมื่อได้รับอนุญาต แล้ว build เวอร์ชันใหม่.
+- บันทึกผล P1.6, Windows build, อุปกรณ์เสียง และผลยืนยันการทดสอบกู้คืน key แบบ offline ใน issue #47
+- หากพบ FAIL ให้แนบหมายเลขข้อ ภาพหน้าจอและ log ที่ตัดข้อมูลส่วนตัวออก แล้วติดตามงานแก้และผลทดสอบซ้ำ
 
-Owner decision: ☐ Approve publish  ☐ Fix first — signature/วันที่: `________________`
+ผลจากเจ้าของ ☐ ผ่าน  ☐ ต้องแก้และทดสอบซ้ำ  ☐ ยังทดสอบไม่ครบ
+
+ชื่อผู้ทดสอบและวันที่ (ICT) `________________`
 
 ## Known limitations ที่ไม่ใช่ FAIL
 
@@ -156,4 +156,5 @@ Owner decision: ☐ Approve publish  ☐ Fix first — signature/วันที
 
 | Version | Date | Status | Change | Base | Author |
 |---|---|---|---|---|---|
+| 0.2.0b | 2026-11-21 | beta | Use the published Play v1.0.0 installer for outstanding P1.6 acceptance and retain the separate QA updater lane | based on d5f7c2f | Codex |
 | 0.1.0b | 2026-11-08 | beta | Initial P1.6 owner acceptance checklist covering clean VM install, import/relink, audible checks, UI/locale/DPI, persistence, auto-restart after update, interrupted install and uninstall/reinstall | `51b84c7` | Claude |
