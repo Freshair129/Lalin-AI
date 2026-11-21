@@ -20,6 +20,12 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
       - name: Validate and promote the published Studio manifest
         shell: pwsh
         env:
@@ -43,10 +49,13 @@ jobs:
           $version = $tag.Substring(1)
           $configBlob = gh api "repos/$repo/contents/apps/desktop/src-tauri/tauri.conf.json?ref=$tag" | ConvertFrom-Json
           $config = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($configBlob.content)) | ConvertFrom-Json
+          $trustedConfigPath = 'apps/desktop/src-tauri/tauri.conf.json'
+          $trustedConfig = Get-Content -LiteralPath $trustedConfigPath -Raw | ConvertFrom-Json
           $updateUrl = "https://github.com/$repo/releases/download/$channelTag/$manifestName"
           if ($config.version -cne $version -or $config.identifier -cne 'com.gmusic.app' -or
+              $config.plugins.updater.pubkey -cne $trustedConfig.plugins.updater.pubkey -or
               @($config.plugins.updater.endpoints).Count -ne 1 -or $config.plugins.updater.endpoints[0] -cne $updateUrl) {
-            throw 'The tagged Studio build must use the release version, legacy bundle ID, and Studio channel.'
+            throw 'The tagged Studio build must use the release version, legacy bundle ID, current signing key, and Studio channel.'
           }
 
           $installer = "G-Music_${version}_x64-setup.exe"
@@ -58,36 +67,55 @@ jobs:
 
           $source = Join-Path $env:RUNNER_TEMP 'studio-update-source'
           New-Item -ItemType Directory -Path $source -Force | Out-Null
-          gh release download $tag --repo $repo --pattern $manifestName --pattern $signatureName --dir $source
+          gh release download $tag --repo $repo --pattern $manifestName --pattern $signatureName --pattern $installer --dir $source
           $sourceManifest = Join-Path $source $manifestName
-          $manifest = Get-Content -LiteralPath $sourceManifest -Raw | ConvertFrom-Json -AsHashtable
+          $manifest = Get-Content -LiteralPath $sourceManifest -Raw | ConvertFrom-Json -AsHashtable -DateKind String
           $signature = (Get-Content -LiteralPath (Join-Path $source $signatureName) -Raw).Trim()
           $installerUrl = "https://github.com/$repo/releases/download/$tag/$installer"
-          if ($manifest.version -cne $version -or [string]::IsNullOrWhiteSpace($signature) -or
+          if ($manifest -isnot [System.Collections.IDictionary] -or $manifest.version -isnot [string] -or $manifest.version -cne $version -or [string]::IsNullOrWhiteSpace($signature) -or
               $manifest.platforms -isnot [System.Collections.IDictionary] -or
               -not $manifest.platforms.Contains('windows-x86_64')) {
             throw 'Studio update metadata is missing the correct version, Windows x64 target, or signature.'
           }
+          if ($null -ne $manifest.notes -and $manifest.notes -isnot [string]) {
+            throw 'Studio release notes must be a string.'
+          }
+          if ($null -ne $manifest.pub_date) {
+            $published = [DateTimeOffset]::MinValue
+            if ($manifest.pub_date -isnot [string] -or
+                $manifest.pub_date -notmatch '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})\z' -or
+                -not [DateTimeOffset]::TryParse($manifest.pub_date, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$published)) {
+              throw 'Studio release publish date must be valid RFC 3339.'
+            }
+          }
           foreach ($target in $manifest.platforms.Keys) {
             $platform = $manifest.platforms[$target]
             if ($target -cnotin @('windows-x86_64', 'windows-x86_64-nsis') -or
-                $platform.url -cne $installerUrl -or $platform.signature -cne $signature) {
+                $platform -isnot [System.Collections.IDictionary] -or
+                $platform.url -isnot [string] -or $platform.url -cne $installerUrl -or
+                $platform.signature -isnot [string] -or $platform.signature -cne $signature) {
               throw "Invalid Studio installer URL or signature for target $target."
             }
           }
+
+          node tools/verify/check_tauri_updater_signature.mjs (Join-Path $source $installer) (Join-Path $source $signatureName) $trustedConfigPath
 
           $channel = gh release view $channelTag --repo $repo --json tagName,isDraft,isPrerelease,assets | ConvertFrom-Json
           if ($channel.tagName -cne $channelTag -or $channel.isDraft -or $channel.isPrerelease) {
             throw 'Create the dedicated published Studio channel release before promotion.'
           }
 
+          function Save-ChannelManifest([string]$DirectoryName) {
+            $directory = Join-Path $env:RUNNER_TEMP $DirectoryName
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+            gh release download $channelTag --repo $repo --pattern $manifestName --dir $directory | Out-Null
+            Join-Path $directory $manifestName
+          }
+
           $sourceHash = (Get-FileHash -LiteralPath $sourceManifest -Algorithm SHA256).Hash
           $previousManifest = $null
           if ($channel.assets | Where-Object name -CEQ $manifestName) {
-            $previous = Join-Path $env:RUNNER_TEMP 'studio-update-previous'
-            New-Item -ItemType Directory -Path $previous -Force | Out-Null
-            gh release download $channelTag --repo $repo --pattern $manifestName --dir $previous
-            $previousManifest = Join-Path $previous $manifestName
+            $previousManifest = Save-ChannelManifest 'studio-update-previous'
             $previousHash = (Get-FileHash -LiteralPath $previousManifest -Algorithm SHA256).Hash
             if ($previousHash -ceq $sourceHash) {
               Write-Host "$tag is already promoted."
@@ -97,14 +125,13 @@ jobs:
             if ([version]$previousVersion -ge [version]$version) {
               throw 'Studio promotion cannot replace a same-version or newer manifest.'
             }
+            Write-Host "Previous Studio manifest version $previousVersion SHA-256 $previousHash."
           }
 
           try {
             gh release upload $channelTag $sourceManifest --repo $repo --clobber
-            $verified = Join-Path $env:RUNNER_TEMP 'studio-update-verified'
-            New-Item -ItemType Directory -Path $verified -Force | Out-Null
-            gh release download $channelTag --repo $repo --pattern $manifestName --dir $verified
-            $promotedHash = (Get-FileHash -LiteralPath (Join-Path $verified $manifestName) -Algorithm SHA256).Hash
+            $verifiedManifest = Save-ChannelManifest 'studio-update-verified'
+            $promotedHash = (Get-FileHash -LiteralPath $verifiedManifest -Algorithm SHA256).Hash
             if ($promotedHash -cne $sourceHash) {
               throw 'The published Studio channel manifest differs from the validated release asset.'
             }
@@ -112,10 +139,17 @@ jobs:
             if ($previousManifest) {
               try {
                 gh release upload $channelTag $previousManifest --repo $repo --clobber
-                Write-Warning 'Restored the previous Studio channel manifest after promotion failed.'
+                $restoredManifest = Save-ChannelManifest 'studio-update-restored'
+                $restoredHash = (Get-FileHash -LiteralPath $restoredManifest -Algorithm SHA256).Hash
+                if ($restoredHash -cne $previousHash) {
+                  throw 'The restored Studio manifest does not match the recorded SHA-256.'
+                }
+                Write-Warning 'Restored and verified the previous Studio channel manifest.'
               } catch {
                 Write-Warning 'Restoration failed. Follow the Studio channel recovery steps in the rename migration plan.'
               }
+            } else {
+              Write-Warning 'No prior Studio channel manifest was available to restore.'
             }
             throw
           }

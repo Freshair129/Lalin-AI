@@ -45,8 +45,9 @@ Use an isolated Windows VM with a snapshot. Seed the [v0.1.1 build](https://gith
 with test projects, voices and outputs. Cover both the sidecar's install-relative
 `data` directory and an existing `DATA_DIR` override in separate runs.
 Stop G-Music and its sidecar, back up the data, and run the new installer with
-the same Windows user, install mode and existing install directory. Keep the
-old installation in place when starting the upgrade. Verify the files and
+the same Windows user, install mode and existing install directory. At the
+NSIS upgrade prompt select **Do not uninstall**. The default choice runs the
+old uninstaller. Verify the files and
 WebView settings are readable after restart, then verify the full sidecar
 starts and the new client uses Studio's endpoint. Include a clean install and
 a signed Studio A→B update in the release evidence. Keep the old installer and
@@ -64,13 +65,17 @@ Studio release with GitHub's latest flag disabled. On first setup the release op
 a `studio-updates` release with `--latest=false` on the approved source
 commit. The operator then runs **Promote Lalin Studio update metadata** from
 `main`, selecting the published Studio version tag. This checks the tag and
-installer provenance, then promotes only `latest.json`. Confirm that the
+installer URL and verifies the downloaded installer with Studio's updater key,
+then promotes only `latest.json`. Confirm that the
 public Studio URL serves those manifest bytes and that Play still serves
 its own manifest.
 
-If promotion fails, retry the same validated release after checking the workflow
-log. If restoration of the prior manifest also failed, the release operator can
-restore the asset from the last known-good Studio release with owner approval.
+If promotion fails, compare the channel digest with the tagged manifest before
+retrying. The workflow logs the previous version and SHA-256 before replacement.
+If automatic restoration failed, recover the manifest from that recorded tag,
+verify its digest, and restore it with owner approval. For a failed first
+promotion with an existing same-version mismatch, compare the two files and
+replace the channel asset with the validated tagged manifest under owner approval.
 An installed newer version requires a separately qualified rollback or a
 fix-forward release.
 
