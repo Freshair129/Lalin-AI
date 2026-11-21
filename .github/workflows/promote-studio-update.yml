@@ -1,0 +1,122 @@
+name: Promote Lalin Studio update metadata
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published Studio release tag, for example v1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: studio-update-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+      - name: Validate and promote the published Studio manifest
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STUDIO_RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $tag = $env:STUDIO_RELEASE_TAG
+          $repo = $env:GITHUB_REPOSITORY
+          $channelTag = 'studio-updates'
+          $manifestName = 'latest.json'
+          if ($tag -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\z') {
+            throw 'Use a stable Studio vX.Y.Z release tag.'
+          }
+
+          $release = gh release view $tag --repo $repo --json tagName,isDraft,isPrerelease,assets | ConvertFrom-Json
+          if ($release.tagName -cne $tag -or $release.isDraft -or $release.isPrerelease) {
+            throw 'The Studio release must be published and stable.'
+          }
+          $version = $tag.Substring(1)
+          $configBlob = gh api "repos/$repo/contents/apps/desktop/src-tauri/tauri.conf.json?ref=$tag" | ConvertFrom-Json
+          $config = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($configBlob.content)) | ConvertFrom-Json
+          $updateUrl = "https://github.com/$repo/releases/download/$channelTag/$manifestName"
+          if ($config.version -cne $version -or $config.identifier -cne 'com.gmusic.app' -or
+              @($config.plugins.updater.endpoints).Count -ne 1 -or $config.plugins.updater.endpoints[0] -cne $updateUrl) {
+            throw 'The tagged Studio build must use the release version, legacy bundle ID, and Studio channel.'
+          }
+
+          $installer = "G-Music_${version}_x64-setup.exe"
+          $signatureName = "$installer.sig"
+          $assetNames = @($release.assets | ForEach-Object { $_.name })
+          foreach ($asset in @($installer, $signatureName, $manifestName)) {
+            if ($assetNames -cnotcontains $asset) { throw "Studio release asset is missing: $asset" }
+          }
+
+          $source = Join-Path $env:RUNNER_TEMP 'studio-update-source'
+          New-Item -ItemType Directory -Path $source -Force | Out-Null
+          gh release download $tag --repo $repo --pattern $manifestName --pattern $signatureName --dir $source
+          $sourceManifest = Join-Path $source $manifestName
+          $manifest = Get-Content -LiteralPath $sourceManifest -Raw | ConvertFrom-Json -AsHashtable
+          $signature = (Get-Content -LiteralPath (Join-Path $source $signatureName) -Raw).Trim()
+          $installerUrl = "https://github.com/$repo/releases/download/$tag/$installer"
+          if ($manifest.version -cne $version -or [string]::IsNullOrWhiteSpace($signature) -or
+              $manifest.platforms -isnot [System.Collections.IDictionary] -or
+              -not $manifest.platforms.Contains('windows-x86_64')) {
+            throw 'Studio update metadata is missing the correct version, Windows x64 target, or signature.'
+          }
+          foreach ($target in $manifest.platforms.Keys) {
+            $platform = $manifest.platforms[$target]
+            if ($target -cnotin @('windows-x86_64', 'windows-x86_64-nsis') -or
+                $platform.url -cne $installerUrl -or $platform.signature -cne $signature) {
+              throw "Invalid Studio installer URL or signature for target $target."
+            }
+          }
+
+          $channel = gh release view $channelTag --repo $repo --json tagName,isDraft,isPrerelease,assets | ConvertFrom-Json
+          if ($channel.tagName -cne $channelTag -or $channel.isDraft -or $channel.isPrerelease) {
+            throw 'Create the dedicated published Studio channel release before promotion.'
+          }
+
+          $sourceHash = (Get-FileHash -LiteralPath $sourceManifest -Algorithm SHA256).Hash
+          $previousManifest = $null
+          if ($channel.assets | Where-Object name -CEQ $manifestName) {
+            $previous = Join-Path $env:RUNNER_TEMP 'studio-update-previous'
+            New-Item -ItemType Directory -Path $previous -Force | Out-Null
+            gh release download $channelTag --repo $repo --pattern $manifestName --dir $previous
+            $previousManifest = Join-Path $previous $manifestName
+            $previousHash = (Get-FileHash -LiteralPath $previousManifest -Algorithm SHA256).Hash
+            if ($previousHash -ceq $sourceHash) {
+              Write-Host "$tag is already promoted."
+              return
+            }
+            $previousVersion = (Get-Content -LiteralPath $previousManifest -Raw | ConvertFrom-Json).version
+            if ([version]$previousVersion -ge [version]$version) {
+              throw 'Studio promotion cannot replace a same-version or newer manifest.'
+            }
+          }
+
+          try {
+            gh release upload $channelTag $sourceManifest --repo $repo --clobber
+            $verified = Join-Path $env:RUNNER_TEMP 'studio-update-verified'
+            New-Item -ItemType Directory -Path $verified -Force | Out-Null
+            gh release download $channelTag --repo $repo --pattern $manifestName --dir $verified
+            $promotedHash = (Get-FileHash -LiteralPath (Join-Path $verified $manifestName) -Algorithm SHA256).Hash
+            if ($promotedHash -cne $sourceHash) {
+              throw 'The published Studio channel manifest differs from the validated release asset.'
+            }
+          } catch {
+            if ($previousManifest) {
+              try {
+                gh release upload $channelTag $previousManifest --repo $repo --clobber
+                Write-Warning 'Restored the previous Studio channel manifest after promotion failed.'
+              } catch {
+                Write-Warning 'Restoration failed. Follow the Studio channel recovery steps in the rename migration plan.'
+              }
+            }
+            throw
+          }
+          Write-Host "Promoted $tag to $channelTag."

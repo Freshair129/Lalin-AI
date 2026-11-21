@@ -66,7 +66,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEyQ0Y0Njg4NEU2QjU0MTcKUldRWFZHdE9pRWJQb25lYWVrcFMrNWZFUTh2RWFESHl6WWp4ZHdudTZhMm5zaDFmN1l3bmxTbWwK",
       "endpoints": [
-        "https://github.com/Freshair129/G-Music/releases/latest/download/latest.json"
+        "https://github.com/Freshair129/Lalin-AI/releases/download/studio-updates/latest.json"
       ],
       "windows": {
         "installMode": "passive"
