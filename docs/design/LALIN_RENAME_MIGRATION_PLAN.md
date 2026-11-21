@@ -1,6 +1,6 @@
 # Lalin AI Rename Migration Plan
 
-**Status:** approved planning artifact — no identifier or updater change has been executed.
+**Status:** Studio updater migration approved. Release and native upgrade acceptance are tracked in [#48](https://github.com/Freshair129/Lalin-AI/issues/48).
 
 ## Name lock
 
@@ -21,11 +21,64 @@
 
 ## Non-negotiable safeguards
 
-- Do not change `com.gmusic.app` or updater endpoints until Wave 0 legal/operational decisions are complete.
+- Preserve `com.gmusic.app` for the approved Studio updater bridge. Changes to the bundle ID or packaging identity need a separate migration decision.
 - Do not rename or remove user data directories without a migration copy and a tested rollback.
 - Do not ship the supplied reference images or copied brand assets.
 - Each packaging wave must stop the running `g-music` and `g-music-backend` process before build, then smoke-test the resulting executable and `GET /` full-runtime profile.
 
-## Immediate next artifact
+## Studio updater migration (S1)
+
+The owner approved this updater migration on 2026-11-21 in #48. The bridge
+installer keeps bundle ID `com.gmusic.app`, the current Studio signing key,
+G-Music packaging names, installation directory, and existing data paths.
+The product rename and AppData migration are later changes.
+
+- Studio checks `https://github.com/Freshair129/Lalin-AI/releases/download/studio-updates/latest.json`.
+- Studio draft builds still use `v*` tags and attach Tauri's `latest.json`,
+  the NSIS installer, and its detached signature. Promotion accepts a published
+  stable `vX.Y.Z` tag whose Tauri configuration points to Studio's channel.
+- Play uses its existing `play-updates/latest-play.json` channel.
+
+### Qualify the bridge installer
+
+Use an isolated Windows VM with a snapshot. Seed the [v0.1.1 build](https://github.com/Freshair129/Lalin-AI/actions/runs/35379933376)
+with test projects, voices and outputs. Cover both the sidecar's install-relative
+`data` directory and an existing `DATA_DIR` override in separate runs.
+Stop G-Music and its sidecar, back up the data, and run the new installer with
+the same Windows user, install mode and existing install directory. At the
+NSIS upgrade prompt select **Do not uninstall**. The default choice runs the
+old uninstaller. Verify the files and
+WebView settings are readable after restart, then verify the full sidecar
+starts and the new client uses Studio's endpoint. Include a clean install and
+a signed Studio A→B update in the release evidence. Keep the old installer and
+VM snapshot for rollback.
+
+The legacy updater uses the repository-wide latest URL. Existing clients
+migrate by installing the approved Studio bridge over G-Music. The channel
+becomes usable after the signed Studio release and its manifest are published.
+
+### Publish and promote
+
+Use a new stable version above v0.1.1 for the bridge and keep the old tag as
+upgrade-test evidence. After separate owner approval, publish the qualified
+Studio release with GitHub's latest flag disabled. On first setup the release operator creates
+a `studio-updates` release with `--latest=false` on the approved source
+commit. The operator then runs **Promote Lalin Studio update metadata** from
+`main`, selecting the published Studio version tag. This checks the tag and
+installer URL and verifies the downloaded installer with Studio's updater key,
+then promotes only `latest.json`. Confirm that the
+public Studio URL serves those manifest bytes and that Play still serves
+its own manifest.
+
+If promotion fails, compare the channel digest with the tagged manifest before
+retrying. The workflow logs the previous version and SHA-256 before replacement.
+If automatic restoration failed, recover the manifest from that recorded tag,
+verify its digest, and restore it with owner approval. For a failed first
+promotion with an existing same-version mismatch, compare the two files and
+replace the channel asset with the validated tagged manifest under owner approval.
+An installed newer version requires a separately qualified rollback or a
+fix-forward release.
+
+## Branding follow-up
 
 Create original Lalin AI SVG brand assets and a product-copy inventory. Implement Wave 1 only after visual-identity approval; packaging is a separate acceptance gate.
