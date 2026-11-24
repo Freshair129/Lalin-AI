@@ -12,6 +12,7 @@ import { PlaybackMixerPanel } from "./components/PlaybackMixerPanel";
 import { PlayMigrationImport } from "./components/PlayMigrationImport";
 import { VideoStage } from "./components/VideoStage";
 import { CompactTransport } from "./components/CompactTransport";
+import { IntelligencePanel, Sparkle } from "./components/IntelligencePanel";
 import { Transport, formatTime } from "./components/Transport";
 import { addYoutubeLink, getLibrary, importSelectedFile, listDamagedTracks, listYoutubeLinks, mediaItem, openYoutubeLink, removeYoutubeLink, restoreManagedTrack, selectRelinkFile, selectRestoreFile, relinkTrack, isVideoItem, type DamagedTrack, type LocalTrack, type YoutubeLink } from "./native";
 import { loadPlaylists, savePlaylists, type Playlist } from "./playlists";
@@ -28,6 +29,7 @@ import {
 } from "./playback/tvMode";
 
 type View =
+  | "intelligence"
   | "home"
   | "tracks"
   | "favorites"
@@ -54,6 +56,7 @@ function AppContent() {
   const [damagedTracks, setDamagedTracks] = useState<DamagedTrack[]>([]);
   const [view, setView] = useState<View>("home");
   const [query, setQuery] = useState("");
+  const [intelPrompt, setIntelPrompt] = useState("");
   const [compact, setCompact] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -373,6 +376,14 @@ function AppContent() {
       report(error);
     }
   };
+  const savePlaylist = (name: string, trackIds: string[]) => {
+    if (!playlistReady || playlists.length >= 200 || !name.trim()) return;
+    updatePlaylists([...playlists, { id: crypto.randomUUID(), name: name.trim(), trackIds }]);
+  };
+  const askLalin = (prompt: string) => {
+    setIntelPrompt(prompt);
+    setView("intelligence");
+  };
   const selectedPlaylist = view.startsWith("playlist:")
     ? playlists.find((item) => `playlist:${item.id}` === view)
     : undefined;
@@ -427,6 +438,7 @@ function AppContent() {
     selectedPlaylist?.name ||
     (
       {
+        intelligence: t("intel.nav"),
         home: t("app.homeTitle"),
         tracks: t("app.tracksTitle"),
         favorites: t("app.favorites"),
@@ -515,9 +527,12 @@ function AppContent() {
     >
       <header className="topbar" hidden={compact}>
         <div className="brand">
-          <span className="brand-icon">▶</span>
+          <span className="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14">
+              <path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+            </svg>
+          </span>
           <strong>Lalin Play</strong>
-          <small>{t("app.localPlayer")}</small>
         </div>
         <div className="top-actions">
           <button disabled={busy} onClick={() => void select(false)}>
@@ -593,6 +608,14 @@ function AppContent() {
                 {t("app.videoNowPlaying")}
               </button>
             ) : null}
+            <button
+              className="nav-intel"
+              aria-current={view === "intelligence" ? "page" : undefined}
+              onClick={() => setView("intelligence")}
+            >
+              <span className="nav-icon intel" aria-hidden="true"><Sparkle /></span>
+              {t("intel.nav")}
+            </button>
             <div className="section-label">{t("app.library")}</div>
             {(
               [
@@ -668,14 +691,18 @@ function AppContent() {
             </form>
             <button
               className="settings-link"
+              aria-current={view === "settings" ? "page" : undefined}
               onClick={() => setView("settings")}
             >
               {t("app.settings")}
             </button>
             <p className="local-note">
-              {t("app.localNote")}
-              <br />
-              {t("app.noAiBackend")}
+              <span className="engine-dot on" aria-hidden="true" />
+              <span>
+                {t("app.localNote")}
+                <br />
+                {t("app.noAiBackend")}
+              </span>
             </p>
           </aside>
         ) : null}
@@ -684,25 +711,47 @@ function AppContent() {
             compact && view !== "queue" && view !== "eq" ? "compact-hidden" : ""
           }
         >
-          {!compact ? (
+          {!compact && view !== "intelligence" ? (
             <div className="page-heading">
               <div>
-                  <span className="eyebrow">{t("app.tagline")}</span>
                 <h1>{title}</h1>
                 <p>
                   {t("app.libraryCounts", { tracks: tracks.length, queued: queue.items.length })}
                 </p>
               </div>
-              <input
-                type="search"
-                aria-label={t("app.searchLabel")}
-                placeholder={t("app.search")}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+              <form
+                className="search-field"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (query.trim()) askLalin(query);
+                }}
+              >
+                <span className="search-glyph" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  aria-label={t("app.searchLabel")}
+                  placeholder={t("app.searchOrAsk")}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <button type="submit" className="ask-lalin" disabled={!query.trim()}>
+                  <Sparkle /> {t("app.askLalin")}
+                </button>
+              </form>
             </div>
           ) : null}
-          {view === "home" ? (
+          {view === "intelligence" ? (
+            <IntelligencePanel
+              key={intelPrompt}
+              tracks={tracks}
+              initialPrompt={intelPrompt}
+              canSavePlaylist={playlistReady && playlists.length < 200}
+              onSavePlaylist={savePlaylist}
+              onOpenFiles={() => void select(false)}
+              report={report}
+            />
+          ) : view === "home" ? (
             <section className="dashboard">
               <div className="dashboard-welcome">
                 <div>
@@ -944,6 +993,11 @@ function AppContent() {
                   >
                     {busy ? t("app.readingFiles") : t("app.chooseMedia")}
                   </button>
+                  {tracks.length && query.trim() ? (
+                    <button type="button" className="ghost" onClick={() => askLalin(query)}>
+                      <Sparkle /> {t("app.askLalinAbout", { query: query.trim() })}
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </section>
