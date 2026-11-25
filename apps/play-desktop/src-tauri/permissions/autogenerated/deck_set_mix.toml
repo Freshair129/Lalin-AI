@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-set-mix"
+description = "Enables the deck_set_mix command without any pre-configured scope."
+commands.allow = ["deck_set_mix"]
+
+[[permission]]
+identifier = "deny-deck-set-mix"
+description = "Denies the deck_set_mix command without any pre-configured scope."
+commands.deny = ["deck_set_mix"]

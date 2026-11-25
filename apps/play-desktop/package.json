@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "tauri": "tauri",
+    "tauri:dev:personal": "tauri dev --features personal-youtube-web",
     "test": "vitest run",
     "check:native": "cargo test --manifest-path src-tauri/Cargo.toml"
   },

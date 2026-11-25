@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-status"
+description = "Enables the deck_status command without any pre-configured scope."
+commands.allow = ["deck_status"]
+
+[[permission]]
+identifier = "deny-deck-status"
+description = "Denies the deck_status command without any pre-configured scope."
+commands.deny = ["deck_status"]

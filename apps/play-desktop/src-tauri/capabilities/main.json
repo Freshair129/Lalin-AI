@@ -20,6 +20,8 @@
     "allow-register-handoff-owner", "allow-publish-handoff-state",
     "allow-complete-handoff-command", "allow-grant-handoff-media",
     "allow-get-system-eq-status", "allow-setup-system-eq", "allow-remove-system-eq", "allow-apply-system-eq",
+    "allow-deck-status", "allow-deck-open", "allow-deck-load", "allow-deck-play-pause", "allow-deck-set-mix",
+    "allow-deck-crossfade", "allow-deck-set-auto", "allow-deck-open-extensions-folder",
     "updater:allow-check", "updater:allow-download", "updater:allow-install"
   ]
 }

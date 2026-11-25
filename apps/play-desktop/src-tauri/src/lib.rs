@@ -7,6 +7,8 @@ mod migration;
 pub mod smart_medley;
 mod smart_medley_store;
 pub mod system_eq;
+#[cfg(feature = "personal-youtube-web")]
+pub mod personal_youtube;
 
 use library::LibraryState;
 use std::{path::PathBuf, sync::Mutex};
@@ -310,6 +312,8 @@ pub fn run() {
             let data_dir = library::app_data_directory(app.handle())
                 .map_err(std::io::Error::other)?;
             app.manage(LibraryState(Mutex::new(library), data_dir));
+            #[cfg(feature = "personal-youtube-web")]
+            app.manage(personal_youtube::SharedDecks::new(personal_youtube::DecksState::new()));
             let open = MenuItem::with_id(app, "open", "เปิด Lalin Play", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "ออกจาก Lalin Play", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
@@ -392,6 +396,24 @@ pub fn run() {
             system_eq::setup_system_eq,
             system_eq::remove_system_eq,
             system_eq::apply_system_eq,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_status,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_open,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_load,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_play_pause,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_set_mix,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_crossfade,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_set_auto,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_open_extensions_folder,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_report,
             set_surface,
             get_compact_fullscreen,
             set_compact_fullscreen,

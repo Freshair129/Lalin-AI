@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-report"
+description = "Enables the deck_report command without any pre-configured scope."
+commands.allow = ["deck_report"]
+
+[[permission]]
+identifier = "deny-deck-report"
+description = "Denies the deck_report command without any pre-configured scope."
+commands.deny = ["deck_report"]

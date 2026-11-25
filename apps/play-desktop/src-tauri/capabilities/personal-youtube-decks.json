@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "personal-youtube-decks",
+  "description": "CR-010 personal builds only: youtube.com deck pages may report player state and nothing else",
+  "webviews": ["deck-a", "deck-b"],
+  "remote": { "urls": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://music.youtube.com/*", "https://youtube.com/*"] },
+  "permissions": ["allow-deck-report"]
+}
