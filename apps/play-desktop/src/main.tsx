@@ -1,6 +1,10 @@
 import ReactDOM from "react-dom/client";
 import { recoverPlayMigrationBeforeStore } from "./playMigration";
 import "./styles.css";
+import { applyAppearance, loadAppearance } from "./appearance";
+
+// Resolve the theme before the first React paint so a saved choice never flashes.
+applyAppearance(loadAppearance());
 
 async function startPlay() {
   const root = document.getElementById("root")!;

@@ -1,4 +1,4 @@
-/* Lalin Play — Apple-inspired design tokens (dark default, light follows the OS) */
+/* Lalin Play — Apple-inspired design tokens (dark default; light via data-theme) */
 :root {
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
     "Segoe UI", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
@@ -35,28 +35,27 @@
   -webkit-font-smoothing: antialiased;
   color-scheme: dark;
 }
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #ffffff;
-    --bg-elevated: #ffffff;
-    --surface: rgba(0, 0, 0, 0.035);
-    --surface-hover: rgba(0, 0, 0, 0.06);
-    --surface-strong: rgba(0, 0, 0, 0.09);
-    --sidebar: rgba(246, 246, 248, 0.82);
-    --material: rgba(250, 250, 252, 0.8);
-    --text: #1d1d1f;
-    --text-secondary: rgba(60, 60, 67, 0.68);
-    --text-tertiary: rgba(60, 60, 67, 0.4);
-    --line: rgba(0, 0, 0, 0.07);
-    --line-strong: rgba(0, 0, 0, 0.12);
-    --accent: #fa2d48;
-    --accent-hover: #e8243f;
-    --accent-soft: rgba(250, 45, 72, 0.1);
-    --danger-bg: rgba(255, 59, 48, 0.1);
-    --danger-text: #c4271c;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
-    color-scheme: light;
-  }
+/* Light appearance: set by appearance.ts from the System/Light/Dark preference. */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --surface: rgba(0, 0, 0, 0.035);
+  --surface-hover: rgba(0, 0, 0, 0.06);
+  --surface-strong: rgba(0, 0, 0, 0.09);
+  --sidebar: rgba(246, 246, 248, 0.82);
+  --material: rgba(250, 250, 252, 0.8);
+  --text: #1d1d1f;
+  --text-secondary: rgba(60, 60, 67, 0.68);
+  --text-tertiary: rgba(60, 60, 67, 0.4);
+  --line: rgba(0, 0, 0, 0.07);
+  --line-strong: rgba(0, 0, 0, 0.12);
+  --accent: #fa2d48;
+  --accent-hover: #e8243f;
+  --accent-soft: rgba(250, 45, 72, 0.1);
+  --danger-bg: rgba(255, 59, 48, 0.1);
+  --danger-text: #c4271c;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  color-scheme: light;
 }
 * {
   box-sizing: border-box;
@@ -1744,7 +1743,7 @@ main {
     flex-wrap: wrap;
     row-gap: 4px;
   }
-  .app:not(.compact):not(.tv) .transport-buttons .volume {
+  .app:not(.compact):not(.tv) .transport-buttons .transport-side {
     flex: 0 0 100%;
     justify-content: center;
     margin-left: 0;
@@ -2174,7 +2173,7 @@ main {
   .app:not(.compact):not(.tv) .transport > :not(.track-summary):not(.seek-row):not(.transport-buttons) {
     grid-column: 1 / -1;
   }
-  .app:not(.compact):not(.tv) .transport .volume {
+  .app:not(.compact):not(.tv) .transport .transport-side {
     position: absolute;
     right: 22px;
     top: 50%;
@@ -2422,11 +2421,9 @@ main {
   color: var(--text-tertiary);
 }
 
-@media (prefers-color-scheme: light) {
-  .track-icon {
-    color: rgba(0, 0, 0, 0.45);
-    background: linear-gradient(145deg, #ececf0, #d9d9de);
-  }
+:root[data-theme="light"] .track-icon {
+  color: rgba(0, 0, 0, 0.45);
+  background: linear-gradient(145deg, #ececf0, #d9d9de);
 }
 @media (max-width: 960px) {
   aside { width: 190px; }
@@ -2434,6 +2431,92 @@ main {
   .search-field { width: 100%; }
   .intel-hero { padding: 26px 22px 22px; }
   .intel-hero h1 { font-size: 26px; }
+}
+
+/* Crossfade quick control + volume cluster */
+.transport-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 12px;
+}
+.transport-side .volume {
+  margin-left: 0;
+}
+.fade-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.transport-buttons .fade-toggle {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+}
+.transport-buttons .fade-toggle:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+.transport-buttons .fade-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.fade-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.fade-duration input {
+  width: 64px;
+}
+.fade-duration output {
+  min-width: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.compact .transport-side {
+  margin-left: 0;
+  gap: 4px;
+}
+.compact .fade-duration {
+  display: none;
+}
+
+/* Appearance picker (segmented control) */
+.appearance-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--surface-strong);
+}
+.segmented button {
+  min-width: 76px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.segmented button:hover {
+  color: var(--text);
+}
+.segmented button[aria-checked="true"] {
+  color: var(--text);
+  background: var(--bg-elevated);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 /* Keep the library usable at narrow widths without squeezing the content pane. */
