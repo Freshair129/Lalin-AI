@@ -2670,3 +2670,80 @@ main {
   aside .section-label, aside .local-note { display: none; }
   aside .settings-link { margin-top: 0; }
 }
+
+/* CR-011: YouTube search, deck queues */
+.youtube-search {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.youtube-search-form {
+  display: flex;
+  gap: 8px;
+}
+.youtube-search-form input {
+  flex: 1;
+  min-width: 0;
+}
+.youtube-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.youtube-search-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.youtube-search-text strong,
+.youtube-search-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.youtube-search-text small {
+  color: var(--muted, #8a8a8f);
+}
+.youtube-deck-queue {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.youtube-deck-queue li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.youtube-deck-queue li.empty {
+  color: var(--muted, #8a8a8f);
+}
+.youtube-deck-queue-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.youtube-deck-queue button {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.youtube-deck-cued {
+  color: var(--accent, #ff375f);
+}
+.youtube-decks-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted, #8a8a8f);
+}
+.search-youtube {
+  white-space: nowrap;
+}

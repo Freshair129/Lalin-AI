@@ -25,7 +25,8 @@ import { initSystemEqSync } from "./systemEq";
 import { youtubeEmbedUrl } from "./youtubeEmbed";
 import { YoutubeEmbedPlayer } from "./components/YoutubeEmbedPlayer";
 import { YoutubeDecksPanel } from "./components/YoutubeDecksPanel";
-import { useYoutubeDecks } from "./youtubeDecks";
+import { YoutubeSearch } from "./components/YoutubeSearch";
+import { itemFromLink, useYoutubeDecks } from "./youtubeDecks";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -58,7 +59,6 @@ function AppContent() {
   const [appearance, setAppearance] = useAppearance();
   useEffect(() => initSystemEqSync(), []);
   const decksAvailable = useYoutubeDecks((state) => state.available);
-  const runDeck = useYoutubeDecks((state) => state.run);
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
@@ -758,6 +758,19 @@ function AppContent() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
+                {decksAvailable ? (
+                  <button
+                    type="button"
+                    className="search-youtube"
+                    disabled={!query.trim()}
+                    onClick={() => {
+                      setView("youtube");
+                      void useYoutubeDecks.getState().searchYoutube(query);
+                    }}
+                  >
+                    {t("decks.searchYoutube")}
+                  </button>
+                ) : null}
                 <button type="submit" className="ask-lalin" disabled={!query.trim()}>
                   <Sparkle /> {t("app.askLalin")}
                 </button>
@@ -952,6 +965,13 @@ function AppContent() {
                   onClose={() => setEmbeddedYoutube(null)}
                 />
               ) : null}
+              <YoutubeSearch
+                onSave={(result) =>
+                  void addYoutubeLink(`https://www.youtube.com/watch?v=${result.videoId}`, result.title)
+                    .then(() => refreshYoutubeLinks())
+                    .catch(report)
+                }
+              />
               <YoutubeDecksPanel />
               <form
                 className="youtube-link-form"
@@ -991,15 +1011,25 @@ function AppContent() {
                     {decksAvailable && embedSrc
                       ? [0, 1].map((deck) => (
                           <button
-                            key={deck}
-                            aria-label={`${t("decks.loadTo")} ${deck === 0 ? "A" : "B"} ${link.title}`}
+                            key={`play-${deck}`}
+                            aria-label={`${t("decks.playOn")} ${deck === 0 ? "A" : "B"} ${link.title}`}
                             onClick={() => {
-                              usePlaybackStore.getState().pause();
                               setEmbeddedYoutube(null);
-                              void runDeck("deck_load", { deck, url: link.url });
+                              void useYoutubeDecks.getState().playNow(deck, itemFromLink(link));
                             }}
                           >
-                            {t("decks.loadTo")} {deck === 0 ? "A" : "B"}
+                            ▶ {deck === 0 ? "A" : "B"}
+                          </button>
+                        ))
+                      : null}
+                    {decksAvailable && embedSrc
+                      ? [0, 1].map((deck) => (
+                          <button
+                            key={`queue-${deck}`}
+                            aria-label={`${t("decks.queueTo")} ${deck === 0 ? "A" : "B"} ${link.title}`}
+                            onClick={() => useYoutubeDecks.getState().enqueue(deck, itemFromLink(link))}
+                          >
+                            + {t("decks.queue")} {deck === 0 ? "A" : "B"}
                           </button>
                         ))
                       : null}

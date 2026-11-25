@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-media-key"
+description = "Enables the deck_media_key command without any pre-configured scope."
+commands.allow = ["deck_media_key"]
+
+[[permission]]
+identifier = "deny-deck-media-key"
+description = "Denies the deck_media_key command without any pre-configured scope."
+commands.deny = ["deck_media_key"]

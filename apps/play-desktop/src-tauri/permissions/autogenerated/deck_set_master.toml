@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-set-master"
+description = "Enables the deck_set_master command without any pre-configured scope."
+commands.allow = ["deck_set_master"]
+
+[[permission]]
+identifier = "deny-deck-set-master"
+description = "Denies the deck_set_master command without any pre-configured scope."
+commands.deny = ["deck_set_master"]
