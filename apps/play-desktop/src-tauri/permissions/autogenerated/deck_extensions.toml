@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-extensions"
+description = "Enables the deck_extensions command without any pre-configured scope."
+commands.allow = ["deck_extensions"]
+
+[[permission]]
+identifier = "deny-deck-extensions"
+description = "Denies the deck_extensions command without any pre-configured scope."
+commands.deny = ["deck_extensions"]

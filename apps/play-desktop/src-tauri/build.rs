@@ -76,6 +76,13 @@ fn main() {
             "deck_set_auto",
             "deck_open_extensions_folder",
             "deck_report",
+            "deck_seek",
+            "deck_stop",
+            "deck_set_master",
+            "deck_extensions",
+            "deck_search",
+            "deck_search_report",
+            "deck_media_key",
         ]),
     ))
     .expect("generate scoped Play commands");

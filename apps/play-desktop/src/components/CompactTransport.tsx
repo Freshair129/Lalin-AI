@@ -7,6 +7,7 @@ import { formatTime } from "./Transport";
 import { PlaybackAudioEngine } from "../playback/audioEngine";
 import { relativeSeekTarget } from "../playback/relativeSeek";
 import { useI18n, localizeError } from "../i18n";
+import { useDeckTransportView, useYoutubeDecks } from "../youtubeDecks";
 
 export function CompactTransport({
   onFull,
@@ -26,6 +27,8 @@ export function CompactTransport({
   onFullscreen: () => void;
 }) {
   const now = usePlaybackStore((state) => state.nowPlaying);
+  // CR-011: the YouTube decks own playback, so play/pause and seek go to the active deck.
+  const deck = useDeckTransportView();
   const { t, locale } = useI18n();
   const video = isVideoItem(now.item);
   const footer = useRef<HTMLElement>(null);
@@ -36,8 +39,11 @@ export function CompactTransport({
   const [hover, setHover] = useState<number | null>(null);
   const [frame, setFrame] = useState<PreviewFrame | null>(null);
   const [hidden, setHidden] = useState(false);
+  const rawDuration = deck ? deck.duration : now.duration;
   const duration =
-    Number.isFinite(now.duration) && now.duration > 0 ? now.duration : 0;
+    Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : 0;
+  const seekTo = (time: number) =>
+    deck ? void useYoutubeDecks.getState().seek(time) : usePlaybackStore.getState().seek(time);
   const target = draft ?? hover;
 
   useEffect(() => {
@@ -126,15 +132,19 @@ export function CompactTransport({
     target !== null && frame?.time === Math.floor(target * 10) / 10
       ? frame
       : null;
-  const position = draft ?? now.currentTime;
+  const position = draft ?? (deck ? deck.time : now.currentTime);
   const skipDisabled =
-    !now.item ||
+    (!now.item && !deck) ||
     !duration ||
     draft !== null ||
     now.state === "loading" ||
     now.state === "error";
   const skip = (delta: number) => {
     if (skipDisabled || dragging.current !== null) return;
+    if (deck) {
+      seekTo(Math.max(0, Math.min(duration, deck.time + delta)));
+      return;
+    }
     const media = PlaybackAudioEngine.getInstance().getActiveMediaElement();
     if (!media) return;
     const target = relativeSeekTarget(media, delta);
@@ -150,8 +160,8 @@ export function CompactTransport({
       {!video ? (
         <div className="compact-artwork">
           <span aria-hidden="true">♫</span>
-          <strong>{now.item?.title || t("compact.openFile")}</strong>
-          {!now.item ? <button onClick={onOpen}>{t("compact.openButton")}</button> : null}
+          <strong>{deck ? deck.title : now.item?.title || t("compact.openFile")}</strong>
+          {!now.item && !deck ? <button onClick={onOpen}>{t("compact.openButton")}</button> : null}
         </div>
       ) : null}
       <div className="compact-seek">
@@ -182,7 +192,7 @@ export function CompactTransport({
           min="0"
           max={duration}
           step="0.1"
-          disabled={!duration || !now.item}
+          disabled={!duration || (!now.item && !deck)}
           value={Math.min(duration, position)}
           aria-valuetext={`${formatTime(position)} / ${formatTime(duration)}`}
           onPointerDown={(event) => {
@@ -204,7 +214,7 @@ export function CompactTransport({
           }}
           onPointerUp={(event) => {
             if (dragging.current !== event.pointerId) return;
-            usePlaybackStore.getState().seek(pointTime(event));
+            seekTo(pointTime(event));
             cancel();
             event.currentTarget.releasePointerCapture(event.pointerId);
           }}
@@ -226,7 +236,7 @@ export function CompactTransport({
           onChange={(event) => {
             if (dragging.current !== null) return;
             const time = Number(event.target.value);
-            usePlaybackStore.getState().seek(time);
+            seekTo(time);
             setHover(time);
           }}
         />
@@ -243,12 +253,12 @@ export function CompactTransport({
         </button>
         <button
           className="compact-play"
-          aria-label={now.state === "playing" ? t("transport.pause") : t("transport.play")}
+          aria-label={(deck ? deck.playing : now.state === "playing") ? t("transport.pause") : t("transport.play")}
           onClick={() =>
-            void usePlaybackStore.getState().togglePlay().catch(report)
+            void (deck ? useYoutubeDecks.getState().togglePlay() : usePlaybackStore.getState().togglePlay()).catch(report)
           }
         >
-          {now.state === "playing" ? "Ⅱ" : "▶"}
+          {(deck ? deck.playing : now.state === "playing") ? "Ⅱ" : "▶"}
         </button>
         <button
           className="skip-ten"

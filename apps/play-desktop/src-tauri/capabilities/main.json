@@ -22,6 +22,7 @@
     "allow-get-system-eq-status", "allow-setup-system-eq", "allow-remove-system-eq", "allow-apply-system-eq",
     "allow-deck-status", "allow-deck-open", "allow-deck-load", "allow-deck-play-pause", "allow-deck-set-mix",
     "allow-deck-crossfade", "allow-deck-set-auto", "allow-deck-open-extensions-folder",
+    "allow-deck-seek", "allow-deck-stop", "allow-deck-set-master", "allow-deck-extensions", "allow-deck-search",
     "updater:allow-check", "updater:allow-download", "updater:allow-install"
   ]
 }

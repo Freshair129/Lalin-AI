@@ -35,7 +35,7 @@ beforeEach(() => {
   vi.stubGlobal("matchMedia", (query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }));
   localStorage.clear();
   localStorage.setItem(STORAGE_LOCALE_KEY, "en");
-  useYoutubeDecks.setState({ available: false, snapshot: null, error: null });
+  useYoutubeDecks.setState({ available: false, snapshot: null, error: null, source: "local", queues: [[], []], current: [null, null], history: [], extensions: null, search: { query: "", results: [], busy: false, error: null } });
   personalBuild = true;
   vi.mocked(listen).mockResolvedValue(() => {});
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
@@ -72,7 +72,8 @@ describe("YouTube decks (CR-010 personal build)", () => {
     await openYoutubeView();
     await screen.findAllByText("I KNOW");
     expect(screen.queryByRole("region", { name: "YouTube Decks" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Deck A I KNOW" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Play on deck A I KNOW" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Search YouTube" })).toBeNull();
   });
 
   it("loads a link into a deck, crossfades, toggles auto and moves the crossfader", async () => {
@@ -80,9 +81,9 @@ describe("YouTube decks (CR-010 personal build)", () => {
     await screen.findByRole("region", { name: "YouTube Decks" });
     expect(screen.getByText("1:01 / 3:00")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Deck B I KNOW" }));
+    fireEvent.click(screen.getByRole("button", { name: "Play on deck B I KNOW" }));
     await waitFor(() =>
-      expect(vi.mocked(invoke)).toHaveBeenCalledWith("deck_load", { deck: 1, url: "https://youtu.be/-fMEMCLuY7M?si=x" }),
+      expect(vi.mocked(invoke)).toHaveBeenCalledWith("deck_load", { deck: 1, url: "https://youtu.be/-fMEMCLuY7M?si=x", start: true }),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /Fade to B/ }));

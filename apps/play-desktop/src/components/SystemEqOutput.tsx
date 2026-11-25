@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useI18n } from "../i18n";
 import { systemEqReady, useSystemEq, type EqOutput } from "../systemEq";
+import { useYoutubeDecks } from "../youtubeDecks";
 
 export function SystemEqOutput() {
   const { t } = useI18n();
@@ -19,6 +20,7 @@ export function SystemEqOutput() {
   const missing = status !== null && !status.installed;
   const showMissing = missing || error === "not-installed";
   const systemOn = output === "system" && systemEqReady(status);
+  const decksPlaying = useYoutubeDecks((state) => state.available && state.source === "decks");
 
   return (
     <div className="system-eq">
@@ -49,6 +51,7 @@ export function SystemEqOutput() {
       ) : systemOn ? (
         <p className="system-eq-note">{t("eq.systemActive")}</p>
       ) : null}
+      {decksPlaying && !systemOn ? <p className="system-eq-note">{t("decks.eqHint")}</p> : null}
       {status?.linked && !busy ? (
         <button type="button" className="eq-btn" onClick={() => void removeFromApo()}>
           {t("eq.systemRemove")}

@@ -6,6 +6,13 @@
 // plugin remains the target for hardened native OS integration once manual smoke testing confirms coverage.
 
 import { usePlaybackStore } from "./usePlaybackStore";
+import { useYoutubeDecks } from "../youtubeDecks";
+
+// CR-011: while the YouTube decks own playback, media keys drive the decks.
+const decksOwnPlayback = () => {
+  const decks = useYoutubeDecks.getState();
+  return decks.available && decks.source === "decks" ? decks : null;
+};
 
 let initialized = false;
 
@@ -44,24 +51,35 @@ export function initMediaSessionAdapter(): () => void {
   // Set action handlers
   try {
     navigator.mediaSession.setActionHandler("play", () => {
-      usePlaybackStore.getState().togglePlay();
+      const decks = decksOwnPlayback();
+      if (decks) void decks.togglePlay();
+      else usePlaybackStore.getState().togglePlay();
     });
     navigator.mediaSession.setActionHandler("pause", () => {
-      usePlaybackStore.getState().pause();
+      const decks = decksOwnPlayback();
+      if (decks) void decks.togglePlay();
+      else usePlaybackStore.getState().pause();
     });
     navigator.mediaSession.setActionHandler("stop", () => {
-      usePlaybackStore.getState().stop();
+      const decks = decksOwnPlayback();
+      if (decks) void decks.stop();
+      else usePlaybackStore.getState().stop();
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
-      usePlaybackStore.getState().previous();
+      const decks = decksOwnPlayback();
+      if (decks) void decks.previous();
+      else usePlaybackStore.getState().previous();
     });
     navigator.mediaSession.setActionHandler("nexttrack", () => {
-      usePlaybackStore.getState().next();
+      const decks = decksOwnPlayback();
+      if (decks) void decks.next();
+      else usePlaybackStore.getState().next();
     });
     navigator.mediaSession.setActionHandler("seekto", (details) => {
-      if (details.seekTime != null) {
-        usePlaybackStore.getState().seek(details.seekTime);
-      }
+      if (details.seekTime == null) return;
+      const decks = decksOwnPlayback();
+      if (decks) void decks.seek(details.seekTime);
+      else usePlaybackStore.getState().seek(details.seekTime);
     });
   } catch (e) {
     console.warn("MediaSession action handler registration failed:", e);

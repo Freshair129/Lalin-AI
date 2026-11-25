@@ -414,6 +414,20 @@ pub fn run() {
             personal_youtube::deck_open_extensions_folder,
             #[cfg(feature = "personal-youtube-web")]
             personal_youtube::deck_report,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_seek,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_stop,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_set_master,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_extensions,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_search,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_search_report,
+            #[cfg(feature = "personal-youtube-web")]
+            personal_youtube::deck_media_key,
             set_surface,
             get_compact_fullscreen,
             set_compact_fullscreen,

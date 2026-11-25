@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-stop"
+description = "Enables the deck_stop command without any pre-configured scope."
+commands.allow = ["deck_stop"]
+
+[[permission]]
+identifier = "deny-deck-stop"
+description = "Denies the deck_stop command without any pre-configured scope."
+commands.deny = ["deck_stop"]

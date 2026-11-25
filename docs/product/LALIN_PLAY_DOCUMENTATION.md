@@ -1,7 +1,7 @@
 ---
-version: "0.3.24b"
+version: "0.3.25b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-25T13:45:00+07:00,Claude"
+last_update: "2026-11-25T18:30:00+07:00,Claude"
 status: "beta"
 superseded_by: null
 attributes:
@@ -110,7 +110,8 @@ prove only audio rendered by Lalin Play.
 | Dashboard / Genesis catalog / RustFS-ready media / cache / favorites | [CR-007](CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md) | Approved; Genesis relational catalog adapter passes `cargo check`; Dashboard, RustFS adapter, real cache, hybrid search and native offline acceptance remain open; YouTube download/cache requires separate prior written approval |
 | Mobile remote / phone-hosted files / YouTube playlist references / crossfade | [CR-008](CR-008--LALIN_PLAY_MOBILE_REMOTE_HOST_CROSSFADE.md) | Approved 2026-10-20; Smooth, Manual DJ and cue-based Medley controls build locally; W1-A automation is closed (focused 19/19, full 102/102), while mobile/security and native listening acceptance remain open |
 | System EQ (Equalizer APO bridge) / embedded official YouTube player | [CR-009](CR-009--LALIN_PLAY_SYSTEM_EQ_YOUTUBE_EMBED.md) | Approved 2026-11-25; supersedes the CR-001 system-wide EQ non-goal and the CR-007 link-only YouTube boundary for these two items only; implementation in progress |
-| Personal YouTube web decks / scripted crossfade / user WebView2 extensions | [CR-010](CR-010--LALIN_PLAY_PERSONAL_YOUTUBE_WEB_DECKS.md) | Approved 2026-11-25 for personal local builds only (`personal-youtube-web` Cargo feature, release builds blocked); implementation in progress |
+| Personal YouTube web decks / scripted crossfade / user WebView2 extensions | [CR-010](CR-010--LALIN_PLAY_PERSONAL_YOUTUBE_WEB_DECKS.md) | Approved 2026-11-25 for personal local builds only (`personal-youtube-web` Cargo feature, release builds blocked); implemented and merged (PR #74) |
+| Deck search / per-deck queues / transport bar drives decks | [CR-011](CR-011--LALIN_PLAY_DECK_SEARCH_QUEUES_TRANSPORT.md) | Approved 2026-11-25; implemented on `feat/play-deck-search-transport` (personal local builds only, same boundary as CR-010); native search/queue/transport checks recorded, ad blocking and media keys not verified |
 | Browser-first remote architecture | [ADR-006](../architecture/ADR-006-LALIN-PLAY-BROWSER-FIRST-MOBILE-REMOTE.md), [SIS](../architecture/LALIN_PLAY_MOBILE_REMOTE_SIS.md) | Candidate; browser path avoids native iOS distribution; TLS mode and W0-B/C review remain open |
 | Mobile remote onboarding / user flows | [Functional Flow](../design/LALIN_PLAY_MOBILE_REMOTE_FUNCTIONAL_FLOW_SPEC.md) | Candidate; current pairing needs trusted page plus in-page invite scan; one-scan QR and persistent pairing are not promised |
 | CR-008 execution waves / readiness | [Wave DAG](../architecture/LALIN_PLAY_CR008_EXECUTION_DAG.md) | Candidate implementation plan updated with browser-first docs and Astra findings; W0-B/C remain BLOCKED and no remote wave starts |
@@ -719,6 +720,7 @@ tests and remains **NOT_RUN** until the local account launches the client.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.25b | 2026-11-25 | beta | Register proposed CR-011 (deck search, per-deck queues, unified transport); mark CR-010 merged | working tree | Claude |
 | 0.3.24b | 2026-11-25 | beta | Register approved personal-only CR-010 (YouTube web decks) | working tree | Claude |
 | 0.3.23b | 2026-11-25 | beta | Register approved CR-009 (Equalizer APO bridge and official YouTube embed) | working tree | Claude |
 | 0.3.22b | 2026-11-07 | beta | Reconcile PR #25's merged S2/G3 evidence and current code map; register the unpublished Play site draft while retaining runtime and release gates | working tree | Codex |

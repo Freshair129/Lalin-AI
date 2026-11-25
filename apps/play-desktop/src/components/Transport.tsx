@@ -1,6 +1,7 @@
 // @req FR-22.2 — Localized full playback controls, state and accessibility labels
 import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { useI18n, localizeError } from "../i18n";
+import { useDeckTransportView, useYoutubeDecks } from "../youtubeDecks";
 
 export function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -32,6 +33,14 @@ export function Transport({
   const action = (promise: Promise<unknown>) => void promise.catch(report);
   const transition = store.transitionSettings;
   const crossfadeOn = transition.mode !== "off";
+  // CR-011: while the YouTube decks own playback, the bar shows and drives the active deck.
+  const deck = useDeckTransportView();
+  const decks = useYoutubeDecks.getState;
+  const title = deck ? deck.title : now.item?.title || t("transport.emptyTitle");
+  const subtitle = deck ? deck.subtitle : now.item?.artist || t("transport.emptySubtitle");
+  const playing = deck ? deck.playing : now.state === "playing";
+  const position = deck ? deck.time : now.currentTime;
+  const length = deck ? deck.duration : now.duration;
   return (
     <footer className="transport" aria-label={t("transport.label")}>
       <div className="track-summary">
@@ -39,56 +48,58 @@ export function Transport({
           ♪
         </span>
         <div>
-          <strong>{now.item?.title || t("transport.emptyTitle")}</strong>
-          <small>{now.item?.artist || t("transport.emptySubtitle")}</small>
+          <strong>{title}</strong>
+          <small>{subtitle}</small>
         </div>
         <span className="play-state" data-testid="play-state">
-          {t(`transport.state.${now.state}` as "transport.state.idle" | "transport.state.playing" | "transport.state.paused" | "transport.state.loading" | "transport.state.error")}
+          {t(`transport.state.${deck ? (deck.playing ? "playing" : "paused") : now.state}` as "transport.state.idle" | "transport.state.playing" | "transport.state.paused" | "transport.state.loading" | "transport.state.error")}
         </span>
       </div>
       <div className="seek-row">
-        <time data-testid="position">{formatTime(now.currentTime)}</time>
+        <time data-testid="position">{formatTime(position)}</time>
         <input
           aria-label={t("transport.position")}
           type="range"
           min="0"
-          max={Number.isFinite(now.duration) ? now.duration : 0}
+          max={Number.isFinite(length) ? length : 0}
           step="0.1"
-          value={now.currentTime}
-          onChange={(e) => store.seek(Number(e.target.value))}
+          value={position}
+          onChange={(e) => (deck ? void decks().seek(Number(e.target.value)) : store.seek(Number(e.target.value)))}
         />
-        <time>{formatTime(now.duration)}</time>
+        <time>{formatTime(length)}</time>
       </div>
       <div className="transport-buttons">
         <button
           aria-label={t("transport.shuffle")}
           aria-pressed={queue.shuffle}
+          disabled={Boolean(deck)}
           onClick={store.toggleShuffle}
         >
           ⇄
         </button>
         <button
           aria-label={t("transport.previous")}
-          onClick={() => action(store.previous())}
+          onClick={() => action(deck ? decks().previous() : store.previous())}
         >
           ⏮
         </button>
         <button
           className="play-button"
-          aria-label={now.state === "playing" ? t("transport.pause") : t("transport.play")}
-          onClick={() => action(store.togglePlay())}
+          aria-label={playing ? t("transport.pause") : t("transport.play")}
+          onClick={() => action(deck ? decks().togglePlay() : store.togglePlay())}
         >
-          {now.state === "playing" ? "Ⅱ" : "▶"}
+          {playing ? "Ⅱ" : "▶"}
         </button>
-        <button aria-label={t("transport.next")} onClick={() => action(store.next())}>
+        <button aria-label={t("transport.next")} onClick={() => action(deck ? decks().next() : store.next())}>
           ⏭
         </button>
-        <button aria-label={t("transport.stop")} onClick={store.stop}>
+        <button aria-label={t("transport.stop")} onClick={() => (deck ? void decks().stop() : store.stop())}>
           ■
         </button>
         <button
           aria-label={t("transport.repeat")}
           aria-pressed={queue.repeatMode !== "off"}
+          disabled={Boolean(deck)}
           onClick={() =>
             store.setRepeatMode(
               queue.repeatMode === "off"

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-seek"
+description = "Enables the deck_seek command without any pre-configured scope."
+commands.allow = ["deck_seek"]
+
+[[permission]]
+identifier = "deny-deck-seek"
+description = "Denies the deck_seek command without any pre-configured scope."
+commands.deny = ["deck_seek"]
