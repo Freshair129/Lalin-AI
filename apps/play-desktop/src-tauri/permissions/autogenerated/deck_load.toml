@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-load"
+description = "Enables the deck_load command without any pre-configured scope."
+commands.allow = ["deck_load"]
+
+[[permission]]
+identifier = "deny-deck-load"
+description = "Denies the deck_load command without any pre-configured scope."
+commands.deny = ["deck_load"]

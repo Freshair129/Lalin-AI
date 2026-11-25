@@ -11,6 +11,8 @@ g3-test-app-data-dir = []
 # Developer benchmark harness only; not built or bundled by default (Smart Medley is deferred for v1.0).
 smart-medley-benchmark = []
 smart-medley-evidence = []
+# CR-010: personal-only YouTube web decks. Never enabled in CI or release builds (build.rs guard).
+personal-youtube-web = ["tauri/unstable"]
 
 [lib]
 name = "lalin_play_lib"

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-play-pause"
+description = "Enables the deck_play_pause command without any pre-configured scope."
+commands.allow = ["deck_play_pause"]
+
+[[permission]]
+identifier = "deny-deck-play-pause"
+description = "Denies the deck_play_pause command without any pre-configured scope."
+commands.deny = ["deck_play_pause"]

@@ -4,6 +4,12 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_ENV").is_ok_and(|target_env| target_env == "msvc") {
         println!("cargo:rustc-link-arg-bin=lalin-play=/STACK:8388608");
     }
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_PERSONAL_YOUTUBE_WEB");
+    if std::env::var("PROFILE").is_ok_and(|profile| profile == "release")
+        && std::env::var_os("CARGO_FEATURE_PERSONAL_YOUTUBE_WEB").is_some()
+    {
+        panic!("release build blocked: personal-youtube-web (CR-010) is for personal local builds only");
+    }
     if std::env::var("PROFILE").is_ok_and(|profile| profile == "release") {
         let config_path = std::path::Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap())
             .join("tauri.conf.json");
@@ -61,6 +67,15 @@ fn main() {
             "setup_system_eq",
             "remove_system_eq",
             "apply_system_eq",
+            "deck_status",
+            "deck_open",
+            "deck_load",
+            "deck_play_pause",
+            "deck_set_mix",
+            "deck_crossfade",
+            "deck_set_auto",
+            "deck_open_extensions_folder",
+            "deck_report",
         ]),
     ))
     .expect("generate scoped Play commands");

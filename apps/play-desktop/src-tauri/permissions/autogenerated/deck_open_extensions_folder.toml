@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deck-open-extensions-folder"
+description = "Enables the deck_open_extensions_folder command without any pre-configured scope."
+commands.allow = ["deck_open_extensions_folder"]
+
+[[permission]]
+identifier = "deny-deck-open-extensions-folder"
+description = "Denies the deck_open_extensions_folder command without any pre-configured scope."
+commands.deny = ["deck_open_extensions_folder"]

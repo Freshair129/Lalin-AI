@@ -24,6 +24,8 @@ import { useAppearance } from "./appearance";
 import { initSystemEqSync } from "./systemEq";
 import { youtubeEmbedUrl } from "./youtubeEmbed";
 import { YoutubeEmbedPlayer } from "./components/YoutubeEmbedPlayer";
+import { YoutubeDecksPanel } from "./components/YoutubeDecksPanel";
+import { useYoutubeDecks } from "./youtubeDecks";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -55,6 +57,20 @@ function AppContent() {
   const { locale, setLocale, t, tPlural } = useI18n();
   const [appearance, setAppearance] = useAppearance();
   useEffect(() => initSystemEqSync(), []);
+  const decksAvailable = useYoutubeDecks((state) => state.available);
+  const runDeck = useYoutubeDecks((state) => state.run);
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void useYoutubeDecks.getState().init().then((unlisten) => {
+      if (cancelled) unlisten();
+      else stop = unlisten;
+    });
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, []);
   useEffect(() => {
     PlaybackAudioEngine.getInstance().setMediaElementLabel(t("video.label"));
   }, [locale, t]);
@@ -936,6 +952,7 @@ function AppContent() {
                   onClose={() => setEmbeddedYoutube(null)}
                 />
               ) : null}
+              <YoutubeDecksPanel />
               <form
                 className="youtube-link-form"
                 onSubmit={(event) => {
@@ -971,6 +988,21 @@ function AppContent() {
                         {t("app.playHere")}
                       </button>
                     ) : null}
+                    {decksAvailable && embedSrc
+                      ? [0, 1].map((deck) => (
+                          <button
+                            key={deck}
+                            aria-label={`${t("decks.loadTo")} ${deck === 0 ? "A" : "B"} ${link.title}`}
+                            onClick={() => {
+                              usePlaybackStore.getState().pause();
+                              setEmbeddedYoutube(null);
+                              void runDeck("deck_load", { deck, url: link.url });
+                            }}
+                          >
+                            {t("decks.loadTo")} {deck === 0 ? "A" : "B"}
+                          </button>
+                        ))
+                      : null}
                     <button onClick={() => void openYoutubeLink(link.id).catch(report)}>{t("app.openYoutube")}</button>
                     <button
                       aria-label={`${t("app.removeYoutube")} ${link.title}`}
