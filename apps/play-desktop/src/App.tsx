@@ -20,6 +20,7 @@ import { usePlaybackStore } from "./playback/usePlaybackStore";
 import { PlaybackAudioEngine, type AudibleTimeUpdate } from "./playback/audioEngine";
 import { bindHandoffReceiver } from "./handoffReceiver";
 import { I18nProvider, useI18n, localizeError } from "./i18n";
+import { useAppearance } from "./appearance";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -49,6 +50,7 @@ export function App() {
 
 function AppContent() {
   const { locale, setLocale, t, tPlural } = useI18n();
+  const [appearance, setAppearance] = useAppearance();
   useEffect(() => {
     PlaybackAudioEngine.getInstance().setMediaElementLabel(t("video.label"));
   }, [locale, t]);
@@ -862,6 +864,22 @@ function AppContent() {
             </section>
           ) : view === "settings" ? (
             <section className="settings">
+              <div className="appearance-picker" role="radiogroup" aria-label={t("settings.appearance")}>
+                <span>{t("settings.appearance")}</span>
+                <div className="segmented">
+                  {(["system", "light", "dark"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      role="radio"
+                      aria-checked={appearance === option}
+                      onClick={() => setAppearance(option)}
+                    >
+                      {t(option === "system" ? "settings.appearanceSystem" : option === "light" ? "settings.appearanceLight" : "settings.appearanceDark")}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <PlaybackSettings report={report} />
               <PlayMigrationImport onChanged={() => {
                 setResume(localStorage.getItem("lalin-play:v1:resume") === "true");
