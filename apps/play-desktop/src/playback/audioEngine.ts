@@ -94,6 +94,12 @@ export class PlaybackAudioEngine {
   private analyserNode: AnalyserNode | null = null;
 
   private isBypassed = false;
+  // CR-009: while Equalizer APO applies the curve system-wide, keep the in-app EQ flat
+  // so Play's own audio is not equalised twice. The user's bypass state is untouched.
+  private externalEQ = false;
+  private get eqFlat(): boolean {
+    return this.isBypassed || this.externalEQ;
+  }
   private currentBandGains: number[] = new Array(EQ_FREQUENCIES.length).fill(0);
   private currentPreamp = 0;
   private currentVolume = 1.0;
@@ -285,7 +291,7 @@ export class PlaybackAudioEngine {
 
     // 1. Preamp (initialized with current preamp value)
     this.preampNode = this.ctx.createGain();
-    const initialPreampLinear = this.isBypassed ? 1.0 : Math.pow(10, this.currentPreamp / 20);
+    const initialPreampLinear = this.eqFlat ? 1.0 : Math.pow(10, this.currentPreamp / 20);
     this.preampNode.gain.value = initialPreampLinear;
 
     // 2. 10 BiquadFilterNodes (peaking) — initialized with current band gains (Fix Bug #1)
@@ -294,7 +300,7 @@ export class PlaybackAudioEngine {
       filter.type = "peaking";
       filter.frequency.value = freq;
       filter.Q.value = 1.4; // standard 1-octave Q
-      filter.gain.value = this.isBypassed ? 0 : this.currentBandGains[index];
+      filter.gain.value = this.eqFlat ? 0 : this.currentBandGains[index];
       return filter;
     });
 
@@ -888,7 +894,7 @@ export class PlaybackAudioEngine {
     this.currentPreamp = clamped;
     if (this.preampNode && this.ctx) {
       // If currently bypassed, keep preamp effectively flat (gain = 1.0 / 0 dB)
-      const linear = this.isBypassed ? 1.0 : Math.pow(10, clamped / 20);
+      const linear = this.eqFlat ? 1.0 : Math.pow(10, clamped / 20);
       this.preampNode.gain.setTargetAtTime(linear, this.ctx.currentTime, 0.03);
     }
   }
@@ -898,7 +904,7 @@ export class PlaybackAudioEngine {
     const clamped = clampGain(gainDb);
     this.currentBandGains[index] = clamped;
 
-    if (!this.isBypassed && this.filterNodes[index] && this.ctx) {
+    if (!this.eqFlat && this.filterNodes[index] && this.ctx) {
       this.filterNodes[index].gain.setTargetAtTime(clamped, this.ctx.currentTime, 0.03);
     }
   }
@@ -914,15 +920,24 @@ export class PlaybackAudioEngine {
 
     // 1. Ramp preamp
     if (this.preampNode) {
-      const targetPreampLinear = bypassed ? 1.0 : Math.pow(10, this.currentPreamp / 20);
+      const targetPreampLinear = this.eqFlat ? 1.0 : Math.pow(10, this.currentPreamp / 20);
       this.preampNode.gain.setTargetAtTime(targetPreampLinear, this.ctx.currentTime, 0.03);
     }
 
     // 2. Ramp all 10 filters
     this.filterNodes.forEach((filter, i) => {
-      const targetGain = bypassed ? 0 : this.currentBandGains[i];
+      const targetGain = this.eqFlat ? 0 : this.currentBandGains[i];
       filter.gain.setTargetAtTime(targetGain, this.ctx!.currentTime, 0.03);
     });
+  }
+
+  public setExternalEQ(active: boolean): void {
+    this.externalEQ = active;
+    this.setBypass(this.isBypassed);
+  }
+
+  public isExternalEQ(): boolean {
+    return this.externalEQ;
   }
 
   public applyEQ(eq: PlaybackEQ): void {

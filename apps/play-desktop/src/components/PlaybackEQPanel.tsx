@@ -13,6 +13,7 @@ import { usePlaybackStore } from "../playback/usePlaybackStore";
 import { PlaybackAudioEngine } from "../playback/audioEngine";
 import { DEFAULT_EQ_PRESETS, type PlaybackEQBand } from "../contracts";
 import { useI18n } from "../i18n";
+import { SystemEqOutput } from "./SystemEqOutput";
 
 function formatFreq(hz: number): string {
   if (hz >= 1000) return `${hz / 1000} kHz`;
@@ -234,6 +235,7 @@ export function PlaybackEQPanel() {
 
   return (
     <div className="eq-panel">
+      <SystemEqOutput />
       <div className="eq-header">
         <div className="eq-preset-row">
           <div className="eq-profile-control">

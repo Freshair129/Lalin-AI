@@ -21,6 +21,9 @@ import { PlaybackAudioEngine, type AudibleTimeUpdate } from "./playback/audioEng
 import { bindHandoffReceiver } from "./handoffReceiver";
 import { I18nProvider, useI18n, localizeError } from "./i18n";
 import { useAppearance } from "./appearance";
+import { initSystemEqSync } from "./systemEq";
+import { youtubeEmbedUrl } from "./youtubeEmbed";
+import { YoutubeEmbedPlayer } from "./components/YoutubeEmbedPlayer";
 import {
   activateTvFocus,
   createGamepadAdapter,
@@ -51,6 +54,7 @@ export function App() {
 function AppContent() {
   const { locale, setLocale, t, tPlural } = useI18n();
   const [appearance, setAppearance] = useAppearance();
+  useEffect(() => initSystemEqSync(), []);
   useEffect(() => {
     PlaybackAudioEngine.getInstance().setMediaElementLabel(t("video.label"));
   }, [locale, t]);
@@ -90,6 +94,7 @@ function AppContent() {
   const [youtubeLinks, setYoutubeLinks] = useState<YoutubeLink[]>([]);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [youtubeTitle, setYoutubeTitle] = useState("");
+  const [embeddedYoutube, setEmbeddedYoutube] = useState<{ id: string; src: string; title: string } | null>(null);
   const [resume, setResume] = useState(
     () => localStorage.getItem("lalin-play:v1:resume") === "true",
   );
@@ -923,6 +928,14 @@ function AppContent() {
           ) : view === "youtube" ? (
             <section className="youtube-library">
               <p>{t("app.youtubeLinksHelp")}</p>
+              {embeddedYoutube ? (
+                <YoutubeEmbedPlayer
+                  key={embeddedYoutube.id}
+                  src={embeddedYoutube.src}
+                  title={embeddedYoutube.title}
+                  onClose={() => setEmbeddedYoutube(null)}
+                />
+              ) : null}
               <form
                 className="youtube-link-form"
                 onSubmit={(event) => {
@@ -940,14 +953,37 @@ function AppContent() {
                 <input type="text" required maxLength={240} aria-label={t("app.youtubeTitle")} placeholder={t("app.youtubeTitle")} value={youtubeTitle} onChange={(event) => setYoutubeTitle(event.target.value)} />
                 <button className="primary" disabled={!youtubeUrl.trim() || !youtubeTitle.trim()}>{t("app.addYoutubeLink")}</button>
               </form>
-              {youtubeLinks.map((link) => (
-                <div className="youtube-row" key={link.id}>
-                  <span className="source-badge youtube-badge">{t("app.badgeYoutube")}</span>
-                  <strong>{link.title}</strong>
-                  <button onClick={() => void openYoutubeLink(link.id).catch(report)}>{t("app.openYoutube")}</button>
-                  <button aria-label={`${t("app.removeYoutube")} ${link.title}`} onClick={() => void removeYoutubeLink(link.id).then(() => refreshYoutubeLinks()).catch(report)}>×</button>
-                </div>
-              ))}
+              {youtubeLinks.map((link) => {
+                const embedSrc = youtubeEmbedUrl(link.url);
+                return (
+                  <div className="youtube-row" key={link.id}>
+                    <span className="source-badge youtube-badge">{t("app.badgeYoutube")}</span>
+                    <strong>{link.title}</strong>
+                    {embedSrc ? (
+                      <button
+                        aria-label={`${t("app.playHere")} ${link.title}`}
+                        onClick={() => {
+                          // One thing plays at a time: pause local playback; the queue stays as it is.
+                          usePlaybackStore.getState().pause();
+                          setEmbeddedYoutube({ id: link.id, src: embedSrc, title: link.title });
+                        }}
+                      >
+                        {t("app.playHere")}
+                      </button>
+                    ) : null}
+                    <button onClick={() => void openYoutubeLink(link.id).catch(report)}>{t("app.openYoutube")}</button>
+                    <button
+                      aria-label={`${t("app.removeYoutube")} ${link.title}`}
+                      onClick={() => {
+                        if (embeddedYoutube?.id === link.id) setEmbeddedYoutube(null);
+                        void removeYoutubeLink(link.id).then(() => refreshYoutubeLinks()).catch(report);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
               {!youtubeLinks.length ? <p className="empty">{t("app.noYoutubeLinks")}</p> : null}
             </section>
           ) : (
