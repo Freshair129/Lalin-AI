@@ -12,7 +12,7 @@
   "app": {
     "windows": [{ "label": "main", "title": "Lalin Play", "width": 1120, "height": 740, "minWidth": 440, "minHeight": 300 }],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; base-uri 'self'",
       "assetProtocol": { "enable": true, "scope": [] }
     }
   },

@@ -19,6 +19,7 @@
     "allow-set-tv", "allow-quit-play", "allow-get-compact-fullscreen", "allow-set-compact-fullscreen",
     "allow-register-handoff-owner", "allow-publish-handoff-state",
     "allow-complete-handoff-command", "allow-grant-handoff-media",
+    "allow-get-system-eq-status", "allow-setup-system-eq", "allow-remove-system-eq", "allow-apply-system-eq",
     "updater:allow-check", "updater:allow-download", "updater:allow-install"
   ]
 }

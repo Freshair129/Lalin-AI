@@ -57,6 +57,10 @@ fn main() {
             "publish_handoff_state",
             "complete_handoff_command",
             "grant_handoff_media",
+            "get_system_eq_status",
+            "setup_system_eq",
+            "remove_system_eq",
+            "apply_system_eq",
         ]),
     ))
     .expect("generate scoped Play commands");

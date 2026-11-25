@@ -1,7 +1,7 @@
 ---
-version: "0.3.22b"
+version: "0.3.23b"
 created_at: "2026-09-20T22:40:00+07:00,LALIN,f5a6681"
-last_update: "2026-11-07T00:00:00+07:00,Codex"
+last_update: "2026-11-25T13:45:00+07:00,Claude"
 status: "beta"
 superseded_by: null
 attributes:
@@ -109,6 +109,7 @@ prove only audio rendered by Lalin Play.
 | Mixer / virtual surround / ENG/TH UI | [CR-006](CR-006--LALIN_PLAY_SONAR_MIXER_SPATIAL_AUDIO.md) | Approved and implemented locally; automated checks recorded, Windows headphone/audio acceptance NOT_RUN |
 | Dashboard / Genesis catalog / RustFS-ready media / cache / favorites | [CR-007](CR-007--LALIN_PLAY_DASHBOARD_OFFLINE_LIBRARY.md) | Approved; Genesis relational catalog adapter passes `cargo check`; Dashboard, RustFS adapter, real cache, hybrid search and native offline acceptance remain open; YouTube download/cache requires separate prior written approval |
 | Mobile remote / phone-hosted files / YouTube playlist references / crossfade | [CR-008](CR-008--LALIN_PLAY_MOBILE_REMOTE_HOST_CROSSFADE.md) | Approved 2026-10-20; Smooth, Manual DJ and cue-based Medley controls build locally; W1-A automation is closed (focused 19/19, full 102/102), while mobile/security and native listening acceptance remain open |
+| System EQ (Equalizer APO bridge) / embedded official YouTube player | [CR-009](CR-009--LALIN_PLAY_SYSTEM_EQ_YOUTUBE_EMBED.md) | Approved 2026-11-25; supersedes the CR-001 system-wide EQ non-goal and the CR-007 link-only YouTube boundary for these two items only; implementation in progress |
 | Browser-first remote architecture | [ADR-006](../architecture/ADR-006-LALIN-PLAY-BROWSER-FIRST-MOBILE-REMOTE.md), [SIS](../architecture/LALIN_PLAY_MOBILE_REMOTE_SIS.md) | Candidate; browser path avoids native iOS distribution; TLS mode and W0-B/C review remain open |
 | Mobile remote onboarding / user flows | [Functional Flow](../design/LALIN_PLAY_MOBILE_REMOTE_FUNCTIONAL_FLOW_SPEC.md) | Candidate; current pairing needs trusted page plus in-page invite scan; one-scan QR and persistent pairing are not promised |
 | CR-008 execution waves / readiness | [Wave DAG](../architecture/LALIN_PLAY_CR008_EXECUTION_DAG.md) | Candidate implementation plan updated with browser-first docs and Astra findings; W0-B/C remain BLOCKED and no remote wave starts |
@@ -717,6 +718,7 @@ tests and remains **NOT_RUN** until the local account launches the client.
 
 | Version | Date | Status | Summary | Commit Hash | Agent |
 |---|---|---|---|---|---|
+| 0.3.23b | 2026-11-25 | beta | Register approved CR-009 (Equalizer APO bridge and official YouTube embed) | working tree | Claude |
 | 0.3.22b | 2026-11-07 | beta | Reconcile PR #25's merged S2/G3 evidence and current code map; register the unpublished Play site draft while retaining runtime and release gates | working tree | Codex |
 | 0.3.21b | 2026-11-07 | beta | Rebase the CR-006/007/008 Play work onto main (a6325d0): keep merged S2/G3 evidence from main and retain CR-006..008 and local-first entries | rebased onto a6325d0 | Claude |
 | 0.3.20b | 2026-10-20 | beta | Add browser-first ADR, SIS and functional flow; refine the CR-008 plan while retaining W0-B/C and remote-start gates | working tree | Codex |

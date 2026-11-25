@@ -6,6 +6,7 @@ mod media_validation;
 mod migration;
 pub mod smart_medley;
 mod smart_medley_store;
+pub mod system_eq;
 
 use library::LibraryState;
 use std::{path::PathBuf, sync::Mutex};
@@ -387,6 +388,10 @@ pub fn run() {
             handoff::register_handoff_owner,
             handoff::publish_handoff_state,
             handoff::complete_handoff_command,
+            system_eq::get_system_eq_status,
+            system_eq::setup_system_eq,
+            system_eq::remove_system_eq,
+            system_eq::apply_system_eq,
             set_surface,
             get_compact_fullscreen,
             set_compact_fullscreen,

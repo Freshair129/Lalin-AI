@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-remove-system-eq"
+description = "Enables the remove_system_eq command without any pre-configured scope."
+commands.allow = ["remove_system_eq"]
+
+[[permission]]
+identifier = "deny-remove-system-eq"
+description = "Denies the remove_system_eq command without any pre-configured scope."
+commands.deny = ["remove_system_eq"]
