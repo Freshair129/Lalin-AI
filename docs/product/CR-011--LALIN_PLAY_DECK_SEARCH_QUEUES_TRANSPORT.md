@@ -1,7 +1,7 @@
 ---
-version: "0.3.0b"
+version: "0.3.1b"
 created_at: "2026-11-25T18:30:00+07:00,Claude"
-last_update: "2026-11-25T18:30:00+07:00,Claude"
+last_update: "2026-11-26T15:40:00+07:00,Claude"
 status: "approved"
 superseded_by: null
 attributes:
@@ -154,6 +154,7 @@ start implementation.
 
 | Version | Date | Status | Change | Commit | Author |
 |---|---|---|---|---|---|
+| 0.3.1b | 2026-11-26 | approved | Bug fix found in the native follow-up check (personal dev build). Bug: after an auto fade, the outgoing deck kept gain 1.0; when its video ended, YouTube autoplay loaded another video there and played it at full volume over the new deck. Fix: the outgoing deck is left at gain 0; the deck page turns YouTube autoplay off; a video that Play did not load on the idle deck is paused and kept silent; a deck the user starts in its window gets gain 1 and pauses the other deck. Checks: cargo `personal_youtube` 10/10 (new `idle_deck_autoplay_is_unrequested`). Native: after an auto fade, deck A stayed paused on its own video at volume 0 for 30 s, and the autoplay toggle read off. Earlier open items, checked natively: (a) starting a local track paused both decks, and the bar showed the local track; (b) auto mode at a natural end ran a 7 s fade and left B active; (c) OS media keys (play/pause twice, Next) drove the active deck; (d) the extension's CSS hides ad containers on deck pages, and no ad appeared in about 12 loads, but actual ad blocking is still not proven. | working tree | Claude |
 | 0.3.0b | 2026-11-25 | approved | Implemented on `feat/play-deck-search-transport`. Automated checks: cargo `personal_youtube` 9/9 (parser fixture, master × fade, cued-only auto start, manifest names); vitest 194/194 (`decideQueueAction`, transport view, search→queue→cue, transport routing, local hand-back, extension list, media keys); `npm run build`; default `cargo check` builds without the module; the release guard still refuses the feature. The parser also read a real results page (18 videos with title, channel and duration). Native check in the personal dev build: (1) a cold search succeeded after one retry in 8.2 s and returned 17 results; warm, 1.8 s; (2) through the UI, searching "ILLSLICK" gave 20 results; "Queue B" listed the item; "Play on A" played it; Deck B was cued from its queue automatically and the queue emptied; (3) the bottom bar showed the deck title, "YouTube · Deck A · channel" and position; pause, play, seek (onChange 126 → 151 s), Stop (both paused) and volume 0.5 all acted on the decks; (4) Next ran a 7 s fade with master 0.5. Midway A = 0.32 and B = 0.39, power ≈ 0.25 = 0.5². It ended with B active at 0.5 and A paused; (5) at the end of Deck B, the next item in B's own queue loaded and played; (6) the panel listed "AdBlocker for YouTube™ 0.5.4", and its service worker ran in the deck profile. Not verified: whether ads are actually blocked (no ad appeared in 5 loads, which proves nothing), hardware media keys, a local track taking back the transport natively (unit-tested only), and auto mode at a natural track end. | working tree | Claude |
 | 0.2.0b | 2026-11-25 | approved | Record user approval; implementation starts | working tree | Claude |
 | 0.1.0b | 2026-11-25 | need review | Propose Play-side YouTube search, per-deck queues, and transport-bar control of the CR-010 decks | working tree | Claude |
