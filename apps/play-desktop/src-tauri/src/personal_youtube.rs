@@ -343,6 +343,17 @@ impl DecksState {
     }
 }
 
+/// True when an idle deck reports a video that Play did not load there, such
+/// as YouTube autoplay moving on after the deck faded out.
+fn is_unrequested_video(deck: usize, active: usize, fading: bool, info: &DeckInfo, report: &DeckReport) -> bool {
+    deck != active
+        && !fading
+        && !info.cued
+        && !info.video_id.is_empty()
+        && !report.video_id.is_empty()
+        && report.video_id != info.video_id
+}
+
 pub type SharedDecks = Mutex<DecksState>;
 
 #[derive(Debug, Clone, Serialize)]
@@ -491,6 +502,10 @@ const DECK_SCRIPT: &str = r##"
       if (Math.abs(v.volume - want) > 0.005) v.volume = want;
       if (want > 0 && v.muted) v.muted = false;
     }).catch(() => {});
+    if (tick % 4 === 0) {
+      // Play's queues pick the next video, so YouTube autoplay stays off.
+      document.querySelector('.ytp-autonav-toggle-button[aria-checked="true"]')?.click();
+    }
     if (tick++ % 4 === 0 && "mediaSession" in navigator) {
       for (const action of ["play", "pause", "nexttrack", "previoustrack", "stop"]) {
         try { navigator.mediaSession.setActionHandler(action, () => invoke("deck_media_key", { action }).catch(() => {})); } catch {}
@@ -677,7 +692,8 @@ fn start_crossfade(app: &AppHandle, seconds: f64) {
             std::thread::sleep(FADE_STEP);
         }
         pause(&app, from);
-        set_gain(&app, from, 1.0);
+        // Keep the outgoing deck silent: YouTube may load another video there.
+        set_gain(&app, from, 0.0);
         {
             let shared = app.state::<SharedDecks>();
             let mut state = shared.lock().unwrap();
@@ -961,7 +977,7 @@ pub fn deck_report(app: AppHandle, webview: Webview, report: DeckReport) -> f64 
     let Some(deck) = DECK_LABELS.iter().position(|label| *label == webview.label()) else {
         return 1.0;
     };
-    let (start_auto, desired) = {
+    let (start_auto, started_by_user, desired) = {
         let shared = app.state::<SharedDecks>();
         let mut state = shared.lock().unwrap();
         let desired = state.desired_volume(deck);
@@ -974,6 +990,14 @@ pub fn deck_report(app: AppHandle, webview: Webview, report: DeckReport) -> f64 
         state.reported[deck] = true;
         let fading = state.fading;
         let active = state.active;
+        // YouTube autoplay (or a click on another video) changed the video on
+        // the idle deck: Play did not ask for it, so hold it silent and paused.
+        if is_unrequested_video(deck, active, fading, &state.decks[deck], &report) {
+            state.gains[deck] = 0.0;
+            drop(state);
+            pause(&app, deck);
+            return 0.0;
+        }
         let info = &mut state.decks[deck];
         info.loaded = true;
         info.time = if report.time.is_finite() { report.time.max(0.0) } else { 0.0 };
@@ -991,9 +1015,14 @@ pub fn deck_report(app: AppHandle, webview: Webview, report: DeckReport) -> f64 
         if started_by_user {
             state.active = deck;
             state.mix = deck as f64;
+            state.gains[deck] = 1.0;
         }
-        (state.should_auto_start(), desired)
+        let desired = if started_by_user { state.desired_volume(deck) } else { desired };
+        (state.should_auto_start(), started_by_user, desired)
     };
+    if started_by_user {
+        pause(&app, other(deck)); // one deck plays at a time outside a fade
+    }
     if start_auto {
         let seconds = app.state::<SharedDecks>().lock().unwrap().fade_seconds;
         start_crossfade(&app, seconds);
@@ -1006,6 +1035,35 @@ pub fn deck_report(app: AppHandle, webview: Webview, report: DeckReport) -> f64 
 mod tests {
     use super::*;
     use serde_json::json;
+
+    fn report(video_id: &str) -> DeckReport {
+        DeckReport {
+            time: 1.0,
+            duration: 200.0,
+            paused: false,
+            volume: 1.0,
+            title: String::new(),
+            ad: false,
+            ended: false,
+            video_id: video_id.into(),
+        }
+    }
+
+    #[test]
+    fn idle_deck_autoplay_is_unrequested() {
+        let info = DeckInfo { video_id: "aaa".into(), ..DeckInfo::default() };
+        // YouTube autoplay moved the faded-out deck to another video.
+        assert!(is_unrequested_video(0, 1, false, &info, &report("bbb")));
+        // The same video (user pressed play in the deck window) is followed.
+        assert!(!is_unrequested_video(0, 1, false, &info, &report("aaa")));
+        // The active deck, a running fade, a cued deck and unknown ids are left alone.
+        assert!(!is_unrequested_video(1, 1, false, &info, &report("bbb")));
+        assert!(!is_unrequested_video(0, 1, true, &info, &report("bbb")));
+        let cued = DeckInfo { cued: true, ..info.clone() };
+        assert!(!is_unrequested_video(0, 1, false, &cued, &report("bbb")));
+        assert!(!is_unrequested_video(0, 1, false, &DeckInfo::default(), &report("bbb")));
+        assert!(!is_unrequested_video(0, 1, false, &info, &report("")));
+    }
 
     #[test]
     fn equal_power_keeps_constant_power_and_clamps() {
